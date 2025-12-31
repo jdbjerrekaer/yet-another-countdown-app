@@ -40,27 +40,31 @@ export function DatePickerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      {/* Backdrop */}
+      {/* Backdrop with blur */}
       <div 
-        className="absolute inset-0 bg-foreground/20 backdrop-blur-sm"
+        className="absolute inset-0 bg-foreground/10 backdrop-blur-xl"
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 bg-card rounded-3xl ios-shadow-lg overflow-hidden animate-slide-up">
+      {/* Modal - iOS liquid glass design */}
+      <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 max-h-[90dvh] flex flex-col rounded-3xl overflow-hidden animate-slide-up ios-glass ios-shadow-lg border border-white/20">
+        {/* Liquid glass overlay effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/10 pointer-events-none" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border">
+        <div className="relative flex items-center justify-between p-5 border-b border-white/10">
           <h2 className="text-xl font-bold text-foreground">New Countdown</h2>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
+            className="w-8 h-8 rounded-full ios-glass flex items-center justify-center hover:bg-white/30 transition-all duration-200 active:scale-95"
           >
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
         
-        {/* Content */}
-        <div className="p-5 space-y-6">
+        {/* Content - scrollable */}
+        <div className="relative flex-1 overflow-y-auto p-5 space-y-5">
           {/* Emoji picker */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
@@ -69,10 +73,10 @@ export function DatePickerModal({
                 <button
                   key={e}
                   onClick={() => setEmoji(e)}
-                  className={`w-11 h-11 rounded-xl text-2xl flex items-center justify-center transition-all ${
+                  className={`w-11 h-11 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
                     emoji === e 
-                      ? 'bg-primary/10 ring-2 ring-primary scale-110' 
-                      : 'bg-secondary hover:bg-muted'
+                      ? 'gradient-accent shadow-ios scale-105' 
+                      : 'ios-glass hover:bg-white/30'
                   }`}
                 >
                   {e}
@@ -81,7 +85,7 @@ export function DatePickerModal({
             </div>
           </div>
           
-          {/* Title input */}
+          {/* Title input - liquid glass style */}
           <div className="space-y-2">
             <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
               Event Name
@@ -91,14 +95,14 @@ export function DatePickerModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="My Special Event"
-              className="h-12 rounded-xl text-base bg-secondary border-0 focus:ring-2 focus:ring-primary"
+              className="h-12 rounded-xl text-base ios-glass border-white/20 focus:ring-2 focus:ring-primary/50 focus:border-transparent placeholder:text-muted-foreground/50"
             />
           </div>
           
-          {/* Date picker */}
+          {/* Date picker - liquid glass style */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-muted-foreground">Target Date</Label>
-            <div className="rounded-2xl bg-secondary p-4 flex justify-center">
+            <div className="rounded-2xl ios-glass border border-white/20 p-3 flex justify-center">
               <Calendar
                 mode="single"
                 selected={date}
@@ -109,19 +113,21 @@ export function DatePickerModal({
             </div>
             {date && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center pt-2">
-                <CalendarIcon className="w-4 h-4" />
-                <span>{format(date, 'EEEE, MMMM d, yyyy')}</span>
+                <div className="w-6 h-6 rounded-lg ios-glass flex items-center justify-center">
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-medium">{format(date, 'EEEE, MMMM d, yyyy')}</span>
               </div>
             )}
           </div>
         </div>
         
-        {/* Footer */}
-        <div className="p-5 border-t border-border flex gap-3">
+        {/* Footer - fixed at bottom with liquid glass buttons */}
+        <div className="relative p-5 border-t border-white/10 flex gap-3">
           <Button 
-            variant="secondary" 
+            variant="ios" 
             onClick={onClose}
-            className="flex-1 h-12"
+            className="flex-1 h-12 rounded-2xl font-semibold"
           >
             Cancel
           </Button>
@@ -129,7 +135,7 @@ export function DatePickerModal({
             variant="iosPrimary"
             onClick={handleSave}
             disabled={!title || !date}
-            className="flex-1 h-12"
+            className="flex-1 h-12 rounded-2xl font-semibold"
           >
             Save Countdown
           </Button>
