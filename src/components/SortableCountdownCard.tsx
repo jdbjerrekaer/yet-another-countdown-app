@@ -53,7 +53,7 @@ export function SortableCountdownCard({
       : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease-out',
     zIndex: isDragging ? 50 : 'auto',
     position: 'relative',
-    touchAction: 'manipulation',
+    touchAction: 'none',
     cursor: isDragging ? 'grabbing' : 'grab',
   };
 

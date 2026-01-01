@@ -196,6 +196,7 @@
     z-index: 50;
     border-radius: 1rem;
     overflow: visible;
+    touch-action: none;
   }
 
   /* Show selection border on outer container when dragging selected card */

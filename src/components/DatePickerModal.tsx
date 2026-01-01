@@ -1,10 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
-import { CalendarIcon, RefreshCw, Trash2 } from 'lucide-react';
+import { CalendarIcon, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
+
+// Helper to check if a color is a custom color (not in the preset list)
+const isCustomColor = (color: string | undefined): boolean => {
+  if (!color) return false;
+  return !COLOR_OPTIONS.some(c => c.value === color);
+};
+
+// Helper to get gradient from a hex color
+const getGradientFromColor = (hex: string): string => {
+  return `linear-gradient(135deg, ${hex} 0%, ${adjustColorBrightness(hex, 20)} 100%)`;
+};
+
+// Helper function to adjust color brightness for gradient
+function adjustColorBrightness(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+}
 
 interface DatePickerModalProps {
   isOpen: boolean;
@@ -52,8 +73,12 @@ export function DatePickerModal({
   const [emoji, setEmoji] = useState(initialEmoji);
   const [emojiColor, setEmojiColor] = useState<string | undefined>(initialEmojiColor);
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
+  const [showCustomEmojiInput, setShowCustomEmojiInput] = useState(false);
+  const [customEmojiValue, setCustomEmojiValue] = useState('');
   const { trigger } = useHaptic();
   const prevIsOpenRef = useRef(false);
+  const colorInputRef = useRef<HTMLInputElement>(null);
+  const customEmojiInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form state only when modal opens (not on every prop change)
   useEffect(() => {
@@ -96,10 +121,44 @@ export function DatePickerModal({
     setEmojiColor(color);
   };
 
+  const handleCustomColorClick = () => {
+    trigger('light');
+    colorInputRef.current?.click();
+  };
+
+  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    trigger('light');
+    setEmojiColor(e.target.value);
+  };
 
   const handleEmojiSelect = (e: string) => {
     trigger('light');
     setEmoji(e);
+    setShowCustomEmojiInput(false);
+  };
+
+  const handleCustomEmojiClick = () => {
+    trigger('light');
+    setShowCustomEmojiInput(true);
+    setCustomEmojiValue('');
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      customEmojiInputRef.current?.focus();
+    }, 100);
+  };
+
+  const handleCustomEmojiSubmit = () => {
+    if (customEmojiValue.trim()) {
+      // Get the first emoji/character from the input
+      const emojiMatch = customEmojiValue.match(/\p{Extended_Pictographic}/u);
+      if (emojiMatch) {
+        handleEmojiSelect(emojiMatch[0]);
+      } else {
+        // If no emoji found, use the first character
+        handleEmojiSelect(customEmojiValue.trim().charAt(0));
+      }
+    }
+    setShowCustomEmojiInput(false);
   };
 
   const handleRecurringToggle = (checked: boolean) => {
@@ -184,6 +243,32 @@ export function DatePickerModal({
                     )}
                   </button>
                 ))}
+                {/* Custom color picker button */}
+                <button
+                  onClick={handleCustomColorClick}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 ${
+                    isCustomColor(emojiColor)
+                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                      : 'hover:scale-105'
+                  }`}
+                  style={isCustomColor(emojiColor) ? { background: getGradientFromColor(emojiColor!) } : undefined}
+                  title="Custom color"
+                >
+                  {isCustomColor(emojiColor) ? (
+                    <span className="text-white text-sm">✓</span>
+                  ) : (
+                    <Plus className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </button>
+                {/* Hidden native color input */}
+                <input
+                  ref={colorInputRef}
+                  type="color"
+                  onChange={handleCustomColorChange}
+                  value={emojiColor || '#3b82f6'}
+                  className="sr-only"
+                  aria-hidden="true"
+                />
               </div>
             </div>
 
@@ -194,7 +279,7 @@ export function DatePickerModal({
                 {EMOJI_OPTIONS.map((e) => {
                   const isSelected = emoji === e;
                   const selectedColorGradient = emojiColor 
-                    ? COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient 
+                    ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
                     : COLOR_OPTIONS[0].gradient;
                   
                   return (
@@ -212,6 +297,65 @@ export function DatePickerModal({
                     </button>
                   );
                 })}
+                {/* Custom emoji - show if a custom emoji is selected (not in EMOJI_OPTIONS) */}
+                {!EMOJI_OPTIONS.includes(emoji) && (
+                  <button
+                    onClick={() => {}}
+                    className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 shadow-sm scale-110"
+                    style={{ 
+                      background: emojiColor 
+                        ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
+                        : COLOR_OPTIONS[0].gradient 
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                )}
+                {/* Custom emoji input or button */}
+                {showCustomEmojiInput ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      ref={customEmojiInputRef}
+                      type="text"
+                      value={customEmojiValue}
+                      onChange={(e) => setCustomEmojiValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleCustomEmojiSubmit();
+                        } else if (e.key === 'Escape') {
+                          setShowCustomEmojiInput(false);
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay to allow button click to register
+                        setTimeout(() => {
+                          if (!customEmojiValue) {
+                            setShowCustomEmojiInput(false);
+                          }
+                        }, 150);
+                      }}
+                      placeholder="🎨"
+                      className="w-12 h-12 rounded-xl text-2xl text-center bg-secondary/50 border-2 border-primary/50 focus:border-primary outline-none"
+                      maxLength={4}
+                      enterKeyHint="done"
+                    />
+                    {/* OK button only visible on larger screens - mobile uses keyboard return key */}
+                    <button
+                      onClick={handleCustomEmojiSubmit}
+                      className="hidden md:flex w-10 h-10 rounded-xl bg-primary text-primary-foreground items-center justify-center text-sm font-medium"
+                    >
+                      OK
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleCustomEmojiClick}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105"
+                    title="Custom emoji"
+                  >
+                    <Plus className="w-6 h-6 text-muted-foreground" />
+                  </button>
+                )}
               </div>
             </div>
 

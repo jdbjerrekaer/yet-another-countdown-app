@@ -24,6 +24,7 @@ import { DatePickerModal } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize } from '@/types/countdown';
 import { getNextRecurringDate } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission } from '@/lib/notifications';
@@ -46,6 +47,7 @@ export default function Index() {
   const lastDragEndTs = useRef<number>(0);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
+  const isMobile = useIsMobile();
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -142,8 +144,9 @@ export default function Index() {
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
     let confirmed = false;
 
-    if (isNative) {
-      // Use ActionSheet on native iOS/Android for native destructive button styling
+    // Use ActionSheet on native platforms OR on mobile screens (PWA)
+    if (isNative || isMobile) {
+      // Use ActionSheet for native destructive button styling
       const result = await ActionSheet.showActions({
         title: 'Delete Event',
         message: `Are you sure you want to delete "${event.title}"? This action cannot be undone.`,
@@ -253,7 +256,7 @@ export default function Index() {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="ion-padding">
+      <IonContent fullscreen className="ion-padding" scrollY={activeDragId === null}>
         {/* iOS large title header (collapsible) */}
         <IonHeader collapse="condense">
           <IonToolbar>
