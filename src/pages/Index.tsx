@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon } from '@ionic/react';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon, IonSegment, IonSegmentButton } from '@ionic/react';
 import { add } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
@@ -350,24 +350,19 @@ export default function Index() {
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                       Widget Size
                     </h2>
-                    <div className="flex gap-2">
+                    <IonSegment
+                      value={selectedSize}
+                      onIonChange={(e) => {
+                        trigger('selection');
+                        setSelectedSize(e.detail.value as WidgetSize);
+                      }}
+                    >
                       {WIDGET_SIZES.map((size) => (
-                        <button
-                          key={size.id}
-                          onClick={() => {
-                            trigger('selection');
-                            setSelectedSize(size.id);
-                          }}
-                          className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all active:scale-95 ${
-                            selectedSize === size.id
-                              ? 'bg-primary text-primary-foreground shadow-ios'
-                              : 'bg-secondary text-foreground'
-                          }`}
-                        >
+                        <IonSegmentButton key={size.id} value={size.id}>
                           {size.label}
-                        </button>
+                        </IonSegmentButton>
                       ))}
-                    </div>
+                    </IonSegment>
                   </section>
 
                   {/* Widget preview */}
