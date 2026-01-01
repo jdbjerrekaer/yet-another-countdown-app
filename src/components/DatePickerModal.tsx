@@ -147,15 +147,26 @@ export function DatePickerModal({
     }, 100);
   };
 
+  const handleCustomEmojiInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Filter to only allow emoji characters (Extended Pictographic, Emoji Modifier, etc.)
+    const emojiRegex = /[\p{Emoji}\p{Extended_Pictographic}]/gu;
+    const emojis = value.match(emojiRegex);
+    if (emojis && emojis.length > 0) {
+      // Only keep emoji characters
+      setCustomEmojiValue(emojis.join(''));
+    } else {
+      // Clear if no emoji found
+      setCustomEmojiValue('');
+    }
+  };
+
   const handleCustomEmojiSubmit = () => {
     if (customEmojiValue.trim()) {
-      // Get the first emoji/character from the input
-      const emojiMatch = customEmojiValue.match(/\p{Extended_Pictographic}/u);
+      // Get the first emoji from the input
+      const emojiMatch = customEmojiValue.match(/[\p{Emoji}\p{Extended_Pictographic}]/u);
       if (emojiMatch) {
         handleEmojiSelect(emojiMatch[0]);
-      } else {
-        // If no emoji found, use the first character
-        handleEmojiSelect(customEmojiValue.trim().charAt(0));
       }
     }
     setShowCustomEmojiInput(false);
@@ -243,32 +254,35 @@ export function DatePickerModal({
                     )}
                   </button>
                 ))}
-                {/* Custom color picker button */}
-                <button
-                  onClick={handleCustomColorClick}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 ${
-                    isCustomColor(emojiColor)
-                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                      : 'hover:scale-105'
-                  }`}
-                  style={isCustomColor(emojiColor) ? { background: getGradientFromColor(emojiColor!) } : undefined}
-                  title="Custom color"
-                >
-                  {isCustomColor(emojiColor) ? (
-                    <span className="text-white text-sm">✓</span>
-                  ) : (
-                    <Plus className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </button>
-                {/* Hidden native color input */}
-                <input
-                  ref={colorInputRef}
-                  type="color"
-                  onChange={handleCustomColorChange}
-                  value={emojiColor || '#3b82f6'}
-                  className="sr-only"
-                  aria-hidden="true"
-                />
+                {/* Custom color picker button with overlay input for Safari mobile */}
+                <div className="relative w-10 h-10">
+                  <button
+                    onClick={handleCustomColorClick}
+                    className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 ${
+                      isCustomColor(emojiColor)
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={isCustomColor(emojiColor) ? { background: getGradientFromColor(emojiColor!) } : undefined}
+                    title="Custom color"
+                  >
+                    {isCustomColor(emojiColor) ? (
+                      <span className="text-white text-sm">✓</span>
+                    ) : (
+                      <Plus className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </button>
+                  {/* Color input overlaid on button for Safari mobile compatibility */}
+                  <input
+                    ref={colorInputRef}
+                    type="color"
+                    onChange={handleCustomColorChange}
+                    value={emojiColor || '#3b82f6'}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ minWidth: '44px', minHeight: '44px' }}
+                    aria-label="Custom color picker"
+                  />
+                </div>
               </div>
             </div>
 
@@ -318,12 +332,18 @@ export function DatePickerModal({
                       ref={customEmojiInputRef}
                       type="text"
                       value={customEmojiValue}
-                      onChange={(e) => setCustomEmojiValue(e.target.value)}
+                      onChange={handleCustomEmojiInput}
+                      onInput={handleCustomEmojiInput}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleCustomEmojiSubmit();
                         } else if (e.key === 'Escape') {
                           setShowCustomEmojiInput(false);
+                        }
+                        // Prevent non-emoji characters
+                        const key = e.key;
+                        if (key.length === 1 && !/[\p{Emoji}\p{Extended_Pictographic}]/u.test(key)) {
+                          e.preventDefault();
                         }
                       }}
                       onBlur={() => {
@@ -338,6 +358,11 @@ export function DatePickerModal({
                       className="w-12 h-12 rounded-xl text-2xl text-center bg-secondary/50 border-2 border-primary/50 focus:border-primary outline-none"
                       maxLength={4}
                       enterKeyHint="done"
+                      // Note: inputMode="emoji" is not standard, but we filter input to only allow emojis
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
                     />
                     {/* OK button only visible on larger screens - mobile uses keyboard return key */}
                     <button

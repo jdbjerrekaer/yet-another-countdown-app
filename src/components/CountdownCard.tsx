@@ -102,6 +102,16 @@ export function CountdownCard({
         borderBottomLeftRadius: `${leftBorderRadius}px`,
         borderTopRightRadius: `${rightBorderRadius}px`,
         borderBottomRightRadius: `${rightBorderRadius}px`,
+        // Safari-specific prefixes to prevent black border-radius rendering bug
+        WebkitBorderTopLeftRadius: `${leftBorderRadius}px`,
+        WebkitBorderBottomLeftRadius: `${leftBorderRadius}px`,
+        WebkitBorderTopRightRadius: `${rightBorderRadius}px`,
+        WebkitBorderBottomRightRadius: `${rightBorderRadius}px`,
+        // Explicit background to prevent Safari rendering artifacts
+        backgroundColor: 'hsl(var(--card))',
+        // Prevent rendering artifacts on Safari
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
         transition: swipeProgress === 0 ? 'border-radius 0.2s ease-out' : 'none',
         // Prevent interactions on the actively dragged card
         pointerEvents: isDragging ? 'none' : 'auto',
