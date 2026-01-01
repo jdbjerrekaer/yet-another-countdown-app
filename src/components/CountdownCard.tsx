@@ -38,6 +38,7 @@ export function CountdownCard({
   const { trigger } = useHaptic();
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
   const [swipeProgress, setSwipeProgress] = useState(0);
+  const hapticTriggeredRef = useRef(false);
   
   const targetDate = event.isRecurring 
     ? getNextRecurringDate(new Date(event.targetDate))
@@ -76,16 +77,28 @@ export function CountdownCard({
     const maxSwipe = 80;
     const progress = Math.min(Math.max(Math.abs(amount) / maxSwipe, 0), 1);
     setSwipeProgress(progress);
+    
+    // Trigger soft haptic when swipe reaches threshold (around 50% progress)
+    // This happens during the swipe, before the delete dialog appears
+    const hapticThreshold = 0.5;
+    if (progress >= hapticThreshold && !hapticTriggeredRef.current) {
+      trigger('light');
+      hapticTriggeredRef.current = true;
+    }
   };
 
   const handleDragEnd = () => {
     // Reset border radius when drag ends
     setSwipeProgress(0);
+    // Reset haptic trigger flag for next swipe
+    hapticTriggeredRef.current = false;
   };
 
   const handleClose = () => {
     // Reset border radius when item closes
     setSwipeProgress(0);
+    // Reset haptic trigger flag for next swipe
+    hapticTriggeredRef.current = false;
   };
 
   // Calculate border radius: morph from 1rem (16px) to 0 on left side
