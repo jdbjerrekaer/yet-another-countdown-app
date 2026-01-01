@@ -11,7 +11,7 @@ import { useHaptic } from '@/hooks/useHaptic';
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean) => void;
+  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean) => void | Promise<void>;
   initialTitle?: string;
   initialDate?: Date;
   initialEmoji?: string;
@@ -107,13 +107,13 @@ export function DatePickerModal({
     onClose();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (title && date) {
       // Only trigger haptic for new countdowns, not edits
       if (!isEditing) {
         trigger('medium');
       }
-      onSave(title, date, emoji, isRecurring);
+      await onSave(title, date, emoji, isRecurring);
       onClose();
     }
   };

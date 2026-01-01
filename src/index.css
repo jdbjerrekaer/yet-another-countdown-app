@@ -194,16 +194,38 @@
       0 4px 12px -2px hsl(0 0% 0% / 0.08);
     opacity: 1;
     z-index: 50;
+    border-radius: 1rem;
+    overflow: visible;
+  }
+
+  /* Show selection border on outer container when dragging selected card */
+  /* Using pseudo-element to ensure it renders on top of everything */
+  .sortable-countdown-card.is-dragging.is-selected::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    pointer-events: none;
+    z-index: 100;
   }
 
   .sortable-countdown-card.is-dragging .countdown-card-wrapper {
     background: hsl(var(--card));
     border-radius: 1rem;
+    overflow: hidden;
   }
 
   /* Dragging state for the card itself - softer shadow */
   .countdown-card-dragging {
     box-shadow: 
+      0 8px 24px -4px hsl(0 0% 0% / 0.12),
+      0 4px 12px -2px hsl(0 0% 0% / 0.08) !important;
+  }
+
+  /* Preserve selection border when dragging */
+  .countdown-card-dragging.countdown-card-selected {
+    box-shadow: 
+      0 0 0 2px hsl(var(--primary)),
       0 8px 24px -4px hsl(0 0% 0% / 0.12),
       0 4px 12px -2px hsl(0 0% 0% / 0.08) !important;
   }

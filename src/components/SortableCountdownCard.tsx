@@ -61,7 +61,7 @@ export function SortableCountdownCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`sortable-countdown-card ${isDragging ? 'is-dragging' : ''}`}
+      className={`sortable-countdown-card ${isDragging ? 'is-dragging' : ''} ${isSelected ? 'is-selected' : ''}`}
       {...attributes}
       {...listeners}
     >

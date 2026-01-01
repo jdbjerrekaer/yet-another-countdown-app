@@ -23,6 +23,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent, WidgetSize } from '@/types/countdown';
 import { getNextRecurringDate } from '@/lib/recurring';
+import { checkNotificationPermission, requestNotificationPermission } from '@/lib/notifications';
 
 const WIDGET_SIZES: { id: WidgetSize; label: string }[] = [
   { id: 'small', label: 'Small' },
@@ -100,7 +101,15 @@ export default function Index() {
     localStorage.setItem('countdowns', JSON.stringify(events));
   }, [events]);
 
-  const handleSave = (title: string, date: Date, emoji: string, isRecurring: boolean) => {
+  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean) => {
+    // Only request notification permission when creating a new event (not editing)
+    if (!editingEvent) {
+      const hasPermission = await checkNotificationPermission();
+      if (!hasPermission) {
+        await requestNotificationPermission();
+      }
+    }
+
     if (editingEvent) {
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
