@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Route, Redirect } from "react-router-dom";
+import { IonApp, IonRouterOutlet } from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -13,13 +15,16 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <IonApp>
+        <IonReactRouter>
+          <IonRouterOutlet>
+            <Route exact path="/" component={Index} />
+            <Route path="/404" component={NotFound} />
+            {/* Catch-all redirects to 404 page */}
+            <Redirect to="/404" />
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </IonApp>
     </TooltipProvider>
   </QueryClientProvider>
 );

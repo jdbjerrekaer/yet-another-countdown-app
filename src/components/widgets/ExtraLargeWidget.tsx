@@ -1,4 +1,4 @@
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 interface ExtraLargeWidgetProps {
@@ -11,21 +11,35 @@ interface ExtraLargeWidgetProps {
 
 export function ExtraLargeWidget({ title, countdown, targetDate, emoji, createdAt }: ExtraLargeWidgetProps) {
   // Calculate progress based on creation date to target date
+  // Uses countdown.totalSeconds for smooth updates every second
   const calculateProgress = () => {
     if (!targetDate || countdown.isPast || countdown.isComplete) {
       return 100;
     }
     
-    const now = new Date();
-    const startDate = createdAt || now;
+    if (!createdAt) {
+      // No createdAt date - can't calculate progress, show 0%
+      return 0;
+    }
     
-    const totalDays = differenceInDays(targetDate, startDate);
-    const daysElapsed = differenceInDays(now, startDate);
+    const startTime = new Date(createdAt).getTime();
+    const targetTime = new Date(targetDate).getTime();
+    const totalDurationSeconds = Math.floor((targetTime - startTime) / 1000);
     
-    if (totalDays <= 0) return 100;
+    // If target is before or at start time, show 100%
+    if (totalDurationSeconds <= 0) return 100;
     
-    const progress = (daysElapsed / totalDays) * 100;
-    return Math.max(0, Math.min(100, progress));
+    // Remaining seconds from countdown hook (updates every second)
+    const remainingSeconds = countdown.totalSeconds;
+    
+    // Elapsed time = total duration - remaining time
+    const elapsedSeconds = totalDurationSeconds - remainingSeconds;
+    
+    // Calculate progress as percentage of time elapsed
+    const progress = (elapsedSeconds / totalDurationSeconds) * 100;
+    
+    // Clamp between 0 and 100
+    return Math.max(0, Math.min(100, Math.round(progress)));
   };
 
   const progress = calculateProgress();
@@ -81,14 +95,20 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, createdA
             <div className="flex justify-between text-sm mb-2">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-medium text-foreground">
-                {progress.toFixed(0)}%
+                {progress}%
               </span>
             </div>
-            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-2 bg-secondary rounded-full overflow-hidden"
+              style={{ position: 'relative' }}
+            >
               <div 
-                className="h-full bg-primary rounded-full transition-all duration-500"
+                className="bg-primary rounded-full"
                 style={{ 
-                  width: `${progress}%` 
+                  width: `${progress}%`,
+                  height: '100%',
+                  maxWidth: '100%',
+                  transition: 'width 0.3s ease'
                 }}
               />
             </div>

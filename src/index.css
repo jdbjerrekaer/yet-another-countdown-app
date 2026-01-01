@@ -135,6 +135,97 @@
   .shadow-ios-lg {
     box-shadow: 0 8px 30px -8px hsl(0 0% 0% / 0.12);
   }
+
+  /* Countdown card wrapper styling */
+  .countdown-card-wrapper {
+    box-shadow: none;
+  }
+
+  .countdown-card-selected {
+    box-shadow: 0 0 0 2px hsl(var(--primary));
+  }
+
+  /* Countdown card styling for Ionic components */
+  .countdown-card-item {
+    --background: hsl(var(--card));
+    --color: hsl(var(--foreground));
+    --padding-start: 0;
+    --padding-end: 0;
+    --inner-padding-start: 0;
+    --inner-padding-end: 0;
+    --inner-border-width: 0;
+    --border-width: 0;
+    --border-color: transparent;
+    --min-height: auto;
+  }
+
+  .countdown-card-item::part(native) {
+    overflow: hidden;
+  }
+
+  /* IonItemSliding container styling */
+  ion-item-sliding {
+    --background: transparent;
+  }
+
+  /* Ensure IonItemOptions fills the container properly */
+  ion-item-options {
+    border-radius: inherit;
+  }
+
+  ion-item-option {
+    --border-radius: 0;
+  }
+
+  /* Sortable countdown card drag styling */
+  .sortable-countdown-card {
+    will-change: transform;
+    /* Fluid spring-like transitions */
+    transition: 
+      transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+      box-shadow 0.3s ease-out,
+      opacity 0.2s ease;
+  }
+
+  .sortable-countdown-card.is-dragging {
+    /* Softer, more diffused shadow for a gentle lift effect */
+    box-shadow: 
+      0 8px 24px -4px hsl(0 0% 0% / 0.12),
+      0 4px 12px -2px hsl(0 0% 0% / 0.08);
+    opacity: 1;
+    z-index: 50;
+  }
+
+  .sortable-countdown-card.is-dragging .countdown-card-wrapper {
+    background: hsl(var(--card));
+    border-radius: 1rem;
+  }
+
+  /* Dragging state for the card itself - softer shadow */
+  .countdown-card-dragging {
+    box-shadow: 
+      0 8px 24px -4px hsl(0 0% 0% / 0.12),
+      0 4px 12px -2px hsl(0 0% 0% / 0.08) !important;
+  }
+
+  /* Dark mode - slightly more visible but still soft */
+  .dark .sortable-countdown-card.is-dragging {
+    box-shadow: 
+      0 8px 24px -4px hsl(0 0% 0% / 0.35),
+      0 4px 12px -2px hsl(0 0% 0% / 0.25);
+  }
+
+  /* Smooth transition for items being displaced */
+  .sortable-countdown-card:not(.is-dragging) {
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Focus visible for keyboard accessibility */
+  .sortable-countdown-card:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: 1rem;
+  }
 }
 
 @layer utilities {

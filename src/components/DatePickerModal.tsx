@@ -85,13 +85,20 @@ export function DatePickerModal({
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle);
-      setDate(initialDate);
+      // Ensure initial date has 8am time for new events
+      let dateToSet = initialDate;
+      if (!initialDate && !isEditing) {
+        const today = new Date();
+        today.setHours(8, 0, 0, 0);
+        dateToSet = today;
+      }
+      setDate(dateToSet);
       setEmoji(initialEmoji);
       setIsRecurring(initialIsRecurring ?? false);
-      setDisplayMonth(initialDate || new Date());
+      setDisplayMonth(dateToSet || new Date());
       setPickerMode('form');
     }
-  }, [isOpen, initialTitle, initialDate, initialEmoji, initialIsRecurring]);
+  }, [isOpen, initialTitle, initialDate, initialEmoji, initialIsRecurring, isEditing]);
 
   if (!shouldRender) return null;
 
@@ -293,12 +300,25 @@ export function DatePickerModal({
                   selected={date}
                   onSelect={(d) => {
                     trigger('medium');
-                    setDate(d);
+                    if (d) {
+                      // For new events, set time to 8am; for editing, preserve existing time
+                      const newDate = new Date(d);
+                      if (!isEditing) {
+                        newDate.setHours(8, 0, 0, 0);
+                      } else if (date) {
+                        // Preserve the time from the existing date when editing
+                        newDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+                      }
+                      setDate(newDate);
+                    } else {
+                      setDate(d);
+                    }
                   }}
                   month={displayMonth}
                   onMonthChange={setDisplayMonth}
                   disabled={(d) => !isRecurring && d < new Date()}
                   className="rounded-xl"
+                  weekStartsOn={1}
                   classNames={{
                     caption: "hidden",
                   }}
