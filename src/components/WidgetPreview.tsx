@@ -34,8 +34,8 @@ export function WidgetPreview({ title, countdown, targetDate, emoji, size, isRec
     return (
       <div className="relative">
         {widget}
-        <div className="absolute top-2 right-2 w-5 h-5 rounded-full ios-glass flex items-center justify-center">
-          <RefreshCw className="w-3 h-3 text-primary-foreground" />
+        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+          <RefreshCw className="w-3.5 h-3.5 text-primary" />
         </div>
       </div>
     );
