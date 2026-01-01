@@ -1,73 +1,241 @@
-# Welcome to your Lovable project
+# Yet Another Countdown App
 
-## Project info
+A beautiful, feature-rich countdown timer application built with React and Ionic. Create and manage multiple countdown timers with support for recurring events, widget previews, and native iOS features.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **Multiple Countdown Timers** - Create and manage unlimited countdown events
+- **Recurring Events** - Set up yearly recurring countdowns (birthdays, anniversaries, etc.)
+- **Drag-and-Drop Sorting** - Reorder your countdowns with intuitive drag-and-drop
+- **Widget Previews** - Preview your countdowns in four different widget sizes:
+  - Small
+  - Medium
+  - Large
+  - Extra Large
+- **iOS Native Features**:
+  - Haptic feedback for better user interaction
+  - Native action sheets and dialogs
+  - Notification support
+  - iOS-style UI components
+- **Local Storage** - All countdowns are automatically saved locally
+- **Mobile-First Design** - Responsive design optimized for mobile devices
+- **Beautiful UI** - Modern, iOS-inspired interface with smooth animations
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+### Frontend
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **React 18** - UI library
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and dev server
 
-Changes made via Lovable will be committed automatically to this repo.
+### UI Framework & Styling
 
-**Use your preferred IDE**
+- **Ionic React** - Mobile-first UI components
+- **shadcn-ui** - High-quality React components
+- **Tailwind CSS** - Utility-first CSS framework
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Mobile
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Capacitor** - Native runtime for iOS (and Android-ready)
 
-Follow these steps:
+### Libraries & Tools
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- **@dnd-kit** - Drag and drop functionality
+- **date-fns** - Date manipulation and formatting
+- **react-hook-form** - Form state management
+- **zod** - Schema validation
+- **@tanstack/react-query** - Data fetching and caching
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Prerequisites
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Node.js** (v18 or higher) and npm - [Install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Bun** (optional) - Alternative package manager, detected via `bun.lockb`
+- **Xcode** (for iOS development) - Required for building and running on iOS devices/simulators
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## Installation & Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <YOUR_GIT_URL>
+   cd yet-another-countdown-app
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
+
+3. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+   The app will be available at `http://localhost:8080`
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start the development server with hot reload
+- `npm run build` - Build for production
+- `npm run build:dev` - Build in development mode
+- `npm run preview` - Preview the production build locally
+- `npm run lint` - Run ESLint to check code quality
+
+### Development Server
+
+The development server runs on port `8080` by default (configured in `vite.config.ts`). The server supports hot module replacement (HMR) for instant updates during development.
+
+## iOS Development
+
+This app uses Capacitor to provide native iOS functionality. To work with the iOS app:
+
+### Sync Web Assets to iOS
+
+After making changes to the web app, sync them to the iOS project:
+
+```bash
+npx cap sync ios
 ```
 
-**Edit a file directly in GitHub**
+### Open in Xcode
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npx cap open ios
+```
 
-**Use GitHub Codespaces**
+This will open the iOS project in Xcode, where you can:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Build and run on iOS simulators
+- Build and run on physical iOS devices
+- Configure app settings and capabilities
 
-## What technologies are used for this project?
+### Native Plugins Used
 
-This project is built with:
+- **@capacitor/dialog** - Native dialog boxes
+- **@capacitor/action-sheet** - Native action sheets
+- **@capacitor/haptics** - Haptic feedback
+- **@capacitor/keyboard** - Keyboard management
+- **@capacitor/splash-screen** - Splash screen control
+- **@capacitor/status-bar** - Status bar styling
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### App Configuration
 
-## How can I deploy this project?
+- **App ID**: `com.countdown.app`
+- **App Name**: `Countdown`
+- **Web Directory**: `dist` (built output)
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Project Structure
 
-## Can I connect a custom domain to my Lovable project?
+```text
+yet-another-countdown-app/
+├── src/
+│   ├── components/          # React components
+│   │   ├── ui/             # shadcn-ui components
+│   │   └── widgets/        # Widget preview components
+│   ├── pages/              # Page components
+│   │   └── Index.tsx       # Main countdown page
+│   ├── hooks/              # Custom React hooks
+│   │   ├── useCountdown.ts # Countdown timer logic
+│   │   └── useHaptic.ts    # Haptic feedback hook
+│   ├── lib/                # Utility functions
+│   │   ├── recurring.ts   # Recurring date calculations
+│   │   └── notifications.ts # Notification helpers
+│   ├── types/              # TypeScript type definitions
+│   ├── App.tsx             # Root component
+│   └── main.tsx            # Application entry point
+├── ios/                    # iOS native project
+├── public/                 # Static assets
+├── capacitor.config.ts     # Capacitor configuration
+├── vite.config.ts          # Vite configuration
+└── tailwind.config.ts      # Tailwind CSS configuration
+```
 
-Yes, you can!
+## Usage
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Creating a Countdown
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Tap the **+** button in the top right corner
+2. Enter a title for your countdown
+3. Select a target date using the date picker
+4. Choose an emoji to represent your event
+5. Optionally enable "Recurring" for yearly events (e.g., birthdays)
+6. Tap "Save" to create the countdown
+
+### Editing a Countdown
+
+1. Tap on a countdown card to select it
+2. Tap the edit button (pencil icon) on the card
+3. Modify the title, date, emoji, or recurring setting
+4. Tap "Save" to update
+
+### Deleting a Countdown
+
+1. Tap the edit button on a countdown card
+2. Tap the "Delete" button in the edit modal
+3. Confirm the deletion
+
+### Reordering Countdowns
+
+1. Long-press (hold for ~300ms) on a countdown card
+2. Drag it to the desired position
+3. Release to drop it in the new position
+
+### Widget Preview
+
+1. Select a countdown by tapping on its card
+2. Choose a widget size (Small, Medium, Large, or Extra Large)
+3. View the preview below to see how it will appear as a widget
+
+### Recurring Events
+
+When you enable "Recurring" for a countdown:
+
+- The countdown automatically resets each year on the same date
+- Perfect for birthdays, anniversaries, holidays, and other yearly events
+- The app calculates the next occurrence automatically
+
+## Deployment
+
+### Web Deployment
+
+The app can be deployed to any static hosting service:
+
+1. **Build the production bundle**
+
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy the `dist` folder** to your hosting service:
+   - Vercel
+   - Netlify
+   - GitHub Pages
+   - AWS S3 + CloudFront
+   - Any static hosting provider
+
+### iOS App Store Deployment
+
+To deploy to the iOS App Store:
+
+1. Build the web app: `npm run build`
+2. Sync to iOS: `npx cap sync ios`
+3. Open in Xcode: `npx cap open ios`
+4. Follow Apple's App Store submission process:
+   - Configure app metadata and screenshots
+   - Archive the app
+   - Submit through App Store Connect
+
+## License
+
+This project is private and proprietary.
+
+## Contributing
+
+This is a private project. For questions or issues, please contact the repository owner.
