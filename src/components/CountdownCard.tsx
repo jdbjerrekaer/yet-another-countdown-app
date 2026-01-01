@@ -63,9 +63,11 @@ export function CountdownCard({
           )}
         </div>
         <p className="text-sm text-muted-foreground">
-          {countdown.isComplete 
-            ? 'Today! 🎉' 
-            : `${countdown.days}d ${countdown.hours}h ${countdown.minutes}m`
+          {countdown.isPast 
+            ? `${countdown.daysSince} days ago`
+            : countdown.isComplete 
+              ? 'Today! 🎉' 
+              : `${countdown.days}d ${countdown.hours}h ${countdown.minutes}m`
           }
         </p>
       </div>

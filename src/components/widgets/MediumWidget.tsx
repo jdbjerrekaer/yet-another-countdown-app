@@ -14,12 +14,19 @@ export function MediumWidget({ title, countdown, emoji }: MediumWidgetProps) {
         <div>
           <p className="font-semibold text-foreground">{title}</p>
           <p className="text-xs text-muted-foreground">
-            {countdown.isComplete ? 'Event arrived!' : 'Counting down'}
+            {countdown.isPast ? 'Time since event' : countdown.isComplete ? 'Event arrived!' : 'Counting down'}
           </p>
         </div>
       </div>
       
-      {countdown.isComplete ? (
+      {countdown.isPast ? (
+        <div className="flex gap-6">
+          <div>
+            <p className="text-3xl font-bold text-foreground">{countdown.daysSince}</p>
+            <p className="text-xs text-muted-foreground">Days ago</p>
+          </div>
+        </div>
+      ) : countdown.isComplete ? (
         <p className="text-3xl font-bold text-primary">Today! 🎉</p>
       ) : (
         <div className="flex gap-6">

@@ -15,7 +15,11 @@ export function SmallWidget({ title, countdown, emoji }: SmallWidgetProps) {
       
       <div>
         <p className="text-xs text-muted-foreground truncate mb-1">{title}</p>
-        {countdown.isComplete ? (
+        {countdown.isPast ? (
+          <p className="text-2xl font-bold text-foreground tracking-tight">
+            {countdown.daysSince}<span className="text-sm font-medium text-muted-foreground ml-1">days ago</span>
+          </p>
+        ) : countdown.isComplete ? (
           <p className="text-2xl font-bold text-primary">Today!</p>
         ) : (
           <p className="text-3xl font-bold text-foreground tracking-tight">

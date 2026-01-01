@@ -7,20 +7,32 @@ export interface CountdownTime {
   seconds: number;
   totalSeconds: number;
   isComplete: boolean;
+  isPast: boolean;
+  daysSince: number;
 }
 
 export function useCountdown(targetDate: Date | null): CountdownTime {
   const calculateTimeLeft = useCallback((): CountdownTime => {
     if (!targetDate) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0, isComplete: true };
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0, isComplete: true, isPast: false, daysSince: 0 };
     }
 
     const now = new Date().getTime();
     const target = targetDate.getTime();
     const difference = target - now;
 
-    if (difference <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0, isComplete: true };
+    // Check if today is the target date (same day)
+    const nowDate = new Date();
+    const isToday = nowDate.toDateString() === targetDate.toDateString();
+    
+    if (isToday) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0, isComplete: true, isPast: false, daysSince: 0 };
+    }
+
+    if (difference < 0) {
+      // Event has passed
+      const daysSince = Math.floor(Math.abs(difference) / (1000 * 60 * 60 * 24));
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0, isComplete: true, isPast: true, daysSince };
     }
 
     const totalSeconds = Math.floor(difference / 1000);
@@ -29,7 +41,7 @@ export function useCountdown(targetDate: Date | null): CountdownTime {
     const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-    return { days, hours, minutes, seconds, totalSeconds, isComplete: false };
+    return { days, hours, minutes, seconds, totalSeconds, isComplete: false, isPast: false, daysSince: 0 };
   }, [targetDate]);
 
   const [timeLeft, setTimeLeft] = useState<CountdownTime>(calculateTimeLeft);
