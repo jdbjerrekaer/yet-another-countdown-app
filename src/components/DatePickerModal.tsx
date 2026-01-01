@@ -17,7 +17,7 @@ interface DatePickerModalProps {
   initialEmoji?: string;
   initialIsRecurring?: boolean;
   isEditing?: boolean;
-  onDelete?: () => void;
+  onDelete?: () => Promise<boolean> | boolean;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -148,13 +148,16 @@ export function DatePickerModal({
     setPickerMode('form');
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     if (onDelete) {
       trigger('light');
-      onDelete();
-      onClose();
+      const shouldClose = await onDelete();
+      // Only close the modal if deletion was confirmed
+      if (shouldClose) {
+        onClose();
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon } from '@ionic/react';
 import { add } from 'ionicons/icons';
+import { Dialog } from '@capacitor/dialog';
 import {
   DndContext,
   closestCenter,
@@ -39,8 +40,6 @@ export default function Index() {
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('large');
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const { trigger } = useHaptic();
@@ -136,15 +135,17 @@ export default function Index() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteRequest = (event: CountdownEvent) => {
-    setEventToDelete(event);
-    setShowDeleteConfirmation(true);
-  };
+  const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
+    const { value } = await Dialog.confirm({
+      title: 'Delete Event',
+      message: `Are you sure you want to delete "${event.title}"? \n \n This action cannot be undone.`,
+      okButtonTitle: 'Delete',
+      cancelButtonTitle: 'Cancel',
+    });
 
-  const handleDeleteConfirm = () => {
-    if (eventToDelete) {
+    if (value) {
       trigger('heavy');
-      const eventId = eventToDelete.id;
+      const eventId = event.id;
       const wasSelected = selectedEventId === eventId;
       
       setEvents(prev => {
@@ -159,16 +160,11 @@ export default function Index() {
         }
         return filtered;
       });
-      
-      setShowDeleteConfirmation(false);
-      setEventToDelete(null);
+      return true; // Deletion confirmed
+    } else {
+      trigger('light');
+      return false; // Deletion cancelled
     }
-  };
-
-  const handleDeleteCancel = () => {
-    trigger('light');
-    setShowDeleteConfirmation(false);
-    setEventToDelete(null);
   };
 
   const handleAddNew = () => {
@@ -359,46 +355,6 @@ export default function Index() {
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
       />
 
-      {/* Native iOS-style Delete Confirmation Dialog */}
-        {showDeleteConfirmation && eventToDelete && (
-          <>
-            <div 
-              className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-              onClick={handleDeleteCancel}
-            />
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
-              <div className="w-full max-w-[270px] bg-[hsl(var(--background)/0.85)] backdrop-blur-xl rounded-[14px] overflow-hidden shadow-2xl pointer-events-auto animate-in zoom-in-95 fade-in duration-200">
-                {/* Header */}
-                <div className="px-4 pt-5 pb-4 text-center">
-                  <h3 className="text-[17px] font-semibold text-foreground leading-tight">
-                    Delete Event?
-                  </h3>
-                  <p className="text-[13px] text-muted-foreground mt-2 leading-snug">
-                    "{eventToDelete.title}" will be permanently deleted.
-                  </p>
-                </div>
-                
-                {/* Buttons */}
-                <div className="border-t border-border/40">
-                  <button
-                    onClick={handleDeleteCancel}
-                    className="w-full py-[11px] text-[17px] text-primary font-normal active:bg-primary/10 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-                <div className="border-t border-border/40">
-                  <button
-                    onClick={handleDeleteConfirm}
-                    className="w-full py-[11px] text-[17px] text-destructive font-semibold active:bg-destructive/10 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
     </IonPage>
   );
 }
