@@ -291,7 +291,11 @@ export function DatePickerModal({
               <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
               <div className="flex gap-2 flex-wrap">
                 {EMOJI_OPTIONS.map((e) => {
-                  const isSelected = emoji === e;
+                  // Only show as selected if it matches AND the emoji is in the preset list
+                  // This prevents preset emojis from showing selected when a custom emoji is used
+                  // Also deselect preset emojis when the custom emoji input is open
+                  const isCustomEmojiSelected = !EMOJI_OPTIONS.includes(emoji);
+                  const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
                   const selectedColorGradient = emojiColor 
                     ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
                     : COLOR_OPTIONS[0].gradient;
@@ -355,7 +359,13 @@ export function DatePickerModal({
                         }, 150);
                       }}
                       placeholder="🎨"
-                      className="w-12 h-12 rounded-xl text-2xl text-center bg-secondary/50 border-2 border-primary/50 focus:border-primary outline-none"
+                      className="w-12 h-12 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none"
+                      style={{
+                        background: emojiColor 
+                          ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
+                          : COLOR_OPTIONS[0].gradient,
+                        color: 'white'
+                      }}
                       maxLength={4}
                       enterKeyHint="done"
                       // Note: inputMode="emoji" is not standard, but we filter input to only allow emojis
