@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
 import { ChevronRight, RefreshCw } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -37,7 +37,6 @@ export function CountdownCard({
 }: CountdownCardProps) {
   const { trigger } = useHaptic();
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
-  const [swipeProgress, setSwipeProgress] = useState(0);
   const hapticTriggeredRef = useRef(false);
   
   const targetDate = event.isRecurring 
@@ -76,7 +75,6 @@ export function CountdownCard({
     // Max swipe is typically around 80-100px for the delete button
     const maxSwipe = 80;
     const progress = Math.min(Math.max(Math.abs(amount) / maxSwipe, 0), 1);
-    setSwipeProgress(progress);
     
     // Trigger soft haptic when swipe reaches threshold (around 50% progress)
     // This happens during the swipe, before the delete dialog appears
@@ -88,22 +86,17 @@ export function CountdownCard({
   };
 
   const handleDragEnd = () => {
-    // Reset border radius when drag ends
-    setSwipeProgress(0);
     // Reset haptic trigger flag for next swipe
     hapticTriggeredRef.current = false;
   };
 
   const handleClose = () => {
-    // Reset border radius when item closes
-    setSwipeProgress(0);
     // Reset haptic trigger flag for next swipe
     hapticTriggeredRef.current = false;
   };
 
-  // Calculate border radius: morph from 1rem (16px) to 0 on left side
-  const leftBorderRadius = 16 * (1 - swipeProgress);
-  const rightBorderRadius = 16; // Keep right side rounded
+  // Keep border radius constant at 1rem (16px) - the wrapper clips everything
+  const borderRadius = 16;
 
   return (
     <div 
@@ -111,21 +104,14 @@ export function CountdownCard({
         isSelected ? 'countdown-card-selected' : ''
       } ${isDragging ? 'countdown-card-dragging' : ''}`}
       style={{
-        borderTopLeftRadius: `${leftBorderRadius}px`,
-        borderBottomLeftRadius: `${leftBorderRadius}px`,
-        borderTopRightRadius: `${rightBorderRadius}px`,
-        borderBottomRightRadius: `${rightBorderRadius}px`,
-        // Safari-specific prefixes to prevent black border-radius rendering bug
-        WebkitBorderTopLeftRadius: `${leftBorderRadius}px`,
-        WebkitBorderBottomLeftRadius: `${leftBorderRadius}px`,
-        WebkitBorderTopRightRadius: `${rightBorderRadius}px`,
-        WebkitBorderBottomRightRadius: `${rightBorderRadius}px`,
+        borderRadius: `${borderRadius}px`,
+        // Safari-specific prefix to prevent black border-radius rendering bug
+        WebkitBorderRadius: `${borderRadius}px`,
         // Explicit background to prevent Safari rendering artifacts
         backgroundColor: 'hsl(var(--card))',
         // Prevent rendering artifacts on Safari
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
-        transition: swipeProgress === 0 ? 'border-radius 0.2s ease-out' : 'none',
         // Prevent interactions on the actively dragged card
         pointerEvents: isDragging ? 'none' : 'auto',
       }}
@@ -136,6 +122,10 @@ export function CountdownCard({
         onIonDrag={handleDrag}
         onIonDragEnd={handleDragEnd}
         onIonClose={handleClose}
+        style={{
+          borderRadius: 'inherit',
+          overflow: 'hidden',
+        }}
       >
         {/* Delete option on the right side */}
         <IonItemOptions side="end" onIonSwipe={handleSwipe}>

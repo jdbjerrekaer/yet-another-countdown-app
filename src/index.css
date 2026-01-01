@@ -166,15 +166,39 @@
   /* IonItemSliding container styling */
   ion-item-sliding {
     --background: hsl(var(--card));
+    border-radius: inherit;
+    overflow: hidden;
   }
 
-  /* Ensure IonItemOptions fills the container properly */
+  /* Ensure IonItemOptions matches the parent container's border radius */
   ion-item-options {
     border-radius: inherit;
+    overflow: hidden;
+  }
+
+  /* Style the delete option with rounded corners on the right side */
+  ion-item-options[side="end"] {
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    /* Override left border radius to 0 since the main item slides over it */
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 
   ion-item-option {
     --border-radius: 0;
+  }
+
+  /* Ensure the last option in the end side has rounded corners */
+  ion-item-options[side="end"] ion-item-option:last-child {
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+  }
+  
+  /* Countdown card wrapper needs to clip its children properly during swipe */
+  .countdown-card-wrapper {
+    isolation: isolate;
+    contain: paint;
   }
 
   /* Sortable countdown card drag styling */
