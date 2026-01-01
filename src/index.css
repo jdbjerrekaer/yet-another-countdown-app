@@ -165,7 +165,7 @@
 
   /* IonItemSliding container styling */
   ion-item-sliding {
-    --background: transparent;
+    --background: hsl(var(--card));
   }
 
   /* Ensure IonItemOptions fills the container properly */
