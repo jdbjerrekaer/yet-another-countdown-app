@@ -204,6 +204,11 @@
   /* Sortable countdown card drag styling */
   .sortable-countdown-card {
     will-change: transform;
+    /* Explicit background to prevent Safari black box rendering artifact */
+    background-color: transparent;
+    /* Safari-specific rendering fix - force hardware acceleration */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
     /* Fluid spring-like transitions */
     transition: 
       transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
@@ -221,6 +226,12 @@
     border-radius: 1rem;
     overflow: visible;
     touch-action: none;
+    /* Safari-specific fixes to prevent black box rendering */
+    background-color: transparent;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Force proper stacking context */
+    isolation: isolate;
   }
 
   /* Show selection border on outer container when dragging selected card */
@@ -265,6 +276,17 @@
   /* Smooth transition for items being displaced */
   .sortable-countdown-card:not(.is-dragging) {
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Parent container styling to prevent Safari black box during drag */
+  .space-y-2 {
+    /* Ensure parent has explicit background to prevent Safari rendering artifacts */
+    background-color: hsl(var(--background));
+    /* Safari-specific rendering fix */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Proper stacking context */
+    isolation: isolate;
   }
 
   /* Focus visible for keyboard accessibility */

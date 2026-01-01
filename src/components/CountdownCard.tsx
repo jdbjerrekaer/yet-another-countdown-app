@@ -112,6 +112,11 @@ export function CountdownCard({
         // Prevent rendering artifacts on Safari
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
+        // Safari-specific rendering fix - force hardware acceleration
+        WebkitTransform: 'translateZ(0)',
+        transform: 'translateZ(0)',
+        // Ensure proper stacking context during drag
+        isolation: isDragging ? 'isolate' : 'auto',
         // Prevent interactions on the actively dragged card
         pointerEvents: isDragging ? 'none' : 'auto',
       }}

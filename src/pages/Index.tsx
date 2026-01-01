@@ -319,7 +319,7 @@ export default function Index() {
                     items={events.map((e) => e.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-2" style={{ backgroundColor: 'hsl(var(--background))' }}>
                       {events.map(event => (
                         <SortableCountdownCard
                           key={event.id}
