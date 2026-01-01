@@ -35,7 +35,7 @@ export function SmallWidget({ title, countdown, emoji }: SmallWidgetProps) {
             {countdown.daysSince}<span className="text-sm font-medium text-muted-foreground ml-1">days ago</span>
           </p>
         ) : countdown.isComplete ? (
-          <p className="text-2xl font-bold text-primary">Today!</p>
+          <p className="text-2xl font-bold text-primary">Today! 🎉</p>
         ) : (
           <p className="text-3xl font-bold text-foreground tracking-tight">
             {timeDisplay.value}<span className="text-lg font-medium text-muted-foreground ml-1">{timeDisplay.unit}</span>
