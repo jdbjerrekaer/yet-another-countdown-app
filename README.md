@@ -203,9 +203,44 @@ When you enable "Recurring" for a countdown:
 
 ## Deployment
 
-### Web Deployment
+### GitHub Pages Deployment
 
-The app can be deployed to any static hosting service:
+This repository is configured for automatic deployment to GitHub Pages using GitHub Actions.
+
+#### Setup Instructions
+
+1. **Enable GitHub Pages in your repository settings:**
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Pages**
+   - Under **Source**, select **GitHub Actions**
+   - Save the settings
+
+2. **Push to the main branch:**
+   - The GitHub Actions workflow will automatically build and deploy your app
+   - The workflow triggers on pushes to the `main` branch
+   - You can also manually trigger it from the **Actions** tab
+
+3. **Access your deployed app:**
+   - Your app will be available at: `https://<username>.github.io/<repository-name>/`
+   - The deployment URL will be shown in the GitHub Actions workflow output
+
+#### Manual Deployment
+
+If you prefer to deploy manually:
+
+1. **Build the production bundle**
+
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy the `dist` folder** to GitHub Pages:
+   - Use the `gh-pages` branch method, or
+   - Use GitHub Actions manually from the Actions tab
+
+### Other Web Deployment Options
+
+The app can also be deployed to other static hosting services:
 
 1. **Build the production bundle**
 
@@ -216,7 +251,6 @@ The app can be deployed to any static hosting service:
 2. **Deploy the `dist` folder** to your hosting service:
    - Vercel
    - Netlify
-   - GitHub Pages
    - AWS S3 + CloudFront
    - Any static hosting provider
 
