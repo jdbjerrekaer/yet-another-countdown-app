@@ -16,7 +16,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <IonApp>
-        <IonReactRouter>
+        <IonReactRouter basename={import.meta.env.BASE_URL}>
           <IonRouterOutlet>
             <Route exact path="/" component={Index} />
             <Route path="/404" component={NotFound} />
