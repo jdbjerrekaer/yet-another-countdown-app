@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { format, setMonth, setYear } from 'date-fns';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent } from '@ionic/react';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle } from '@ionic/react';
 import { CalendarIcon, RefreshCw, ChevronLeft, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { IOSWheelPicker } from '@/components/IOSWheelPicker';
 import { useHaptic } from '@/hooks/useHaptic';
 
@@ -248,9 +247,9 @@ export function DatePickerModal({
                   <p className="text-sm text-muted-foreground">For birthdays, anniversaries</p>
                 </div>
               </div>
-              <Switch 
+              <IonToggle 
                 checked={isRecurring} 
-                onCheckedChange={handleRecurringToggle}
+                onIonChange={(e) => handleRecurringToggle(e.detail.checked)}
               />
             </div>
             
