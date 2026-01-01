@@ -10,22 +10,23 @@ interface WidgetPreviewProps {
   countdown: CountdownTime;
   targetDate: Date | null;
   emoji: string;
+  emojiColor?: string;
   size: 'small' | 'medium' | 'large' | 'extraLarge';
   isRecurring?: boolean;
   createdAt?: Date;
 }
 
-export function WidgetPreview({ title, countdown, targetDate, emoji, size, isRecurring, createdAt }: WidgetPreviewProps) {
+export function WidgetPreview({ title, countdown, targetDate, emoji, emojiColor, size, isRecurring, createdAt }: WidgetPreviewProps) {
   const widget = (() => {
     switch (size) {
       case 'small':
-        return <SmallWidget title={title} countdown={countdown} emoji={emoji} />;
+        return <SmallWidget title={title} countdown={countdown} emoji={emoji} emojiColor={emojiColor} />;
       case 'medium':
-        return <MediumWidget title={title} countdown={countdown} emoji={emoji} />;
+        return <MediumWidget title={title} countdown={countdown} emoji={emoji} emojiColor={emojiColor} />;
       case 'large':
-        return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} />;
+        return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} />;
       case 'extraLarge':
-        return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} createdAt={createdAt} />;
+        return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} createdAt={createdAt} />;
       default:
         return null;
     }

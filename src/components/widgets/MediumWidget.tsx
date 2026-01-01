@@ -4,9 +4,10 @@ interface MediumWidgetProps {
   title: string;
   countdown: CountdownTime;
   emoji: string;
+  emojiColor?: string;
 }
 
-export function MediumWidget({ title, countdown, emoji }: MediumWidgetProps) {
+export function MediumWidget({ title, countdown, emoji, emojiColor: _emojiColor }: MediumWidgetProps) {
   return (
     <div className="w-[329px] h-[155px] rounded-[28px] bg-card shadow-ios-lg p-5 flex flex-col justify-between">
       <div className="flex items-center gap-3">

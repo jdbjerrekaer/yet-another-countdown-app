@@ -4,6 +4,7 @@ interface SmallWidgetProps {
   title: string;
   countdown: CountdownTime;
   emoji: string;
+  emojiColor?: string;
 }
 
 const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string } => {
@@ -19,7 +20,7 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
   return { value: countdown.seconds, unit: 'seconds' };
 };
 
-export function SmallWidget({ title, countdown, emoji }: SmallWidgetProps) {
+export function SmallWidget({ title, countdown, emoji, emojiColor: _emojiColor }: SmallWidgetProps) {
   const timeDisplay = getTimeDisplay(countdown);
   
   return (

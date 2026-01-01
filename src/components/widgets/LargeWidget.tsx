@@ -6,9 +6,10 @@ interface LargeWidgetProps {
   countdown: CountdownTime;
   targetDate: Date | null;
   emoji: string;
+  emojiColor?: string;
 }
 
-export function LargeWidget({ title, countdown, targetDate, emoji }: LargeWidgetProps) {
+export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor }: LargeWidgetProps) {
   return (
     <div className="w-[329px] h-[329px] rounded-[28px] bg-card shadow-ios-lg p-6 flex flex-col">
       <div className="flex items-center gap-3 mb-auto">

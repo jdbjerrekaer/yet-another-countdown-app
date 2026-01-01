@@ -3,6 +3,7 @@ export interface CountdownEvent {
   title: string;
   targetDate: string;
   emoji: string;
+  emojiColor?: string;
   isRecurring: boolean;
   createdAt: string;
 }

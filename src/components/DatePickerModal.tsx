@@ -9,16 +9,31 @@ import { useHaptic } from '@/hooks/useHaptic';
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean) => void | Promise<void>;
+  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => void | Promise<void>;
   initialTitle?: string;
   initialDate?: Date;
   initialEmoji?: string;
+  initialEmojiColor?: string;
   initialIsRecurring?: boolean;
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
+
+// Predefined color palette for emoji containers
+const COLOR_OPTIONS = [
+  { id: 'default', label: 'Default', value: undefined, gradient: 'linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 60%) 100%)' },
+  { id: 'rose', label: 'Rose', value: '#e11d48', gradient: 'linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)' },
+  { id: 'orange', label: 'Orange', value: '#ea580c', gradient: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)' },
+  { id: 'amber', label: 'Amber', value: '#d97706', gradient: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' },
+  { id: 'emerald', label: 'Emerald', value: '#059669', gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' },
+  { id: 'teal', label: 'Teal', value: '#0d9488', gradient: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)' },
+  { id: 'cyan', label: 'Cyan', value: '#0891b2', gradient: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)' },
+  { id: 'violet', label: 'Violet', value: '#7c3aed', gradient: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)' },
+  { id: 'fuchsia', label: 'Fuchsia', value: '#c026d3', gradient: 'linear-gradient(135deg, #c026d3 0%, #d946ef 100%)' },
+  { id: 'slate', label: 'Slate', value: '#475569', gradient: 'linear-gradient(135deg, #475569 0%, #64748b 100%)' },
+];
 
 export function DatePickerModal({
   isOpen,
@@ -27,6 +42,7 @@ export function DatePickerModal({
   initialTitle = '',
   initialDate,
   initialEmoji = '🎯',
+  initialEmojiColor,
   initialIsRecurring = false,
   isEditing = false,
   onDelete,
@@ -34,6 +50,7 @@ export function DatePickerModal({
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
+  const [emojiColor, setEmojiColor] = useState<string | undefined>(initialEmojiColor);
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const { trigger } = useHaptic();
   const prevIsOpenRef = useRef(false);
@@ -52,10 +69,11 @@ export function DatePickerModal({
       }
       setDate(dateToSet);
       setEmoji(initialEmoji || '🎯');
+      setEmojiColor(initialEmojiColor);
       setIsRecurring(initialIsRecurring ?? false);
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen, initialTitle, initialDate, initialEmoji, initialIsRecurring, isEditing]);
+  }, [isOpen, initialTitle, initialDate, initialEmoji, initialEmojiColor, initialIsRecurring, isEditing]);
 
   const handleClose = () => {
     trigger('light');
@@ -68,9 +86,14 @@ export function DatePickerModal({
       if (!isEditing) {
         trigger('medium');
       }
-      await onSave(title, date, emoji, isRecurring);
+      await onSave(title, date, emoji, isRecurring, emojiColor);
       onClose();
     }
+  };
+
+  const handleColorSelect = (color: string | undefined) => {
+    trigger('light');
+    setEmojiColor(color);
   };
 
 
@@ -140,23 +163,55 @@ export function DatePickerModal({
               />
             </div>
 
-            {/* Emoji picker */}
+            {/* Color picker - above Icon so user picks color first */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">Icon Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {COLOR_OPTIONS.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => handleColorSelect(color.value)}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                      (emojiColor === color.value || (!emojiColor && !color.value))
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ background: color.gradient }}
+                    title={color.label}
+                  >
+                    {(emojiColor === color.value || (!emojiColor && !color.value)) && (
+                      <span className="text-white text-sm">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
               <div className="flex gap-2 flex-wrap">
-                {EMOJI_OPTIONS.map((e) => (
-                  <button
-                    key={e}
-                    onClick={() => handleEmojiSelect(e)}
-                    className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
-                      emoji === e 
-                        ? 'bg-primary shadow-sm scale-110' 
-                        : 'bg-secondary/50 hover:bg-secondary'
-                    }`}
-                  >
-                    {e}
-                  </button>
-                ))}
+                {EMOJI_OPTIONS.map((e) => {
+                  const isSelected = emoji === e;
+                  const selectedColorGradient = emojiColor 
+                    ? COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient 
+                    : COLOR_OPTIONS[0].gradient;
+                  
+                  return (
+                    <button
+                      key={e}
+                      onClick={() => handleEmojiSelect(e)}
+                      className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                        isSelected 
+                          ? 'shadow-sm scale-110' 
+                          : 'bg-secondary/50 hover:bg-secondary'
+                      }`}
+                      style={isSelected ? { background: selectedColorGradient } : undefined}
+                    >
+                      {e}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

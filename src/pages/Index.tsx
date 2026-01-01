@@ -103,7 +103,7 @@ export default function Index() {
     localStorage.setItem('countdowns', JSON.stringify(events));
   }, [events]);
 
-  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean) => {
+  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
     // Only request notification permission when creating a new event (not editing)
     if (!editingEvent) {
       const hasPermission = await checkNotificationPermission();
@@ -115,7 +115,7 @@ export default function Index() {
     if (editingEvent) {
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
-          ? { ...e, title, targetDate: date.toISOString(), emoji, isRecurring }
+          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring }
           : e
       ));
     } else {
@@ -124,6 +124,7 @@ export default function Index() {
         title,
         targetDate: date.toISOString(),
         emoji,
+        emojiColor,
         isRecurring,
         createdAt: new Date().toISOString(),
       };
@@ -352,6 +353,7 @@ export default function Index() {
                           countdown={countdown}
                           targetDate={targetDate}
                           emoji={selectedEvent.emoji}
+                          emojiColor={selectedEvent.emojiColor}
                           size={selectedSize}
                           isRecurring={selectedEvent.isRecurring}
                           createdAt={new Date(selectedEvent.createdAt)}
@@ -378,6 +380,7 @@ export default function Index() {
           return today;
         })()}
         initialEmoji={editingEvent?.emoji}
+        initialEmojiColor={editingEvent?.emojiColor}
         initialIsRecurring={editingEvent?.isRecurring}
         isEditing={!!editingEvent}
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
