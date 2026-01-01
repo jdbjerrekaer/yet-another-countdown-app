@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format, setMonth, setYear } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent } from '@ionic/react';
 import { CalendarIcon, RefreshCw, ChevronLeft, Trash2 } from 'lucide-react';
@@ -64,11 +64,13 @@ export function DatePickerModal({
   const [pickerMode, setPickerMode] = useState<PickerMode>('form');
   const [displayMonth, setDisplayMonth] = useState<Date>(initialDate || new Date());
   const { trigger } = useHaptic();
+  const prevIsOpenRef = useRef(false);
 
-  // Reset form state when opening
+  // Reset form state only when modal opens (not on every prop change)
   useEffect(() => {
-    if (isOpen) {
-      setTitle(initialTitle);
+    // Only reset when transitioning from closed to open
+    if (isOpen && !prevIsOpenRef.current) {
+      setTitle(initialTitle || '');
       // Ensure initial date has 8am time for new events
       let dateToSet = initialDate;
       if (!initialDate && !isEditing) {
@@ -77,11 +79,12 @@ export function DatePickerModal({
         dateToSet = today;
       }
       setDate(dateToSet);
-      setEmoji(initialEmoji);
+      setEmoji(initialEmoji || '🎯');
       setIsRecurring(initialIsRecurring ?? false);
       setDisplayMonth(dateToSet || new Date());
       setPickerMode('form');
     }
+    prevIsOpenRef.current = isOpen;
   }, [isOpen, initialTitle, initialDate, initialEmoji, initialIsRecurring, isEditing]);
 
   const handleClose = () => {
