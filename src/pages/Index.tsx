@@ -256,11 +256,11 @@ export default function Index() {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="ion-padding" scrollY={activeDragId === null}>
+      <IonContent fullscreen className="ion-padding">
         {/* iOS large title header (collapsible) */}
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">Countdown</IonTitle>
+            <IonTitle size="large">Yet Another Countdown App</IonTitle>
           </IonToolbar>
         </IonHeader>
 
