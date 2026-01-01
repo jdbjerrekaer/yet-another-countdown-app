@@ -107,11 +107,9 @@ export function DatePickerModal({
 
   const handleSave = async () => {
     if (title && date) {
-      // Only trigger haptic for new countdowns, not edits
-      if (!isEditing) {
-        trigger('medium');
-      }
       await onSave(title, date, emoji, isRecurring, emojiColor);
+      // Trigger haptic feedback after successful save (for both creating and editing)
+      trigger('medium');
       onClose();
     }
   };
