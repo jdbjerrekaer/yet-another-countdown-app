@@ -167,8 +167,8 @@ export default function Index() {
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
     let confirmed = false;
 
-    // Use ActionSheet on native platforms OR on mobile screens (PWA)
-    if (isNative || isMobile) {
+    // Use ActionSheet only on native platforms
+    if (isNative) {
       // Use ActionSheet for native destructive button styling
       const result = await ActionSheet.showActions({
         title: 'Delete Event',
@@ -186,7 +186,7 @@ export default function Index() {
       });
       confirmed = result.index === 0;
     } else {
-      // Use Dialog on desktop
+      // Use Dialog on web platforms (including Safari PWA and mobile Safari)
       const { value } = await Dialog.confirm({
         title: 'Delete Event',
         message: `Are you sure you want to delete "${event.title}"? This action cannot be undone.`,
