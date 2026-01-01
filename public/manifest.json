@@ -1,0 +1,52 @@
+{
+  "name": "Yet Another Countdown App",
+  "short_name": "Countdown",
+  "description": "A beautiful, feature-rich countdown timer application. Create and manage multiple countdown timers with support for recurring events and widget previews.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#007AFF",
+  "background_color": "#f8f8f8",
+  "categories": ["utilities", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "512x512",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Countdown",
+      "short_name": "New",
+      "description": "Create a new countdown timer",
+      "url": "/?action=new",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "192x192",
+          "type": "image/x-icon"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": []
+}
