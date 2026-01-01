@@ -248,6 +248,22 @@
     outline-offset: 2px;
     border-radius: 1rem;
   }
+
+  /* IonDatetime width consistency - ensure calendar and month/year picker have same width */
+  ion-datetime.datetime-fixed-width {
+    width: 350px !important;
+    max-width: 100%;
+  }
+
+  /* Ensure month/year picker maintains the same width */
+  ion-datetime.datetime-fixed-width.month-year-picker-open {
+    width: 350px !important;
+  }
+
+  /* Target the month-year picker specifically */
+  ion-datetime.datetime-fixed-width .datetime-month-year-picker {
+    width: 350px !important;
+  }
 }
 
 @layer utilities {

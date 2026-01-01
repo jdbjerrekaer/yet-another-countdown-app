@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { format, setMonth, setYear } from 'date-fns';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle } from '@ionic/react';
-import { CalendarIcon, RefreshCw, ChevronLeft, Trash2 } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
+import { CalendarIcon, RefreshCw, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { IOSWheelPicker } from '@/components/IOSWheelPicker';
 import { useHaptic } from '@/hooks/useHaptic';
 
 interface DatePickerModalProps {
@@ -22,29 +20,6 @@ interface DatePickerModalProps {
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
 
-const MONTHS = [
-  { value: 0, label: 'January' },
-  { value: 1, label: 'February' },
-  { value: 2, label: 'March' },
-  { value: 3, label: 'April' },
-  { value: 4, label: 'May' },
-  { value: 5, label: 'June' },
-  { value: 6, label: 'July' },
-  { value: 7, label: 'August' },
-  { value: 8, label: 'September' },
-  { value: 9, label: 'October' },
-  { value: 10, label: 'November' },
-  { value: 11, label: 'December' },
-];
-
-const currentYear = new Date().getFullYear();
-const YEARS = Array.from({ length: 20 }, (_, i) => ({
-  value: currentYear + i,
-  label: String(currentYear + i),
-}));
-
-type PickerMode = 'form' | 'month' | 'year';
-
 export function DatePickerModal({
   isOpen,
   onClose,
@@ -60,8 +35,6 @@ export function DatePickerModal({
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
-  const [pickerMode, setPickerMode] = useState<PickerMode>('form');
-  const [displayMonth, setDisplayMonth] = useState<Date>(initialDate || new Date());
   const { trigger } = useHaptic();
   const prevIsOpenRef = useRef(false);
 
@@ -80,15 +53,12 @@ export function DatePickerModal({
       setDate(dateToSet);
       setEmoji(initialEmoji || '🎯');
       setIsRecurring(initialIsRecurring ?? false);
-      setDisplayMonth(dateToSet || new Date());
-      setPickerMode('form');
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, initialTitle, initialDate, initialEmoji, initialIsRecurring, isEditing]);
 
   const handleClose = () => {
     trigger('light');
-    setPickerMode('form');
     onClose();
   };
 
@@ -103,20 +73,6 @@ export function DatePickerModal({
     }
   };
 
-  const handleMonthSelect = (monthIndex: number) => {
-    const newDate = setMonth(displayMonth, monthIndex);
-    setDisplayMonth(newDate);
-  };
-
-  const handleYearSelect = (year: number) => {
-    const newDate = setYear(displayMonth, year);
-    setDisplayMonth(newDate);
-  };
-
-  const handleHeaderClick = (type: 'month' | 'year') => {
-    trigger('selection');
-    setPickerMode(type);
-  };
 
   const handleEmojiSelect = (e: string) => {
     trigger('light');
@@ -128,10 +84,6 @@ export function DatePickerModal({
     setIsRecurring(checked);
   };
 
-  const handleBack = () => {
-    trigger('light');
-    setPickerMode('form');
-  };
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -146,61 +98,33 @@ export function DatePickerModal({
     }
   };
 
-  const isPickerMode = pickerMode === 'month' || pickerMode === 'year';
-
   return (
     <IonModal
       isOpen={isOpen}
       onDidDismiss={handleClose}
     >
-      {/* Dynamic header based on mode */}
       <IonHeader>
         <IonToolbar>
-          {isPickerMode ? (
-            <>
-              <IonButtons slot="start">
-                <IonButton onClick={handleBack}>
-                  <ChevronLeft className="w-5 h-5 mr-1" />
-                  Back
-                </IonButton>
-              </IonButtons>
-              <IonTitle>
-                {pickerMode === 'month' ? 'Select Month' : 'Select Year'}
-              </IonTitle>
-            </>
-          ) : (
-            <>
-              <IonButtons slot="start">
-                <IonButton onClick={handleClose}>Cancel</IonButton>
-              </IonButtons>
-              <IonTitle>
-                {isEditing ? `Edit ${initialTitle || title || 'Event'}` : 'New Event'}
-              </IonTitle>
-              <IonButtons slot="end">
-                <IonButton 
-                  onClick={handleSave} 
-                  disabled={!title || !date}
-                  strong={true}
-                >
-                  Save
-                </IonButton>
-              </IonButtons>
-            </>
-          )}
+          <IonButtons slot="start">
+            <IonButton onClick={handleClose}>Cancel</IonButton>
+          </IonButtons>
+          <IonTitle>
+            {isEditing ? `Edit ${initialTitle || title || 'Event'}` : 'New Event'}
+          </IonTitle>
+          <IonButtons slot="end">
+            <IonButton 
+              onClick={handleSave} 
+              disabled={!title || !date}
+              strong={true}
+            >
+              Save
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="ion-padding">
-        {isPickerMode ? (
-          /* Month/Year picker content */
-          <IOSWheelPicker
-            items={pickerMode === 'month' ? MONTHS : YEARS}
-            selectedValue={pickerMode === 'month' ? displayMonth.getMonth() : displayMonth.getFullYear()}
-            onSelect={pickerMode === 'month' ? handleMonthSelect : handleYearSelect}
-            onConfirm={handleBack}
-          />
-        ) : (
-          /* Form content */
+        {/* Form content */}
           <div className="space-y-6">
             {/* Title input */}
             <div className="space-y-2">
@@ -257,32 +181,19 @@ export function DatePickerModal({
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Date</Label>
               <div className="rounded-2xl bg-secondary/40 overflow-hidden">
-                {/* Month/Year header */}
-                <div className="flex items-center justify-center gap-2 py-3 border-b border-border/30">
-                  <button
-                    onClick={() => handleHeaderClick('month')}
-                    className="px-4 py-2 rounded-lg font-semibold text-primary active:bg-primary/10 transition-colors"
-                  >
-                    {format(displayMonth, 'MMMM')}
-                  </button>
-                  <button
-                    onClick={() => handleHeaderClick('year')}
-                    className="px-4 py-2 rounded-lg font-semibold text-primary active:bg-primary/10 transition-colors"
-                  >
-                    {format(displayMonth, 'yyyy')}
-                  </button>
-                </div>
-
-                {/* Calendar */}
+                {/* Native Ionic Calendar */}
                 <div className="p-2 flex justify-center">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => {
+                  <IonDatetime
+                    presentation="date"
+                    value={date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : undefined}
+                    onIonChange={(e) => {
                       trigger('medium');
-                      if (d) {
+                      const value = (e.detail as any).value;
+                      if (value && typeof value === 'string') {
+                        // Parse the date string as local date (YYYY-MM-DD format)
+                        const [year, month, day] = value.split('T')[0].split('-').map(Number);
+                        const newDate = new Date(year, month - 1, day);
                         // For new events, set time to 8am; for editing, preserve existing time
-                        const newDate = new Date(d);
                         if (!isEditing) {
                           newDate.setHours(8, 0, 0, 0);
                         } else if (date) {
@@ -290,18 +201,26 @@ export function DatePickerModal({
                           newDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
                         }
                         setDate(newDate);
-                      } else {
-                        setDate(d);
                       }
                     }}
-                    month={displayMonth}
-                    onMonthChange={setDisplayMonth}
-                    disabled={(d) => !isRecurring && d < new Date()}
-                    className="rounded-xl"
-                    weekStartsOn={1}
-                    classNames={{
-                      caption: "hidden",
-                    }}
+                    min={isRecurring ? undefined : (() => {
+                      const today = new Date();
+                      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    })()}
+                    max={(() => {
+                      const maxDate = new Date();
+                      maxDate.setFullYear(maxDate.getFullYear() + 5);
+                      return `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}-${String(maxDate.getDate()).padStart(2, '0')}`;
+                    })()}
+                    firstDayOfWeek={1}
+                    showDefaultTitle={false}
+                    showDefaultButtons={false}
+                    style={{
+                      '--color': 'var(--ion-color-primary)',
+                      width: '350px',
+                      maxWidth: '100%',
+                    } as React.CSSProperties}
+                    className="datetime-fixed-width"
                   />
                 </div>
               </div>
@@ -334,7 +253,6 @@ export function DatePickerModal({
               </div>
             )}
           </div>
-        )}
       </IonContent>
     </IonModal>
   );
