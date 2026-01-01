@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon } from '@ionic/react';
 import { add } from 'ionicons/icons';
+import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { Dialog } from '@capacitor/dialog';
 import {
@@ -23,7 +24,6 @@ import { DatePickerModal } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize } from '@/types/countdown';
 import { getNextRecurringDate } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission } from '@/lib/notifications';
@@ -45,7 +45,7 @@ export default function Index() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const { trigger } = useHaptic();
-  const isMobile = useIsMobile();
+  const isNative = Capacitor.isNativePlatform();
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -141,8 +141,8 @@ export default function Index() {
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
     let confirmed = false;
 
-    if (isMobile) {
-      // Use ActionSheet on mobile for native destructive button styling
+    if (isNative) {
+      // Use ActionSheet on native iOS/Android for native destructive button styling
       const result = await ActionSheet.showActions({
         title: 'Delete Event',
         message: `Are you sure you want to delete "${event.title}"? This action cannot be undone.`,
