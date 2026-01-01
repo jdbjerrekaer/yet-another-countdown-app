@@ -3,29 +3,25 @@ import { CountdownTime } from '@/hooks/useCountdown';
 interface SmallWidgetProps {
   title: string;
   countdown: CountdownTime;
-  emoji?: string;
+  emoji: string;
 }
 
-export function SmallWidget({ title, countdown, emoji = "🎯" }: SmallWidgetProps) {
+export function SmallWidget({ title, countdown, emoji }: SmallWidgetProps) {
   return (
-    <div className="w-[170px] h-[170px] rounded-3xl widget-small-bg ios-shadow p-4 flex flex-col justify-between overflow-hidden relative">
-      {/* Decorative blur */}
-      <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full bg-primary/20 blur-2xl" />
-      
-      <div className="flex items-center gap-2">
+    <div className="w-[155px] h-[155px] rounded-[28px] bg-card shadow-ios-lg p-4 flex flex-col justify-between">
+      <div className="flex items-center justify-between">
         <span className="text-2xl">{emoji}</span>
-        <span className="text-xs font-medium text-muted-foreground truncate flex-1">
-          {title}
-        </span>
       </div>
       
-      <div className="flex flex-col items-center justify-center flex-1">
-        <span className="text-5xl font-bold text-foreground tracking-tight animate-count" key={countdown.days}>
-          {countdown.days}
-        </span>
-        <span className="text-xs font-medium text-muted-foreground mt-1">
-          days left
-        </span>
+      <div>
+        <p className="text-xs text-muted-foreground truncate mb-1">{title}</p>
+        {countdown.isComplete ? (
+          <p className="text-2xl font-bold text-primary">Today!</p>
+        ) : (
+          <p className="text-3xl font-bold text-foreground tracking-tight">
+            {countdown.days}<span className="text-lg font-medium text-muted-foreground ml-1">days</span>
+          </p>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
-import { Trash2, Settings, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useCountdown, CountdownTime } from '@/hooks/useCountdown';
+import { Trash2, ChevronRight, RefreshCw } from 'lucide-react';
+import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
 import { getNextRecurringDate } from '@/lib/recurring';
@@ -22,7 +21,6 @@ export function CountdownCard({
 }: CountdownCardProps) {
   const { trigger } = useHaptic();
   
-  // For recurring events, calculate next occurrence
   const targetDate = event.isRecurring 
     ? getNextRecurringDate(new Date(event.targetDate))
     : new Date(event.targetDate);
@@ -49,11 +47,11 @@ export function CountdownCard({
   return (
     <div 
       onClick={handleSelect}
-      className={`ios-glass rounded-2xl p-4 flex items-center gap-4 transition-all duration-200 active:scale-[0.98] cursor-pointer ${
-        isSelected ? 'ring-2 ring-primary/50 bg-primary/5' : ''
+      className={`bg-card rounded-2xl p-4 flex items-center gap-4 transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-ios ${
+        isSelected ? 'ring-2 ring-primary' : ''
       }`}
     >
-      <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center shadow-ios flex-shrink-0">
+      <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center flex-shrink-0">
         <span className="text-2xl">{event.emoji}</span>
       </div>
       
@@ -66,29 +64,25 @@ export function CountdownCard({
         </div>
         <p className="text-sm text-muted-foreground">
           {countdown.isComplete 
-            ? 'Event has arrived! 🎉' 
+            ? 'Today! 🎉' 
             : `${countdown.days}d ${countdown.hours}h ${countdown.minutes}m`
           }
         </p>
       </div>
       
-      <div className="flex gap-1 flex-shrink-0">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="w-8 h-8"
-          onClick={handleEdit}
-        >
-          <Settings className="w-4 h-4 text-muted-foreground" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="w-8 h-8"
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button 
+          className="w-8 h-8 rounded-full flex items-center justify-center active:bg-secondary transition-colors"
           onClick={handleDelete}
         >
           <Trash2 className="w-4 h-4 text-destructive/70" />
-        </Button>
+        </button>
+        <button 
+          className="w-8 h-8 rounded-full flex items-center justify-center active:bg-secondary transition-colors"
+          onClick={handleEdit}
+        >
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
     </div>
   );

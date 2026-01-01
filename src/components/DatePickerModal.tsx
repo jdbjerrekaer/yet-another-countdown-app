@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { format, setMonth, setYear } from 'date-fns';
-import { CalendarIcon, X, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CalendarIcon, X, RefreshCw, ChevronLeft } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,7 +41,7 @@ const YEARS = Array.from({ length: 20 }, (_, i) => ({
   label: String(currentYear + i),
 }));
 
-type PickerMode = 'calendar' | 'month' | 'year';
+type PickerMode = 'form' | 'month' | 'year';
 
 export function DatePickerModal({
   isOpen,
@@ -57,7 +56,7 @@ export function DatePickerModal({
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring);
-  const [pickerMode, setPickerMode] = useState<PickerMode>('calendar');
+  const [pickerMode, setPickerMode] = useState<PickerMode>('form');
   const [displayMonth, setDisplayMonth] = useState<Date>(initialDate || new Date());
   const { trigger } = useHaptic();
 
@@ -83,11 +82,7 @@ export function DatePickerModal({
 
   const handleHeaderClick = (type: 'month' | 'year') => {
     trigger('selection');
-    if (pickerMode === type) {
-      setPickerMode('calendar');
-    } else {
-      setPickerMode(type);
-    }
+    setPickerMode(type);
   };
 
   const handleEmojiSelect = (e: string) => {
@@ -100,57 +95,69 @@ export function DatePickerModal({
     setIsRecurring(checked);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      {/* Backdrop with blur */}
-      <div 
-        className="absolute inset-0 bg-foreground/10 backdrop-blur-xl"
-        onClick={onClose}
-      />
-      
-      {/* Modal - iOS liquid glass design */}
-      <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 max-h-[90dvh] flex flex-col rounded-3xl overflow-hidden animate-slide-up ios-glass ios-shadow-lg border border-white/20">
-        {/* Liquid glass overlay effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/10 pointer-events-none" />
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-        
+  const handleBack = () => {
+    trigger('light');
+    setPickerMode('form');
+  };
+
+  // Month/Year picker mode - fullscreen
+  if (pickerMode === 'month' || pickerMode === 'year') {
+    return (
+      <div className="fixed inset-0 z-50 bg-background animate-fade-in">
         {/* Header */}
-        <div className="relative flex items-center justify-between p-5 border-b border-white/10">
-          <h2 className="text-xl font-bold text-foreground">New Countdown</h2>
+        <div className="flex items-center h-14 px-4 border-b border-border/50">
           <button 
-            onClick={() => {
-              trigger('light');
-              onClose();
-            }}
-            className="w-8 h-8 rounded-full ios-glass flex items-center justify-center hover:bg-white/30 transition-all duration-200 active:scale-95"
+            onClick={handleBack}
+            className="flex items-center gap-1 text-primary font-medium active:opacity-70 transition-opacity"
           >
-            <X className="w-4 h-4 text-muted-foreground" />
+            <ChevronLeft className="w-5 h-5" />
+            Back
           </button>
+          <h2 className="flex-1 text-center text-lg font-semibold text-foreground pr-16">
+            {pickerMode === 'month' ? 'Select Month' : 'Select Year'}
+          </h2>
         </div>
         
-        {/* Content - scrollable */}
-        <div className="relative flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Emoji picker */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
-            <div className="flex gap-2 flex-wrap">
-              {EMOJI_OPTIONS.map((e) => (
-                <button
-                  key={e}
-                  onClick={() => handleEmojiSelect(e)}
-                  className={`w-11 h-11 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
-                    emoji === e 
-                      ? 'gradient-accent shadow-ios scale-105' 
-                      : 'ios-glass hover:bg-white/30'
-                  }`}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Title input - liquid glass style */}
+        {/* Picker */}
+        <div className="flex-1">
+          <IOSWheelPicker
+            items={pickerMode === 'month' ? MONTHS : YEARS}
+            selectedValue={pickerMode === 'month' ? displayMonth.getMonth() : displayMonth.getFullYear()}
+            onSelect={pickerMode === 'month' ? handleMonthSelect : handleYearSelect}
+            onConfirm={handleBack}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background animate-fade-in flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between h-14 px-4 border-b border-border/50">
+        <button 
+          onClick={() => {
+            trigger('light');
+            onClose();
+          }}
+          className="text-primary font-medium active:opacity-70 transition-opacity"
+        >
+          Cancel
+        </button>
+        <h2 className="text-lg font-semibold text-foreground">New Event</h2>
+        <button 
+          onClick={handleSave}
+          disabled={!title || !date}
+          className="text-primary font-semibold active:opacity-70 transition-opacity disabled:opacity-40"
+        >
+          Save
+        </button>
+      </div>
+      
+      {/* Content - scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-5 space-y-6">
+          {/* Title input */}
           <div className="space-y-2">
             <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
               Event Name
@@ -159,135 +166,96 @@ export function DatePickerModal({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="My Special Event"
-              className="h-12 rounded-xl text-base ios-glass border-white/20 focus:ring-2 focus:ring-primary/50 focus:border-transparent placeholder:text-muted-foreground/50"
+              placeholder="Enter event name"
+              className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
             />
           </div>
 
-          {/* Recurring toggle */}
+          {/* Emoji picker */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-muted-foreground">Recurring Event</Label>
-            <div className="ios-glass rounded-xl p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-                  <RefreshCw className="w-4 h-4 text-primary-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">Repeat Yearly</p>
-                  <p className="text-xs text-muted-foreground">For birthdays, anniversaries, etc.</p>
-                </div>
-              </div>
-              <Switch 
-                checked={isRecurring} 
-                onCheckedChange={handleRecurringToggle}
-              />
+            <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
+            <div className="flex gap-2 flex-wrap">
+              {EMOJI_OPTIONS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => handleEmojiSelect(e)}
+                  className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                    emoji === e 
+                      ? 'bg-primary shadow-sm scale-110' 
+                      : 'bg-secondary/50 hover:bg-secondary'
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* Recurring toggle */}
+          <div className="bg-secondary/40 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <RefreshCw className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Repeat Yearly</p>
+                <p className="text-sm text-muted-foreground">For birthdays, anniversaries</p>
+              </div>
+            </div>
+            <Switch 
+              checked={isRecurring} 
+              onCheckedChange={handleRecurringToggle}
+            />
+          </div>
           
-          {/* Date picker - with iOS month/year selector */}
+          {/* Date picker */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-muted-foreground">Target Date</Label>
-            <div className="rounded-2xl ios-glass border border-white/20 overflow-hidden">
-              {/* Custom header with tappable month/year */}
-              <div className="flex items-center justify-center gap-1 p-3 border-b border-white/10">
+            <Label className="text-sm font-medium text-muted-foreground">Date</Label>
+            <div className="rounded-2xl bg-secondary/40 overflow-hidden">
+              {/* Month/Year header */}
+              <div className="flex items-center justify-center gap-2 py-3 border-b border-border/30">
                 <button
                   onClick={() => handleHeaderClick('month')}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all active:scale-95 ${
-                    pickerMode === 'month' 
-                      ? 'gradient-accent text-primary-foreground' 
-                      : 'ios-glass hover:bg-white/30 text-foreground'
-                  }`}
+                  className="px-4 py-2 rounded-lg font-semibold text-primary active:bg-primary/10 transition-colors"
                 >
                   {format(displayMonth, 'MMMM')}
                 </button>
                 <button
                   onClick={() => handleHeaderClick('year')}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all active:scale-95 ${
-                    pickerMode === 'year' 
-                      ? 'gradient-accent text-primary-foreground' 
-                      : 'ios-glass hover:bg-white/30 text-foreground'
-                  }`}
+                  className="px-4 py-2 rounded-lg font-semibold text-primary active:bg-primary/10 transition-colors"
                 >
                   {format(displayMonth, 'yyyy')}
                 </button>
               </div>
 
-              {/* Picker content */}
-              <div className="p-3">
-                {pickerMode === 'calendar' && (
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => {
-                      trigger('medium');
-                      setDate(d);
-                    }}
-                    month={displayMonth}
-                    onMonthChange={setDisplayMonth}
-                    disabled={(d) => !isRecurring && d < new Date()}
-                    className="rounded-xl"
-                    classNames={{
-                      caption: "hidden", // Hide default caption, using custom header
-                    }}
-                  />
-                )}
-                
-                {pickerMode === 'month' && (
-                  <IOSWheelPicker
-                    items={MONTHS}
-                    selectedValue={displayMonth.getMonth()}
-                    onSelect={(month) => {
-                      handleMonthSelect(month);
-                      setPickerMode('calendar');
-                    }}
-                  />
-                )}
-                
-                {pickerMode === 'year' && (
-                  <IOSWheelPicker
-                    items={YEARS}
-                    selectedValue={displayMonth.getFullYear()}
-                    onSelect={(year) => {
-                      handleYearSelect(year);
-                      setPickerMode('calendar');
-                    }}
-                  />
-                )}
+              {/* Calendar */}
+              <div className="p-2">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => {
+                    trigger('medium');
+                    setDate(d);
+                  }}
+                  month={displayMonth}
+                  onMonthChange={setDisplayMonth}
+                  disabled={(d) => !isRecurring && d < new Date()}
+                  className="rounded-xl"
+                  classNames={{
+                    caption: "hidden",
+                  }}
+                />
               </div>
             </div>
             
             {date && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center pt-2">
-                <div className="w-6 h-6 rounded-lg ios-glass flex items-center justify-center">
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                </div>
+                <CalendarIcon className="w-4 h-4" />
                 <span className="font-medium">{format(date, 'EEEE, MMMM d, yyyy')}</span>
                 {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
               </div>
             )}
           </div>
-        </div>
-        
-        {/* Footer - fixed at bottom with liquid glass buttons */}
-        <div className="relative p-5 border-t border-white/10 flex gap-3">
-          <Button 
-            variant="ios" 
-            onClick={() => {
-              trigger('light');
-              onClose();
-            }}
-            className="flex-1 h-12 rounded-2xl font-semibold"
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="iosPrimary"
-            onClick={handleSave}
-            disabled={!title || !date}
-            className="flex-1 h-12 rounded-2xl font-semibold"
-          >
-            Save Countdown
-          </Button>
         </div>
       </div>
     </div>

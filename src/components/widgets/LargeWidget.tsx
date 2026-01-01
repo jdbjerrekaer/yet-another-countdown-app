@@ -1,75 +1,53 @@
-import { CountdownTime } from '@/hooks/useCountdown';
 import { format } from 'date-fns';
+import { CountdownTime } from '@/hooks/useCountdown';
 
 interface LargeWidgetProps {
   title: string;
   countdown: CountdownTime;
   targetDate: Date | null;
-  emoji?: string;
+  emoji: string;
 }
 
-export function LargeWidget({ title, countdown, targetDate, emoji = "🎯" }: LargeWidgetProps) {
-  const progress = countdown.isComplete ? 100 : Math.min(100, Math.max(0, 100 - (countdown.totalSeconds / (365 * 24 * 60 * 60)) * 100));
-
+export function LargeWidget({ title, countdown, targetDate, emoji }: LargeWidgetProps) {
   return (
-    <div className="w-[364px] h-[364px] rounded-3xl widget-large-bg ios-shadow p-6 flex flex-col overflow-hidden relative">
-      {/* Decorative elements */}
-      <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/15 blur-3xl" />
-      <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-accent/15 blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
+    <div className="w-[329px] h-[329px] rounded-[28px] bg-card shadow-ios-lg p-6 flex flex-col">
+      <div className="flex items-center gap-3 mb-auto">
+        <span className="text-4xl">{emoji}</span>
+        <div>
+          <p className="text-lg font-semibold text-foreground">{title}</p>
+          {targetDate && (
+            <p className="text-sm text-muted-foreground">
+              {format(targetDate, 'MMM d, yyyy')}
+            </p>
+          )}
+        </div>
+      </div>
       
-      {/* Header */}
-      <div className="flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{emoji}</span>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-foreground">{title}</span>
-            <span className="text-xs text-muted-foreground">
-              {targetDate ? format(targetDate, 'MMMM d, yyyy') : 'Set a date'}
-            </span>
+      {countdown.isComplete ? (
+        <div className="text-center py-8">
+          <p className="text-5xl font-bold text-primary">Today!</p>
+          <p className="text-xl mt-2">🎉</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+            <p className="text-4xl font-bold text-foreground">{countdown.days}</p>
+            <p className="text-sm text-muted-foreground">Days</p>
+          </div>
+          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+            <p className="text-4xl font-bold text-foreground">{countdown.hours}</p>
+            <p className="text-sm text-muted-foreground">Hours</p>
+          </div>
+          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+            <p className="text-4xl font-bold text-foreground">{countdown.minutes}</p>
+            <p className="text-sm text-muted-foreground">Minutes</p>
+          </div>
+          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+            <p className="text-4xl font-bold text-foreground">{countdown.seconds}</p>
+            <p className="text-sm text-muted-foreground">Seconds</p>
           </div>
         </div>
-      </div>
-      
-      {/* Main countdown */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10">
-        <div className="grid grid-cols-4 gap-3 w-full">
-          <CountdownBlock value={countdown.days} label="Days" />
-          <CountdownBlock value={countdown.hours} label="Hours" />
-          <CountdownBlock value={countdown.minutes} label="Min" />
-          <CountdownBlock value={countdown.seconds} label="Sec" />
-        </div>
-      </div>
-      
-      {/* Progress bar */}
-      <div className="relative z-10 space-y-2">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Progress</span>
-          <span>{countdown.isComplete ? 'Complete!' : `${countdown.days} days remaining`}</span>
-        </div>
-        <div className="h-2 rounded-full bg-secondary overflow-hidden">
-          <div 
-            className="h-full rounded-full gradient-accent transition-all duration-1000 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CountdownBlock({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="flex flex-col items-center p-3 rounded-2xl bg-card/50 ios-glass">
-      <span 
-        className="text-4xl font-bold text-foreground tracking-tight tabular-nums animate-count" 
-        key={value}
-      >
-        {String(value).padStart(2, '0')}
-      </span>
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">
-        {label}
-      </span>
+      )}
     </div>
   );
 }
