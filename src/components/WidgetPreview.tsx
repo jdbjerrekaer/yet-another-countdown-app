@@ -12,9 +12,10 @@ interface WidgetPreviewProps {
   emoji: string;
   size: 'small' | 'medium' | 'large' | 'extraLarge';
   isRecurring?: boolean;
+  createdAt?: Date;
 }
 
-export function WidgetPreview({ title, countdown, targetDate, emoji, size, isRecurring }: WidgetPreviewProps) {
+export function WidgetPreview({ title, countdown, targetDate, emoji, size, isRecurring, createdAt }: WidgetPreviewProps) {
   const widget = (() => {
     switch (size) {
       case 'small':
@@ -24,7 +25,7 @@ export function WidgetPreview({ title, countdown, targetDate, emoji, size, isRec
       case 'large':
         return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} />;
       case 'extraLarge':
-        return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} />;
+        return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} createdAt={createdAt} />;
       default:
         return null;
     }

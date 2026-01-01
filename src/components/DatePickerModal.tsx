@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, setMonth, setYear } from 'date-fns';
-import { CalendarIcon, X, RefreshCw, ChevronLeft } from 'lucide-react';
+import { CalendarIcon, RefreshCw, ChevronLeft } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ interface DatePickerModalProps {
   initialDate?: Date;
   initialEmoji?: string;
   initialIsRecurring?: boolean;
+  isEditing?: boolean;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -51,6 +52,7 @@ export function DatePickerModal({
   initialDate,
   initialEmoji = '🎯',
   initialIsRecurring = false,
+  isEditing = false,
 }: DatePickerModalProps) {
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
@@ -58,13 +60,50 @@ export function DatePickerModal({
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring);
   const [pickerMode, setPickerMode] = useState<PickerMode>('form');
   const [displayMonth, setDisplayMonth] = useState<Date>(initialDate || new Date());
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
   const { trigger } = useHaptic();
 
-  if (!isOpen) return null;
+  // Handle open/close animation state
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+    } else if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+        setIsClosing(false);
+      }, 250); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Reset form state when opening
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(initialTitle);
+      setDate(initialDate);
+      setEmoji(initialEmoji);
+      setIsRecurring(initialIsRecurring);
+      setDisplayMonth(initialDate || new Date());
+      setPickerMode('form');
+    }
+  }, [isOpen, initialTitle, initialDate, initialEmoji, initialIsRecurring]);
+
+  if (!shouldRender) return null;
+
+  const handleClose = () => {
+    trigger('light');
+    onClose();
+  };
 
   const handleSave = () => {
     if (title && date) {
-      trigger('medium');
+      // Only trigger haptic for new countdowns, not edits
+      if (!isEditing) {
+        trigger('medium');
+      }
       onSave(title, date, emoji, isRecurring);
       onClose();
     }
@@ -100,10 +139,13 @@ export function DatePickerModal({
     setPickerMode('form');
   };
 
+  const backdropClass = isClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop-in';
+  const contentClass = isClosing ? 'animate-modal-content-out' : 'animate-modal-content-in';
+
   // Month/Year picker mode - fullscreen
   if (pickerMode === 'month' || pickerMode === 'year') {
     return (
-      <div className="fixed inset-0 z-50 bg-background animate-fade-in">
+      <div className={`fixed inset-0 z-50 bg-background/95 backdrop-blur-xl ${contentClass}`}>
         {/* Header */}
         <div className="flex items-center h-14 px-4 border-b border-border/50">
           <button 
@@ -132,31 +174,33 @@ export function DatePickerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-background animate-fade-in flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between h-14 px-4 border-b border-border/50">
-        <button 
-          onClick={() => {
-            trigger('light');
-            onClose();
-          }}
-          className="text-primary font-medium active:opacity-70 transition-opacity"
-        >
-          Cancel
-        </button>
-        <h2 className="text-lg font-semibold text-foreground">New Event</h2>
-        <button 
-          onClick={handleSave}
-          disabled={!title || !date}
-          className="text-primary font-semibold active:opacity-70 transition-opacity disabled:opacity-40"
-        >
-          Save
-        </button>
-      </div>
+    <>
+      {/* Backdrop with blur */}
+      <div className={`fixed inset-0 z-40 bg-black/30 backdrop-blur-sm ${backdropClass}`} onClick={handleClose} />
+      
+      {/* Modal content */}
+      <div className={`fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col ${contentClass}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between h-14 px-4 border-b border-border/50">
+          <button 
+            onClick={handleClose}
+            className="text-primary font-medium active:opacity-70 transition-opacity"
+          >
+            Cancel
+          </button>
+          <h2 className="text-lg font-semibold text-foreground">{isEditing ? 'Edit Event' : 'New Event'}</h2>
+          <button 
+            onClick={handleSave}
+            disabled={!title || !date}
+            className="text-primary font-semibold active:opacity-70 transition-opacity disabled:opacity-40"
+          >
+            Save
+          </button>
+        </div>
       
       {/* Content - scrollable */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-5 space-y-6">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-5 space-y-6">
           {/* Title input */}
           <div className="space-y-2">
             <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
@@ -229,7 +273,7 @@ export function DatePickerModal({
               </div>
 
               {/* Calendar */}
-              <div className="p-2">
+              <div className="p-2 flex justify-center">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -258,6 +302,7 @@ export function DatePickerModal({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

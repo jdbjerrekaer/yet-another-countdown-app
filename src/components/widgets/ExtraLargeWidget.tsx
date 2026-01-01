@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 interface ExtraLargeWidgetProps {
@@ -6,9 +6,30 @@ interface ExtraLargeWidgetProps {
   countdown: CountdownTime;
   targetDate: Date | null;
   emoji: string;
+  createdAt?: Date;
 }
 
-export function ExtraLargeWidget({ title, countdown, targetDate, emoji }: ExtraLargeWidgetProps) {
+export function ExtraLargeWidget({ title, countdown, targetDate, emoji, createdAt }: ExtraLargeWidgetProps) {
+  // Calculate progress based on creation date to target date
+  const calculateProgress = () => {
+    if (!targetDate || countdown.isPast || countdown.isComplete) {
+      return 100;
+    }
+    
+    const now = new Date();
+    const startDate = createdAt || now;
+    
+    const totalDays = differenceInDays(targetDate, startDate);
+    const daysElapsed = differenceInDays(now, startDate);
+    
+    if (totalDays <= 0) return 100;
+    
+    const progress = (daysElapsed / totalDays) * 100;
+    return Math.max(0, Math.min(100, progress));
+  };
+
+  const progress = calculateProgress();
+
   return (
     <div className="w-[329px] h-[400px] rounded-[28px] bg-card shadow-ios-lg p-6 flex flex-col">
       <div className="flex items-center gap-4 mb-6">
@@ -60,14 +81,14 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji }: ExtraL
             <div className="flex justify-between text-sm mb-2">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-medium text-foreground">
-                {Math.max(0, Math.min(100, 100 - (countdown.days / 365) * 100)).toFixed(0)}%
+                {progress.toFixed(0)}%
               </span>
             </div>
             <div className="h-2 bg-secondary rounded-full overflow-hidden">
               <div 
                 className="h-full bg-primary rounded-full transition-all duration-500"
                 style={{ 
-                  width: `${Math.max(0, Math.min(100, 100 - (countdown.days / 365) * 100))}%` 
+                  width: `${progress}%` 
                 }}
               />
             </div>

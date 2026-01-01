@@ -83,7 +83,7 @@ export function IOSWheelPicker({
       <div className="relative h-[250px] overflow-hidden">
         {/* Selection indicator */}
         <div 
-          className="absolute left-4 right-4 top-1/2 -translate-y-1/2 bg-secondary/60 rounded-xl pointer-events-none z-10"
+          className="absolute left-4 right-4 top-1/2 -translate-y-1/2 bg-primary/10 rounded-xl pointer-events-none z-0"
           style={{ height: itemHeight }}
         />
         
@@ -119,8 +119,8 @@ export function IOSWheelPicker({
                 }}
                 onClick={() => handleItemClick(index)}
               >
-                <span className={`text-2xl font-semibold transition-colors duration-150 ${
-                  isSelected ? 'text-foreground' : 'text-muted-foreground'
+                <span className={`text-2xl transition-colors duration-150 ${
+                  isSelected ? 'text-foreground font-bold' : 'text-muted-foreground font-semibold'
                 }`}>
                   {item.label}
                 </span>

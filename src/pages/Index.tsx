@@ -204,6 +204,7 @@ export default function Index() {
                         emoji={selectedEvent.emoji}
                         size={selectedSize}
                         isRecurring={selectedEvent.isRecurring}
+                        createdAt={new Date(selectedEvent.createdAt)}
                       />
                     </div>
                   </div>
@@ -222,6 +223,7 @@ export default function Index() {
         initialDate={editingEvent ? new Date(editingEvent.targetDate) : undefined}
         initialEmoji={editingEvent?.emoji}
         initialIsRecurring={editingEvent?.isRecurring}
+        isEditing={!!editingEvent}
       />
     </div>
   );
