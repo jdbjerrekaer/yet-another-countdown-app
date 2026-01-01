@@ -25,7 +25,12 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji }: ExtraL
         </div>
       </div>
       
-      {countdown.isComplete ? (
+      {countdown.isPast ? (
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <p className="text-7xl font-bold text-foreground mb-2">{countdown.daysSince}</p>
+          <p className="text-xl text-muted-foreground">days since</p>
+        </div>
+      ) : countdown.isComplete ? (
         <div className="flex-1 flex flex-col items-center justify-center">
           <p className="text-6xl font-bold text-primary mb-4">Today!</p>
           <p className="text-4xl">🎉</p>
