@@ -253,16 +253,20 @@
   ion-datetime.datetime-fixed-width {
     width: 350px !important;
     max-width: 100%;
+    border-radius: 1rem;
+    overflow: hidden;
   }
 
   /* Ensure month/year picker maintains the same width */
   ion-datetime.datetime-fixed-width.month-year-picker-open {
     width: 350px !important;
+    border-radius: 1rem;
   }
 
   /* Target the month-year picker specifically */
   ion-datetime.datetime-fixed-width .datetime-month-year-picker {
     width: 350px !important;
+    border-radius: 1rem;
   }
 }
 
