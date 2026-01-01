@@ -22,6 +22,8 @@ export default function Index() {
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('large');
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
   const { trigger } = useHaptic();
   
   const [events, setEvents] = useState<CountdownEvent[]>(() => {
@@ -92,12 +94,39 @@ export default function Index() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (eventId: string) => {
-    trigger('heavy');
-    setEvents(prev => prev.filter(e => e.id !== eventId));
-    if (selectedEventId === eventId) {
-      setSelectedEventId(events.find(e => e.id !== eventId)?.id || null);
+  const handleDeleteRequest = (event: CountdownEvent) => {
+    setEventToDelete(event);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (eventToDelete) {
+      trigger('heavy');
+      const eventId = eventToDelete.id;
+      const wasSelected = selectedEventId === eventId;
+      
+      setEvents(prev => {
+        const filtered = prev.filter(e => e.id !== eventId);
+        // Update selected event if the deleted event was selected
+        if (wasSelected) {
+          if (filtered.length > 0) {
+            setSelectedEventId(filtered[0].id);
+          } else {
+            setSelectedEventId(null);
+          }
+        }
+        return filtered;
+      });
+      
+      setShowDeleteConfirmation(false);
+      setEventToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    trigger('light');
+    setShowDeleteConfirmation(false);
+    setEventToDelete(null);
   };
 
   const handleAddNew = () => {
@@ -157,7 +186,7 @@ export default function Index() {
                       setSelectedEventId(event.id);
                     }}
                     onEdit={() => handleEdit(event)}
-                    onDelete={() => handleDelete(event.id)}
+                    onDelete={() => handleDeleteRequest(event)}
                   />
                 ))}
               </div>
@@ -224,7 +253,49 @@ export default function Index() {
         initialEmoji={editingEvent?.emoji}
         initialIsRecurring={editingEvent?.isRecurring}
         isEditing={!!editingEvent}
+        onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
       />
+
+      {/* Native iOS-style Delete Confirmation Dialog */}
+      {showDeleteConfirmation && eventToDelete && (
+        <>
+          <div 
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={handleDeleteCancel}
+          />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
+            <div className="w-full max-w-[270px] bg-[hsl(var(--background)/0.85)] backdrop-blur-xl rounded-[14px] overflow-hidden shadow-2xl pointer-events-auto animate-in zoom-in-95 fade-in duration-200">
+              {/* Header */}
+              <div className="px-4 pt-5 pb-4 text-center">
+                <h3 className="text-[17px] font-semibold text-foreground leading-tight">
+                  Delete Event?
+                </h3>
+                <p className="text-[13px] text-muted-foreground mt-2 leading-snug">
+                  "{eventToDelete.title}" will be permanently deleted.
+                </p>
+              </div>
+              
+              {/* Buttons */}
+              <div className="border-t border-border/40">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="w-full py-[11px] text-[17px] text-primary font-normal active:bg-primary/10 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+              <div className="border-t border-border/40">
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="w-full py-[11px] text-[17px] text-destructive font-semibold active:bg-destructive/10 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

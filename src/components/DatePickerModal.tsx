@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, setMonth, setYear } from 'date-fns';
-import { CalendarIcon, RefreshCw, ChevronLeft } from 'lucide-react';
+import { CalendarIcon, RefreshCw, ChevronLeft, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ interface DatePickerModalProps {
   initialEmoji?: string;
   initialIsRecurring?: boolean;
   isEditing?: boolean;
+  onDelete?: () => void;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -53,11 +54,12 @@ export function DatePickerModal({
   initialEmoji = '🎯',
   initialIsRecurring = false,
   isEditing = false,
+  onDelete,
 }: DatePickerModalProps) {
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
-  const [isRecurring, setIsRecurring] = useState(initialIsRecurring);
+  const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const [pickerMode, setPickerMode] = useState<PickerMode>('form');
   const [displayMonth, setDisplayMonth] = useState<Date>(initialDate || new Date());
   const [isClosing, setIsClosing] = useState(false);
@@ -85,7 +87,7 @@ export function DatePickerModal({
       setTitle(initialTitle);
       setDate(initialDate);
       setEmoji(initialEmoji);
-      setIsRecurring(initialIsRecurring);
+      setIsRecurring(initialIsRecurring ?? false);
       setDisplayMonth(initialDate || new Date());
       setPickerMode('form');
     }
@@ -139,6 +141,16 @@ export function DatePickerModal({
     setPickerMode('form');
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (onDelete) {
+      trigger('light');
+      onDelete();
+      onClose();
+    }
+  };
+
   const backdropClass = isClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop-in';
   const contentClass = isClosing ? 'animate-modal-content-out' : 'animate-modal-content-in';
 
@@ -188,7 +200,9 @@ export function DatePickerModal({
           >
             Cancel
           </button>
-          <h2 className="text-lg font-semibold text-foreground">{isEditing ? 'Edit Event' : 'New Event'}</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            {isEditing ? `Edit ${initialTitle || title || 'Event'}` : 'New Event'}
+          </h2>
           <button 
             onClick={handleSave}
             disabled={!title || !date}
@@ -300,6 +314,25 @@ export function DatePickerModal({
               </div>
             )}
           </div>
+
+          {/* Advanced section - only show when editing */}
+          {isEditing && onDelete && (
+            <div className="pt-4 border-t border-border/50">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  Advanced
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Event
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       </div>
