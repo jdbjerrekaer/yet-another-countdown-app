@@ -27,7 +27,7 @@ import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize } from '@/types/countdown';
 import { getNextRecurringDate } from '@/lib/recurring';
-import { checkNotificationPermission, requestNotificationPermission } from '@/lib/notifications';
+import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 
 const WIDGET_SIZES: { id: WidgetSize; label: string }[] = [
   { id: 'small', label: 'Small' },
@@ -105,21 +105,38 @@ export default function Index() {
     localStorage.setItem('countdowns', JSON.stringify(events));
   }, [events]);
 
+  // Check scheduled notifications on app load (for web platform)
+  useEffect(() => {
+    checkScheduledNotifications();
+    // Check every minute for web notifications
+    const interval = setInterval(() => {
+      checkScheduledNotifications();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
-    // Only request notification permission when creating a new event (not editing)
-    if (!editingEvent) {
-      const hasPermission = await checkNotificationPermission();
-      if (!hasPermission) {
-        await requestNotificationPermission();
-      }
+    // Request notification permission when creating or editing an event
+    const hasPermission = await checkNotificationPermission();
+    if (!hasPermission) {
+      await requestNotificationPermission();
     }
 
     if (editingEvent) {
+      // Cancel old notification and schedule new one
+      await cancelEventNotification(editingEvent.id);
+      
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
           ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring }
           : e
       ));
+      
+      // Schedule notification for the updated event
+      const targetDateForNotification = isRecurring 
+        ? getNextRecurringDate(date)
+        : date;
+      await scheduleEventNotification(editingEvent.id, title, targetDateForNotification, emoji);
     } else {
       const newEvent: CountdownEvent = {
         id: generateId(),
@@ -132,6 +149,12 @@ export default function Index() {
       };
       setEvents(prev => [...prev, newEvent]);
       setSelectedEventId(newEvent.id);
+      
+      // Schedule notification for the new event
+      const targetDateForNotification = isRecurring 
+        ? getNextRecurringDate(date)
+        : date;
+      await scheduleEventNotification(newEvent.id, title, targetDateForNotification, emoji);
     }
     setEditingEvent(null);
   };
@@ -178,6 +201,9 @@ export default function Index() {
       trigger('heavy');
       const eventId = event.id;
       const wasSelected = selectedEventId === eventId;
+      
+      // Cancel the notification for this event
+      await cancelEventNotification(eventId);
       
       setEvents(prev => {
         const filtered = prev.filter(e => e.id !== eventId);
