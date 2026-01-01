@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CountdownCard } from './CountdownCard';
@@ -34,20 +35,117 @@ export function SortableCountdownCard({
     disabled: isDragDisabled,
   });
 
+  // Track rotation angle state for smooth animation
+  const [rotationAngle, setRotationAngle] = useState<number>(0);
+  const previousYRef = useRef<number | null>(null);
+  const previousXRef = useRef<number | null>(null);
+  const targetRotationRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // Calculate dynamic tilt based on both vertical and horizontal movement
+  useEffect(() => {
+    if (isDragging && transform) {
+      const currentY = transform.y;
+      const currentX = transform.x;
+      const previousY = previousYRef.current;
+      const previousX = previousXRef.current;
+
+      if (previousY !== null && previousX !== null) {
+        // Calculate deltas (positive Y = moving down, positive X = moving right)
+        const deltaY = currentY - previousY;
+        const deltaX = currentX - previousX;
+        
+        // Calculate rotation angle based on movement direction
+        // Vertical movement: highly reactive
+        // Moving down (positive deltaY) = positive tilt, moving up (negative deltaY) = negative tilt
+        const verticalTiltMultiplier = 0.08; // Much more reactive vertical tilt
+        const verticalRotationDelta = -deltaY * verticalTiltMultiplier;
+
+        // Horizontal movement: noticeable tilt
+        // Moving right (positive deltaX) = positive tilt, moving left (negative deltaX) = negative tilt
+        const horizontalTiltMultiplier = 0.05; // Much more noticeable horizontal tilt
+        const horizontalRotationDelta = deltaX * horizontalTiltMultiplier;
+        
+        // Combine both rotation deltas
+        const rotationDelta = verticalRotationDelta + horizontalRotationDelta;
+        
+        // Update target rotation (accumulate changes)
+        targetRotationRef.current += rotationDelta;
+        
+        // Clamp target rotation to reasonable range (-8deg to +8deg) - much larger range for more reactivity
+        targetRotationRef.current = Math.max(-8, Math.min(8, targetRotationRef.current));
+      } else {
+        // Initialize when starting to drag
+        targetRotationRef.current = 0;
+      }
+
+      previousYRef.current = currentY;
+      previousXRef.current = currentX;
+    } else {
+      // Reset when not dragging
+      targetRotationRef.current = 0;
+      previousYRef.current = null;
+      previousXRef.current = null;
+      setRotationAngle(0);
+    }
+  }, [transform, isDragging]);
+
+  // Smooth interpolation of rotation angle using requestAnimationFrame
+  useEffect(() => {
+    if (isDragging) {
+      const animate = () => {
+        setRotationAngle((current) => {
+          const target = targetRotationRef.current;
+          const diff = target - current;
+          
+          // Smooth interpolation factor (0.4 = much more responsive)
+          const factor = 0.4;
+          const newAngle = current + diff * factor;
+          
+          // Continue animation if change is significant enough
+          if (Math.abs(diff) > 0.01) {
+            animationFrameRef.current = requestAnimationFrame(animate);
+            return newAngle;
+          } else {
+            // Reached target, but keep checking in case target changes
+            animationFrameRef.current = requestAnimationFrame(animate);
+            return target;
+          }
+        });
+      };
+      
+      animationFrameRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
+      };
+    } else {
+      // Clean up animation when not dragging
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    }
+  }, [isDragging]);
+
   // Build transform string - only use translate to prevent squishing
   // dnd-kit sometimes adds scaleY which distorts the element
   const translateOnly = transform 
     ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
     : undefined;
   
-  // Add tilt and slight scale when dragging for lift effect
+  // Add dynamic tilt and slight scale when dragging for lift effect
   const finalTransform = isDragging 
-    ? `${translateOnly || 'translate3d(0, 0, 0)'} rotate(1.5deg) scale(1.02)`
+    ? `${translateOnly || 'translate3d(0, 0, 0)'} rotate(${rotationAngle.toFixed(2)}deg) scale(1.02)`
     : translateOnly;
 
   const style: React.CSSProperties = {
     transform: finalTransform,
-    // No transitions during drag to prevent jitter - transitions only when not dragging
+    // No transitions during drag - rotation is smoothed via requestAnimationFrame
+    // Translate stays immediate to prevent jitter, rotation is smoothly interpolated
     transition: isDragging 
       ? 'none' 
       : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease-out',
