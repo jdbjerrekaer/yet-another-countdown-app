@@ -217,8 +217,8 @@ export function DatePickerModal({
                     showDefaultButtons={false}
                     style={{
                       '--color': 'var(--ion-color-primary)',
-                      width: '350px',
-                      maxWidth: '100%',
+                      width: '100%',
+                      // maxWidth: '350px',
                     } as React.CSSProperties}
                     className="datetime-fixed-width"
                   />

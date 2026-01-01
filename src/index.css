@@ -251,21 +251,23 @@
 
   /* IonDatetime width consistency - ensure calendar and month/year picker have same width */
   ion-datetime.datetime-fixed-width {
-    width: 350px !important;
-    max-width: 100%;
+    width: 100% !important;
+    max-width: 350px;
     border-radius: 1rem;
     overflow: hidden;
   }
 
   /* Ensure month/year picker maintains the same width */
   ion-datetime.datetime-fixed-width.month-year-picker-open {
-    width: 350px !important;
+    width: 100% !important;
+    max-width: 350px;
     border-radius: 1rem;
   }
 
   /* Target the month-year picker specifically */
   ion-datetime.datetime-fixed-width .datetime-month-year-picker {
-    width: 350px !important;
+    width: 100% !important;
+    max-width: 350px;
     border-radius: 1rem;
   }
 }
