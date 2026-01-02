@@ -35,6 +35,21 @@ export function SortableCountdownCard({
     disabled: isDragDisabled,
   });
 
+  // Store the initial transform when dragging starts to maintain position
+  const initialTransformRef = useRef<{ x: number; y: number } | null>(null);
+  
+  useEffect(() => {
+    if (isDragging && transform) {
+      // Store initial transform when drag starts
+      if (initialTransformRef.current === null) {
+        initialTransformRef.current = { x: transform.x, y: transform.y };
+      }
+    } else {
+      // Reset when not dragging
+      initialTransformRef.current = null;
+    }
+  }, [isDragging, transform]);
+
   // Track rotation angle state for smooth animation
   const [rotationAngle, setRotationAngle] = useState<number>(0);
   const previousYRef = useRef<number | null>(null);
@@ -133,17 +148,20 @@ export function SortableCountdownCard({
 
   // Build transform string - only use translate to prevent squishing
   // dnd-kit sometimes adds scaleY which distorts the element
-  const translateOnly = transform 
+  // When dragging, use the initial transform to maintain exact position
+  const translateOnly = isDragging && initialTransformRef.current
+    ? `translate3d(${Math.round(initialTransformRef.current.x)}px, ${Math.round(initialTransformRef.current.y)}px, 0)`
+    : transform
     ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
     : undefined;
   
-  // Add dynamic tilt and slight scale when dragging for lift effect
-  const finalTransform = isDragging 
-    ? `${translateOnly || 'translate3d(0, 0, 0)'} rotate(${rotationAngle.toFixed(2)}deg) scale(1.02)`
-    : translateOnly;
+  // When dragging, keep the translate transform to maintain position
+  // but don't add rotation/scale (DragOverlay handles the visual representation)
+  // This prevents the card from shifting when drag starts
+  const finalTransform = translateOnly;
 
   const style: React.CSSProperties = {
-    transform: finalTransform,
+    transform: finalTransform, // No transform when dragging (DragOverlay handles it)
     // No transitions during drag - rotation is smoothed via requestAnimationFrame
     // Translate stays immediate to prevent jitter, rotation is smoothly interpolated
     transition: isDragging 
@@ -157,6 +175,9 @@ export function SortableCountdownCard({
     willChange: isDragging ? 'transform' : 'auto',
     // Force GPU acceleration
     transformOrigin: 'center center',
+    // Hide the original item while dragging (keep space to avoid layout shift)
+    // Use opacity instead of visibility to maintain exact layout position
+    opacity: isDragging ? 0 : 1,
   };
 
   return (

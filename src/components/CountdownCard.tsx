@@ -108,6 +108,7 @@ export function CountdownCard({
         // Safari-specific prefix to prevent black border-radius rendering bug
         WebkitBorderRadius: `${borderRadius}px`,
         // Explicit background to prevent Safari rendering artifacts
+        // Force opaque background when dragging to prevent transparency issues
         backgroundColor: 'hsl(var(--card))',
         // Prevent rendering artifacts on Safari
         backfaceVisibility: 'hidden',
@@ -119,6 +120,9 @@ export function CountdownCard({
         isolation: isDragging ? 'isolate' : 'auto',
         // Prevent interactions on the actively dragged card
         pointerEvents: isDragging ? 'none' : 'auto',
+        // Force backdrop-filter to none when dragging to prevent transparency
+        backdropFilter: isDragging ? 'none' : undefined,
+        WebkitBackdropFilter: isDragging ? 'none' : undefined,
       }}
     >
       <IonItemSliding 

@@ -13,6 +13,8 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
+  DragMoveEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -22,6 +24,7 @@ import {
 import { WidgetPreview } from '@/components/WidgetPreview';
 import { DatePickerModal } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
+import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -44,7 +47,12 @@ export default function Index() {
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [dragRotationAngle, setDragRotationAngle] = useState<number>(0);
   const lastDragEndTs = useRef<number>(0);
+  const previousDragYRef = useRef<number | null>(null);
+  const previousDragXRef = useRef<number | null>(null);
+  const targetDragRotationRef = useRef<number>(0);
+  const dragAnimationFrameRef = useRef<number | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -239,12 +247,67 @@ export default function Index() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
+    targetDragRotationRef.current = 0;
+    previousDragYRef.current = null;
+    previousDragXRef.current = null;
+    setDragRotationAngle(0);
+    // Set cursor to grabbing on body for proper cursor display
+    document.body.style.cursor = 'grabbing';
     trigger('medium');
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    if (!event.delta) return;
+    
+    // event.delta is relative to drag start, so we need to track the previous delta
+    // to calculate the change between moves
+    const currentY = event.delta.y;
+    const currentX = event.delta.x;
+    const previousY = previousDragYRef.current;
+    const previousX = previousDragXRef.current;
+
+    if (previousY !== null && previousX !== null) {
+      // Calculate deltas between moves (positive Y = moving down, positive X = moving right)
+      const deltaY = currentY - previousY;
+      const deltaX = currentX - previousX;
+      
+      // Calculate rotation angle based on movement direction
+      // Vertical movement: highly reactive
+      // Moving down (positive deltaY) = positive tilt, moving up (negative deltaY) = negative tilt
+      const verticalTiltMultiplier = 0.08;
+      const verticalRotationDelta = -deltaY * verticalTiltMultiplier;
+
+      // Horizontal movement: noticeable tilt
+      // Moving right (positive deltaX) = positive tilt, moving left (negative deltaX) = negative tilt
+      const horizontalTiltMultiplier = 0.05;
+      const horizontalRotationDelta = deltaX * horizontalTiltMultiplier;
+      
+      // Combine both rotation deltas
+      const rotationDelta = verticalRotationDelta + horizontalRotationDelta;
+      
+      // Update target rotation (accumulate changes)
+      targetDragRotationRef.current += rotationDelta;
+      
+      // Clamp target rotation to reasonable range (-8deg to +8deg)
+      targetDragRotationRef.current = Math.max(-8, Math.min(8, targetDragRotationRef.current));
+    } else {
+      // Initialize when starting to drag
+      targetDragRotationRef.current = 0;
+    }
+
+    previousDragYRef.current = currentY;
+    previousDragXRef.current = currentX;
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveDragId(null);
+    targetDragRotationRef.current = 0;
+    previousDragYRef.current = null;
+    previousDragXRef.current = null;
+    setDragRotationAngle(0);
+    // Reset cursor
+    document.body.style.cursor = '';
     lastDragEndTs.current = Date.now();
 
     if (over && active.id !== over.id) {
@@ -257,6 +320,47 @@ export default function Index() {
     }
   };
 
+  // Smooth interpolation of rotation angle for DragOverlay using requestAnimationFrame
+  useEffect(() => {
+    if (activeDragId) {
+      const animate = () => {
+        setDragRotationAngle((current) => {
+          const target = targetDragRotationRef.current;
+          const diff = target - current;
+          
+          // Smooth interpolation factor (0.4 = much more responsive)
+          const factor = 0.4;
+          const newAngle = current + diff * factor;
+          
+          // Continue animation if change is significant enough
+          if (Math.abs(diff) > 0.01) {
+            dragAnimationFrameRef.current = requestAnimationFrame(animate);
+            return newAngle;
+          } else {
+            // Reached target, but keep checking in case target changes
+            dragAnimationFrameRef.current = requestAnimationFrame(animate);
+            return target;
+          }
+        });
+      };
+      
+      dragAnimationFrameRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (dragAnimationFrameRef.current) {
+          cancelAnimationFrame(dragAnimationFrameRef.current);
+          dragAnimationFrameRef.current = null;
+        }
+      };
+    } else {
+      // Clean up animation when not dragging
+      if (dragAnimationFrameRef.current) {
+        cancelAnimationFrame(dragAnimationFrameRef.current);
+        dragAnimationFrameRef.current = null;
+      }
+    }
+  }, [activeDragId]);
+
   // Check if a tap should be ignored (happened too soon after a drag ended)
   const shouldIgnoreTap = () => {
     return Date.now() - lastDragEndTs.current < 200;
@@ -266,9 +370,9 @@ export default function Index() {
     <IonPage>
 
       <IonContent fullscreen className="ion-padding">
-        {/* iOS large title header (collapsible) */}
-        <IonHeader collapse="condense">
-          <IonToolbar style={{ zIndex: 1 }}>
+        {/* iOS large title header */}
+        <IonHeader>
+          <IonToolbar>
             <IonTitle size="large">Yet Another Countdown App</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -296,6 +400,7 @@ export default function Index() {
                   sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragStart={handleDragStart}
+                  onDragMove={handleDragMove}
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
@@ -323,6 +428,37 @@ export default function Index() {
                       ))}
                     </div>
                   </SortableContext>
+                  <DragOverlay 
+                    style={{ zIndex: 9999 }}
+                    dropAnimation={null}
+                  >
+                    {activeDragId ? (() => {
+                      const activeEvent = events.find(e => e.id === activeDragId);
+                      if (!activeEvent) return null;
+                      return (
+                        <div 
+                          className={`sortable-countdown-card is-dragging ${activeEvent.id === selectedEventId ? 'is-selected' : ''}`}
+                          style={{ 
+                            width: '100%', 
+                            maxWidth: '485px',
+                            pointerEvents: 'none',
+                            transform: `rotate(${dragRotationAngle.toFixed(2)}deg) scale(1.02)`,
+                            transformOrigin: 'center center',
+                          }}
+                        >
+                          <CountdownCard
+                            event={activeEvent}
+                            isSelected={activeEvent.id === selectedEventId}
+                            onSelect={() => {}}
+                            onEdit={() => {}}
+                            onDelete={() => {}}
+                            isReordering={true}
+                            isDragging={true}
+                          />
+                        </div>
+                      );
+                    })() : null}
+                  </DragOverlay>
                 </DndContext>
               </section>
 

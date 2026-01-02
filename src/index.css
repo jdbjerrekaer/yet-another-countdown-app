@@ -246,9 +246,15 @@
   }
 
   .sortable-countdown-card.is-dragging .countdown-card-wrapper {
-    background: hsl(var(--card));
+    background: hsl(var(--card)) !important;
+    background-color: hsl(var(--card)) !important;
+    backdrop-filter: none !important;
     border-radius: 1rem;
     overflow: hidden;
+    /* Ensure proper stacking context */
+    isolation: isolate;
+    /* Force opaque background rendering */
+    opacity: 1;
   }
 
   /* Dragging state for the card itself - softer shadow */
@@ -365,6 +371,68 @@
   .dark ion-fab-button:active {
     --box-shadow: 0 2px 8px -2px hsl(0 0% 0% / 0.3), 
                   0 1px 4px -1px hsl(0 0% 0% / 0.2);
+  }
+
+  /* Normalize Ionic header positioning - remove sticky/absolute */
+  ion-header {
+    position: relative !important;
+    z-index: auto !important;
+  }
+
+  ion-header ion-toolbar {
+    position: relative !important;
+    z-index: auto !important;
+    --background: transparent !important;
+    background: transparent !important;
+    --border-width: 0 !important;
+    --border-color: transparent !important;
+    border: none !important;
+  }
+
+  ion-header ion-toolbar::part(native) {
+    position: relative !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Ensure content sections stack properly with flexbox */
+  ion-content section {
+    position: relative !important;
+    z-index: auto !important;
+  }
+
+  ion-content section h2 {
+    position: relative !important;
+    z-index: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+  }
+
+  /* Target h2 with specific classes */
+  ion-content section h2.text-sm,
+  ion-content section h2.font-semibold,
+  ion-content section h2.text-muted-foreground,
+  ion-content section h2.uppercase,
+  ion-content section h2.tracking-wider {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+  }
+
+  /* Ensure all content inside ion-content uses natural flow, but exclude FAB */
+  ion-content > *:not(ion-fab) {
+    position: relative !important;
+  }
+
+  /* Ensure nested divs also use relative positioning */
+  ion-content div.pb-12,
+  ion-content div.space-y-8,
+  ion-content div.space-y-3 {
+    position: relative !important;
   }
 }
 
