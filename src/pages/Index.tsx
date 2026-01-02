@@ -264,16 +264,11 @@ export default function Index() {
 
   return (
     <IonPage>
-      <IonHeader translucent>
-        <IonToolbar>
-          <IonTitle>Countdown</IonTitle>
-        </IonToolbar>
-      </IonHeader>
 
       <IonContent fullscreen className="ion-padding">
         {/* iOS large title header (collapsible) */}
         <IonHeader collapse="condense">
-          <IonToolbar>
+          <IonToolbar style={{ zIndex: 1 }}>
             <IonTitle size="large">Yet Another Countdown App</IonTitle>
           </IonToolbar>
         </IonHeader>

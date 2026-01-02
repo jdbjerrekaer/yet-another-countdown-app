@@ -27,7 +27,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor: _
       {countdown.isPast ? (
         <div className="flex flex-col items-center justify-center flex-1">
           <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-          <p className="text-lg text-muted-foreground mt-2">days since</p>
+          <p className="text-lg text-muted-foreground mt-2">day{countdown.daysSince !== 1 ? 's' : ''} since</p>
         </div>
       ) : countdown.isComplete ? (
         <div className="text-center py-8">

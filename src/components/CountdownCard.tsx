@@ -169,10 +169,10 @@ export function CountdownCard({
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {countdown.isPast 
-                ? `${countdown.daysSince} days ago`
-                : countdown.isComplete 
-                  ? 'Today! 🎉' 
+              {countdown.isPast
+                ? `${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                : countdown.isComplete
+                  ? 'Today! 🎉'
                   : `${countdown.days}d ${countdown.hours}h ${countdown.minutes}m`
               }
             </p>

@@ -24,7 +24,7 @@ export function MediumWidget({ title, countdown, emoji, emojiColor: _emojiColor 
         <div className="flex gap-6">
           <div>
             <p className="text-3xl font-bold text-foreground">{countdown.daysSince}</p>
-            <p className="text-xs text-muted-foreground">Days ago</p>
+            <p className="text-xs text-muted-foreground">Day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
           </div>
         </div>
       ) : countdown.isComplete ? (
