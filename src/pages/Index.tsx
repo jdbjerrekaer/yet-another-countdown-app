@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon, IonSegment, IonSegmentButton } from '@ionic/react';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFab, IonFabButton } from '@ionic/react';
 import { add } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
@@ -267,18 +267,6 @@ export default function Index() {
       <IonHeader translucent>
         <IonToolbar>
           <IonTitle>Countdown</IonTitle>
-          <IonButtons slot="end">
-            <IonButton 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleAddNew();
-              }}
-              type="button"
-            >
-              <IonIcon icon={add} slot="icon-only" />
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -299,7 +287,7 @@ export default function Index() {
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-2">No Countdowns</h2>
               <p className="text-muted-foreground text-center max-w-xs mb-8">
-                Tap the + button to create your first countdown
+                Tap the + button below to create your first countdown
               </p>
             </div>
           ) : (
@@ -390,6 +378,13 @@ export default function Index() {
             </div>
           )}
         </div>
+
+        {/* Floating Action Button */}
+        <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton onClick={handleAddNew} aria-label="Add event">
+            <IonIcon icon={add} />
+          </IonFabButton>
+        </IonFab>
       </IonContent>
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
