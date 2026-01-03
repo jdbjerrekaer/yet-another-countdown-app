@@ -253,59 +253,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               />
             </div>
 
-            {/* Color picker - above Icon so user picks color first */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">Icon Color</Label>
-              <div className="flex gap-2 flex-wrap">
-                {COLOR_OPTIONS.map((color) => (
-                  <button
-                    key={color.id}
-                    onClick={() => handleColorSelect(color.value)}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
-                      (emojiColor === color.value || (!emojiColor && !color.value))
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ background: color.gradient }}
-                    title={color.label}
-                  >
-                    {(emojiColor === color.value || (!emojiColor && !color.value)) && (
-                      <span className="text-white text-sm">✓</span>
-                    )}
-                  </button>
-                ))}
-                {/* Custom color picker button with overlay input for Safari mobile */}
-                <div className="relative w-10 h-10">
-                  <button
-                    onClick={handleCustomColorClick}
-                    className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 ${
-                      isCustomColor(emojiColor)
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                        : 'hover:scale-105'
-                    }`}
-                    style={isCustomColor(emojiColor) ? { background: getGradientFromColor(emojiColor!) } : undefined}
-                    title="Custom color"
-                  >
-                    {isCustomColor(emojiColor) ? (
-                      <span className="text-white text-sm">✓</span>
-                    ) : (
-                      <Plus className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                  {/* Color input overlaid on button for Safari mobile compatibility */}
-                  <input
-                    ref={colorInputRef}
-                    type="color"
-                    onChange={handleCustomColorChange}
-                    value={emojiColor || '#3b82f6'}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    style={{ minWidth: '44px', minHeight: '44px' }}
-                    aria-label="Custom color picker"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
@@ -411,6 +358,59 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     <Plus className="w-6 h-6 text-muted-foreground" />
                   </button>
                 )}
+              </div>
+            </div>
+
+            {/* Color picker */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">Icon Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {COLOR_OPTIONS.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => handleColorSelect(color.value)}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                      (emojiColor === color.value || (!emojiColor && !color.value))
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ background: color.gradient }}
+                    title={color.label}
+                  >
+                    {(emojiColor === color.value || (!emojiColor && !color.value)) && (
+                      <span className="text-2xl">{emoji}</span>
+                    )}
+                  </button>
+                ))}
+                {/* Custom color picker button with overlay input for Safari mobile */}
+                <div className="relative w-12 h-12">
+                  <button
+                    onClick={handleCustomColorClick}
+                    className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 ${
+                      isCustomColor(emojiColor)
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={isCustomColor(emojiColor) ? { background: getGradientFromColor(emojiColor!) } : undefined}
+                    title="Custom color"
+                  >
+                    {isCustomColor(emojiColor) ? (
+                      <span className="text-2xl">{emoji}</span>
+                    ) : (
+                      <Plus className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </button>
+                  {/* Color input overlaid on button for Safari mobile compatibility */}
+                  <input
+                    ref={colorInputRef}
+                    type="color"
+                    onChange={handleCustomColorChange}
+                    value={emojiColor || '#3b82f6'}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ minWidth: '48px', minHeight: '48px' }}
+                    aria-label="Custom color picker"
+                  />
+                </div>
               </div>
             </div>
 
