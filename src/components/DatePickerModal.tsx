@@ -107,9 +107,37 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       
       // Auto-focus the title input when creating a new event (not editing)
       if (!isEditing) {
-        setTimeout(() => {
-          titleInputRef.current?.focus();
-        }, 300);
+        const attemptFocus = (attempt: number = 0) => {
+          const maxAttempts = 10;
+          const input = titleInputRef.current;
+          
+          if (!input) {
+            if (attempt < maxAttempts) {
+              requestAnimationFrame(() => attemptFocus(attempt + 1));
+            }
+            return;
+          }
+          
+          const isVisible = input.offsetParent !== null && 
+                           input.offsetWidth > 0 && 
+                           input.offsetHeight > 0;
+          
+          if (isVisible) {
+            input.focus();
+            setTimeout(() => {
+              if (document.activeElement !== input) {
+                input.click();
+                setTimeout(() => input.focus(), 50);
+              }
+            }, 50);
+          } else if (attempt < maxAttempts) {
+            requestAnimationFrame(() => attemptFocus(attempt + 1));
+          }
+        };
+        
+        requestAnimationFrame(() => {
+          setTimeout(() => attemptFocus(), 100);
+        });
       }
     }
     prevIsOpenRef.current = isOpen;
@@ -249,6 +277,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter event name"
+                autoFocus={!isEditing}
                 className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
               />
             </div>
