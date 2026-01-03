@@ -308,25 +308,25 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
               <div className="flex gap-2 flex-wrap" key={suggestedEmojis.join(',')}>
                 {suggestedEmojis.map((e, index) => {
-                  // Only show as selected if it matches AND the emoji is in the suggested list
-                  // This prevents suggested emojis from showing selected when a custom emoji is used
-                  // Also deselect suggested emojis when the custom emoji input is open
                   const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
                   const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
-                  const selectedColorGradient = getGradientFromColor(emojiColor);
                   
                   return (
                     <button
                       key={`${e}-${index}`}
                       onClick={() => handleEmojiSelect(e)}
-                      className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 emoji-suggestion-enter ${
-                        isSelected 
-                          ? 'shadow-sm scale-110' 
+                      className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-300 active:scale-95 emoji-suggestion-enter ${
+                        isSelected
+                          ? 'border-[3px] border-white/90'
                           : 'bg-secondary/50 hover:bg-secondary'
                       }`}
                       style={{
-                        ...(isSelected ? { background: selectedColorGradient } : {}),
+                        ...(isSelected ? { 
+                          backgroundColor: emojiColor,
+                          boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                        } : {}),
                         animationDelay: `${index * 20}ms`,
+                        transform: isSelected ? 'scale(1.35)' : 'scale(1)',
                       }}
                     >
                       {e}
@@ -337,9 +337,11 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 {emoji !== '' && !suggestedEmojis.includes(emoji) && (
                   <button
                     onClick={() => {}}
-                    className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 shadow-sm scale-110"
-                    style={{ 
-                      background: getGradientFromColor(emojiColor)
+                    className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
+                    style={{
+                      backgroundColor: emojiColor,
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                      transform: 'scale(1.35)'
                     }}
                   >
                     {emoji}
