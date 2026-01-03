@@ -40,11 +40,14 @@ interface DatePickerModalProps {
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
   onValidityChange?: (canSave: boolean) => void;
+  onConfirmDateChange?: (title: string) => Promise<boolean>;
 }
 
 export interface DatePickerModalRef {
   save: () => Promise<void>;
   canSave: () => boolean;
+  hasDateChanged: () => boolean;
+  getCurrentDate: () => Date | undefined;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -75,6 +78,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   isEditing = false,
   onDelete,
   onValidityChange,
+  onConfirmDateChange,
 }, ref) => {
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
@@ -88,6 +92,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const colorInputRef = useRef<HTMLInputElement>(null);
   const customEmojiInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const originalDateRef = useRef<Date | undefined>(undefined);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -117,6 +122,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         dateToSet = today;
       }
       setDate(dateToSet);
+      // Store original date for change detection when editing (create a copy to avoid reference issues)
+      if (isEditing && initialDate) {
+        originalDateRef.current = new Date(initialDate.getTime());
+      } else {
+        originalDateRef.current = undefined;
+      }
       setEmoji(initialEmoji ?? '');
       setEmojiColor(initialEmojiColor);
       setIsRecurring(initialIsRecurring ?? false);
@@ -166,6 +177,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   const canSave = () => Boolean(title && date && emoji);
 
+  // Check if the date has changed from the original (for editing mode)
+  const hasDateChanged = (): boolean => {
+    if (!isEditing || !originalDateRef.current || !date) {
+      return false;
+    }
+    // Compare both date and time - ensure both are valid dates
+    if (isNaN(originalDateRef.current.getTime()) || isNaN(date.getTime())) {
+      return false;
+    }
+    return originalDateRef.current.getTime() !== date.getTime();
+  };
+
   // Notify parent when validity changes
   useEffect(() => {
     if (onValidityChange) {
@@ -175,6 +198,16 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   const handleSave = async () => {
     if (title && date && emoji) {
+      // If editing and date has changed, show confirmation dialog
+      if (isEditing && hasDateChanged() && onConfirmDateChange) {
+        const confirmed = await onConfirmDateChange(title);
+        if (!confirmed) {
+          // User cancelled, don't save
+          trigger('light');
+          return;
+        }
+      }
+      
       await onSave(title, date, emoji, isRecurring, emojiColor);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
@@ -186,6 +219,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   useImperativeHandle(ref, () => ({
     save: handleSave,
     canSave,
+    hasDateChanged,
+    getCurrentDate: () => date,
   }));
 
   const handleColorSelect = (color: string | undefined) => {

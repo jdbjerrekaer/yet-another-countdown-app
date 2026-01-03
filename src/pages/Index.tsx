@@ -132,6 +132,41 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
+  // Show confirmation dialog when date has changed during edit
+  const confirmDateChange = async (eventTitle: string): Promise<boolean> => {
+    let confirmed = false;
+
+    // Use ActionSheet only on native platforms
+    if (isNative) {
+      const result = await ActionSheet.showActions({
+        title: 'Date Changed',
+        message: `You've changed the date for "${eventTitle}". Are you sure you want to save these changes?`,
+        options: [
+          {
+            title: 'Save Changes',
+            style: ActionSheetButtonStyle.Default,
+          },
+          {
+            title: 'Cancel',
+            style: ActionSheetButtonStyle.Cancel,
+          },
+        ],
+      });
+      confirmed = result.index === 0;
+    } else {
+      // Use Dialog on web platforms
+      const { value } = await Dialog.confirm({
+        title: 'Date Changed',
+        message: `You've changed the date for "${eventTitle}". Are you sure you want to save these changes?`,
+        okButtonTitle: 'Save Changes',
+        cancelButtonTitle: 'Cancel',
+      });
+      confirmed = value;
+    }
+
+    return confirmed;
+  };
+
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
     // Request notification permission when creating or editing an event
     const hasPermission = await checkNotificationPermission();
@@ -588,6 +623,7 @@ export default function Index() {
         isEditing={!!editingEvent}
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
         onValidityChange={setCanSaveForm}
+        onConfirmDateChange={confirmDateChange}
       />
 
     </IonPage>
