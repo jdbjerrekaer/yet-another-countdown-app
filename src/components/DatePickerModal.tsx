@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
 import { CalendarIcon, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
+import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
 
 // Helper to check if a color is a custom color (not in the preset list)
 const isCustomColor = (color: string | undefined): boolean => {
@@ -68,7 +69,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   onSave,
   initialTitle = '',
   initialDate,
-  initialEmoji = '🎯',
+  initialEmoji = '',
   initialEmojiColor,
   initialIsRecurring = false,
   isEditing = false,
@@ -88,6 +89,21 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const customEmojiInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  // Compute suggested emojis based on title input
+  const suggestedEmojis = useMemo(() => {
+    const trimmed = title.trim();
+    if (!trimmed) {
+      // No title yet: show defaults
+      return EMOJI_OPTIONS;
+    }
+    const results = getEmojiSuggestions(trimmed, 12);
+    if (results.length === 0) {
+      // No matches: fall back to defaults
+      return EMOJI_OPTIONS;
+    }
+    return results.map((r) => r.unicode);
+  }, [title]);
+
   // Reset form state only when modal opens (not on every prop change)
   useEffect(() => {
     // Only reset when transitioning from closed to open
@@ -101,7 +117,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         dateToSet = today;
       }
       setDate(dateToSet);
-      setEmoji(initialEmoji || '🎯');
+      setEmoji(initialEmoji ?? '');
       setEmojiColor(initialEmojiColor);
       setIsRecurring(initialIsRecurring ?? false);
       
@@ -148,17 +164,17 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     onClose();
   };
 
-  const canSave = () => Boolean(title && date);
+  const canSave = () => Boolean(title && date && emoji);
 
   // Notify parent when validity changes
   useEffect(() => {
     if (onValidityChange) {
       onValidityChange(canSave());
     }
-  }, [title, date, onValidityChange]);
+  }, [title, date, emoji, onValidityChange]);
 
   const handleSave = async () => {
-    if (title && date) {
+    if (title && date && emoji) {
       await onSave(title, date, emoji, isRecurring, emojiColor);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
@@ -285,12 +301,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
-              <div className="flex gap-2 flex-wrap">
-                {EMOJI_OPTIONS.map((e) => {
-                  // Only show as selected if it matches AND the emoji is in the preset list
-                  // This prevents preset emojis from showing selected when a custom emoji is used
-                  // Also deselect preset emojis when the custom emoji input is open
-                  const isCustomEmojiSelected = !EMOJI_OPTIONS.includes(emoji);
+              <div className="flex gap-2 flex-wrap" key={suggestedEmojis.join(',')}>
+                {suggestedEmojis.map((e, index) => {
+                  // Only show as selected if it matches AND the emoji is in the suggested list
+                  // This prevents suggested emojis from showing selected when a custom emoji is used
+                  // Also deselect suggested emojis when the custom emoji input is open
+                  const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
                   const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
                   const selectedColorGradient = emojiColor 
                     ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
@@ -298,21 +314,24 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   
                   return (
                     <button
-                      key={e}
+                      key={`${e}-${index}`}
                       onClick={() => handleEmojiSelect(e)}
-                      className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                      className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 active:scale-95 emoji-suggestion-enter ${
                         isSelected 
                           ? 'shadow-sm scale-110' 
                           : 'bg-secondary/50 hover:bg-secondary'
                       }`}
-                      style={isSelected ? { background: selectedColorGradient } : undefined}
+                      style={{
+                        ...(isSelected ? { background: selectedColorGradient } : {}),
+                        animationDelay: `${index * 20}ms`,
+                      }}
                     >
                       {e}
                     </button>
                   );
                 })}
-                {/* Custom emoji - show if a custom emoji is selected (not in EMOJI_OPTIONS) */}
-                {!EMOJI_OPTIONS.includes(emoji) && (
+                {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis) */}
+                {emoji !== '' && !suggestedEmojis.includes(emoji) && (
                   <button
                     onClick={() => {}}
                     className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 shadow-sm scale-110"
