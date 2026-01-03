@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
 import { CalendarIcon, RefreshCw, Trash2, Plus } from 'lucide-react';
@@ -38,12 +38,6 @@ interface DatePickerModalProps {
   initialIsRecurring?: boolean;
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
-  onValidityChange?: (canSave: boolean) => void;
-}
-
-export interface DatePickerModalRef {
-  save: () => Promise<void>;
-  canSave: () => boolean;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -62,7 +56,7 @@ const COLOR_OPTIONS = [
   { id: 'slate', label: 'Slate', value: '#475569', gradient: 'linear-gradient(135deg, #475569 0%, #64748b 100%)' },
 ];
 
-export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
+export function DatePickerModal({
   isOpen,
   onClose,
   onSave,
@@ -73,8 +67,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   initialIsRecurring = false,
   isEditing = false,
   onDelete,
-  onValidityChange,
-}, ref) => {
+}: DatePickerModalProps) {
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
@@ -112,15 +105,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     onClose();
   };
 
-  const canSave = () => Boolean(title && date);
-
-  // Notify parent when validity changes
-  useEffect(() => {
-    if (onValidityChange) {
-      onValidityChange(canSave());
-    }
-  }, [title, date, onValidityChange]);
-
   const handleSave = async () => {
     if (title && date) {
       await onSave(title, date, emoji, isRecurring, emojiColor);
@@ -129,12 +113,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       onClose();
     }
   };
-
-  // Expose save method to parent via ref
-  useImperativeHandle(ref, () => ({
-    save: handleSave,
-    canSave,
-  }));
 
   const handleColorSelect = (color: string | undefined) => {
     trigger('light');
@@ -224,6 +202,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
           <IonTitle>
             {isEditing ? `Edit ${initialTitle || title || 'Event'}` : 'New Event'}
           </IonTitle>
+          <IonButtons slot="end">
+            <IonButton 
+              onClick={handleSave} 
+              disabled={!title || !date}
+              strong={true}
+            >
+              Save
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -237,12 +224,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               </Label>
               <Input
                 id="title"
-                ref={(el) => {
-                  // Auto-focus when modal opens for new events
-                  if (el && isOpen && !isEditing) {
-                    setTimeout(() => el.focus(), 300);
-                  }
-                }}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter event name"
@@ -454,14 +435,13 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                         setDate(newDate);
                       }
                     }}
-                    min={(() => {
-                      const minDate = new Date();
-                      minDate.setFullYear(minDate.getFullYear() - 100);
-                      return `${minDate.getFullYear()}-${String(minDate.getMonth() + 1).padStart(2, '0')}-${String(minDate.getDate()).padStart(2, '0')}`;
+                    min={isRecurring ? undefined : (() => {
+                      const today = new Date();
+                      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                     })()}
                     max={(() => {
                       const maxDate = new Date();
-                      maxDate.setFullYear(maxDate.getFullYear() + 100);
+                      maxDate.setFullYear(maxDate.getFullYear() + 5);
                       return `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}-${String(maxDate.getDate()).padStart(2, '0')}`;
                     })()}
                     firstDayOfWeek={1}
@@ -508,4 +488,4 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       </IonContent>
     </IonModal>
   );
-});
+}
