@@ -108,12 +108,18 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const hasManualChangeRef = useRef(false);
   const lastEmojiRef = useRef<string | undefined>(emoji);
   const lastValueRef = useRef<string>(value);
+  
+  // Velocity tracking for smart snapping
+  const lastSlideIndexRef = useRef<number>(selectedIndex);
+  const lastScrollTimeRef = useRef<number>(Date.now());
+  const scrollVelocityRef = useRef<number>(0);
+  const VELOCITY_THRESHOLD = 3; // slides/s - snap if slower than this
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     align: 'center',
     containScroll: false,
-    dragFree: false,
+    dragFree: true,
     skipSnaps: false,
   });
 
@@ -177,6 +183,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       setSelectedIndex(initialIndex);
       setPreviewColor(COLOR_PALETTE[initialIndex]);
       lastIndexRef.current = initialIndex;
+      lastSlideIndexRef.current = initialIndex; // Initialize velocity tracking
       isInitializedRef.current = true;
       
       // Update the value if we used emoji-based color
@@ -186,9 +193,30 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     }
   }, [emblaApi, value, emoji, onChange]);
 
-  // Handle scroll events for real-time preview
+  // Handle scroll events for real-time preview and velocity tracking
   const onScroll = useCallback(() => {
     if (!emblaApi) return;
+    
+    // Track velocity for smart snapping based on slide indices
+    const currentTime = Date.now();
+    const slideIndex = emblaApi.selectedScrollSnap();
+    const slideCount = COLOR_PALETTE.length;
+    const currentSlideIndex = ((slideIndex % slideCount) + slideCount) % slideCount;
+    const timeDelta = currentTime - lastScrollTimeRef.current;
+    
+    if (timeDelta > 0 && timeDelta < 1000) { // Only calculate if time delta is reasonable
+      // Calculate slide change, accounting for looping
+      let slideDelta = Math.abs(currentSlideIndex - lastSlideIndexRef.current);
+      // Handle wrap-around (if we went from end to beginning or vice versa)
+      if (slideDelta > slideCount / 2) {
+        slideDelta = slideCount - slideDelta;
+      }
+      // Convert to slides per second
+      scrollVelocityRef.current = (slideDelta / timeDelta) * 1000; // slides/s
+    }
+    
+    lastSlideIndexRef.current = currentSlideIndex;
+    lastScrollTimeRef.current = currentTime;
     
     // Cancel any pending animation frame
     if (rafRef.current) {
@@ -212,6 +240,27 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         setPreviewColor(colorAtCenter);
       }
     });
+  }, [emblaApi]);
+
+  // Handle pointer up - snap if velocity is low
+  const onPointerUp = useCallback(() => {
+    if (!emblaApi) return;
+    
+    // If velocity is below threshold, snap to nearest color
+    if (Math.abs(scrollVelocityRef.current) < VELOCITY_THRESHOLD) {
+      const slideCount = COLOR_PALETTE.length;
+      const scrollProgress = emblaApi.scrollProgress();
+      
+      // Clamp scrollProgress to [0, 1] to handle edge cases
+      const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
+      
+      // Find the nearest slide index
+      const currentSlide = Math.round(clampedProgress * (slideCount - 1));
+      const nearestIndex = Math.max(0, Math.min(slideCount - 1, currentSlide));
+      
+      // Snap to nearest color smoothly
+      emblaApi.scrollTo(nearestIndex, false);
+    }
   }, [emblaApi]);
 
   // Handle slide changes (when snapped)
@@ -247,16 +296,36 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     emblaApi.on('select', onSelect);
     emblaApi.on('scroll', onScroll);
     emblaApi.on('reInit', onSelect);
+    emblaApi.on('pointerUp', onPointerUp);
 
     return () => {
       emblaApi.off('select', onSelect);
       emblaApi.off('scroll', onScroll);
       emblaApi.off('reInit', onSelect);
+      emblaApi.off('pointerUp', onPointerUp);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [emblaApi, onSelect, onScroll]);
+  }, [emblaApi, onSelect, onScroll, onPointerUp]);
+
+  // Handle tap/click on color swatch
+  const handleColorClick = useCallback(
+    (paletteIndex: number) => {
+      if (!emblaApi) return;
+      
+      // Mark as manually changed when user taps
+      if (!hasManualChangeRef.current) {
+        hasManualChangeRef.current = true;
+        onManualChange?.();
+      }
+      
+      // Scroll to the selected color smoothly (onSelect callback will handle state updates)
+      emblaApi.scrollTo(paletteIndex, false);
+      trigger('selection');
+    },
+    [emblaApi, trigger, onManualChange]
+  );
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -303,13 +372,16 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
           {COLOR_PALETTE.map((color, i) => (
             <div
               key={i}
-              className="flex-shrink-0"
+              className="flex-shrink-0 cursor-pointer"
               style={{
                 width: 72,
                 height: 48,
                 backgroundColor: color,
                 transition: 'background-color 0.2s ease-out',
               }}
+              onClick={() => handleColorClick(i)}
+              role="button"
+              aria-label={`Select color ${i + 1}`}
             />
           ))}
         </div>
