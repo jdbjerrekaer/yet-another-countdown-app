@@ -4,7 +4,7 @@ import { ChevronRight, RefreshCw } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
-import { getNextRecurringDate } from '@/lib/recurring';
+import { getNextRecurringDate, getNextOccurrenceNumber } from '@/lib/recurring';
 
 // Helper function to adjust color brightness for gradient
 function adjustColorBrightness(hex: string, percent: number): string {
@@ -44,6 +44,11 @@ export function CountdownCard({
     : new Date(event.targetDate);
   
   const countdown = useCountdown(targetDate);
+  
+  // Calculate next occurrence number for recurring events
+  const nextOccurrenceNumber = event.isRecurring 
+    ? getNextOccurrenceNumber(new Date(event.targetDate))
+    : 0;
 
   const handleSelect = () => {
     trigger('light');
@@ -169,7 +174,14 @@ export function CountdownCard({
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
               {event.isRecurring && (
-                <RefreshCw className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <RefreshCw className="w-3.5 h-3.5 text-primary" />
+                  {nextOccurrenceNumber > 0 && (
+                    <span className="text-xs text-primary font-medium">
+                      #{nextOccurrenceNumber}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
             <p className="text-sm text-muted-foreground">

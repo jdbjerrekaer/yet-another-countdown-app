@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 interface LargeWidgetProps {
@@ -7,18 +8,30 @@ interface LargeWidgetProps {
   targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
+  isRecurring?: boolean;
+  nextOccurrenceNumber?: number;
 }
 
-export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor }: LargeWidgetProps) {
+export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor, isRecurring, nextOccurrenceNumber }: LargeWidgetProps) {
   return (
     <div className="w-[329px] h-[329px] rounded-[28px] bg-card shadow-ios-lg p-6 flex flex-col">
       <div className="flex items-center gap-3 mb-auto">
         <span className="text-4xl">{emoji}</span>
-        <div>
-          <p className="text-lg font-semibold text-foreground">{title}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-semibold text-foreground truncate">{title}</p>
+            {isRecurring && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <RefreshCw className="w-3.5 h-3.5 text-primary" />
+                {nextOccurrenceNumber && (
+                  <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                )}
+              </div>
+            )}
+          </div>
           {targetDate && (
             <p className="text-sm text-muted-foreground">
-              {format(targetDate, 'MMM d, yyyy')}
+              {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
             </p>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 // Helper function to adjust color brightness for gradient
@@ -18,9 +19,11 @@ interface ExtraLargeWidgetProps {
   emoji: string;
   emojiColor?: string;
   createdAt?: Date;
+  isRecurring?: boolean;
+  nextOccurrenceNumber?: number;
 }
 
-export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiColor, createdAt }: ExtraLargeWidgetProps) {
+export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiColor, createdAt, isRecurring, nextOccurrenceNumber }: ExtraLargeWidgetProps) {
   // Calculate progress based on creation date to target date
   // Uses countdown.totalSeconds for smooth updates every second
   const calculateProgress = () => {
@@ -66,11 +69,23 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
         >
           <span className="text-3xl">{emoji}</span>
         </div>
-        <div>
-          <p className="text-xl font-bold text-foreground">{title}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-xl font-bold text-foreground truncate">{title}</p>
+            {isRecurring && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <RefreshCw className="w-4 h-4 text-primary" />
+                {nextOccurrenceNumber && (
+                  <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
+                )}
+              </div>
+            )}
+          </div>
           {targetDate && (
             <p className="text-sm text-muted-foreground">
-              {format(targetDate, 'EEEE, MMMM d, yyyy')}
+              {isRecurring 
+                ? `Next: ${format(targetDate, 'EEEE, MMMM d, yyyy')}` 
+                : format(targetDate, 'EEEE, MMMM d, yyyy')}
             </p>
           )}
         </div>

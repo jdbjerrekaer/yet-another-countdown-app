@@ -30,7 +30,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize } from '@/types/countdown';
-import { getNextRecurringDate } from '@/lib/recurring';
+import { getNextRecurringDate, getNextOccurrenceNumber } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 
 const WIDGET_SIZES: { id: WidgetSize; label: string }[] = [
@@ -112,6 +112,11 @@ export default function Index() {
     : null;
   
   const countdown = useCountdown(targetDate);
+  
+  // Calculate next occurrence number for recurring events
+  const nextOccurrenceNumber = selectedEvent?.isRecurring
+    ? getNextOccurrenceNumber(new Date(selectedEvent.targetDate))
+    : undefined;
 
   useEffect(() => {
     localStorage.setItem('countdowns', JSON.stringify(events));
@@ -551,6 +556,7 @@ export default function Index() {
                           size={selectedSize}
                           isRecurring={selectedEvent.isRecurring}
                           createdAt={new Date(selectedEvent.createdAt)}
+                          nextOccurrenceNumber={nextOccurrenceNumber}
                         />
                       </div>
                     </div>

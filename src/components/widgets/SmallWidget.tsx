@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 interface SmallWidgetProps {
@@ -7,6 +8,8 @@ interface SmallWidgetProps {
   targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
+  isRecurring?: boolean;
+  nextOccurrenceNumber?: number;
 }
 
 const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string } => {
@@ -22,20 +25,28 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
   return { value: countdown.seconds, unit: 'seconds' };
 };
 
-export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor }: SmallWidgetProps) {
+export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor, isRecurring, nextOccurrenceNumber }: SmallWidgetProps) {
   const timeDisplay = getTimeDisplay(countdown);
   
   return (
     <div className="w-[155px] h-[155px] rounded-[28px] bg-card shadow-ios-lg p-4 flex flex-col justify-between">
       <div className="flex items-center justify-between">
         <span className="text-2xl">{emoji}</span>
+        {isRecurring && (
+          <div className="flex items-center gap-1">
+            <RefreshCw className="w-3 h-3 text-primary" />
+            {nextOccurrenceNumber && (
+              <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+            )}
+          </div>
+        )}
       </div>
       
       <div>
         <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
         {targetDate && (
           <p className="text-xs text-muted-foreground truncate mb-1">
-            {format(targetDate, 'MMM d, yyyy')}
+            {isRecurring ? `Next: ${format(targetDate, 'MMM d')}` : format(targetDate, 'MMM d, yyyy')}
           </p>
         )}
         {countdown.isPast ? (
