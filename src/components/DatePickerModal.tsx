@@ -315,10 +315,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     <button
                       key={`${e}-${index}`}
                       onClick={() => handleEmojiSelect(e)}
-                      className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-300 active:scale-95 emoji-suggestion-enter ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-95 emoji-suggestion-enter ${
                         isSelected
-                          ? 'border-[3px] border-white/90'
-                          : 'bg-secondary/50 hover:bg-secondary'
+                          ? 'border-[3px] border-white/90 text-xl'
+                          : 'bg-secondary/50 hover:bg-secondary text-2xl'
                       }`}
                       style={{
                         ...(isSelected ? { 
@@ -326,7 +326,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
                         } : {}),
                         animationDelay: `${index * 20}ms`,
-                        transform: isSelected ? 'scale(1.35)' : 'scale(1)',
+                        transform: isSelected ? 'scale(1.1)' : undefined,
                       }}
                     >
                       {e}
@@ -337,11 +337,11 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 {emoji !== '' && !suggestedEmojis.includes(emoji) && (
                   <button
                     onClick={() => {}}
-                    className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
+                    className="w-12 h-12 rounded-xl text-xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
                     style={{
                       backgroundColor: emojiColor,
                       boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                      transform: 'scale(1.35)'
+                      transform: 'scale(1.1)'
                     }}
                   >
                     {emoji}
