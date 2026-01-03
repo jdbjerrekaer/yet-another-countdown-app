@@ -2,16 +2,11 @@ import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo }
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
 import { CalendarIcon, RefreshCw, Trash2, Plus } from 'lucide-react';
+import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
-
-// Helper to check if a color is a custom color (not in the preset list)
-const isCustomColor = (color: string | undefined): boolean => {
-  if (!color) return false;
-  return !COLOR_OPTIONS.some(c => c.value === color);
-};
 
 // Helper to get gradient from a hex color
 const getGradientFromColor = (hex: string): string => {
@@ -52,20 +47,6 @@ export interface DatePickerModalRef {
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
 
-// Predefined color palette for emoji containers
-const COLOR_OPTIONS = [
-  { id: 'default', label: 'Default', value: undefined, gradient: 'linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 60%) 100%)' },
-  { id: 'rose', label: 'Rose', value: '#e11d48', gradient: 'linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)' },
-  { id: 'orange', label: 'Orange', value: '#ea580c', gradient: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)' },
-  { id: 'amber', label: 'Amber', value: '#d97706', gradient: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' },
-  { id: 'emerald', label: 'Emerald', value: '#059669', gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' },
-  { id: 'teal', label: 'Teal', value: '#0d9488', gradient: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)' },
-  { id: 'cyan', label: 'Cyan', value: '#0891b2', gradient: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)' },
-  { id: 'violet', label: 'Violet', value: '#7c3aed', gradient: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)' },
-  { id: 'fuchsia', label: 'Fuchsia', value: '#c026d3', gradient: 'linear-gradient(135deg, #c026d3 0%, #d946ef 100%)' },
-  { id: 'slate', label: 'Slate', value: '#475569', gradient: 'linear-gradient(135deg, #475569 0%, #64748b 100%)' },
-];
-
 export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
   isOpen,
   onClose,
@@ -83,16 +64,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
-  const [emojiColor, setEmojiColor] = useState<string | undefined>(initialEmojiColor);
+  // Default to blue if no initial color provided
+  const DEFAULT_COLOR = '#3b82f6';
+  const [emojiColor, setEmojiColor] = useState<string>(initialEmojiColor || DEFAULT_COLOR);
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const [showCustomEmojiInput, setShowCustomEmojiInput] = useState(false);
   const [customEmojiValue, setCustomEmojiValue] = useState('');
   const { trigger } = useHaptic();
   const prevIsOpenRef = useRef(false);
-  const colorInputRef = useRef<HTMLInputElement>(null);
   const customEmojiInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const originalDateRef = useRef<Date | undefined>(undefined);
+  const colorManuallyChangedRef = useRef(false);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -129,8 +112,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         originalDateRef.current = undefined;
       }
       setEmoji(initialEmoji ?? '');
-      setEmojiColor(initialEmojiColor);
+      setEmojiColor(initialEmojiColor || DEFAULT_COLOR);
       setIsRecurring(initialIsRecurring ?? false);
+      // Reset manual change flag when modal opens
+      colorManuallyChangedRef.current = false;
       
       // Auto-focus the title input when creating a new event (not editing)
       if (!isEditing) {
@@ -222,21 +207,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     hasDateChanged,
     getCurrentDate: () => date,
   }));
-
-  const handleColorSelect = (color: string | undefined) => {
-    trigger('light');
-    setEmojiColor(color);
-  };
-
-  const handleCustomColorClick = () => {
-    trigger('light');
-    colorInputRef.current?.click();
-  };
-
-  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    trigger('light');
-    setEmojiColor(e.target.value);
-  };
 
   const handleEmojiSelect = (e: string) => {
     trigger('light');
@@ -343,9 +313,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   // Also deselect suggested emojis when the custom emoji input is open
                   const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
                   const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
-                  const selectedColorGradient = emojiColor 
-                    ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
-                    : COLOR_OPTIONS[0].gradient;
+                  const selectedColorGradient = getGradientFromColor(emojiColor);
                   
                   return (
                     <button
@@ -371,9 +339,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     onClick={() => {}}
                     className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all duration-200 shadow-sm scale-110"
                     style={{ 
-                      background: emojiColor 
-                        ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
-                        : COLOR_OPTIONS[0].gradient 
+                      background: getGradientFromColor(emojiColor)
                     }}
                   >
                     {emoji}
@@ -411,9 +377,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       placeholder="🎨"
                       className="w-12 h-12 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none"
                       style={{
-                        background: emojiColor 
-                          ? (isCustomColor(emojiColor) ? getGradientFromColor(emojiColor) : COLOR_OPTIONS.find(c => c.value === emojiColor)?.gradient)
-                          : COLOR_OPTIONS[0].gradient,
+                        background: getGradientFromColor(emojiColor),
                         color: 'white'
                       }}
                       maxLength={4}
@@ -444,57 +408,17 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               </div>
             </div>
 
-            {/* Color picker */}
+            {/* Color picker wheel */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Icon Color</Label>
-              <div className="flex gap-2 flex-wrap">
-                {COLOR_OPTIONS.map((color) => (
-                  <button
-                    key={color.id}
-                    onClick={() => handleColorSelect(color.value)}
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
-                      (emojiColor === color.value || (!emojiColor && !color.value))
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ background: color.gradient }}
-                    title={color.label}
-                  >
-                    {(emojiColor === color.value || (!emojiColor && !color.value)) && (
-                      <span className="text-2xl">{emoji}</span>
-                    )}
-                  </button>
-                ))}
-                {/* Custom color picker button with overlay input for Safari mobile */}
-                <div className="relative w-12 h-12">
-                  <button
-                    onClick={handleCustomColorClick}
-                    className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 ${
-                      isCustomColor(emojiColor)
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                        : 'hover:scale-105'
-                    }`}
-                    style={isCustomColor(emojiColor) ? { background: getGradientFromColor(emojiColor!) } : undefined}
-                    title="Custom color"
-                  >
-                    {isCustomColor(emojiColor) ? (
-                      <span className="text-2xl">{emoji}</span>
-                    ) : (
-                      <Plus className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                  {/* Color input overlaid on button for Safari mobile compatibility */}
-                  <input
-                    ref={colorInputRef}
-                    type="color"
-                    onChange={handleCustomColorChange}
-                    value={emojiColor || '#3b82f6'}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    style={{ minWidth: '48px', minHeight: '48px' }}
-                    aria-label="Custom color picker"
-                  />
-                </div>
-              </div>
+              <ColorWheelPicker 
+                value={emojiColor} 
+                onChange={setEmojiColor}
+                emoji={emoji}
+                onManualChange={() => {
+                  colorManuallyChangedRef.current = true;
+                }}
+              />
             </div>
 
             {/* Recurring toggle */}
