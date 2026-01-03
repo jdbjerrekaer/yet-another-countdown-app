@@ -5,6 +5,7 @@ A beautiful, feature-rich countdown timer application built with React and Ionic
 ## Features
 
 - **Multiple Countdown Timers** - Create and manage unlimited countdown events
+- **Count Up & Down** - Select future dates to count down, or past dates to count up (days since)
 - **Recurring Events** - Set up yearly recurring countdowns (birthdays, anniversaries, etc.)
 - **Drag-and-Drop Sorting** - Reorder your countdowns with intuitive drag-and-drop
 - **Widget Previews** - Preview your countdowns in four different widget sizes:

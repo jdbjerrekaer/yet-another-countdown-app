@@ -129,8 +129,6 @@ export function CountdownCard({
         ref={slidingRef}
         disabled={isReordering}
         onIonDrag={handleDrag}
-        onIonDragEnd={handleDragEnd}
-        onIonClose={handleClose}
         style={{
           borderRadius: 'inherit',
           overflow: 'hidden',
