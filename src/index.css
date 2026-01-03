@@ -136,6 +136,109 @@
     box-shadow: 0 8px 30px -8px hsl(0 0% 0% / 0.12);
   }
 
+  /* Widget appearance mode styles */
+  .widget-light {
+    background: hsl(0 0% 100%);
+    color: hsl(0 0% 9%);
+  }
+
+  .widget-dark {
+    background: hsl(0 0% 10%);
+    color: hsl(0 0% 98%);
+  }
+
+  .widget-dark .text-foreground {
+    color: hsl(0 0% 98%);
+  }
+
+  .widget-dark .text-muted-foreground {
+    color: hsl(0 0% 60%);
+  }
+
+  .widget-dark .bg-secondary\/50 {
+    background: hsl(0 0% 15% / 0.5);
+  }
+
+  .widget-dark .bg-secondary\/30 {
+    background: hsl(0 0% 15% / 0.3);
+  }
+
+  .widget-dark .bg-secondary {
+    background: hsl(0 0% 15%);
+  }
+
+  .widget-transparent {
+    background: hsl(0 0% 50% / 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: hsl(0 0% 9%);
+  }
+
+  .widget-transparent .text-foreground {
+    color: hsl(0 0% 9%);
+  }
+
+  .widget-transparent .text-muted-foreground {
+    color: hsl(0 0% 35%);
+  }
+
+  .widget-transparent .bg-secondary\/50 {
+    background: hsl(0 0% 0% / 0.08);
+  }
+
+  .widget-transparent .bg-secondary\/30 {
+    background: hsl(0 0% 0% / 0.05);
+  }
+
+  .widget-transparent .bg-secondary {
+    background: hsl(0 0% 0% / 0.1);
+  }
+
+  /* Tinted mode - base styles, actual color set via inline style */
+  .widget-tinted {
+    /* Background color set dynamically via inline style */
+  }
+
+  .widget-tinted-light .text-foreground {
+    color: hsl(0 0% 9%);
+  }
+
+  .widget-tinted-light .text-muted-foreground {
+    color: hsl(0 0% 40%);
+  }
+
+  .widget-tinted-light .bg-secondary\/50 {
+    background: hsl(0 0% 0% / 0.06);
+  }
+
+  .widget-tinted-light .bg-secondary\/30 {
+    background: hsl(0 0% 0% / 0.04);
+  }
+
+  .widget-tinted-light .bg-secondary {
+    background: hsl(0 0% 0% / 0.08);
+  }
+
+  .widget-tinted-dark .text-foreground {
+    color: hsl(0 0% 98%);
+  }
+
+  .widget-tinted-dark .text-muted-foreground {
+    color: hsl(0 0% 65%);
+  }
+
+  .widget-tinted-dark .bg-secondary\/50 {
+    background: hsl(0 0% 100% / 0.08);
+  }
+
+  .widget-tinted-dark .bg-secondary\/30 {
+    background: hsl(0 0% 100% / 0.05);
+  }
+
+  .widget-tinted-dark .bg-secondary {
+    background: hsl(0 0% 100% / 0.1);
+  }
+
   /* Countdown card wrapper styling */
   .countdown-card-wrapper {
     box-shadow: none;

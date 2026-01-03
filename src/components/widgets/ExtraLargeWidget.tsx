@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
+import { WidgetAppearanceMode } from '@/types/countdown';
+import { getTintedBackground } from '@/lib/colorPalette';
 
 // Helper function to adjust color brightness for gradient
 function adjustColorBrightness(hex: string, percent: number): string {
@@ -18,12 +20,30 @@ interface ExtraLargeWidgetProps {
   targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
+  appearanceMode: WidgetAppearanceMode;
   createdAt?: Date;
   isRecurring?: boolean;
   nextOccurrenceNumber?: number;
 }
 
-export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiColor, createdAt, isRecurring, nextOccurrenceNumber }: ExtraLargeWidgetProps) {
+function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
+  const baseClasses = 'w-[329px] h-[400px] rounded-[28px] shadow-ios-lg p-6 flex flex-col';
+  
+  switch (appearanceMode) {
+    case 'light':
+      return `${baseClasses} widget-light`;
+    case 'dark':
+      return `${baseClasses} widget-dark`;
+    case 'transparent':
+      return `${baseClasses} widget-transparent`;
+    case 'tinted':
+      return `${baseClasses} widget-tinted widget-tinted-light`;
+    default:
+      return `${baseClasses} bg-card`;
+  }
+}
+
+export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, createdAt, isRecurring, nextOccurrenceNumber }: ExtraLargeWidgetProps) {
   // Calculate progress based on creation date to target date
   // Uses countdown.totalSeconds for smooth updates every second
   const calculateProgress = () => {
@@ -57,9 +77,15 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
   };
 
   const progress = calculateProgress();
+  const widgetClasses = getWidgetClasses(appearanceMode);
+  
+  // For tinted mode, generate the background color from emoji color
+  const tintedStyle = appearanceMode === 'tinted' 
+    ? { background: getTintedBackground(emojiColor, true) }
+    : undefined;
 
   return (
-    <div className="w-[329px] h-[400px] rounded-[28px] bg-card shadow-ios-lg p-6 flex flex-col">
+    <div className={widgetClasses} style={tintedStyle}>
       <div className="flex items-center gap-4 mb-6">
         <div 
           className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}

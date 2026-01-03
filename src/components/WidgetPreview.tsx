@@ -3,6 +3,7 @@ import { MediumWidget } from './widgets/MediumWidget';
 import { LargeWidget } from './widgets/LargeWidget';
 import { ExtraLargeWidget } from './widgets/ExtraLargeWidget';
 import { CountdownTime } from '@/hooks/useCountdown';
+import { WidgetAppearanceMode } from '@/types/countdown';
 
 interface WidgetPreviewProps {
   title: string;
@@ -11,21 +12,22 @@ interface WidgetPreviewProps {
   emoji: string;
   emojiColor?: string;
   size: 'small' | 'medium' | 'large' | 'extraLarge';
+  appearanceMode: WidgetAppearanceMode;
   isRecurring?: boolean;
   createdAt?: Date;
   nextOccurrenceNumber?: number;
 }
 
-export function WidgetPreview({ title, countdown, targetDate, emoji, emojiColor, size, isRecurring, createdAt, nextOccurrenceNumber }: WidgetPreviewProps) {
+export function WidgetPreview({ title, countdown, targetDate, emoji, emojiColor, size, appearanceMode, isRecurring, createdAt, nextOccurrenceNumber }: WidgetPreviewProps) {
   switch (size) {
     case 'small':
-      return <SmallWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
+      return <SmallWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
     case 'medium':
-      return <MediumWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
+      return <MediumWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
     case 'large':
-      return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
+      return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
     case 'extraLarge':
-      return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} createdAt={createdAt} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
+      return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} createdAt={createdAt} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
     default:
       return null;
   }

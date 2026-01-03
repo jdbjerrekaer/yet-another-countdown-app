@@ -29,7 +29,7 @@ import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CountdownEvent, WidgetSize } from '@/types/countdown';
+import { CountdownEvent, WidgetSize, WidgetAppearanceMode } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 
@@ -40,11 +40,22 @@ const WIDGET_SIZES: { id: WidgetSize; label: string }[] = [
   { id: 'extraLarge', label: 'Extra Large' },
 ];
 
+const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; label: string }[] = [
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+  { id: 'transparent', label: 'Glass' },
+  { id: 'tinted', label: 'Tinted' },
+];
+
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export default function Index() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('large');
+  const [selectedAppearanceMode, setSelectedAppearanceMode] = useState<WidgetAppearanceMode>(() => {
+    const saved = localStorage.getItem('widgetAppearanceMode');
+    return (saved as WidgetAppearanceMode) || 'light';
+  });
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -121,6 +132,11 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('countdowns', JSON.stringify(events));
   }, [events]);
+
+  // Persist appearance mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('widgetAppearanceMode', selectedAppearanceMode);
+  }, [selectedAppearanceMode]);
 
   // Check scheduled notifications on app load (for web platform)
   useEffect(() => {
@@ -575,6 +591,26 @@ export default function Index() {
                     </IonSegment>
                   </section>
 
+                  {/* Appearance mode selector */}
+                  <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Appearance
+                    </h2>
+                    <IonSegment
+                      value={selectedAppearanceMode}
+                      onIonChange={(e) => {
+                        trigger('selection');
+                        setSelectedAppearanceMode(e.detail.value as WidgetAppearanceMode);
+                      }}
+                    >
+                      {WIDGET_APPEARANCE_MODES.map((mode) => (
+                        <IonSegmentButton key={mode.id} value={mode.id}>
+                          {mode.label}
+                        </IonSegmentButton>
+                      ))}
+                    </IonSegment>
+                  </section>
+
                   {/* Widget preview */}
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
@@ -589,6 +625,7 @@ export default function Index() {
                           emoji={selectedEvent.emoji}
                           emojiColor={selectedEvent.emojiColor}
                           size={selectedSize}
+                          appearanceMode={selectedAppearanceMode}
                           isRecurring={selectedEvent.isRecurring}
                           createdAt={new Date(selectedEvent.createdAt)}
                           nextOccurrenceNumber={nextOccurrenceNumber}

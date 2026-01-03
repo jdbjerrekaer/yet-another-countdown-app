@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
+import { WidgetAppearanceMode } from '@/types/countdown';
+import { getTintedBackground } from '@/lib/colorPalette';
 
 interface MediumWidgetProps {
   title: string;
@@ -8,13 +10,38 @@ interface MediumWidgetProps {
   targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
+  appearanceMode: WidgetAppearanceMode;
   isRecurring?: boolean;
   nextOccurrenceNumber?: number;
 }
 
-export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor, isRecurring, nextOccurrenceNumber }: MediumWidgetProps) {
+function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
+  const baseClasses = 'w-[329px] h-[155px] rounded-[28px] shadow-ios-lg p-5 flex flex-col justify-between';
+  
+  switch (appearanceMode) {
+    case 'light':
+      return `${baseClasses} widget-light`;
+    case 'dark':
+      return `${baseClasses} widget-dark`;
+    case 'transparent':
+      return `${baseClasses} widget-transparent`;
+    case 'tinted':
+      return `${baseClasses} widget-tinted widget-tinted-light`;
+    default:
+      return `${baseClasses} bg-card`;
+  }
+}
+
+export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, isRecurring, nextOccurrenceNumber }: MediumWidgetProps) {
+  const widgetClasses = getWidgetClasses(appearanceMode);
+  
+  // For tinted mode, generate the background color from emoji color
+  const tintedStyle = appearanceMode === 'tinted' 
+    ? { background: getTintedBackground(emojiColor, true) }
+    : undefined;
+
   return (
-    <div className="w-[329px] h-[155px] rounded-[28px] bg-card shadow-ios-lg p-5 flex flex-col justify-between">
+    <div className={widgetClasses} style={tintedStyle}>
       <div className="flex items-center gap-3">
         <span className="text-3xl">{emoji}</span>
         <div className="flex-1 min-w-0">
