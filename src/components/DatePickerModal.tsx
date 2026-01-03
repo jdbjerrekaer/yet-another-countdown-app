@@ -237,6 +237,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               </Label>
               <Input
                 id="title"
+                ref={(el) => {
+                  // Auto-focus when modal opens for new events
+                  if (el && isOpen && !isEditing) {
+                    setTimeout(() => el.focus(), 300);
+                  }
+                }}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter event name"
@@ -448,13 +454,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                         setDate(newDate);
                       }
                     }}
-                    min={isRecurring ? undefined : (() => {
-                      const today = new Date();
-                      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    min={(() => {
+                      const minDate = new Date();
+                      minDate.setFullYear(minDate.getFullYear() - 100);
+                      return `${minDate.getFullYear()}-${String(minDate.getMonth() + 1).padStart(2, '0')}-${String(minDate.getDate()).padStart(2, '0')}`;
                     })()}
                     max={(() => {
                       const maxDate = new Date();
-                      maxDate.setFullYear(maxDate.getFullYear() + 5);
+                      maxDate.setFullYear(maxDate.getFullYear() + 100);
                       return `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}-${String(maxDate.getDate()).padStart(2, '0')}`;
                     })()}
                     firstDayOfWeek={1}
