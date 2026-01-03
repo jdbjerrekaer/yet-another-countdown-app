@@ -20,9 +20,9 @@ export function WidgetPreview({ title, countdown, targetDate, emoji, emojiColor,
   const widget = (() => {
     switch (size) {
       case 'small':
-        return <SmallWidget title={title} countdown={countdown} emoji={emoji} emojiColor={emojiColor} />;
+        return <SmallWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} />;
       case 'medium':
-        return <MediumWidget title={title} countdown={countdown} emoji={emoji} emojiColor={emojiColor} />;
+        return <MediumWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} />;
       case 'large':
         return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} />;
       case 'extraLarge':

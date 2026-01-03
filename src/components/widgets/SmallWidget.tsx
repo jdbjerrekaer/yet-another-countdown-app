@@ -1,8 +1,10 @@
+import { format } from 'date-fns';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 interface SmallWidgetProps {
   title: string;
   countdown: CountdownTime;
+  targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
 }
@@ -20,7 +22,7 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
   return { value: countdown.seconds, unit: 'seconds' };
 };
 
-export function SmallWidget({ title, countdown, emoji, emojiColor: _emojiColor }: SmallWidgetProps) {
+export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor }: SmallWidgetProps) {
   const timeDisplay = getTimeDisplay(countdown);
   
   return (
@@ -30,7 +32,12 @@ export function SmallWidget({ title, countdown, emoji, emojiColor: _emojiColor }
       </div>
       
       <div>
-        <p className="text-xs text-muted-foreground truncate mb-1">{title}</p>
+        <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
+        {targetDate && (
+          <p className="text-xs text-muted-foreground truncate mb-1">
+            {format(targetDate, 'MMM d, yyyy')}
+          </p>
+        )}
         {countdown.isPast ? (
           <p className="text-2xl font-bold text-foreground tracking-tight">
             {countdown.daysSince}<span className="text-sm font-medium text-muted-foreground ml-1">day{countdown.daysSince !== 1 ? 's' : ''} ago</span>

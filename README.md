@@ -5,6 +5,7 @@ A beautiful, feature-rich countdown timer application built with React and Ionic
 ## Features
 
 - **Multiple Countdown Timers** - Create and manage unlimited countdown events
+- **Count Up Support** - Select past dates to track time since an event ("days ago")
 - **Recurring Events** - Set up yearly recurring countdowns (birthdays, anniversaries, etc.)
 - **Drag-and-Drop Sorting** - Reorder your countdowns with intuitive drag-and-drop
 - **Widget Previews** - Preview your countdowns in four different widget sizes:
@@ -163,10 +164,12 @@ yet-another-countdown-app/
 
 1. Tap the **+** button in the top right corner
 2. Enter a title for your countdown
-3. Select a target date using the date picker
+3. Select a target date using the date picker (future dates count down, past dates count up)
 4. Choose an emoji to represent your event
 5. Optionally enable "Recurring" for yearly events (e.g., birthdays)
 6. Tap "Save" to create the countdown
+
+> **Tip:** Selecting a date in the past enables "count up" mode, showing how many days ago the event occurred.
 
 ### Editing a Countdown
 

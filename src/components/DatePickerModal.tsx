@@ -79,6 +79,7 @@ export function DatePickerModal({
   const prevIsOpenRef = useRef(false);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const customEmojiInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form state only when modal opens (not on every prop change)
   useEffect(() => {
@@ -96,6 +97,13 @@ export function DatePickerModal({
       setEmoji(initialEmoji || '🎯');
       setEmojiColor(initialEmojiColor);
       setIsRecurring(initialIsRecurring ?? false);
+      
+      // Auto-focus the title input when creating a new event (not editing)
+      if (!isEditing) {
+        setTimeout(() => {
+          titleInputRef.current?.focus();
+        }, 300);
+      }
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, initialTitle, initialDate, initialEmoji, initialEmojiColor, initialIsRecurring, isEditing]);
@@ -223,6 +231,7 @@ export function DatePickerModal({
                 Event Name
               </Label>
               <Input
+                ref={titleInputRef}
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -435,10 +444,7 @@ export function DatePickerModal({
                         setDate(newDate);
                       }
                     }}
-                    min={isRecurring ? undefined : (() => {
-                      const today = new Date();
-                      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                    })()}
+                    min="1900-01-01"
                     max={(() => {
                       const maxDate = new Date();
                       maxDate.setFullYear(maxDate.getFullYear() + 5);

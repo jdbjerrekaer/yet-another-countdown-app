@@ -79,7 +79,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
       {countdown.isPast ? (
         <div className="flex-1 flex flex-col items-center justify-center">
           <p className="text-7xl font-bold text-foreground mb-2">{countdown.daysSince}</p>
-          <p className="text-xl text-muted-foreground">day{countdown.daysSince !== 1 ? 's' : ''} since</p>
+          <p className="text-xl text-muted-foreground">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
         </div>
       ) : countdown.isComplete ? (
         <div className="flex-1 flex flex-col items-center justify-center">

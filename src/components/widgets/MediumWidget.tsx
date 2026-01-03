@@ -1,22 +1,30 @@
+import { format } from 'date-fns';
 import { CountdownTime } from '@/hooks/useCountdown';
 
 interface MediumWidgetProps {
   title: string;
   countdown: CountdownTime;
+  targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
 }
 
-export function MediumWidget({ title, countdown, emoji, emojiColor: _emojiColor }: MediumWidgetProps) {
+export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor: _emojiColor }: MediumWidgetProps) {
   return (
     <div className="w-[329px] h-[155px] rounded-[28px] bg-card shadow-ios-lg p-5 flex flex-col justify-between">
       <div className="flex items-center gap-3">
         <span className="text-3xl">{emoji}</span>
         <div>
           <p className="font-semibold text-foreground">{title}</p>
-          <p className="text-xs text-muted-foreground">
-            {countdown.isPast ? 'Time since event' : countdown.isComplete ? 'Event arrived!' : 'Counting down'}
-          </p>
+          {targetDate ? (
+            <p className="text-xs text-muted-foreground">
+              {format(targetDate, 'MMM d, yyyy')}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {countdown.isPast ? 'Time since event' : countdown.isComplete ? 'Event arrived!' : 'Counting down'}
+            </p>
+          )}
         </div>
       </div>
       
