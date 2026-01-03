@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFab, IonFabButton } from '@ionic/react';
-import { add } from 'ionicons/icons';
+import { createPortal } from 'react-dom';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton } from '@ionic/react';
+import { add, checkmark } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { Dialog } from '@capacitor/dialog';
@@ -22,7 +23,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { WidgetPreview } from '@/components/WidgetPreview';
-import { DatePickerModal } from '@/components/DatePickerModal';
+import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -48,11 +49,14 @@ export default function Index() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [dragRotationAngle, setDragRotationAngle] = useState<number>(0);
+  const [canSaveForm, setCanSaveForm] = useState(false);
+  const [draggedCardWidth, setDraggedCardWidth] = useState<number | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
   const previousDragXRef = useRef<number | null>(null);
   const targetDragRotationRef = useRef<number>(0);
   const dragAnimationFrameRef = useRef<number | null>(null);
+  const datePickerModalRef = useRef<DatePickerModalRef>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -240,9 +244,20 @@ export default function Index() {
     setIsModalOpen(true);
   };
 
+  const handleFabClick = () => {
+    if (isModalOpen) {
+      // Modal is open - trigger save
+      datePickerModalRef.current?.save();
+    } else {
+      // Modal is closed - open it
+      handleAddNew();
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingEvent(null);
+    setCanSaveForm(false);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -253,6 +268,25 @@ export default function Index() {
     setDragRotationAngle(0);
     // Set cursor to grabbing on body for proper cursor display
     document.body.style.cursor = 'grabbing';
+    
+    // Measure the actual card width to match it in DragOverlay
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const activeId = event.active.id as string;
+      const cardElement = document.querySelector(`[data-sortable-id="${activeId}"]`) as HTMLElement;
+      if (cardElement) {
+        // Use getBoundingClientRect for more accurate measurement
+        const rect = cardElement.getBoundingClientRect();
+        setDraggedCardWidth(rect.width);
+      } else {
+        // Fallback: calculate width based on viewport minus padding
+        // ion-padding typically adds 16px on each side
+        const padding = 32; // 16px * 2
+        const calculatedWidth = window.innerWidth - padding;
+        setDraggedCardWidth(calculatedWidth);
+      }
+    });
+    
     trigger('medium');
   };
 
@@ -306,6 +340,7 @@ export default function Index() {
     previousDragYRef.current = null;
     previousDragXRef.current = null;
     setDragRotationAngle(0);
+    setDraggedCardWidth(null);
     // Reset cursor
     document.body.style.cursor = '';
     lastDragEndTs.current = Date.now();
@@ -365,6 +400,22 @@ export default function Index() {
   const shouldIgnoreTap = () => {
     return Date.now() - lastDragEndTs.current < 200;
   };
+
+  const fabPortal = (
+    <div className={`fab-portal${isModalOpen ? ' fab-portal--above-modal' : ''}`}>
+      <IonFabButton 
+        onClick={handleFabClick} 
+        aria-label={isModalOpen ? "Save event" : "Add event"}
+        disabled={isModalOpen && !canSaveForm}
+        style={isModalOpen && !canSaveForm ? { 
+          '--background': 'var(--ion-color-medium, #92949c)',
+          '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
+        } as React.CSSProperties : undefined}
+      >
+        <IonIcon icon={isModalOpen ? checkmark : add} />
+      </IonFabButton>
+    </div>
+  );
 
   return (
     <IonPage>
@@ -439,8 +490,8 @@ export default function Index() {
                         <div 
                           className={`sortable-countdown-card is-dragging ${activeEvent.id === selectedEventId ? 'is-selected' : ''}`}
                           style={{ 
-                            width: '100%', 
-                            maxWidth: '485px',
+                            width: draggedCardWidth ? `${draggedCardWidth}px` : '100%',
+                            maxWidth: draggedCardWidth ? `${draggedCardWidth}px` : 'none',
                             pointerEvents: 'none',
                             transform: `rotate(${dragRotationAngle.toFixed(2)}deg) scale(1.02)`,
                             transformOrigin: 'center center',
@@ -509,17 +560,13 @@ export default function Index() {
             </div>
           )}
         </div>
-
-        {/* Floating Action Button */}
-        <IonFab vertical="bottom" horizontal="end" slot="fixed">
-          <IonFabButton onClick={handleAddNew} aria-label="Add event">
-            <IonIcon icon={add} />
-          </IonFabButton>
-        </IonFab>
       </IonContent>
+
+      {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal
+        ref={datePickerModalRef}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSave}
@@ -534,6 +581,7 @@ export default function Index() {
         initialIsRecurring={editingEvent?.isRecurring}
         isEditing={!!editingEvent}
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
+        onValidityChange={setCanSaveForm}
       />
 
     </IonPage>

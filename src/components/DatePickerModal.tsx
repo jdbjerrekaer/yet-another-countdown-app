@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
 import { CalendarIcon, RefreshCw, Trash2, Plus } from 'lucide-react';
@@ -38,6 +38,12 @@ interface DatePickerModalProps {
   initialIsRecurring?: boolean;
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
+  onValidityChange?: (canSave: boolean) => void;
+}
+
+export interface DatePickerModalRef {
+  save: () => Promise<void>;
+  canSave: () => boolean;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -56,7 +62,7 @@ const COLOR_OPTIONS = [
   { id: 'slate', label: 'Slate', value: '#475569', gradient: 'linear-gradient(135deg, #475569 0%, #64748b 100%)' },
 ];
 
-export function DatePickerModal({
+export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
   isOpen,
   onClose,
   onSave,
@@ -67,7 +73,8 @@ export function DatePickerModal({
   initialIsRecurring = false,
   isEditing = false,
   onDelete,
-}: DatePickerModalProps) {
+  onValidityChange,
+}, ref) => {
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
@@ -113,6 +120,15 @@ export function DatePickerModal({
     onClose();
   };
 
+  const canSave = () => Boolean(title && date);
+
+  // Notify parent when validity changes
+  useEffect(() => {
+    if (onValidityChange) {
+      onValidityChange(canSave());
+    }
+  }, [title, date, onValidityChange]);
+
   const handleSave = async () => {
     if (title && date) {
       await onSave(title, date, emoji, isRecurring, emojiColor);
@@ -121,6 +137,12 @@ export function DatePickerModal({
       onClose();
     }
   };
+
+  // Expose save method to parent via ref
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+    canSave,
+  }));
 
   const handleColorSelect = (color: string | undefined) => {
     trigger('light');
@@ -210,15 +232,6 @@ export function DatePickerModal({
           <IonTitle>
             {isEditing ? `Edit ${initialTitle || title || 'Event'}` : 'New Event'}
           </IonTitle>
-          <IonButtons slot="end">
-            <IonButton 
-              onClick={handleSave} 
-              disabled={!title || !date}
-              strong={true}
-            >
-              Save
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
@@ -494,4 +507,4 @@ export function DatePickerModal({
       </IonContent>
     </IonModal>
   );
-}
+});
