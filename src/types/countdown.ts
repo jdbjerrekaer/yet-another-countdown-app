@@ -11,3 +11,5 @@ export interface CountdownEvent {
 export type WidgetSize = 'small' | 'medium' | 'large' | 'extraLarge';
 
 export type WidgetAppearanceMode = 'light' | 'dark' | 'transparent' | 'tinted';
+
+export type WidgetCountdownStyle = 'focus' | 'visual';

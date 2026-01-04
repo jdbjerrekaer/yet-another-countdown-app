@@ -1,8 +1,10 @@
 import { format } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
-import { WidgetAppearanceMode } from '@/types/countdown';
+import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
+import { calculateRemainingPercent } from '@/lib/widgetProgress';
+import { CountdownRing } from './CountdownRing';
 
 interface LargeWidgetProps {
   title: string;
@@ -11,7 +13,9 @@ interface LargeWidgetProps {
   emoji: string;
   emojiColor?: string;
   appearanceMode: WidgetAppearanceMode;
+  countdownStyle: WidgetCountdownStyle;
   isRecurring?: boolean;
+  createdAt?: Date;
   nextOccurrenceNumber?: number;
 }
 
@@ -32,7 +36,7 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
   }
 }
 
-export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, isRecurring, nextOccurrenceNumber }: LargeWidgetProps) {
+export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, countdownStyle, isRecurring, createdAt, nextOccurrenceNumber }: LargeWidgetProps) {
   const widgetClasses = getWidgetClasses(appearanceMode);
   
   // For tinted mode, generate the background color from emoji color
@@ -40,6 +44,88 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
     ? { background: getTintedBackground(emojiColor, true) }
     : undefined;
 
+  // Calculate progress for visual mode
+  const { remainingPercent, isActive } = calculateRemainingPercent(
+    targetDate,
+    countdown,
+    isRecurring ?? false,
+    createdAt
+  );
+
+  // Use emojiColor for ring, fallback to primary blue
+  const ringColor = emojiColor || 'hsl(211, 100%, 50%)';
+
+  // Visual mode layout
+  if (countdownStyle === 'visual') {
+    return (
+      <div className={widgetClasses} style={tintedStyle}>
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-3xl">{emoji}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-lg font-semibold text-foreground truncate">{title}</p>
+              {(isRecurring || countdown.isPast) && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                  {nextOccurrenceNumber && (
+                    <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            {targetDate && (
+              <p className="text-sm text-muted-foreground">
+                {isRecurring ? format(targetDate, 'MMM d, yyyy') : format(targetDate, 'MMM d, yyyy')}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Center: Large ring */}
+        <div className="flex-1 flex items-center justify-center">
+          {countdown.isPast ? (
+            <div className="text-center">
+              <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
+              <p className="text-lg text-muted-foreground mt-2">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
+            </div>
+          ) : countdown.isComplete ? (
+            <div className="text-center">
+              <p className="text-5xl font-bold text-primary">Today!</p>
+              <p className="text-3xl mt-2">🎉</p>
+            </div>
+          ) : (
+            <CountdownRing
+              percentRemaining={isActive ? remainingPercent : 0}
+              color={ringColor}
+              sizePx={160}
+              strokeWidth={22}
+            />
+          )}
+        </div>
+
+        {/* Bottom: Time breakdown */}
+        {!countdown.isPast && !countdown.isComplete && (
+          <div className="flex justify-center gap-6 mt-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">{countdown.hours}</p>
+              <p className="text-xs text-muted-foreground">Hours</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">{countdown.minutes}</p>
+              <p className="text-xs text-muted-foreground">Min</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">{countdown.seconds}</p>
+              <p className="text-xs text-muted-foreground">Sec</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Focus mode layout (original)
   return (
     <div className={widgetClasses} style={tintedStyle}>
       <div className="flex items-center gap-3 mb-auto">

@@ -190,22 +190,10 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   // Initialize to the correct slide on mount
   useEffect(() => {
     if (emblaApi && !isInitializedRef.current) {
-      // If emoji is provided and color hasn't been manually changed, use emoji-based color
-      let initialColor = value;
-      let shouldUpdateValue = false;
-      
-      if (emoji && !hasManualChangeRef.current) {
-        const emojiHex = emojiToHex(emoji);
-        const emojiColorIndex = findClosestColorIndex(emojiHex);
-        const emojiColor = COLOR_PALETTE[emojiColorIndex];
-        
-        // Use emoji color if it's different from current value
-        // This handles the case where value is DEFAULT_COLOR or doesn't match emoji
-        if (emojiColor && emojiColor !== value) {
-          initialColor = emojiColor;
-          shouldUpdateValue = true;
-        }
-      }
+      // Always use the provided value - it's the saved color for this event
+      // The emoji-based color suggestion should only apply when creating new events
+      // or when the user explicitly changes the emoji (handled by the emoji effect above)
+      const initialColor = value;
       
       const initialIndex = findClosestColorIndex(initialColor);
       emblaApi.scrollTo(initialIndex, true); // instant scroll
@@ -214,13 +202,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       lastIndexRef.current = initialIndex;
       lastSlideIndexRef.current = initialIndex; // Initialize velocity tracking
       isInitializedRef.current = true;
-      
-      // Update the value if we used emoji-based color
-      if (shouldUpdateValue) {
-        onChange(initialColor);
-      }
     }
-  }, [emblaApi, value, emoji, onChange]);
+  }, [emblaApi, value]);
 
   // Handle scroll events for real-time preview and velocity tracking
   const onScroll = useCallback(() => {
@@ -295,6 +278,10 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   // Handle slide changes (when snapped)
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
+    
+    // Don't update state until we're properly initialized
+    // This prevents overwriting the correct initial value with index 0
+    if (!isInitializedRef.current) return;
 
     const slideIndex = emblaApi.selectedScrollSnap();
     const slideCount = COLOR_PALETTE.length;

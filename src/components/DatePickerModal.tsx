@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
-import { CalendarIcon, RefreshCw, Trash2, Plus } from 'lucide-react';
+import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,12 +70,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const [showCustomEmojiInput, setShowCustomEmojiInput] = useState(false);
   const [customEmojiValue, setCustomEmojiValue] = useState('');
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
   const { trigger } = useHaptic();
   const prevIsOpenRef = useRef(false);
   const customEmojiInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const originalDateRef = useRef<Date | undefined>(undefined);
   const colorManuallyChangedRef = useRef(false);
+  const [colorPickerKey, setColorPickerKey] = useState(0);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -116,6 +118,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       setIsRecurring(initialIsRecurring ?? false);
       // Reset manual change flag when modal opens
       colorManuallyChangedRef.current = false;
+      // Increment key to force ColorWheelPicker remount with correct initial value
+      setColorPickerKey(prev => prev + 1);
       
       // Auto-focus the title input when creating a new event (not editing)
       if (!isEditing) {
@@ -292,15 +296,37 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
                 Event Name
               </Label>
-              <Input
-                ref={titleInputRef}
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter event name"
-                autoFocus={!isEditing}
-                className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
-              />
+              <div className="relative">
+                <Input
+                  ref={titleInputRef}
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onFocus={() => setIsTitleFocused(true)}
+                  onBlur={() => setIsTitleFocused(false)}
+                  placeholder="Enter event name"
+                  autoFocus={!isEditing}
+                  className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10"
+                />
+                {isTitleFocused && title && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setTitle('');
+                      // Use setTimeout to ensure the input stays focused after clearing
+                      setTimeout(() => {
+                        titleInputRef.current?.focus();
+                      }, 0);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-secondary/80 active:bg-secondary text-muted-foreground hover:text-foreground animate-blur-in"
+                    aria-label="Clear input"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Emoji picker - selected emoji shows the chosen color */}
@@ -414,6 +440,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Icon Color</Label>
               <ColorWheelPicker 
+                key={colorPickerKey}
                 value={emojiColor} 
                 onChange={setEmojiColor}
                 emoji={emoji}

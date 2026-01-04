@@ -4,17 +4,7 @@ import { ChevronRight, RefreshCw } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
-import { getNextRecurringDate, getNextOccurrenceNumber } from '@/lib/recurring';
-
-// Helper function to adjust color brightness for gradient
-function adjustColorBrightness(hex: string, percent: number): string {
-  const num = parseInt(hex.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = Math.min(255, Math.max(0, (num >> 16) + amt));
-  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
-  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
-  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
-}
+import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 
 interface CountdownCardProps {
   event: CountdownEvent;
@@ -45,10 +35,12 @@ export function CountdownCard({
   
   const countdown = useCountdown(targetDate);
   
-  // Calculate next occurrence number for recurring events
-  const nextOccurrenceNumber = event.isRecurring 
-    ? getNextOccurrenceNumber(new Date(event.targetDate))
-    : 0;
+  // Calculate occurrence number for events
+  const occurrenceNumber = event.isRecurring
+    ? (countdown.isPast
+        ? getRepetitionCount(new Date(event.targetDate))
+        : getNextOccurrenceNumber(new Date(event.targetDate)))
+    : (countdown.isPast ? 1 : 0);
 
   const handleSelect = () => {
     trigger('light');
@@ -164,7 +156,7 @@ export function CountdownCard({
           <div 
             className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${!event.emojiColor ? 'gradient-accent' : ''}`}
             style={event.emojiColor ? { 
-              background: `linear-gradient(135deg, ${event.emojiColor} 0%, ${adjustColorBrightness(event.emojiColor, 20)} 100%)` 
+              backgroundColor: event.emojiColor
             } : undefined}
           >
             <span className="text-2xl">{event.emoji}</span>
@@ -173,12 +165,12 @@ export function CountdownCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
-              {event.isRecurring && (
+              {(event.isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <RefreshCw className="w-3.5 h-3.5 text-primary" />
-                  {nextOccurrenceNumber > 0 && (
+                  {event.isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                  {occurrenceNumber > 0 && (
                     <span className="text-xs text-primary font-medium">
-                      #{nextOccurrenceNumber}
+                      #{occurrenceNumber}
                     </span>
                   )}
                 </div>

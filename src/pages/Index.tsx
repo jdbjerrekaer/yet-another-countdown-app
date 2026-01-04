@@ -29,8 +29,8 @@ import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CountdownEvent, WidgetSize, WidgetAppearanceMode } from '@/types/countdown';
-import { getNextRecurringDate, getNextOccurrenceNumber } from '@/lib/recurring';
+import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
+import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 
 const WIDGET_SIZES: { id: WidgetSize; label: string }[] = [
@@ -47,6 +47,11 @@ const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; label: string }[] = [
   { id: 'tinted', label: 'Tinted' },
 ];
 
+const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; label: string }[] = [
+  { id: 'focus', label: 'Focus' },
+  { id: 'visual', label: 'Visual' },
+];
+
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export default function Index() {
@@ -55,6 +60,10 @@ export default function Index() {
   const [selectedAppearanceMode, setSelectedAppearanceMode] = useState<WidgetAppearanceMode>(() => {
     const saved = localStorage.getItem('widgetAppearanceMode');
     return (saved as WidgetAppearanceMode) || 'light';
+  });
+  const [selectedCountdownStyle, setSelectedCountdownStyle] = useState<WidgetCountdownStyle>(() => {
+    const saved = localStorage.getItem('widgetCountdownStyle');
+    return (saved as WidgetCountdownStyle) || 'focus';
   });
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -124,9 +133,13 @@ export default function Index() {
   
   const countdown = useCountdown(targetDate);
   
-  // Calculate next occurrence number for recurring events
-  const nextOccurrenceNumber = selectedEvent?.isRecurring
-    ? getNextOccurrenceNumber(new Date(selectedEvent.targetDate))
+  // Calculate occurrence number for events
+  const occurrenceNumber = selectedEvent
+    ? (selectedEvent.isRecurring
+        ? (countdown.isPast
+            ? getRepetitionCount(new Date(selectedEvent.targetDate))
+            : getNextOccurrenceNumber(new Date(selectedEvent.targetDate)))
+        : (countdown.isPast ? 1 : undefined))
     : undefined;
 
   useEffect(() => {
@@ -137,6 +150,11 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('widgetAppearanceMode', selectedAppearanceMode);
   }, [selectedAppearanceMode]);
+
+  // Persist countdown style to localStorage
+  useEffect(() => {
+    localStorage.setItem('widgetCountdownStyle', selectedCountdownStyle);
+  }, [selectedCountdownStyle]);
 
   // Check scheduled notifications on app load (for web platform)
   useEffect(() => {
@@ -591,6 +609,26 @@ export default function Index() {
                     </IonSegment>
                   </section>
 
+                  {/* Countdown style selector */}
+                  <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Style
+                    </h2>
+                    <IonSegment
+                      value={selectedCountdownStyle}
+                      onIonChange={(e) => {
+                        trigger('selection');
+                        setSelectedCountdownStyle(e.detail.value as WidgetCountdownStyle);
+                      }}
+                    >
+                      {WIDGET_COUNTDOWN_STYLES.map((style) => (
+                        <IonSegmentButton key={style.id} value={style.id}>
+                          {style.label}
+                        </IonSegmentButton>
+                      ))}
+                    </IonSegment>
+                  </section>
+
                   {/* Appearance mode selector */}
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
@@ -626,9 +664,10 @@ export default function Index() {
                           emojiColor={selectedEvent.emojiColor}
                           size={selectedSize}
                           appearanceMode={selectedAppearanceMode}
+                          countdownStyle={selectedCountdownStyle}
                           isRecurring={selectedEvent.isRecurring}
                           createdAt={new Date(selectedEvent.createdAt)}
-                          nextOccurrenceNumber={nextOccurrenceNumber}
+                          nextOccurrenceNumber={occurrenceNumber}
                         />
                       </div>
                     </div>
