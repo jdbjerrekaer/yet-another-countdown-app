@@ -4,7 +4,7 @@ import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
-import { CountdownRing } from './CountdownRing';
+import { ProgressBars } from './ProgressBars';
 
 interface LargeWidgetProps {
   title: string;
@@ -52,8 +52,8 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
     createdAt
   );
 
-  // Use emojiColor for ring, fallback to primary blue
-  const ringColor = emojiColor || 'hsl(211, 100%, 50%)';
+  // Use emojiColor for bars, fallback to primary blue
+  const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
   // Visual mode layout
   if (countdownStyle === 'visual') {
@@ -61,7 +61,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
       <div className={widgetClasses} style={tintedStyle}>
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{emoji}</span>
+          <span className="text-4xl">{emoji}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="text-lg font-semibold text-foreground truncate">{title}</p>
@@ -82,43 +82,53 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
           </div>
         </div>
 
-        {/* Center: Large ring */}
+        {/* Center: Progress bars */}
         <div className="flex-1 flex items-center justify-center">
-          {countdown.isPast ? (
-            <div className="text-center">
-              <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-              <p className="text-lg text-muted-foreground mt-2">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
-            </div>
-          ) : countdown.isComplete ? (
+          {countdown.isComplete && !countdown.isPast ? (
             <div className="text-center">
               <p className="text-5xl font-bold text-primary">Today!</p>
               <p className="text-3xl mt-2">🎉</p>
             </div>
           ) : (
-            <CountdownRing
-              percentRemaining={isActive ? remainingPercent : 0}
-              color={ringColor}
-              sizePx={160}
-              strokeWidth={22}
+            <ProgressBars
+              remainingPercent={remainingPercent}
+              numBars={10}
+              color={barColor}
+              barWidth={22}
+              barHeight={120}
+              gap={6}
             />
           )}
         </div>
 
         {/* Bottom: Time breakdown */}
-        {!countdown.isPast && !countdown.isComplete && (
+        {!countdown.isComplete && (
           <div className="flex justify-center gap-6 mt-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">{countdown.hours}</p>
-              <p className="text-xs text-muted-foreground">Hours</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">{countdown.minutes}</p>
-              <p className="text-xs text-muted-foreground">Min</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">{countdown.seconds}</p>
-              <p className="text-xs text-muted-foreground">Sec</p>
-            </div>
+            {countdown.isPast ? (
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground">{countdown.daysSince}</p>
+                <p className="text-xs text-muted-foreground">Days ago</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{countdown.days}</p>
+                  <p className="text-xs text-muted-foreground">Days</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{countdown.hours}</p>
+                  <p className="text-xs text-muted-foreground">Hours</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{countdown.minutes}</p>
+                  <p className="text-xs text-muted-foreground">Min</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{countdown.seconds}</p>
+                  <p className="text-xs text-muted-foreground">Sec</p>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

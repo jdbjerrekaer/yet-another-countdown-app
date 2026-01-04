@@ -4,7 +4,7 @@ import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
-import { CountdownRing } from './CountdownRing';
+import { ProgressBars } from './ProgressBars';
 
 // Helper function to adjust color brightness for gradient
 function adjustColorBrightness(hex: string, percent: number): string {
@@ -86,22 +86,22 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
     createdAt
   );
 
-  // Use emojiColor for ring, fallback to primary blue
-  const ringColor = emojiColor || 'hsl(211, 100%, 50%)';
+  // Use emojiColor for bars, fallback to primary blue
+  const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
       <div className={widgetClasses} style={tintedStyle}>
         {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-6">
           <div 
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
             style={emojiColor ? { 
               background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
             } : undefined}
           >
-            <span className="text-2xl">{emoji}</span>
+            <span className="text-3xl">{emoji}</span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -125,70 +125,51 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
           </div>
         </div>
 
-        {/* Center: Large ring */}
-        <div className="flex-1 flex items-center justify-center">
-          {countdown.isPast ? (
-            <div className="text-center">
-              <p className="text-7xl font-bold text-foreground mb-2">{countdown.daysSince}</p>
-              <p className="text-xl text-muted-foreground">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
-            </div>
-          ) : countdown.isComplete ? (
+        {/* Center: Progress bars and time breakdown */}
+        <div className="flex-1 flex flex-col justify-center">
+          {countdown.isComplete && !countdown.isPast ? (
             <div className="text-center">
               <p className="text-6xl font-bold text-primary mb-4">Today!</p>
               <p className="text-4xl">🎉</p>
             </div>
-          ) : (
-            <CountdownRing
-              percentRemaining={isActive ? remainingPercent : 0}
-              color={ringColor}
-              sizePx={180}
-              strokeWidth={24}
-            />
-          )}
-        </div>
-
-        {/* Bottom: Time breakdown and remaining bar */}
-        {!countdown.isPast && !countdown.isComplete && (
-          <div className="space-y-4">
-            <div className="flex justify-center gap-6">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{countdown.hours}</p>
-                <p className="text-xs text-muted-foreground">Hours</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{countdown.minutes}</p>
-                <p className="text-xs text-muted-foreground">Min</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{countdown.seconds}</p>
-                <p className="text-xs text-muted-foreground">Sec</p>
-              </div>
+          ) : countdown.isPast ? (
+            <div className="flex flex-col items-center justify-center">
+              <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
+              <p className="text-lg text-muted-foreground mt-2">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
             </div>
-            
-            <div className="bg-secondary/30 rounded-2xl p-3">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Remaining</span>
-                <span className="font-medium text-foreground">
-                  {remainingPercent}%
-                </span>
-              </div>
-              <div 
-                className="h-2 bg-secondary rounded-full overflow-hidden"
-              >
-                <div 
-                  className="rounded-full"
-                  style={{ 
-                    width: `${remainingPercent}%`,
-                    height: '100%',
-                    maxWidth: '100%',
-                    backgroundColor: ringColor,
-                    transition: 'width 0.3s ease'
-                  }}
+          ) : (
+            <>
+              <div className="flex items-center justify-center mb-6">
+                <ProgressBars
+                  remainingPercent={remainingPercent}
+                  numBars={8}
+                  color={barColor}
+                  barWidth={30}
+                  barHeight={140}
+                  gap={5}
                 />
               </div>
-            </div>
-          </div>
-        )}
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <p className="text-3xl font-bold text-foreground">{countdown.days}</p>
+                  <p className="text-xs text-muted-foreground">Days</p>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <p className="text-3xl font-bold text-foreground">{countdown.hours}</p>
+                  <p className="text-xs text-muted-foreground">Hours</p>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <p className="text-3xl font-bold text-foreground">{countdown.minutes}</p>
+                  <p className="text-xs text-muted-foreground">Minutes</p>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <p className="text-3xl font-bold text-foreground">{countdown.seconds}</p>
+                  <p className="text-xs text-muted-foreground">Seconds</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -238,46 +219,23 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
           <p className="text-4xl">🎉</p>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="grid grid-cols-4 gap-2 mb-6">
-            <div className="bg-secondary/50 rounded-xl p-3 text-center">
-              <p className="text-3xl font-bold text-foreground">{countdown.days}</p>
-              <p className="text-xs text-muted-foreground">Days</p>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="bg-secondary/50 rounded-2xl p-5 text-center">
+              <p className="text-5xl font-bold text-foreground">{countdown.days}</p>
+              <p className="text-sm text-muted-foreground">Days</p>
             </div>
-            <div className="bg-secondary/50 rounded-xl p-3 text-center">
-              <p className="text-3xl font-bold text-foreground">{countdown.hours}</p>
-              <p className="text-xs text-muted-foreground">Hrs</p>
+            <div className="bg-secondary/50 rounded-2xl p-5 text-center">
+              <p className="text-5xl font-bold text-foreground">{countdown.hours}</p>
+              <p className="text-sm text-muted-foreground">Hours</p>
             </div>
-            <div className="bg-secondary/50 rounded-xl p-3 text-center">
-              <p className="text-3xl font-bold text-foreground">{countdown.minutes}</p>
-              <p className="text-xs text-muted-foreground">Min</p>
+            <div className="bg-secondary/50 rounded-2xl p-5 text-center">
+              <p className="text-5xl font-bold text-foreground">{countdown.minutes}</p>
+              <p className="text-sm text-muted-foreground">Minutes</p>
             </div>
-            <div className="bg-secondary/50 rounded-xl p-3 text-center">
-              <p className="text-3xl font-bold text-foreground">{countdown.seconds}</p>
-              <p className="text-xs text-muted-foreground">Sec</p>
-            </div>
-          </div>
-          
-          <div className="bg-secondary/30 rounded-2xl p-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium text-foreground">
-                {elapsedProgress}%
-              </span>
-            </div>
-            <div 
-              className="h-2 bg-secondary rounded-full overflow-hidden"
-              style={{ position: 'relative' }}
-            >
-              <div 
-                className="bg-primary rounded-full"
-                style={{ 
-                  width: `${elapsedProgress}%`,
-                  height: '100%',
-                  maxWidth: '100%',
-                  transition: 'width 0.3s ease'
-                }}
-              />
+            <div className="bg-secondary/50 rounded-2xl p-5 text-center">
+              <p className="text-5xl font-bold text-foreground">{countdown.seconds}</p>
+              <p className="text-sm text-muted-foreground">Seconds</p>
             </div>
           </div>
         </div>
