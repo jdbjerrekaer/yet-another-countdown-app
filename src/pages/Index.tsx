@@ -68,15 +68,15 @@ export default function Index() {
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [dragRotationAngle, setDragRotationAngle] = useState<number>(0);
   const [canSaveForm, setCanSaveForm] = useState(false);
   const [draggedCardWidth, setDraggedCardWidth] = useState<number | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
   const previousDragXRef = useRef<number | null>(null);
-  const targetDragRotationRef = useRef<number>(0);
-  const dragAnimationFrameRef = useRef<number | null>(null);
+  const currentDragRotationRef = useRef<number>(0);
+  const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
+  const proxyInputRef = useRef<HTMLInputElement>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -315,13 +315,16 @@ export default function Index() {
     console.log('handleAddNew called, opening modal');
     trigger('medium');
     setEditingEvent(null);
+    
+    // Safari mobile fix: Focus proxy input immediately while in user gesture context
+    // This opens the keyboard, then we transfer focus to the modal input when ready
+    if (proxyInputRef.current) {
+      proxyInputRef.current.focus();
+    }
+    
     setIsModalOpen(true);
-    // Focus input immediately while still in user gesture context (Safari mobile fix)
-    // Call synchronously first (within gesture context), then also schedule for next tick
+    // Also call focusInput for when modal is ready
     datePickerModalRef.current?.focusInput();
-    requestAnimationFrame(() => {
-      datePickerModalRef.current?.focusInput();
-    });
   };
 
   const handleFabClick = () => {
@@ -342,10 +345,9 @@ export default function Index() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
-    targetDragRotationRef.current = 0;
+    currentDragRotationRef.current = 0;
     previousDragYRef.current = null;
     previousDragXRef.current = null;
-    setDragRotationAngle(0);
     // Set cursor to grabbing on body for proper cursor display
     document.body.style.cursor = 'grabbing';
     
@@ -399,14 +401,17 @@ export default function Index() {
       // Combine both rotation deltas
       const rotationDelta = verticalRotationDelta + horizontalRotationDelta;
       
-      // Update target rotation (accumulate changes)
-      targetDragRotationRef.current += rotationDelta;
+      // Update rotation directly (accumulate changes) - clamped to -8deg to +8deg
+      currentDragRotationRef.current = Math.max(-8, Math.min(8, currentDragRotationRef.current + rotationDelta));
       
-      // Clamp target rotation to reasonable range (-8deg to +8deg)
-      targetDragRotationRef.current = Math.max(-8, Math.min(8, targetDragRotationRef.current));
+      // Apply transform directly to DOM element for smooth animation on Safari
+      // This avoids React state updates which cause jitter on mobile Safari
+      if (dragOverlayRef.current) {
+        dragOverlayRef.current.style.transform = `rotate(${currentDragRotationRef.current}deg) scale(1.02)`;
+      }
     } else {
       // Initialize when starting to drag
-      targetDragRotationRef.current = 0;
+      currentDragRotationRef.current = 0;
     }
 
     previousDragYRef.current = currentY;
@@ -416,10 +421,9 @@ export default function Index() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveDragId(null);
-    targetDragRotationRef.current = 0;
+    currentDragRotationRef.current = 0;
     previousDragYRef.current = null;
     previousDragXRef.current = null;
-    setDragRotationAngle(0);
     setDraggedCardWidth(null);
     // Reset cursor
     document.body.style.cursor = '';
@@ -434,47 +438,6 @@ export default function Index() {
       trigger('light');
     }
   };
-
-  // Smooth interpolation of rotation angle for DragOverlay using requestAnimationFrame
-  useEffect(() => {
-    if (activeDragId) {
-      const animate = () => {
-        setDragRotationAngle((current) => {
-          const target = targetDragRotationRef.current;
-          const diff = target - current;
-          
-          // Smooth interpolation factor (0.4 = much more responsive)
-          const factor = 0.4;
-          const newAngle = current + diff * factor;
-          
-          // Continue animation if change is significant enough
-          if (Math.abs(diff) > 0.01) {
-            dragAnimationFrameRef.current = requestAnimationFrame(animate);
-            return newAngle;
-          } else {
-            // Reached target, but keep checking in case target changes
-            dragAnimationFrameRef.current = requestAnimationFrame(animate);
-            return target;
-          }
-        });
-      };
-      
-      dragAnimationFrameRef.current = requestAnimationFrame(animate);
-      
-      return () => {
-        if (dragAnimationFrameRef.current) {
-          cancelAnimationFrame(dragAnimationFrameRef.current);
-          dragAnimationFrameRef.current = null;
-        }
-      };
-    } else {
-      // Clean up animation when not dragging
-      if (dragAnimationFrameRef.current) {
-        cancelAnimationFrame(dragAnimationFrameRef.current);
-        dragAnimationFrameRef.current = null;
-      }
-    }
-  }, [activeDragId]);
 
   // Check if a tap should be ignored (happened too soon after a drag ended)
   const shouldIgnoreTap = () => {
@@ -568,13 +531,21 @@ export default function Index() {
                       if (!activeEvent) return null;
                       return (
                         <div 
+                          ref={dragOverlayRef}
                           className={`sortable-countdown-card is-dragging ${activeEvent.id === selectedEventId ? 'is-selected' : ''}`}
                           style={{ 
                             width: draggedCardWidth ? `${draggedCardWidth}px` : '100%',
                             maxWidth: draggedCardWidth ? `${draggedCardWidth}px` : 'none',
                             pointerEvents: 'none',
-                            transform: `rotate(${dragRotationAngle.toFixed(2)}deg) scale(1.02)`,
+                            // Initial transform - will be updated directly via ref for smooth animation
+                            transform: 'rotate(0deg) scale(1.02)',
                             transformOrigin: 'center center',
+                            // Use CSS transition for smooth rotation - GPU accelerated
+                            transition: 'transform 80ms ease-out',
+                            // Force GPU compositing for smoother animation on Safari
+                            willChange: 'transform',
+                            backfaceVisibility: 'hidden',
+                            WebkitBackfaceVisibility: 'hidden',
                           }}
                         >
                           <CountdownCard
@@ -686,6 +657,23 @@ export default function Index() {
       </IonContent>
 
       {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
+
+      {/* Hidden proxy input for Safari mobile keyboard focus - positioned off-screen */}
+      <input
+        ref={proxyInputRef}
+        type="text"
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: '-9999px',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      />
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal
