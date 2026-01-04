@@ -17,8 +17,17 @@ const VERSION = 1;
 
 /**
  * Encodes an event payload into a shareable import link
+ * Automatically detects platform and uses the appropriate URL format:
+ * - Native iOS/Android: Uses custom scheme (countdownapp://) for AirDrop/Messages
+ * - Web browser: Uses HTTP URL based on current origin
+ * 
+ * @param payload - Event data to encode
+ * @param forceNative - Force native scheme even on web (for testing)
  */
-export function encodeEventImportLink(payload: Omit<EventImportPayload, 'v'>): string {
+export function encodeEventImportLink(
+  payload: Omit<EventImportPayload, 'v'>,
+  forceNative: boolean = false
+): string {
   const fullPayload: EventImportPayload = {
     ...payload,
     v: VERSION,
@@ -31,7 +40,22 @@ export function encodeEventImportLink(payload: Omit<EventImportPayload, 'v'>): s
     .replace(/\//g, '_')
     .replace(/=/g, '');
   
-  return `${SCHEME}://import?payload=${base64}&v=${VERSION}`;
+  const queryString = `payload=${base64}&v=${VERSION}`;
+  
+  // Detect if we're running on a native platform (Capacitor)
+  // Check for Capacitor's native platform indicator
+  const isNativePlatform = forceNative || 
+    (typeof window !== 'undefined' && 
+     (window as any).Capacitor?.isNativePlatform?.() === true);
+  
+  if (isNativePlatform) {
+    // Use custom scheme for native apps (works with AirDrop, Messages, etc.)
+    return `${SCHEME}://import?${queryString}`;
+  } else {
+    // Use web URL for browser sharing
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://countdown.app';
+    return `${origin}/import?${queryString}`;
+  }
 }
 
 /**
