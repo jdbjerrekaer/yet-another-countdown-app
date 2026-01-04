@@ -72,13 +72,13 @@
   "dialogs": {
     "dateChanged": {
       "title": "Datum geändert",
-      "message": "Du hast das Datum für „{{title}}“ geändert. Möchtest du diese Änderungen wirklich speichern?",
+      "message": "Du hast das Datum für \"{{title}}\" von {{oldDate}} auf {{newDate}} geändert. Möchtest du diese Änderungen wirklich speichern?",
       "save": "Änderungen speichern",
       "cancel": "Abbrechen"
     },
     "deleteEvent": {
       "title": "Ereignis löschen",
-      "message": "Bist du sicher, dass du „{{title}}“ löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "message": "Bist du sicher, dass du \"{{title}}\" löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
       "delete": "Löschen",
       "cancel": "Abbrechen"
     }

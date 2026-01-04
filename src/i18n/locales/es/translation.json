@@ -72,7 +72,7 @@
   "dialogs": {
     "dateChanged": {
       "title": "Fecha Cambiada",
-      "message": "Has cambiado la fecha de \"{{title}}\". ¿Estás seguro de que quieres guardar estos cambios?",
+      "message": "Has cambiado la fecha de \"{{title}}\" de {{oldDate}} a {{newDate}}. ¿Estás seguro de que quieres guardar estos cambios?",
       "save": "Guardar Cambios",
       "cancel": "Cancelar"
     },

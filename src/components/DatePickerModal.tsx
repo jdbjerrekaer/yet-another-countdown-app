@@ -39,7 +39,7 @@ interface DatePickerModalProps {
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
   onValidityChange?: (canSave: boolean) => void;
-  onConfirmDateChange?: (title: string) => Promise<boolean>;
+  onConfirmDateChange?: (title: string, oldDate: Date, newDate: Date) => Promise<boolean>;
 }
 
 export interface DatePickerModalRef {
@@ -250,8 +250,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const handleSave = async () => {
     if (title && date && emoji) {
       // If editing and date has changed, show confirmation dialog
-      if (isEditing && hasDateChanged() && onConfirmDateChange) {
-        const confirmed = await onConfirmDateChange(title);
+      if (isEditing && hasDateChanged() && onConfirmDateChange && originalDateRef.current) {
+        const confirmed = await onConfirmDateChange(title, originalDateRef.current, date);
         if (!confirmed) {
           // User cancelled, don't save
           trigger('light');

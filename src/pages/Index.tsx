@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton } from '@ionic/react';
 import { add, checkmark } from 'ionicons/icons';
+import { format } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { Dialog } from '@capacitor/dialog';
@@ -170,14 +171,18 @@ export default function Index() {
   }, []);
 
   // Show confirmation dialog when date has changed during edit
-  const confirmDateChange = async (eventTitle: string): Promise<boolean> => {
+  const confirmDateChange = async (eventTitle: string, oldDate: Date, newDate: Date): Promise<boolean> => {
     let confirmed = false;
+    
+    // Format dates for display
+    const oldDateFormatted = format(oldDate, 'MMM d, yyyy');
+    const newDateFormatted = format(newDate, 'MMM d, yyyy');
 
     // Use ActionSheet only on native platforms
     if (isNative) {
       const result = await ActionSheet.showActions({
         title: t('dialogs.dateChanged.title'),
-        message: t('dialogs.dateChanged.message', { title: eventTitle }),
+        message: t('dialogs.dateChanged.message', { title: eventTitle, oldDate: oldDateFormatted, newDate: newDateFormatted }),
         options: [
           {
             title: t('dialogs.dateChanged.save'),
@@ -194,7 +199,7 @@ export default function Index() {
       // Use Dialog on web platforms
       const { value } = await Dialog.confirm({
         title: t('dialogs.dateChanged.title'),
-        message: t('dialogs.dateChanged.message', { title: eventTitle }),
+        message: t('dialogs.dateChanged.message', { title: eventTitle, oldDate: oldDateFormatted, newDate: newDateFormatted }),
         okButtonTitle: t('dialogs.dateChanged.save'),
         cancelButtonTitle: t('dialogs.dateChanged.cancel'),
       });

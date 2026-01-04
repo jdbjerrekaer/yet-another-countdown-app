@@ -72,7 +72,7 @@
   "dialogs": {
     "dateChanged": {
       "title": "Data Modificata",
-      "message": "Hai modificato la data di \"{{title}}\". Sei sicuro di voler salvare queste modifiche?",
+      "message": "Hai modificato la data di \"{{title}}\" da {{oldDate}} a {{newDate}}. Sei sicuro di voler salvare queste modifiche?",
       "save": "Salva Modifiche",
       "cancel": "Annulla"
     },
