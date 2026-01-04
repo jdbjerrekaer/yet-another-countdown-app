@@ -537,8 +537,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     </button>
                   );
                 })}
-                {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis) */}
-                {emoji !== '' && !suggestedEmojis.includes(emoji) && (
+                {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis) and input is not showing */}
+                {emoji !== '' && !suggestedEmojis.includes(emoji) && !showCustomEmojiInput && (
                   <button
                     onClick={() => {}}
                     className="w-12 h-12 rounded-xl text-xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
@@ -581,7 +581,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                         }, 150);
                       }}
                       placeholder={t('modal.customEmojiPlaceholder')}
-                      className="w-12 h-12 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none"
+                      className="w-12 h-12 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none [&::placeholder]:opacity-30"
                       style={{
                         background: getGradientFromColor(emojiColor),
                         color: 'white'
