@@ -78,6 +78,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const originalDateRef = useRef<Date | undefined>(undefined);
   const colorManuallyChangedRef = useRef(false);
   const [colorPickerKey, setColorPickerKey] = useState(0);
+  const [emojiAnimationKey, setEmojiAnimationKey] = useState(0);
+  const prevSuggestedEmojisRef = useRef<string[]>([]);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -93,6 +95,19 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     }
     return results.map((r) => r.unicode);
   }, [title]);
+
+  // Track emoji list changes to trigger animations
+  useEffect(() => {
+    const prevEmojis = prevSuggestedEmojisRef.current.join(',');
+    const currentEmojis = suggestedEmojis.join(',');
+    
+    if (prevEmojis !== currentEmojis && prevEmojis !== '') {
+      // Emoji list changed, trigger animation
+      setEmojiAnimationKey(prev => prev + 1);
+    }
+    
+    prevSuggestedEmojisRef.current = suggestedEmojis;
+  }, [suggestedEmojis]);
 
   // Reset form state only when modal opens (not on every prop change)
   useEffect(() => {
@@ -121,40 +136,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       // Increment key to force ColorWheelPicker remount with correct initial value
       setColorPickerKey(prev => prev + 1);
       
-      // Auto-focus the title input when creating a new event (not editing)
-      if (!isEditing) {
-        const attemptFocus = (attempt: number = 0) => {
-          const maxAttempts = 10;
-          const input = titleInputRef.current;
-          
-          if (!input) {
-            if (attempt < maxAttempts) {
-              requestAnimationFrame(() => attemptFocus(attempt + 1));
-            }
-            return;
-          }
-          
-          const isVisible = input.offsetParent !== null && 
-                           input.offsetWidth > 0 && 
-                           input.offsetHeight > 0;
-          
-          if (isVisible) {
-            input.focus();
-            setTimeout(() => {
-              if (document.activeElement !== input) {
-                input.click();
-                setTimeout(() => input.focus(), 50);
-              }
-            }, 50);
-          } else if (attempt < maxAttempts) {
-            requestAnimationFrame(() => attemptFocus(attempt + 1));
-          }
-        };
-        
-        requestAnimationFrame(() => {
-          setTimeout(() => attemptFocus(), 100);
-        });
-      }
+      // Reset emoji animation state when modal opens
+      setEmojiAnimationKey(0);
+      prevSuggestedEmojisRef.current = [];
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, initialTitle, initialDate, initialEmoji, initialEmojiColor, initialIsRecurring, isEditing]);
@@ -162,6 +146,30 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const handleClose = () => {
     trigger('light');
     onClose();
+  };
+
+  // Handle modal presentation - focus input after modal is fully presented (Safari mobile fix)
+  const handleModalPresent = () => {
+    if (!isEditing && titleInputRef.current) {
+      // Use longer delay for Safari mobile - modal animation needs to complete
+      setTimeout(() => {
+        const input = titleInputRef.current;
+        if (input) {
+          // Try focus first
+          input.focus();
+          
+          // Fallback: if focus didn't work, try click + focus
+          setTimeout(() => {
+            if (document.activeElement !== input) {
+              input.click();
+              setTimeout(() => {
+                input.focus();
+              }, 50);
+            }
+          }, 100);
+        }
+      }, 400); // Increased delay for Safari mobile modal animation
+    }
   };
 
   const canSave = () => Boolean(title && date && emoji);
@@ -276,6 +284,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     <IonModal
       isOpen={isOpen}
       onDidDismiss={handleClose}
+      onDidPresent={handleModalPresent}
     >
       <IonHeader>
         <IonToolbar>
@@ -305,7 +314,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   onFocus={() => setIsTitleFocused(true)}
                   onBlur={() => setIsTitleFocused(false)}
                   placeholder="Enter event name"
-                  autoFocus={!isEditing}
                   className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10"
                 />
                 {isTitleFocused && title && (
@@ -332,16 +340,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
-              <div className="flex gap-2 flex-wrap" key={suggestedEmojis.join(',')}>
+              <div className="flex gap-2 flex-wrap" key={`emoji-list-${emojiAnimationKey}`}>
                 {suggestedEmojis.map((e, index) => {
                   const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
                   const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
                   
                   return (
                     <button
-                      key={`${e}-${index}`}
+                      key={`${e}-${index}-${emojiAnimationKey}`}
                       onClick={() => handleEmojiSelect(e)}
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-95 emoji-suggestion-enter ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-95 ${
+                        emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''
+                      } ${
                         isSelected
                           ? 'border-[3px] border-white/90 text-xl'
                           : 'bg-secondary/50 hover:bg-secondary text-2xl'
@@ -351,7 +361,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           backgroundColor: emojiColor,
                           boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
                         } : {}),
-                        animationDelay: `${index * 20}ms`,
+                        animationDelay: `${index * 30}ms`,
                         transform: isSelected ? 'scale(1.1)' : undefined,
                       }}
                     >
@@ -427,7 +437,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 ) : (
                   <button
                     onClick={handleCustomEmojiClick}
-                    className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105"
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105 ${
+                      emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''
+                    }`}
+                    style={{
+                      animationDelay: `${suggestedEmojis.length * 30}ms`,
+                    }}
                     title="Custom emoji"
                   >
                     <Plus className="w-6 h-6 text-muted-foreground" />
