@@ -1,0 +1,101 @@
+{
+  "app": {
+    "title": "Un'altra App di Countdown",
+    "noCountdowns": "Nessun Countdown",
+    "createFirst": "Tocca il pulsante + qui sotto per creare il tuo primo countdown"
+  },
+  "events": {
+    "title": "Eventi",
+    "delete": "Elimina",
+    "edit": "Modifica"
+  },
+  "widget": {
+    "size": "Dimensione Widget",
+    "style": "Stile",
+    "appearance": "Aspetto",
+    "preview": "Anteprima",
+    "next": "Prossimo: {{date}}",
+    "timeSince": "Tempo trascorso dall'evento",
+    "arrived": "L'evento è arrivato!",
+    "countingDown": "Conto alla rovescia...",
+    "units": {
+      "days": "giorno",
+      "days_plural": "giorni",
+      "daysShort": "Giorni",
+      "hours": "ora",
+      "hours_plural": "ore",
+      "hoursShort": "Ore",
+      "minutes": "minuto",
+      "minutes_plural": "minuti",
+      "minutesShort": "Min",
+      "seconds": "secondo",
+      "seconds_plural": "secondi",
+      "secondsShort": "Sec"
+    },
+    "daysAgoText": "fa",
+    "daysAgoTextUpper": "Giorni fa",
+    "sizes": {
+      "small": "Piccolo",
+      "medium": "Medio",
+      "large": "Grande",
+      "extraLarge": "Extra Large"
+    },
+    "styles": {
+      "focus": "Focus",
+      "visual": "Visuale"
+    },
+    "appearances": {
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "transparent": "Vetro",
+      "tinted": "Colorato"
+    }
+  },
+  "modal": {
+    "editEvent": "Modifica Evento",
+    "newEvent": "Nuovo Evento",
+    "titleLabel": "Titolo",
+    "eventNamePlaceholder": "Inserisci il nome dell'evento",
+    "dateLabel": "Data",
+    "emojiLabel": "Icona",
+    "colorLabel": "Colore",
+    "recurringLabel": "Annuale",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina Evento",
+    "advancedLabel": "Avanzate",
+    "repeatYearlyLabel": "Ripeti ogni anno",
+    "repeatYearlySublabel": "Per compleanni, anniversari",
+    "customEmojiTitle": "Emoji personalizzata",
+    "customEmojiPlaceholder": "🎨"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Data Modificata",
+      "message": "Hai modificato la data di \"{{title}}\". Sei sicuro di voler salvare queste modifiche?",
+      "save": "Salva Modifiche",
+      "cancel": "Annulla"
+    },
+    "deleteEvent": {
+      "title": "Elimina Evento",
+      "message": "Sei sicuro di voler eliminare \"{{title}}\"? Questa azione non può essere annullata.",
+      "delete": "Elimina",
+      "cancel": "Annulla"
+    }
+  },
+  "countdown": {
+    "today": "Oggi! 🎉",
+    "daysAgo": "{{count}} giorno fa",
+    "daysAgo_plural": "{{count}} giorni fa",
+    "format": "{{days}}g {{hours}}o {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Il tuo countdown è arrivato a zero!"
+  },
+  "aria": {
+    "saveEvent": "Salva evento",
+    "addEvent": "Aggiungi evento",
+    "clearInput": "Cancella input",
+    "colorPicker": "Selettore colore"
+  }
+}

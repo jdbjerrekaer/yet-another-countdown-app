@@ -1,0 +1,101 @@
+{
+  "app": {
+    "title": "Mais um App de Contagem Regressiva",
+    "noCountdowns": "Sem Contagens Regressivas",
+    "createFirst": "Toque no botão + abaixo para criar sua primeira contagem regressiva"
+  },
+  "events": {
+    "title": "Eventos",
+    "delete": "Excluir",
+    "edit": "Editar"
+  },
+  "widget": {
+    "size": "Tamanho do Widget",
+    "style": "Estilo",
+    "appearance": "Aparência",
+    "preview": "Visualização",
+    "next": "Próximo: {{date}}",
+    "timeSince": "Tempo desde o evento",
+    "arrived": "O evento chegou!",
+    "countingDown": "Contagem regressiva...",
+    "units": {
+      "days": "dia",
+      "days_plural": "dias",
+      "daysShort": "Dias",
+      "hours": "hora",
+      "hours_plural": "horas",
+      "hoursShort": "Horas",
+      "minutes": "minuto",
+      "minutes_plural": "minutos",
+      "minutesShort": "Min",
+      "seconds": "segundo",
+      "seconds_plural": "segundos",
+      "secondsShort": "Seg"
+    },
+    "daysAgoText": "atrás",
+    "daysAgoTextUpper": "Dias atrás",
+    "sizes": {
+      "small": "Pequeno",
+      "medium": "Médio",
+      "large": "Grande",
+      "extraLarge": "Extra Grande"
+    },
+    "styles": {
+      "focus": "Foco",
+      "visual": "Visual"
+    },
+    "appearances": {
+      "light": "Claro",
+      "dark": "Escuro",
+      "transparent": "Vidro",
+      "tinted": "Colorido"
+    }
+  },
+  "modal": {
+    "editEvent": "Editar Evento",
+    "newEvent": "Novo Evento",
+    "titleLabel": "Título",
+    "eventNamePlaceholder": "Digite o nome do evento",
+    "dateLabel": "Data",
+    "emojiLabel": "Ícone",
+    "colorLabel": "Cor",
+    "recurringLabel": "Anual",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir Evento",
+    "advancedLabel": "Avançado",
+    "repeatYearlyLabel": "Repetir anualmente",
+    "repeatYearlySublabel": "Para aniversários e datas especiais",
+    "customEmojiTitle": "Emoji personalizado",
+    "customEmojiPlaceholder": "🎨"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Data Alterada",
+      "message": "Você alterou a data de \"{{title}}\". Tem certeza de que deseja salvar estas alterações?",
+      "save": "Salvar Alterações",
+      "cancel": "Cancelar"
+    },
+    "deleteEvent": {
+      "title": "Excluir Evento",
+      "message": "Tem certeza de que deseja excluir \"{{title}}\"? Esta ação não pode ser desfeita.",
+      "delete": "Excluir",
+      "cancel": "Cancelar"
+    }
+  },
+  "countdown": {
+    "today": "Hoje! 🎉",
+    "daysAgo": "há {{count}} dia",
+    "daysAgo_plural": "há {{count}} dias",
+    "format": "{{days}}d {{hours}}h {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Sua contagem regressiva chegou a zero!"
+  },
+  "aria": {
+    "saveEvent": "Salvar evento",
+    "addEvent": "Adicionar evento",
+    "clearInput": "Limpar entrada",
+    "colorPicker": "Seletor de cores"
+  }
+}

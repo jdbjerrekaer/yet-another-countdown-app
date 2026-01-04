@@ -1,0 +1,101 @@
+{
+  "app": {
+    "title": "Yet Another Countdown App",
+    "noCountdowns": "No Countdowns",
+    "createFirst": "Tap the + button below to create your first countdown"
+  },
+  "events": {
+    "title": "Events",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "widget": {
+    "size": "Widget Size",
+    "style": "Style",
+    "appearance": "Appearance",
+    "preview": "Preview",
+    "next": "Next: {{date}}",
+    "timeSince": "Time since event",
+    "arrived": "Event arrived!",
+    "countingDown": "Counting down",
+    "units": {
+      "days": "day",
+      "days_plural": "days",
+      "daysShort": "Days",
+      "hours": "hour",
+      "hours_plural": "hours",
+      "hoursShort": "Hours",
+      "minutes": "minute",
+      "minutes_plural": "minutes",
+      "minutesShort": "Min",
+      "seconds": "second",
+      "seconds_plural": "seconds",
+      "secondsShort": "Sec"
+    },
+    "daysAgoText": "ago",
+    "daysAgoTextUpper": "Days ago",
+    "sizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "extraLarge": "Extra Large"
+    },
+    "styles": {
+      "focus": "Focus",
+      "visual": "Visual"
+    },
+    "appearances": {
+      "light": "Light",
+      "dark": "Dark",
+      "transparent": "Glass",
+      "tinted": "Tinted"
+    }
+  },
+  "modal": {
+    "editEvent": "Edit Event",
+    "newEvent": "New Event",
+    "titleLabel": "Title",
+    "eventNamePlaceholder": "Enter event name",
+    "dateLabel": "Date",
+    "emojiLabel": "Emoji",
+    "colorLabel": "Color",
+    "recurringLabel": "Yearly",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete Event",
+    "advancedLabel": "Advanced",
+    "repeatYearlyLabel": "Repeat Yearly",
+    "repeatYearlySublabel": "For birthdays, anniversaries",
+    "customEmojiTitle": "Custom emoji",
+    "customEmojiPlaceholder": "🎨"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Date Changed",
+      "message": "You've changed the date for \"{{title}}\". Are you sure you want to save these changes?",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    },
+    "deleteEvent": {
+      "title": "Delete Event",
+      "message": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    }
+  },
+  "countdown": {
+    "today": "Today! 🎉",
+    "daysAgo": "{{count}} day ago",
+    "daysAgo_plural": "{{count}} days ago",
+    "format": "{{days}}d {{hours}}h {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Your countdown has reached zero!"
+  },
+  "aria": {
+    "saveEvent": "Save event",
+    "addEvent": "Add event",
+    "clearInput": "Clear input",
+    "colorPicker": "Color picker"
+  }
+}

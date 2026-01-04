@@ -1,0 +1,101 @@
+{
+  "app": {
+    "title": "Еще одно приложение обратного отсчета",
+    "noCountdowns": "Нет отсчетов",
+    "createFirst": "Нажмите на кнопку + ниже, чтобы создать свой первый отсчет"
+  },
+  "events": {
+    "title": "События",
+    "delete": "Удалить",
+    "edit": "Изменить"
+  },
+  "widget": {
+    "size": "Размер виджета",
+    "style": "Стиль",
+    "appearance": "Внешний вид",
+    "preview": "Предпросмотр",
+    "next": "Следующее: {{date}}",
+    "timeSince": "Времени прошло",
+    "arrived": "Событие наступило!",
+    "countingDown": "Идет отсчет...",
+    "units": {
+      "days": "день",
+      "days_plural": "дней",
+      "daysShort": "Дни",
+      "hours": "час",
+      "hours_plural": "часов",
+      "hoursShort": "Часы",
+      "minutes": "минута",
+      "minutes_plural": "минут",
+      "minutesShort": "Мин",
+      "seconds": "секунда",
+      "seconds_plural": "секунд",
+      "secondsShort": "Сек"
+    },
+    "daysAgoText": "назад",
+    "daysAgoTextUpper": "Дней назад",
+    "sizes": {
+      "small": "Маленький",
+      "medium": "Средний",
+      "large": "Большой",
+      "extraLarge": "Очень большой"
+    },
+    "styles": {
+      "focus": "Фокус",
+      "visual": "Визуальный"
+    },
+    "appearances": {
+      "light": "Светлый",
+      "dark": "Темный",
+      "transparent": "Стеклянный",
+      "tinted": "Тонированный"
+    }
+  },
+  "modal": {
+    "editEvent": "Изменить событие",
+    "newEvent": "Новое событие",
+    "titleLabel": "Заголовок",
+    "eventNamePlaceholder": "Введите название события",
+    "dateLabel": "Дата",
+    "emojiLabel": "Иконка",
+    "colorLabel": "Цвет",
+    "repeatYearlyLabel": "Ежегодно",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить событие",
+    "advancedLabel": "Дополнительно",
+    "repeatYearlyLabel": "Повторять ежегодно",
+    "repeatYearlySublabel": "Для дней рождения, юбилеев",
+    "customEmojiTitle": "Свой эмодзи",
+    "customEmojiPlaceholder": "🎨"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Дата изменена",
+      "message": "Вы изменили дату для «{{title}}». Вы уверены, что хотите сохранить изменения?",
+      "save": "Сохранить изменения",
+      "cancel": "Отмена"
+    },
+    "deleteEvent": {
+      "title": "Удалить событие",
+      "message": "Вы уверены, что хотите удалить «{{title}}»? Это действие нельзя отменить.",
+      "delete": "Удалить",
+      "cancel": "Отмена"
+    }
+  },
+  "countdown": {
+    "today": "Сегодня! 🎉",
+    "daysAgo": "{{count}} дн. назад",
+    "daysAgo_plural": "{{count}} дн. назад",
+    "format": "{{days}}д {{hours}}ч {{minutes}}м"
+  },
+  "notifications": {
+    "reachedZero": "Ваш обратный отсчет закончился!"
+  },
+  "aria": {
+    "saveEvent": "Сохранить событие",
+    "addEvent": "Добавить событие",
+    "clearInput": "Очистить поле",
+    "colorPicker": "Выбор цвета"
+  }
+}

@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
 import { ChevronRight, RefreshCw } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -25,6 +26,7 @@ export function CountdownCard({
   isReordering = false,
   isDragging = false,
 }: CountdownCardProps) {
+  const { t } = useTranslation();
   const { trigger } = useHaptic();
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
   const hapticTriggeredRef = useRef(false);
@@ -140,7 +142,7 @@ export function CountdownCard({
             expandable
             onClick={handleDelete}
           >
-            Delete
+            {t('events.delete')}
           </IonItemOption>
         </IonItemOptions>
         
@@ -178,10 +180,10 @@ export function CountdownCard({
             </div>
             <p className="text-sm text-muted-foreground">
               {countdown.isPast
-                ? `${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                ? t('countdown.daysAgo', { count: countdown.daysSince })
                 : countdown.isComplete
-                  ? 'Today! 🎉'
-                  : `${countdown.days}d ${countdown.hours}h ${countdown.minutes}m`
+                  ? t('countdown.today')
+                  : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
               }
             </p>
           </div>

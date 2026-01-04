@@ -22,6 +22,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
+import { useTranslation } from 'react-i18next';
 import { WidgetPreview } from '@/components/WidgetPreview';
 import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
@@ -33,28 +34,29 @@ import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle 
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 
-const WIDGET_SIZES: { id: WidgetSize; label: string }[] = [
-  { id: 'small', label: 'Small' },
-  { id: 'medium', label: 'Medium' },
-  { id: 'large', label: 'Large' },
-  { id: 'extraLarge', label: 'Extra Large' },
+const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
+  { id: 'small', labelKey: 'widget.sizes.small' },
+  { id: 'medium', labelKey: 'widget.sizes.medium' },
+  { id: 'large', labelKey: 'widget.sizes.large' },
+  { id: 'extraLarge', labelKey: 'widget.sizes.extraLarge' },
 ];
 
-const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; label: string }[] = [
-  { id: 'light', label: 'Light' },
-  { id: 'dark', label: 'Dark' },
-  { id: 'transparent', label: 'Glass' },
-  { id: 'tinted', label: 'Tinted' },
+const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; labelKey: string }[] = [
+  { id: 'light', labelKey: 'widget.appearances.light' },
+  { id: 'dark', labelKey: 'widget.appearances.dark' },
+  { id: 'transparent', labelKey: 'widget.appearances.transparent' },
+  { id: 'tinted', labelKey: 'widget.appearances.tinted' },
 ];
 
-const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; label: string }[] = [
-  { id: 'focus', label: 'Focus' },
-  { id: 'visual', label: 'Visual' },
+const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; labelKey: string }[] = [
+  { id: 'focus', labelKey: 'widget.styles.focus' },
+  { id: 'visual', labelKey: 'widget.styles.visual' },
 ];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export default function Index() {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('large');
   const [selectedAppearanceMode, setSelectedAppearanceMode] = useState<WidgetAppearanceMode>(() => {
@@ -73,7 +75,9 @@ export default function Index() {
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
   const previousDragXRef = useRef<number | null>(null);
-  const currentDragRotationRef = useRef<number>(0);
+  const targetDragRotationRef = useRef<number>(0);
+  const displayedDragRotationRef = useRef<number>(0);
+  const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
   const { trigger } = useHaptic();
@@ -172,15 +176,15 @@ export default function Index() {
     // Use ActionSheet only on native platforms
     if (isNative) {
       const result = await ActionSheet.showActions({
-        title: 'Date Changed',
-        message: `You've changed the date for "${eventTitle}". Are you sure you want to save these changes?`,
+        title: t('dialogs.dateChanged.title'),
+        message: t('dialogs.dateChanged.message', { title: eventTitle }),
         options: [
           {
-            title: 'Save Changes',
+            title: t('dialogs.dateChanged.save'),
             style: ActionSheetButtonStyle.Default,
           },
           {
-            title: 'Cancel',
+            title: t('dialogs.dateChanged.cancel'),
             style: ActionSheetButtonStyle.Cancel,
           },
         ],
@@ -189,10 +193,10 @@ export default function Index() {
     } else {
       // Use Dialog on web platforms
       const { value } = await Dialog.confirm({
-        title: 'Date Changed',
-        message: `You've changed the date for "${eventTitle}". Are you sure you want to save these changes?`,
-        okButtonTitle: 'Save Changes',
-        cancelButtonTitle: 'Cancel',
+        title: t('dialogs.dateChanged.title'),
+        message: t('dialogs.dateChanged.message', { title: eventTitle }),
+        okButtonTitle: t('dialogs.dateChanged.save'),
+        cancelButtonTitle: t('dialogs.dateChanged.cancel'),
       });
       confirmed = value;
     }
@@ -256,15 +260,15 @@ export default function Index() {
     if (isNative) {
       // Use ActionSheet for native destructive button styling
       const result = await ActionSheet.showActions({
-        title: 'Delete Event',
-        message: `Are you sure you want to delete "${event.title}"? This action cannot be undone.`,
+        title: t('dialogs.deleteEvent.title'),
+        message: t('dialogs.deleteEvent.message', { title: event.title }),
         options: [
           {
-            title: 'Delete',
+            title: t('dialogs.deleteEvent.delete'),
             style: ActionSheetButtonStyle.Destructive,
           },
           {
-            title: 'Cancel',
+            title: t('dialogs.deleteEvent.cancel'),
             style: ActionSheetButtonStyle.Cancel,
           },
         ],
@@ -273,10 +277,10 @@ export default function Index() {
     } else {
       // Use Dialog on web platforms (including Safari PWA and mobile Safari)
       const { value } = await Dialog.confirm({
-        title: 'Delete Event',
-        message: `Are you sure you want to delete "${event.title}"? This action cannot be undone.`,
-        okButtonTitle: 'Delete',
-        cancelButtonTitle: 'Cancel',
+        title: t('dialogs.deleteEvent.title'),
+        message: t('dialogs.deleteEvent.message', { title: event.title }),
+        okButtonTitle: t('dialogs.deleteEvent.delete'),
+        cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
       });
       confirmed = value;
     }
@@ -336,11 +340,38 @@ export default function Index() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
-    currentDragRotationRef.current = 0;
+    targetDragRotationRef.current = 0;
+    displayedDragRotationRef.current = 0;
     previousDragYRef.current = null;
     previousDragXRef.current = null;
     // Set cursor to grabbing on body for proper cursor display
     document.body.style.cursor = 'grabbing';
+    
+    // Start the smooth rotation animation loop
+    const animateRotation = () => {
+      const target = targetDragRotationRef.current;
+      const current = displayedDragRotationRef.current;
+      
+      // Smooth interpolation factor - lower = smoother but more laggy
+      // 0.15 provides good balance between responsiveness and smoothness
+      const lerpFactor = 0.15;
+      
+      // Interpolate towards target rotation
+      const newRotation = current + (target - current) * lerpFactor;
+      
+      // Only update DOM if there's meaningful change (reduces Safari repaints)
+      if (Math.abs(newRotation - current) > 0.01) {
+        displayedDragRotationRef.current = newRotation;
+        if (dragOverlayRef.current) {
+          dragOverlayRef.current.style.transform = `rotate(${newRotation}deg) scale(1.02)`;
+        }
+      }
+      
+      // Continue animation loop while dragging
+      dragAnimationFrameRef.current = requestAnimationFrame(animateRotation);
+    };
+    
+    dragAnimationFrameRef.current = requestAnimationFrame(animateRotation);
     
     // Measure the actual card width to match it in DragOverlay
     // Use requestAnimationFrame to ensure DOM is ready
@@ -392,17 +423,13 @@ export default function Index() {
       // Combine both rotation deltas
       const rotationDelta = verticalRotationDelta + horizontalRotationDelta;
       
-      // Update rotation directly (accumulate changes) - clamped to -8deg to +8deg
-      currentDragRotationRef.current = Math.max(-8, Math.min(8, currentDragRotationRef.current + rotationDelta));
-      
-      // Apply transform directly to DOM element for smooth animation on Safari
-      // This avoids React state updates which cause jitter on mobile Safari
-      if (dragOverlayRef.current) {
-        dragOverlayRef.current.style.transform = `rotate(${currentDragRotationRef.current}deg) scale(1.02)`;
-      }
+      // Update TARGET rotation (the animation loop will smoothly interpolate towards this)
+      // This decouples user input from DOM updates, preventing Safari mobile jitter
+      targetDragRotationRef.current = Math.max(-8, Math.min(8, targetDragRotationRef.current + rotationDelta));
     } else {
       // Initialize when starting to drag
-      currentDragRotationRef.current = 0;
+      targetDragRotationRef.current = 0;
+      displayedDragRotationRef.current = 0;
     }
 
     previousDragYRef.current = currentY;
@@ -412,10 +439,16 @@ export default function Index() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveDragId(null);
-    currentDragRotationRef.current = 0;
+    targetDragRotationRef.current = 0;
+    displayedDragRotationRef.current = 0;
     previousDragYRef.current = null;
     previousDragXRef.current = null;
     setDraggedCardWidth(null);
+    // Cancel the animation loop
+    if (dragAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(dragAnimationFrameRef.current);
+      dragAnimationFrameRef.current = null;
+    }
     // Reset cursor
     document.body.style.cursor = '';
     lastDragEndTs.current = Date.now();
@@ -439,7 +472,7 @@ export default function Index() {
     <div className={`fab-portal${isModalOpen ? ' fab-portal--above-modal' : ''}`}>
       <IonFabButton 
         onClick={handleFabClick} 
-        aria-label={isModalOpen ? "Save event" : "Add event"}
+        aria-label={isModalOpen ? t('aria.saveEvent') : t('aria.addEvent')}
         disabled={isModalOpen && !canSaveForm}
         style={isModalOpen && !canSaveForm ? { 
           '--background': 'var(--ion-color-medium, #92949c)',
@@ -458,7 +491,7 @@ export default function Index() {
         {/* iOS large title header */}
         <IonHeader>
           <IonToolbar>
-            <IonTitle size="large">Yet Another Countdown App</IonTitle>
+            <IonTitle size="large">{t('app.title')}</IonTitle>
           </IonToolbar>
         </IonHeader>
 
@@ -469,9 +502,9 @@ export default function Index() {
               <div className="w-20 h-20 rounded-3xl gradient-accent flex items-center justify-center shadow-ios-lg mb-6 animate-float">
                 <span className="text-4xl">⏳</span>
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">No Countdowns</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">{t('app.noCountdowns')}</h2>
               <p className="text-muted-foreground text-center max-w-xs mb-8">
-                Tap the + button below to create your first countdown
+                {t('app.createFirst')}
               </p>
             </div>
           ) : (
@@ -479,7 +512,7 @@ export default function Index() {
               {/* Events list */}
               <section className="space-y-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                  Events
+                  {t('events.title')}
                 </h2>
                 <DndContext
                   sensors={sensors}
@@ -531,8 +564,9 @@ export default function Index() {
                             // Initial transform - will be updated directly via ref for smooth animation
                             transform: 'rotate(0deg) scale(1.02)',
                             transformOrigin: 'center center',
-                            // Use CSS transition for smooth rotation - GPU accelerated
-                            transition: 'transform 80ms ease-out',
+                            // NO CSS transition - we use requestAnimationFrame with manual interpolation
+                            // CSS transitions conflict with direct DOM updates causing jitter on Safari mobile
+                            transition: 'none',
                             // Force GPU compositing for smoother animation on Safari
                             willChange: 'transform',
                             backfaceVisibility: 'hidden',
@@ -560,7 +594,7 @@ export default function Index() {
                   {/* Size selector */}
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      Widget Size
+                      {t('widget.size')}
                     </h2>
                     <IonSegment
                       value={selectedSize}
@@ -571,7 +605,7 @@ export default function Index() {
                     >
                       {WIDGET_SIZES.map((size) => (
                         <IonSegmentButton key={size.id} value={size.id}>
-                          {size.label}
+                          {t(size.labelKey)}
                         </IonSegmentButton>
                       ))}
                     </IonSegment>
@@ -580,7 +614,7 @@ export default function Index() {
                   {/* Countdown style selector */}
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      Style
+                      {t('widget.style')}
                     </h2>
                     <IonSegment
                       value={selectedCountdownStyle}
@@ -591,7 +625,7 @@ export default function Index() {
                     >
                       {WIDGET_COUNTDOWN_STYLES.map((style) => (
                         <IonSegmentButton key={style.id} value={style.id}>
-                          {style.label}
+                          {t(style.labelKey)}
                         </IonSegmentButton>
                       ))}
                     </IonSegment>
@@ -600,7 +634,7 @@ export default function Index() {
                   {/* Appearance mode selector */}
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      Appearance
+                      {t('widget.appearance')}
                     </h2>
                     <IonSegment
                       value={selectedAppearanceMode}
@@ -611,7 +645,7 @@ export default function Index() {
                     >
                       {WIDGET_APPEARANCE_MODES.map((mode) => (
                         <IonSegmentButton key={mode.id} value={mode.id}>
-                          {mode.label}
+                          {t(mode.labelKey)}
                         </IonSegmentButton>
                       ))}
                     </IonSegment>
@@ -620,7 +654,7 @@ export default function Index() {
                   {/* Widget preview */}
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      Preview
+                      {t('widget.preview')}
                     </h2>
                     <div className="flex justify-center py-4">
                       <div className="animate-scale-in" key={`${selectedEventId}-${selectedSize}`}>

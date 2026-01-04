@@ -4,6 +4,7 @@ import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonCo
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,6 +66,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   onValidityChange,
   onConfirmDateChange,
 }, ref) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
@@ -310,13 +312,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   };
 
   // Expose save method to parent via ref
+  // Must include all dependencies that handleSave and other functions use
+  // to prevent stale closures when called from parent
   useImperativeHandle(ref, () => ({
     save: handleSave,
     canSave,
     hasDateChanged,
     getCurrentDate: () => date,
     focusInput,
-  }));
+  }), [title, date, emoji, isRecurring, emojiColor, isEditing, onConfirmDateChange, onSave, onClose, trigger]);
 
   const handleEmojiSelect = (e: string) => {
     trigger('light');
@@ -387,10 +391,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={handleClose}>Cancel</IonButton>
+            <IonButton onClick={handleClose}>{t('modal.cancel')}</IonButton>
           </IonButtons>
           <IonTitle>
-            {isEditing ? `Edit ${initialTitle || title || 'Event'}` : 'New Event'}
+            {isEditing ? t('modal.editEvent') : t('modal.newEvent')}
           </IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -401,7 +405,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Title input */}
             <div className="space-y-2">
               <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
-                Event Name
+                {t('modal.titleLabel')}
               </Label>
               <div className="relative">
                 <Input
@@ -411,7 +415,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   onChange={(e) => setTitle(e.target.value)}
                   onFocus={() => setIsTitleFocused(true)}
                   onBlur={() => setIsTitleFocused(false)}
-                  placeholder="Enter event name"
+                  placeholder={t('modal.eventNamePlaceholder')}
                   autoFocus={!isEditing && !Capacitor.isNativePlatform() && !isSafariMobile()}
                   className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10"
                 />
@@ -428,7 +432,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       }, 0);
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-secondary/80 active:bg-secondary text-muted-foreground hover:text-foreground animate-blur-in"
-                    aria-label="Clear input"
+                    aria-label={t('aria.clearInput')}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -438,7 +442,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">Icon</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('modal.emojiLabel')}</Label>
               <div className="flex gap-2 flex-wrap" key={`emoji-list-${emojiAnimationKey}`}>
                 {suggestedEmojis.map((e, index) => {
                   const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
@@ -511,7 +515,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           }
                         }, 150);
                       }}
-                      placeholder="🎨"
+                      placeholder={t('modal.customEmojiPlaceholder')}
                       className="w-12 h-12 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none"
                       style={{
                         background: getGradientFromColor(emojiColor),
@@ -542,7 +546,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     style={{
                       animationDelay: `${suggestedEmojis.length * 30}ms`,
                     }}
-                    title="Custom emoji"
+                    title={t('modal.customEmojiTitle')}
                   >
                     <Plus className="w-6 h-6 text-muted-foreground" />
                   </button>
@@ -552,7 +556,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
             {/* Color picker wheel */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground -mt-4">Icon Color</Label>
+              <Label className="text-sm font-medium text-muted-foreground -mt-4">{t('modal.colorLabel')}</Label>
               <ColorWheelPicker 
                 key={colorPickerKey}
                 value={emojiColor} 
@@ -571,8 +575,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   <RefreshCw className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Repeat Yearly</p>
-                  <p className="text-sm text-muted-foreground">For birthdays, anniversaries</p>
+                  <p className="font-medium text-foreground">{t('modal.repeatYearlyLabel')}</p>
+                  <p className="text-sm text-muted-foreground">{t('modal.repeatYearlySublabel')}</p>
                 </div>
               </div>
               <IonToggle 
@@ -583,7 +587,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             
             {/* Date picker */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">Date</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('modal.dateLabel')}</Label>
               <div className="rounded-2xl bg-secondary/40 overflow-hidden">
                 {/* Native Ionic Calendar */}
                 <div className="p-2 flex justify-center">
@@ -640,7 +644,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               <div className="pt-4 border-t border-border/50">
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                    Advanced
+                    {t('modal.advancedLabel')}
                   </h3>
                   <button
                     type="button"
@@ -648,7 +652,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete Event
+                    {t('modal.delete')}
                   </button>
                 </div>
               </div>

@@ -1,0 +1,101 @@
+{
+  "app": {
+    "title": "Noch eine Countdown-App",
+    "noCountdowns": "Keine Countdowns",
+    "createFirst": "Tippe auf das +-Symbol unten, um deinen ersten Countdown zu erstellen"
+  },
+  "events": {
+    "title": "Ereignisse",
+    "delete": "Löschen",
+    "edit": "Bearbeiten"
+  },
+  "widget": {
+    "size": "Widget-Größe",
+    "style": "Stil",
+    "appearance": "Aussehen",
+    "preview": "Vorschau",
+    "next": "Nächstes: {{date}}",
+    "timeSince": "Zeit seit dem Ereignis",
+    "arrived": "Ereignis ist eingetreten!",
+    "countingDown": "Countdown läuft...",
+    "units": {
+      "days": "Tag",
+      "days_plural": "Tage",
+      "daysShort": "Tage",
+      "hours": "Stunde",
+      "hours_plural": "Stunden",
+      "hoursShort": "Stunden",
+      "minutes": "Minute",
+      "minutes_plural": "Minuten",
+      "minutesShort": "Min",
+      "seconds": "Sekunde",
+      "seconds_plural": "Sekunden",
+      "secondsShort": "Sek"
+    },
+    "daysAgoText": "vor",
+    "daysAgoTextUpper": "Vor Tagen",
+    "sizes": {
+      "small": "Klein",
+      "medium": "Mittel",
+      "large": "Groß",
+      "extraLarge": "Extra Groß"
+    },
+    "styles": {
+      "focus": "Fokus",
+      "visual": "Visuell"
+    },
+    "appearances": {
+      "light": "Hell",
+      "dark": "Dunkel",
+      "transparent": "Glas",
+      "tinted": "Getönt"
+    }
+  },
+  "modal": {
+    "editEvent": "Ereignis bearbeiten",
+    "newEvent": "Neues Ereignis",
+    "titleLabel": "Titel",
+    "eventNamePlaceholder": "Ereignisname eingeben",
+    "dateLabel": "Datum",
+    "emojiLabel": "Symbol",
+    "colorLabel": "Farbe",
+    "recurringLabel": "Jährlich",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Ereignis löschen",
+    "advancedLabel": "Erweitert",
+    "repeatYearlyLabel": "Jährlich wiederholen",
+    "repeatYearlySublabel": "Für Geburtstage, Jubiläen",
+    "customEmojiTitle": "Benutzerdefiniertes Emoji",
+    "customEmojiPlaceholder": "🎨"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Datum geändert",
+      "message": "Du hast das Datum für „{{title}}“ geändert. Möchtest du diese Änderungen wirklich speichern?",
+      "save": "Änderungen speichern",
+      "cancel": "Abbrechen"
+    },
+    "deleteEvent": {
+      "title": "Ereignis löschen",
+      "message": "Bist du sicher, dass du „{{title}}“ löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "delete": "Löschen",
+      "cancel": "Abbrechen"
+    }
+  },
+  "countdown": {
+    "today": "Heute! 🎉",
+    "daysAgo": "vor {{count}} Tag",
+    "daysAgo_plural": "vor {{count}} Tagen",
+    "format": "{{days}}T {{hours}}St {{minutes}}M"
+  },
+  "notifications": {
+    "reachedZero": "Dein Countdown ist abgelaufen!"
+  },
+  "aria": {
+    "saveEvent": "Ereignis speichern",
+    "addEvent": "Ereignis hinzufügen",
+    "clearInput": "Eingabe löschen",
+    "colorPicker": "Farbauswahl"
+  }
+}

@@ -5,6 +5,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { SplashScreen } from "@capacitor/splash-screen";
 import App from "./App.tsx";
+import "./i18n"; // Initialize i18n
 
 /* Ionic Core CSS */
 import "@ionic/react/css/core.css";

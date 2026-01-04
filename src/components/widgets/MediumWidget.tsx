@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
@@ -37,6 +38,7 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
 }
 
 export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, countdownStyle, isRecurring, createdAt, nextOccurrenceNumber }: MediumWidgetProps) {
+  const { t } = useTranslation();
   const widgetClasses = getWidgetClasses(appearanceMode);
   
   // For tinted mode, generate the background color from emoji color
@@ -76,21 +78,21 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
             {targetDate ? (
               <p className="text-xs text-muted-foreground">
                 {isRecurring 
-                  ? `Next: ${format(targetDate, 'MMM d, yyyy')}` 
+                  ? t('widget.next', { date: format(targetDate, 'MMM d, yyyy') }) 
                   : countdown.isPast
-                    ? `${format(targetDate, 'MMM d, yyyy')} · ${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                    ? `${format(targetDate, 'MMM d, yyyy')} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
                     : format(targetDate, 'MMM d, yyyy')}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
-                {countdown.isPast ? 'Time since event' : countdown.isComplete ? 'Event arrived!' : 'Counting down'}
+                {countdown.isPast ? t('widget.timeSince') : countdown.isComplete ? t('widget.arrived') : t('widget.countingDown')}
               </p>
             )}
           </div>
         </div>
         
         {countdown.isComplete && !countdown.isPast ? (
-          <p className="text-3xl font-bold text-primary">Today! 🎉</p>
+          <p className="text-3xl font-bold text-primary">{t('countdown.today')}</p>
         ) : (
           <div className="flex gap-6 items-end w-full">
             <ProgressBars
@@ -128,11 +130,11 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
           </div>
           {targetDate ? (
             <p className="text-xs text-muted-foreground">
-              {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
+              {isRecurring ? t('widget.next', { date: format(targetDate, 'MMM d, yyyy') }) : format(targetDate, 'MMM d, yyyy')}
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {countdown.isPast ? 'Time since event' : countdown.isComplete ? 'Event arrived!' : 'Counting down'}
+              {countdown.isPast ? t('widget.timeSince') : countdown.isComplete ? t('widget.arrived') : t('widget.countingDown')}
             </p>
           )}
         </div>
@@ -142,24 +144,24 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
         <div className="flex gap-6">
           <div>
             <p className="text-3xl font-bold text-foreground">{countdown.daysSince}</p>
-            <p className="text-xs text-muted-foreground">Day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
+            <p className="text-xs text-muted-foreground">{t('widget.units.daysShort', { count: countdown.daysSince })} {t('widget.daysAgoText')}</p>
           </div>
         </div>
       ) : countdown.isComplete ? (
-        <p className="text-3xl font-bold text-primary">Today! 🎉</p>
+        <p className="text-3xl font-bold text-primary">{t('countdown.today')}</p>
       ) : (
         <div className="flex gap-6">
           <div>
             <p className="text-3xl font-bold text-foreground">{countdown.days}</p>
-            <p className="text-xs text-muted-foreground">Days</p>
+            <p className="text-xs text-muted-foreground">{t('widget.units.daysShort', { count: countdown.days })}</p>
           </div>
           <div>
             <p className="text-3xl font-bold text-foreground">{countdown.hours}</p>
-            <p className="text-xs text-muted-foreground">Hours</p>
+            <p className="text-xs text-muted-foreground">{t('widget.units.hoursShort', { count: countdown.hours })}</p>
           </div>
           <div>
             <p className="text-3xl font-bold text-foreground">{countdown.minutes}</p>
-            <p className="text-xs text-muted-foreground">Min</p>
+            <p className="text-xs text-muted-foreground">{t('widget.units.minutesShort', { count: countdown.minutes })}</p>
           </div>
         </div>
       )}

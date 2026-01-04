@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
@@ -50,6 +51,7 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
 }
 
 export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, countdownStyle, isRecurring, createdAt, nextOccurrenceNumber }: SmallWidgetProps) {
+  const { t } = useTranslation();
   const timeDisplay = getTimeDisplay(countdown);
   const widgetClasses = getWidgetClasses(appearanceMode);
   
@@ -90,14 +92,14 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
               {isRecurring 
-                ? `Next: ${format(targetDate, 'MMM d')}` 
+                ? t('widget.next', { date: format(targetDate, 'MMM d') }) 
                 : countdown.isPast
-                  ? `${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                  ? t('countdown.daysAgo', { count: countdown.daysSince })
                   : format(targetDate, 'MMM d, yyyy')}
             </p>
           )}
           {countdown.isComplete && !countdown.isPast ? (
-            <p className="text-2xl font-bold text-primary">Today! 🎉</p>
+            <p className="text-2xl font-bold text-primary">{t('countdown.today')}</p>
           ) : (
             <div className="flex justify-start w-full">
               <ProgressBars
@@ -136,18 +138,18 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
         <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
         {targetDate && (
           <p className="text-xs text-muted-foreground truncate mb-1">
-            {isRecurring ? `Next: ${format(targetDate, 'MMM d')}` : format(targetDate, 'MMM d, yyyy')}
+            {isRecurring ? t('widget.next', { date: format(targetDate, 'MMM d') }) : format(targetDate, 'MMM d, yyyy')}
           </p>
         )}
         {countdown.isPast ? (
           <p className="text-3xl font-bold text-foreground tracking-tight">
-            {countdown.daysSince}<span className="text-lg font-medium text-muted-foreground ml-1">day{countdown.daysSince !== 1 ? 's' : ''} ago</span>
+            {countdown.daysSince}<span className="text-lg font-medium text-muted-foreground ml-1">{t('widget.units.days', { count: countdown.daysSince })} {t('widget.daysAgoText')}</span>
           </p>
         ) : countdown.isComplete ? (
-          <p className="text-2xl font-bold text-primary">Today! 🎉</p>
+          <p className="text-2xl font-bold text-primary">{t('countdown.today')}</p>
         ) : (
           <p className="text-3xl font-bold text-foreground tracking-tight">
-            {timeDisplay.value}<span className="text-lg font-medium text-muted-foreground ml-1">{timeDisplay.unit}</span>
+            {timeDisplay.value}<span className="text-lg font-medium text-muted-foreground ml-1">{t(`widget.units.${timeDisplay.unit}`, { count: timeDisplay.value })}</span>
           </p>
         )}
       </div>

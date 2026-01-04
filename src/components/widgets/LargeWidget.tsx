@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
@@ -37,6 +38,7 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
 }
 
 export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, countdownStyle, isRecurring, createdAt, nextOccurrenceNumber }: LargeWidgetProps) {
+  const { t } = useTranslation();
   const widgetClasses = getWidgetClasses(appearanceMode);
   
   // For tinted mode, generate the background color from emoji color
@@ -91,9 +93,9 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
             {targetDate && (
               <p className="text-sm text-muted-foreground">
                 {isRecurring 
-                  ? `Next: ${format(targetDate, 'MMM d, yyyy')}` 
+                  ? t('widget.next', { date: format(targetDate, 'MMM d, yyyy') }) 
                   : countdown.isPast
-                    ? `${format(targetDate, 'MMM d, yyyy')} · ${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                    ? `${format(targetDate, 'MMM d, yyyy')} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
                     : format(targetDate, 'MMM d, yyyy')}
               </p>
             )}
@@ -104,8 +106,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         <div className="flex-1 flex items-center justify-center">
           {countdown.isComplete && !countdown.isPast ? (
             <div className="text-center">
-              <p className="text-5xl font-bold text-primary">Today!</p>
-              <p className="text-3xl mt-2">🎉</p>
+              <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
             </div>
           ) : (
             <ProgressBars
@@ -128,38 +129,38 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
               <>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{elapsedDays}</p>
-                  <p className="text-xs text-muted-foreground">Days ago</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.daysAgoTextUpper')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{elapsedHours}</p>
-                  <p className="text-xs text-muted-foreground">Hours</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.hoursShort')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{elapsedMinutes}</p>
-                  <p className="text-xs text-muted-foreground">Min</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.minutesShort')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{elapsedSeconds}</p>
-                  <p className="text-xs text-muted-foreground">Sec</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.secondsShort')}</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{countdown.days}</p>
-                  <p className="text-xs text-muted-foreground">Days</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.daysShort')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{countdown.hours}</p>
-                  <p className="text-xs text-muted-foreground">Hours</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.hoursShort')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{countdown.minutes}</p>
-                  <p className="text-xs text-muted-foreground">Min</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.minutesShort')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{countdown.seconds}</p>
-                  <p className="text-xs text-muted-foreground">Sec</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.units.secondsShort')}</p>
                 </div>
               </>
             )}
@@ -197,30 +198,29 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
       {countdown.isPast ? (
         <div className="flex flex-col items-center justify-center flex-1">
           <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-          <p className="text-lg text-muted-foreground mt-2">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
+          <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
         </div>
       ) : countdown.isComplete ? (
         <div className="text-center py-8">
-          <p className="text-5xl font-bold text-primary">Today!</p>
-          <p className="text-xl mt-2">🎉</p>
+          <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-secondary/50 rounded-2xl p-4 text-center">
             <p className="text-4xl font-bold text-foreground">{countdown.days}</p>
-            <p className="text-sm text-muted-foreground">Days</p>
+            <p className="text-sm text-muted-foreground">{t('widget.units.days_plural')}</p>
           </div>
           <div className="bg-secondary/50 rounded-2xl p-4 text-center">
             <p className="text-4xl font-bold text-foreground">{countdown.hours}</p>
-            <p className="text-sm text-muted-foreground">Hours</p>
+            <p className="text-sm text-muted-foreground">{t('widget.units.hours_plural')}</p>
           </div>
           <div className="bg-secondary/50 rounded-2xl p-4 text-center">
             <p className="text-4xl font-bold text-foreground">{countdown.minutes}</p>
-            <p className="text-sm text-muted-foreground">Minutes</p>
+            <p className="text-sm text-muted-foreground">{t('widget.units.minutes_plural')}</p>
           </div>
           <div className="bg-secondary/50 rounded-2xl p-4 text-center">
             <p className="text-4xl font-bold text-foreground">{countdown.seconds}</p>
-            <p className="text-sm text-muted-foreground">Seconds</p>
+            <p className="text-sm text-muted-foreground">{t('widget.units.seconds_plural')}</p>
           </div>
         </div>
       )}

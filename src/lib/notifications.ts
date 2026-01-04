@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import i18n from '../i18n';
 
 /**
  * Convert event ID string to a numeric notification ID
@@ -124,7 +125,7 @@ export async function scheduleEventNotification(
         notifications: [
           {
             title: `${emoji} ${title}`,
-            body: 'Your countdown has reached zero!',
+            body: i18n.t('notifications.reachedZero'),
             id: notificationId,
             schedule: { at: targetDate },
             sound: 'default',
@@ -198,7 +199,7 @@ export async function cancelEventNotification(eventId: string): Promise<void> {
 function showWebNotification(title: string, emoji: string): void {
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification(`${emoji} ${title}`, {
-      body: 'Your countdown has reached zero!',
+      body: i18n.t('notifications.reachedZero'),
       icon: '/favicon.ico',
     });
   }
