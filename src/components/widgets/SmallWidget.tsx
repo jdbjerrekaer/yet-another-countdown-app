@@ -140,8 +140,8 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           </p>
         )}
         {countdown.isPast ? (
-          <p className="text-2xl font-bold text-foreground tracking-tight">
-            {countdown.daysSince}<span className="text-sm font-medium text-muted-foreground ml-1">day{countdown.daysSince !== 1 ? 's' : ''} ago</span>
+          <p className="text-3xl font-bold text-foreground tracking-tight">
+            {countdown.daysSince}<span className="text-lg font-medium text-muted-foreground ml-1">day{countdown.daysSince !== 1 ? 's' : ''} ago</span>
           </p>
         ) : countdown.isComplete ? (
           <p className="text-2xl font-bold text-primary">Today! 🎉</p>
