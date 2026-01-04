@@ -67,27 +67,38 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${f(0)}${f(8)}${f(4)}`;
 }
 
+// Parse hex color to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return null;
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  };
+}
+
+// Calculate color distance between two hex colors (0-765 range, sum of RGB differences)
+function calculateColorDistance(hex1: string, hex2: string): number {
+  const rgb1 = hexToRgb(hex1);
+  const rgb2 = hexToRgb(hex2);
+  if (!rgb1 || !rgb2) return 0;
+  return Math.abs(rgb1.r - rgb2.r) + Math.abs(rgb1.g - rgb2.g) + Math.abs(rgb1.b - rgb2.b);
+}
+
 // Find the closest palette index for a given hex color
 function findClosestColorIndex(hex: string): number {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return 0;
-
-  const r = parseInt(result[1], 16);
-  const g = parseInt(result[2], 16);
-  const b = parseInt(result[3], 16);
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
 
   let closestIndex = 0;
   let closestDiff = Infinity;
 
   for (let i = 0; i < COLOR_PALETTE.length; i++) {
-    const palResult = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(COLOR_PALETTE[i]);
-    if (!palResult) continue;
+    const palRgb = hexToRgb(COLOR_PALETTE[i]);
+    if (!palRgb) continue;
 
-    const pr = parseInt(palResult[1], 16);
-    const pg = parseInt(palResult[2], 16);
-    const pb = parseInt(palResult[3], 16);
-
-    const diff = Math.abs(r - pr) + Math.abs(g - pg) + Math.abs(b - pb);
+    const diff = Math.abs(rgb.r - palRgb.r) + Math.abs(rgb.g - palRgb.g) + Math.abs(rgb.b - palRgb.b);
     if (diff < closestDiff) {
       closestDiff = diff;
       closestIndex = i;
@@ -159,6 +170,36 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     }
   }, [value, emblaApi]);
 
+  // Calculate transition duration based on color distance
+  // Similar to velocity-based transitions, but uses color distance instead
+  const calculateDistanceBasedTransition = useCallback((fromHex: string, toHex: string): number => {
+    const distance = calculateColorDistance(fromHex, toHex);
+    
+    // Color distance ranges from 0 to 765 (max RGB difference: 255*3)
+    // Map distance to transition duration:
+    // - Small distance (similar colors): shorter transition (feels snappy)
+    // - Large distance (very different colors): longer transition (smooth color journey)
+    const MIN_EMOJI_TRANSITION = 500; // ms - minimum for very similar colors (increased for better UX)
+    const MAX_EMOJI_TRANSITION = 1000; // ms - maximum for opposite colors (increased for better UX)
+    const LOW_DISTANCE_THRESHOLD = 100; // colors closer than this get min duration
+    const HIGH_DISTANCE_THRESHOLD = 500; // colors farther than this get max duration
+    
+    if (distance <= LOW_DISTANCE_THRESHOLD) {
+      return MIN_EMOJI_TRANSITION;
+    }
+    
+    if (distance >= HIGH_DISTANCE_THRESHOLD) {
+      return MAX_EMOJI_TRANSITION;
+    }
+    
+    // Linear interpolation between thresholds
+    const distanceRange = HIGH_DISTANCE_THRESHOLD - LOW_DISTANCE_THRESHOLD;
+    const durationRange = MAX_EMOJI_TRANSITION - MIN_EMOJI_TRANSITION;
+    const normalizedDistance = (distance - LOW_DISTANCE_THRESHOLD) / distanceRange;
+    
+    return MIN_EMOJI_TRANSITION + (normalizedDistance * durationRange);
+  }, []);
+
   // Update color from emoji when emoji changes (only if not manually changed)
   useEffect(() => {
     // Skip if no emoji
@@ -182,6 +223,11 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       const emojiColor = COLOR_PALETTE[emojiColorIndex];
       
       if (emojiColor) {
+        // Calculate transition duration based on color distance
+        const currentColor = previewColor || COLOR_PALETTE[lastIndexRef.current] || value;
+        const transitionDuration = calculateDistanceBasedTransition(currentColor, emojiColor);
+        setPreviewTransitionDuration(transitionDuration);
+        
         emblaApi.scrollTo(emojiColorIndex, false); // smooth scroll
         setSelectedIndex(emojiColorIndex);
         setPreviewColor(emojiColor);
@@ -192,7 +238,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     
     // Update the ref after all checks
     lastEmojiRef.current = emoji;
-  }, [emoji, emblaApi, onChange]);
+  }, [emoji, emblaApi, onChange, previewColor, value, calculateDistanceBasedTransition]);
 
   // Initialize to the correct slide on mount
   useEffect(() => {
