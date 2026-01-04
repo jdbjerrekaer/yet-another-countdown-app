@@ -101,11 +101,34 @@
   "notifications": {
     "reachedZero": "Dein Countdown ist abgelaufen!"
   },
+  "calendar": {
+    "importTitle": "Aus Kalender importieren",
+    "importButton": "Importieren",
+    "fetchEvents": "Ereignisse abrufen",
+    "loading": "Lade Kalenderereignisse...",
+    "fetchError": "Fehler beim Abrufen der Kalenderereignisse",
+    "noEventsTitle": "Keine wiederkehrenden Ereignisse",
+    "noEventsMessage": "Keine Geburtstage oder Jubiläen in deinem Kalender gefunden",
+    "eventsFound": "{{count}} Ereignis gefunden",
+    "eventsFound_plural": "{{count}} Ereignisse gefunden",
+    "searchPlaceholder": "Ereignisse suchen...",
+    "selectAll": "Alle auswählen",
+    "deselectAll": "Alle abwählen",
+    "yearly": "Jährlich",
+    "tryAgain": "Erneut versuchen",
+    "refresh": "Aktualisieren",
+    "icsUrlLabel": "Kalender-URL (.ics)",
+    "icsUrlPlaceholder": "Füge deine Kalender-URL hier ein",
+    "icsUrlHint": "Füge eine öffentliche .ics Kalender-URL ein (z.B. von Google Calendar)",
+    "urlRequired": "Bitte gib eine Kalender-URL ein",
+    "invalidUrl": "Bitte gib eine gültige .ics Kalender-URL ein"
+  },
   "aria": {
     "saveEvent": "Ereignis speichern",
     "addEvent": "Ereignis hinzufügen",
     "clearInput": "Eingabe löschen",
     "colorPicker": "Farbauswahl",
-    "shareEvent": "Ereignis teilen"
+    "shareEvent": "Ereignis teilen",
+    "importFromCalendar": "Aus Kalender importieren"
   }
 }

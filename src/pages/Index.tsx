@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton } from '@ionic/react';
-import { add, checkmark } from 'ionicons/icons';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
+import { add, checkmark, calendarOutline } from 'ionicons/icons';
 import { format } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
@@ -35,6 +35,8 @@ import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle 
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
+import { CalendarImportModal } from '@/components/CalendarImportModal';
+import { ImportableEvent, convertToCountdownEvent } from '@/lib/calendarImport';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -71,6 +73,7 @@ export default function Index() {
   });
   const [editingEvent, setEditingEvent] = useState<CountdownEvent | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isCalendarImportOpen, setIsCalendarImportOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [canSaveForm, setCanSaveForm] = useState(false);
   const [draggedCardWidth, setDraggedCardWidth] = useState<number | null>(null);
@@ -433,6 +436,44 @@ export default function Index() {
     setCanSaveForm(false);
   };
 
+  const handleOpenCalendarImport = () => {
+    trigger('light');
+    setIsCalendarImportOpen(true);
+  };
+
+  const handleCalendarImport = async (importedEvents: ImportableEvent[]) => {
+    // Check notification permission once before importing
+    const hasPermission = await checkNotificationPermission();
+
+    // Convert and add each event
+    for (const importedEvent of importedEvents) {
+      const eventData = convertToCountdownEvent(importedEvent, generateId);
+      const newEvent: CountdownEvent = {
+        id: generateId(),
+        ...eventData,
+        createdAt: new Date().toISOString(),
+      };
+      
+      setEvents(prev => [...prev, newEvent]);
+      
+      // Schedule notification if permission is already granted
+      if (hasPermission) {
+        const targetDateForNotification = newEvent.isRecurring 
+          ? getNextRecurringDate(new Date(newEvent.targetDate))
+          : new Date(newEvent.targetDate);
+        await scheduleEventNotification(newEvent.id, newEvent.title, targetDateForNotification, newEvent.emoji);
+      }
+    }
+    
+    // Select the first imported event
+    if (importedEvents.length > 0) {
+      // We need to wait for state to update, so we'll set it after the events are added
+      // This is handled by the useEffect that selects first event if none selected
+    }
+    
+    trigger('medium');
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
     targetDragRotationRef.current = 0;
@@ -587,6 +628,11 @@ export default function Index() {
         <IonHeader>
           <IonToolbar>
             <IonTitle size="large">{t('app.title')}</IonTitle>
+            <IonButtons slot="end">
+              <IonButton onClick={handleOpenCalendarImport} aria-label={t('aria.importFromCalendar')}>
+                <IonIcon icon={calendarOutline} slot="icon-only" />
+              </IonButton>
+            </IonButtons>
           </IonToolbar>
         </IonHeader>
 
@@ -797,6 +843,12 @@ export default function Index() {
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
         onValidityChange={setCanSaveForm}
         onConfirmDateChange={confirmDateChange}
+      />
+
+      <CalendarImportModal
+        isOpen={isCalendarImportOpen}
+        onClose={() => setIsCalendarImportOpen(false)}
+        onImport={handleCalendarImport}
       />
 
     </IonPage>

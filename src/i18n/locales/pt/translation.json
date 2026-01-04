@@ -101,11 +101,34 @@
   "notifications": {
     "reachedZero": "Sua contagem regressiva chegou a zero!"
   },
+  "calendar": {
+    "importTitle": "Importar do Calendário",
+    "importButton": "Importar",
+    "fetchEvents": "Buscar Eventos",
+    "loading": "Carregando eventos do calendário...",
+    "fetchError": "Erro ao buscar eventos do calendário",
+    "noEventsTitle": "Sem Eventos Recorrentes",
+    "noEventsMessage": "Nenhum aniversário ou data especial encontrado no seu calendário",
+    "eventsFound": "{{count}} evento encontrado",
+    "eventsFound_plural": "{{count}} eventos encontrados",
+    "searchPlaceholder": "Buscar eventos...",
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desmarcar Tudo",
+    "yearly": "Anual",
+    "tryAgain": "Tentar Novamente",
+    "refresh": "Atualizar",
+    "icsUrlLabel": "URL do Calendário (.ics)",
+    "icsUrlPlaceholder": "Cole a URL do seu calendário aqui",
+    "icsUrlHint": "Cole uma URL pública de calendário .ics (ex. do Google Calendar)",
+    "urlRequired": "Por favor, insira uma URL de calendário",
+    "invalidUrl": "Por favor, insira uma URL de calendário .ics válida"
+  },
   "aria": {
     "saveEvent": "Salvar evento",
     "addEvent": "Adicionar evento",
     "clearInput": "Limpar entrada",
     "colorPicker": "Seletor de cores",
-    "shareEvent": "Compartilhar evento"
+    "shareEvent": "Compartilhar evento",
+    "importFromCalendar": "Importar do calendário"
   }
 }

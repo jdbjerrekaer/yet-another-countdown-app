@@ -101,11 +101,34 @@
   "notifications": {
     "reachedZero": "Ваш обратный отсчет закончился!"
   },
+  "calendar": {
+    "importTitle": "Импорт из календаря",
+    "importButton": "Импортировать",
+    "fetchEvents": "Получить события",
+    "loading": "Загрузка событий календаря...",
+    "fetchError": "Ошибка при получении событий календаря",
+    "noEventsTitle": "Нет повторяющихся событий",
+    "noEventsMessage": "В вашем календаре не найдено дней рождения или годовщин",
+    "eventsFound": "Найдено {{count}} событие",
+    "eventsFound_plural": "Найдено {{count}} событий",
+    "searchPlaceholder": "Поиск событий...",
+    "selectAll": "Выбрать все",
+    "deselectAll": "Отменить выбор",
+    "yearly": "Ежегодно",
+    "tryAgain": "Попробовать снова",
+    "refresh": "Обновить",
+    "icsUrlLabel": "URL календаря (.ics)",
+    "icsUrlPlaceholder": "Вставьте URL вашего календаря здесь",
+    "icsUrlHint": "Вставьте публичный URL календаря .ics (например, из Google Calendar)",
+    "urlRequired": "Пожалуйста, введите URL календаря",
+    "invalidUrl": "Пожалуйста, введите действительный URL календаря .ics"
+  },
   "aria": {
     "saveEvent": "Сохранить событие",
     "addEvent": "Добавить событие",
     "clearInput": "Очистить поле",
     "colorPicker": "Выбор цвета",
-    "shareEvent": "Поделиться событием"
+    "shareEvent": "Поделиться событием",
+    "importFromCalendar": "Импортировать из календаря"
   }
 }

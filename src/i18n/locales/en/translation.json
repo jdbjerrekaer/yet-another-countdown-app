@@ -101,11 +101,34 @@
   "notifications": {
     "reachedZero": "Your countdown has reached zero!"
   },
+  "calendar": {
+    "importTitle": "Import from Calendar",
+    "importButton": "Import",
+    "fetchEvents": "Fetch Events",
+    "loading": "Loading calendar events...",
+    "fetchError": "Failed to fetch calendar events",
+    "noEventsTitle": "No Recurring Events",
+    "noEventsMessage": "No birthdays or anniversaries found in your calendar",
+    "eventsFound": "{{count}} events found",
+    "eventsFound_plural": "{{count}} events found",
+    "searchPlaceholder": "Search events...",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "yearly": "Yearly",
+    "tryAgain": "Try Again",
+    "refresh": "Refresh",
+    "icsUrlLabel": "Calendar URL (.ics)",
+    "icsUrlPlaceholder": "Paste your calendar URL here",
+    "icsUrlHint": "Paste a public .ics calendar URL (e.g., from Google Calendar)",
+    "urlRequired": "Please enter a calendar URL",
+    "invalidUrl": "Please enter a valid .ics calendar URL"
+  },
   "aria": {
     "saveEvent": "Save event",
     "addEvent": "Add event",
     "clearInput": "Clear input",
     "colorPicker": "Color picker",
-    "shareEvent": "Share event"
+    "shareEvent": "Share event",
+    "importFromCalendar": "Import from calendar"
   }
 }
