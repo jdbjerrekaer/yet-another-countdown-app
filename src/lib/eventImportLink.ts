@@ -53,8 +53,15 @@ export function encodeEventImportLink(
     return `${SCHEME}://import?${queryString}`;
   } else {
     // Use web URL for browser sharing
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://countdown.app';
-    return `${origin}/import?${queryString}`;
+    // Include base path for GitHub Pages or other deployments with subpaths
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      // Get base path from Vite's BASE_URL (e.g., '/yet-another-countdown-app/')
+      const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, ''); // Remove trailing slash
+      return `${origin}${basePath}/import?${queryString}`;
+    }
+    // Fallback for SSR or non-browser environments
+    return `https://jdbjerrekaer.github.io/yet-another-countdown-app/import?${queryString}`;
   }
 }
 
