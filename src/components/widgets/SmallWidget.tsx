@@ -103,7 +103,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
                 numBars={7}
                 color={barColor}
                 barWidth={12}
-                barHeight={37}
+                barHeight={36.5}
                 gap={6}
               />
             </div>
