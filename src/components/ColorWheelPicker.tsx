@@ -125,7 +125,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const lastSlideIndexRef = useRef<number>(selectedIndex);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
-  const VELOCITY_THRESHOLD = 3; // slides/s - snap if slower than this
+  const VELOCITY_THRESHOLD = 1; // slides/s - snap if slower than this
+  const SNAP_DISTANCE_THRESHOLD = 0.5; // fraction of slide width - only snap if within this distance
   
   // Velocity-based transition timing constants
   const MIN_TRANSITION_DURATION = 0; // ms - instant at high velocity
@@ -330,14 +331,14 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     });
   }, [emblaApi, calculateTransitionDuration]);
 
-  // Handle pointer up - snap if velocity is low
+  // Handle pointer up - snap if velocity is low and close to snap point
   const onPointerUp = useCallback(() => {
     if (!emblaApi) return;
     
     // Reset transition duration to smooth when interaction ends
     setPreviewTransitionDuration(MAX_TRANSITION_DURATION);
     
-    // If velocity is below threshold, snap to nearest color
+    // If velocity is below threshold, check if we should snap
     if (Math.abs(scrollVelocityRef.current) < VELOCITY_THRESHOLD) {
       const slideCount = COLOR_PALETTE.length;
       const scrollProgress = emblaApi.scrollProgress();
@@ -345,12 +346,21 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       // Clamp scrollProgress to [0, 1] to handle edge cases
       const clampedProgress = Math.max(0, Math.min(1, scrollProgress));
       
-      // Find the nearest slide index
-      const currentSlide = Math.round(clampedProgress * (slideCount - 1));
-      const nearestIndex = Math.max(0, Math.min(slideCount - 1, currentSlide));
+      // Calculate the exact slide position (0 to slideCount-1)
+      const exactSlidePosition = clampedProgress * (slideCount - 1);
       
-      // Snap to nearest color smoothly
-      emblaApi.scrollTo(nearestIndex, false);
+      // Find the nearest slide index
+      const nearestIndex = Math.round(exactSlidePosition);
+      const clampedNearestIndex = Math.max(0, Math.min(slideCount - 1, nearestIndex));
+      
+      // Calculate distance to nearest snap point (as fraction of slide width)
+      const distanceToNearest = Math.abs(exactSlidePosition - clampedNearestIndex);
+      
+      // Only snap if we're close enough to a snap point (weaker snapping)
+      if (distanceToNearest <= SNAP_DISTANCE_THRESHOLD) {
+        // Snap to nearest color smoothly
+        emblaApi.scrollTo(clampedNearestIndex, false);
+      }
     }
   }, [emblaApi]);
 
