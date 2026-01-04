@@ -28,7 +28,14 @@ export const COLOR_PALETTE = [
   '#a0bf40',
   // Yellows
   '#bfbf40',
+  '#bfb040',
   '#bfa040',
+  '#bf9040',
+  '#ffd700', // Pure yellow-gold
+  '#ffed4e', // Bright yellow
+  '#fff44f', // Light yellow
+  '#ffeb3b', // Lemon yellow
+  '#fdd835', // Amber yellow
   // Oranges
   '#bf8040',
   '#bf6040',
