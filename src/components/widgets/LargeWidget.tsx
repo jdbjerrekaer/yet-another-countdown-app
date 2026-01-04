@@ -90,7 +90,11 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
             </div>
             {targetDate && (
               <p className="text-sm text-muted-foreground">
-                {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
+                {isRecurring 
+                  ? `Next: ${format(targetDate, 'MMM d, yyyy')}` 
+                  : countdown.isPast
+                    ? `${format(targetDate, 'MMM d, yyyy')} · ${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                    : format(targetDate, 'MMM d, yyyy')}
               </p>
             )}
           </div>
@@ -173,9 +177,9 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-lg font-semibold text-foreground truncate">{title}</p>
-            {isRecurring && (
+            {(isRecurring || countdown.isPast) && (
               <div className="flex items-center gap-1 flex-shrink-0">
-                <RefreshCw className="w-3.5 h-3.5 text-primary" />
+                {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
                 {nextOccurrenceNumber && (
                   <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
                 )}

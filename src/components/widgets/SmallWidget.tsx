@@ -89,7 +89,11 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
-              {isRecurring ? `Next: ${format(targetDate, 'MMM d')}` : format(targetDate, 'MMM d, yyyy')}
+              {isRecurring 
+                ? `Next: ${format(targetDate, 'MMM d')}` 
+                : countdown.isPast
+                  ? `${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                  : format(targetDate, 'MMM d, yyyy')}
             </p>
           )}
           {countdown.isComplete && !countdown.isPast ? (

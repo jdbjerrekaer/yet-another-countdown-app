@@ -133,7 +133,9 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
               <p className="text-sm text-muted-foreground">
                 {isRecurring 
                   ? `Next: ${format(targetDate, 'EEEE, MMMM d, yyyy')}` 
-                  : format(targetDate, 'EEEE, MMMM d, yyyy')}
+                  : countdown.isPast
+                    ? `${format(targetDate, 'EEEE, MMMM d, yyyy')} · ${countdown.daysSince} day${countdown.daysSince !== 1 ? 's' : ''} ago`
+                    : format(targetDate, 'EEEE, MMMM d, yyyy')}
               </p>
             )}
           </div>
@@ -210,9 +212,9 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-xl font-bold text-foreground truncate">{title}</p>
-            {isRecurring && (
+            {(isRecurring || countdown.isPast) && (
               <div className="flex items-center gap-1 flex-shrink-0">
-                <RefreshCw className="w-4 h-4 text-primary" />
+                {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
                 {nextOccurrenceNumber && (
                   <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
                 )}
@@ -221,9 +223,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
           </div>
           {targetDate && (
             <p className="text-sm text-muted-foreground">
-              {isRecurring 
-                ? `Next: ${format(targetDate, 'EEEE, MMMM d, yyyy')}` 
-                : format(targetDate, 'EEEE, MMMM d, yyyy')}
+              {isRecurring ? `Next: ${format(targetDate, 'EEEE, MMMM d, yyyy')}` : format(targetDate, 'EEEE, MMMM d, yyyy')}
             </p>
           )}
         </div>
