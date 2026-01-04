@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { format } from 'date-fns';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon } from '@ionic/react';
+import { shareOutline } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
+import { Share } from '@capacitor/share';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
@@ -11,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
 import { isSafariMobile } from '@/lib/utils';
+import { encodeEventImportLink } from '@/lib/eventImportLink';
+import { toast } from '@/components/ui/sonner';
 
 // Helper to get gradient from a hex color
 const getGradientFromColor = (hex: string): string => {
@@ -382,6 +386,60 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     }
   };
 
+  const handleShareClick = async () => {
+    if (!title || !date || !emoji) {
+      return;
+    }
+
+    trigger('light');
+
+    try {
+      const importLink = encodeEventImportLink({
+        title,
+        targetDate: date.toISOString(),
+        emoji,
+        emojiColor,
+        isRecurring,
+      });
+
+      const isNative = Capacitor.isNativePlatform();
+
+      if (isNative) {
+        // Use Capacitor Share plugin for native platforms
+        await Share.share({
+          title: `${emoji} ${title}`,
+          text: `${emoji} ${title}`,
+          url: importLink,
+          dialogTitle: t('modal.shareEvent'),
+        });
+      } else {
+        // Web fallback: Use Web Share API if available
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `${emoji} ${title}`,
+              text: `${emoji} ${title}`,
+              url: importLink,
+            });
+          } catch (shareError: any) {
+            // User cancelled or error occurred
+            if (shareError.name !== 'AbortError') {
+              // Only show error if it wasn't a cancellation
+              throw shareError;
+            }
+          }
+        } else {
+          // Fallback: Copy to clipboard
+          await navigator.clipboard.writeText(importLink);
+          toast.success(t('modal.shareLinkCopied'));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to share event:', error);
+      toast.error(t('modal.shareError'));
+    }
+  };
+
   return (
     <IonModal
       isOpen={isOpen}
@@ -396,6 +454,13 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
           <IonTitle>
             {isEditing ? t('modal.editEvent') : t('modal.newEvent')}
           </IonTitle>
+          {isEditing && title && date && emoji && (
+            <IonButtons slot="end">
+              <IonButton onClick={handleShareClick} aria-label={t('aria.shareEvent')}>
+                <IonIcon icon={shareOutline} />
+              </IonButton>
+            </IonButtons>
+          )}
         </IonToolbar>
       </IonHeader>
 

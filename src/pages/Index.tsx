@@ -34,6 +34,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
+import { EventImportPayload } from '@/lib/eventImportLink';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -169,6 +170,95 @@ export default function Index() {
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Handle pending imported events
+  useEffect(() => {
+    const handlePendingImport = async () => {
+      const pendingImportStr = localStorage.getItem('pendingImportedEvent');
+      if (!pendingImportStr) {
+        return;
+      }
+
+      try {
+        const payload: EventImportPayload = JSON.parse(pendingImportStr);
+        
+        // Format date for display
+        const eventDate = new Date(payload.targetDate);
+        const dateFormatted = format(eventDate, 'MMM d, yyyy');
+        
+        // Show confirmation dialog
+        let confirmed = false;
+        
+        if (isNative) {
+          const result = await ActionSheet.showActions({
+            title: t('dialogs.importEvent.title'),
+            message: t('dialogs.importEvent.message', { 
+              title: payload.title, 
+              emoji: payload.emoji,
+              date: dateFormatted 
+            }),
+            options: [
+              {
+                title: t('dialogs.importEvent.import'),
+                style: ActionSheetButtonStyle.Default,
+              },
+              {
+                title: t('dialogs.importEvent.cancel'),
+                style: ActionSheetButtonStyle.Cancel,
+              },
+            ],
+          });
+          confirmed = result.index === 0;
+        } else {
+          const { value } = await Dialog.confirm({
+            title: t('dialogs.importEvent.title'),
+            message: t('dialogs.importEvent.message', { 
+              title: payload.title, 
+              emoji: payload.emoji,
+              date: dateFormatted 
+            }),
+            okButtonTitle: t('dialogs.importEvent.import'),
+            cancelButtonTitle: t('dialogs.importEvent.cancel'),
+          });
+          confirmed = value;
+        }
+
+        if (confirmed) {
+          // Create new event from imported payload
+          const newEvent: CountdownEvent = {
+            id: generateId(),
+            title: payload.title,
+            targetDate: payload.targetDate,
+            emoji: payload.emoji,
+            emojiColor: payload.emojiColor,
+            isRecurring: payload.isRecurring,
+            createdAt: new Date().toISOString(),
+          };
+          
+          setEvents(prev => [...prev, newEvent]);
+          setSelectedEventId(newEvent.id);
+          
+          // Schedule notification only if permission is already granted (don't prompt on import)
+          const hasPermission = await checkNotificationPermission();
+          if (hasPermission) {
+            const targetDateForNotification = payload.isRecurring 
+              ? getNextRecurringDate(new Date(payload.targetDate))
+              : new Date(payload.targetDate);
+            await scheduleEventNotification(newEvent.id, payload.title, targetDateForNotification, payload.emoji);
+          }
+        }
+        
+        // Clear pending import regardless of confirmation
+        localStorage.removeItem('pendingImportedEvent');
+      } catch (error) {
+        console.error('Failed to import event:', error);
+        // Clear invalid pending import
+        localStorage.removeItem('pendingImportedEvent');
+      }
+    };
+
+    handlePendingImport();
+  }, [isNative, t]);
 
   // Show confirmation dialog when date has changed during edit
   const confirmDateChange = async (eventTitle: string, oldDate: Date, newDate: Date): Promise<boolean> => {

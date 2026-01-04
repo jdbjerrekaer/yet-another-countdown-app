@@ -7,6 +7,8 @@ import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Import from "./pages/Import";
+import { DeepLinkHandler } from "./components/DeepLinkHandler";
 
 const queryClient = new QueryClient();
 
@@ -17,8 +19,10 @@ const App = () => (
       <Sonner />
       <IonApp>
         <IonReactRouter basename={import.meta.env.BASE_URL}>
+          <DeepLinkHandler />
           <IonRouterOutlet>
             <Route exact path="/" component={Index} />
+            <Route path="/import" component={Import} />
             <Route path="/404" component={NotFound} />
             {/* Catch-all redirects to 404 page */}
             <Redirect to="/404" />

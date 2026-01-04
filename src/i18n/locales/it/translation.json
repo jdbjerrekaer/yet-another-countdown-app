@@ -67,7 +67,10 @@
     "repeatYearlyLabel": "Ripeti ogni anno",
     "repeatYearlySublabel": "Per compleanni, anniversari",
     "customEmojiTitle": "Emoji personalizzata",
-    "customEmojiPlaceholder": "🎨"
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Condividi Evento",
+    "shareLinkCopied": "Link di importazione copiato negli appunti",
+    "shareError": "Errore durante la condivisione dell'evento"
   },
   "dialogs": {
     "dateChanged": {
@@ -80,6 +83,12 @@
       "title": "Elimina Evento",
       "message": "Sei sicuro di voler eliminare \"{{title}}\"? Questa azione non può essere annullata.",
       "delete": "Elimina",
+      "cancel": "Annulla"
+    },
+    "importEvent": {
+      "title": "Importa Evento",
+      "message": "Vuoi importare \"{{emoji}} {{title}}\" programmato per {{date}}?",
+      "import": "Importa",
       "cancel": "Annulla"
     }
   },
@@ -96,6 +105,7 @@
     "saveEvent": "Salva evento",
     "addEvent": "Aggiungi evento",
     "clearInput": "Cancella input",
-    "colorPicker": "Selettore colore"
+    "colorPicker": "Selettore colore",
+    "shareEvent": "Condividi evento"
   }
 }

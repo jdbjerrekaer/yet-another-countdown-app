@@ -59,7 +59,7 @@
     "dateLabel": "Дата",
     "emojiLabel": "Иконка",
     "colorLabel": "Цвет",
-    "repeatYearlyLabel": "Ежегодно",
+    "recurringLabel": "Ежегодно",
     "save": "Сохранить",
     "cancel": "Отмена",
     "delete": "Удалить событие",
@@ -67,7 +67,10 @@
     "repeatYearlyLabel": "Повторять ежегодно",
     "repeatYearlySublabel": "Для дней рождения, юбилеев",
     "customEmojiTitle": "Свой эмодзи",
-    "customEmojiPlaceholder": "🎨"
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Поделиться событием",
+    "shareLinkCopied": "Ссылка для импорта скопирована в буфер обмена",
+    "shareError": "Ошибка при обмене событием"
   },
   "dialogs": {
     "dateChanged": {
@@ -80,6 +83,12 @@
       "title": "Удалить событие",
       "message": "Вы уверены, что хотите удалить «{{title}}»? Это действие нельзя отменить.",
       "delete": "Удалить",
+      "cancel": "Отмена"
+    },
+    "importEvent": {
+      "title": "Импортировать событие",
+      "message": "Вы хотите импортировать «{{emoji}} {{title}}», запланированное на {{date}}?",
+      "import": "Импортировать",
       "cancel": "Отмена"
     }
   },
@@ -96,6 +105,7 @@
     "saveEvent": "Сохранить событие",
     "addEvent": "Добавить событие",
     "clearInput": "Очистить поле",
-    "colorPicker": "Выбор цвета"
+    "colorPicker": "Выбор цвета",
+    "shareEvent": "Поделиться событием"
   }
 }

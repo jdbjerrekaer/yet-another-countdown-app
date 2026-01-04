@@ -67,7 +67,10 @@
     "repeatYearlyLabel": "Repeat Yearly",
     "repeatYearlySublabel": "For birthdays, anniversaries",
     "customEmojiTitle": "Custom emoji",
-    "customEmojiPlaceholder": "🎨"
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Share Event",
+    "shareLinkCopied": "Import link copied to clipboard",
+    "shareError": "Failed to share event"
   },
   "dialogs": {
     "dateChanged": {
@@ -80,6 +83,12 @@
       "title": "Delete Event",
       "message": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
       "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "importEvent": {
+      "title": "Import Event",
+      "message": "Do you want to import \"{{emoji}} {{title}}\" scheduled for {{date}}?",
+      "import": "Import",
       "cancel": "Cancel"
     }
   },
@@ -96,6 +105,7 @@
     "saveEvent": "Save event",
     "addEvent": "Add event",
     "clearInput": "Clear input",
-    "colorPicker": "Color picker"
+    "colorPicker": "Color picker",
+    "shareEvent": "Share event"
   }
 }
