@@ -272,54 +272,38 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     }
   };
 
-  // Focus input method - can be called immediately while in user gesture context (Safari mobile fix)
+  // Focus input method - transfers focus from proxy input to modal input (Safari mobile fix)
   const focusInput = () => {
-    if (!isEditing && titleInputRef.current) {
-      const input = titleInputRef.current;
-      
-      // Immediate focus attempt (within user gesture context)
-      try {
-        input.focus();
-      } catch (e) {
-        // Ignore errors
-      }
-      
-      // Schedule multiple delayed attempts for when modal is ready
-      const attempts = [50, 150, 300, 500, 700];
-      attempts.forEach((delay) => {
-        setTimeout(() => {
-          if (!input) return;
-          
-          // Try focus
+    if (isEditing) return;
+    
+    // Schedule focus attempts for when modal and input are ready
+    // Safari mobile: keyboard should already be open from proxy input focus
+    const attempts = [100, 250, 400, 600, 800];
+    attempts.forEach((delay) => {
+      setTimeout(() => {
+        const input = titleInputRef.current;
+        if (!input) return;
+        
+        // Check if input is visible and ready
+        const isVisible = input.offsetParent !== null && 
+                         input.offsetWidth > 0 && 
+                         input.offsetHeight > 0;
+        
+        if (isVisible) {
           try {
+            // Transfer focus from proxy to actual input
             input.focus();
+            
+            // Set selection to trigger cursor
+            if (input.setSelectionRange) {
+              input.setSelectionRange(0, 0);
+            }
           } catch (e) {
             // Ignore errors
           }
-          
-          // Scroll into view if needed
-          if (input.offsetParent !== null) {
-            requestAnimationFrame(() => {
-              try {
-                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => {
-                  input.focus();
-                  if (input.setSelectionRange) {
-                    try {
-                      input.setSelectionRange(0, 0);
-                    } catch (e) {
-                      // Ignore errors
-                    }
-                  }
-                }, 50);
-              } catch (e) {
-                // Ignore errors
-              }
-            });
-          }
-        }, delay);
-      });
-    }
+        }
+      }, delay);
+    });
   };
 
   // Expose save method to parent via ref
