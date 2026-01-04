@@ -556,7 +556,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
             {/* Color picker wheel */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground -mt-4">{t('modal.colorLabel')}</Label>
+              <Label className="text-sm font-medium text-muted-foreground" style={{ position: 'relative', top: '-8px' }}>{t('modal.colorLabel')}</Label>
               <ColorWheelPicker 
                 key={colorPickerKey}
                 value={emojiColor} 
