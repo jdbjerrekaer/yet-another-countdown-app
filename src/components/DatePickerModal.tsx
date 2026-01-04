@@ -139,6 +139,33 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       // Reset emoji animation state when modal opens
       setEmojiAnimationKey(0);
       prevSuggestedEmojisRef.current = [];
+      
+      // Try to focus immediately when modal opens (while still in user gesture context for Safari mobile)
+      if (!isEditing && titleInputRef.current) {
+        // Immediate attempt while in user gesture context
+        const input = titleInputRef.current;
+        // Try focus immediately (within user gesture context)
+        try {
+          input.focus();
+        } catch (e) {
+          // Ignore focus errors
+        }
+        
+        // Also try after a short delay
+        requestAnimationFrame(() => {
+          if (input && document.activeElement !== input) {
+            try {
+              input.focus();
+              // Ensure input is visible
+              if (input.offsetParent === null) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            } catch (e) {
+              // Ignore focus errors
+            }
+          }
+        });
+      }
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, initialTitle, initialDate, initialEmoji, initialEmojiColor, initialIsRecurring, isEditing]);
@@ -151,24 +178,56 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   // Handle modal presentation - focus input after modal is fully presented (Safari mobile fix)
   const handleModalPresent = () => {
     if (!isEditing && titleInputRef.current) {
-      // Use longer delay for Safari mobile - modal animation needs to complete
-      setTimeout(() => {
-        const input = titleInputRef.current;
-        if (input) {
-          // Try focus first
+      const input = titleInputRef.current;
+      
+      // Safari mobile requires multiple attempts with different strategies
+      // Try multiple times with increasing delays
+      const attempts = [100, 300, 500, 700];
+      
+      attempts.forEach((delay, index) => {
+        setTimeout(() => {
+          if (!input) return;
+          
+          // Strategy 1: Direct focus
           input.focus();
           
-          // Fallback: if focus didn't work, try click + focus
-          setTimeout(() => {
-            if (document.activeElement !== input) {
-              input.click();
-              setTimeout(() => {
-                input.focus();
-              }, 50);
-            }
-          }, 100);
-        }
-      }, 400); // Increased delay for Safari mobile modal animation
+          // Strategy 2: Scroll into view then focus
+          requestAnimationFrame(() => {
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            setTimeout(() => {
+              // Strategy 3: Focus again after scroll
+              input.focus();
+              
+              // Strategy 4: Set selection range to ensure focus (for text inputs)
+              if (input.setSelectionRange) {
+                try {
+                  input.setSelectionRange(0, 0);
+                } catch (e) {
+                  // Ignore errors for non-text inputs
+                }
+              }
+              
+              // Strategy 5: Click then focus (for last attempt)
+              if (index === attempts.length - 1 && document.activeElement !== input) {
+                setTimeout(() => {
+                  input.click();
+                  setTimeout(() => {
+                    input.focus();
+                    if (input.setSelectionRange) {
+                      try {
+                        input.setSelectionRange(0, 0);
+                      } catch (e) {
+                        // Ignore errors
+                      }
+                    }
+                  }, 50);
+                }, 100);
+              }
+            }, 50);
+          });
+        }, delay);
+      });
     }
   };
 
