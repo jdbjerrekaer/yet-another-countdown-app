@@ -101,6 +101,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const { trigger } = useHaptic();
   const [selectedIndex, setSelectedIndex] = useState(() => findClosestColorIndex(value));
   const [previewColor, setPreviewColor] = useState<string>(value);
+  const [previewTransitionDuration, setPreviewTransitionDuration] = useState(200); // ms
   const lastIndexRef = useRef(selectedIndex);
   const isInitializedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,6 +115,12 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
   const VELOCITY_THRESHOLD = 3; // slides/s - snap if slower than this
+  
+  // Velocity-based transition timing constants
+  const MIN_TRANSITION_DURATION = 0; // ms - instant at high velocity
+  const MAX_TRANSITION_DURATION = 200; // ms - smooth at low velocity  
+  const HIGH_VELOCITY_THRESHOLD = 15; // slides/s - above this, use minimum transition
+  const LOW_VELOCITY_THRESHOLD = 2; // slides/s - below this, use maximum transition
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
@@ -205,6 +212,26 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     }
   }, [emblaApi, value]);
 
+  // Calculate transition duration based on scroll velocity
+  const calculateTransitionDuration = useCallback((velocity: number): number => {
+    const absVelocity = Math.abs(velocity);
+    
+    if (absVelocity >= HIGH_VELOCITY_THRESHOLD) {
+      return MIN_TRANSITION_DURATION;
+    }
+    
+    if (absVelocity <= LOW_VELOCITY_THRESHOLD) {
+      return MAX_TRANSITION_DURATION;
+    }
+    
+    // Linear interpolation between thresholds
+    const velocityRange = HIGH_VELOCITY_THRESHOLD - LOW_VELOCITY_THRESHOLD;
+    const durationRange = MAX_TRANSITION_DURATION - MIN_TRANSITION_DURATION;
+    const normalizedVelocity = (absVelocity - LOW_VELOCITY_THRESHOLD) / velocityRange;
+    
+    return MAX_TRANSITION_DURATION - (normalizedVelocity * durationRange);
+  }, []);
+
   // Handle scroll events for real-time preview and velocity tracking
   const onScroll = useCallback(() => {
     if (!emblaApi) return;
@@ -249,14 +276,20 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       const colorAtCenter = COLOR_PALETTE[paletteIndex];
       
       if (colorAtCenter) {
+        // Update transition duration based on current velocity
+        const newDuration = calculateTransitionDuration(scrollVelocityRef.current);
+        setPreviewTransitionDuration(newDuration);
         setPreviewColor(colorAtCenter);
       }
     });
-  }, [emblaApi]);
+  }, [emblaApi, calculateTransitionDuration]);
 
   // Handle pointer up - snap if velocity is low
   const onPointerUp = useCallback(() => {
     if (!emblaApi) return;
+    
+    // Reset transition duration to smooth when interaction ends
+    setPreviewTransitionDuration(MAX_TRANSITION_DURATION);
     
     // If velocity is below threshold, snap to nearest color
     if (Math.abs(scrollVelocityRef.current) < VELOCITY_THRESHOLD) {
@@ -274,6 +307,12 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       emblaApi.scrollTo(nearestIndex, false);
     }
   }, [emblaApi]);
+
+  // Handle settle - reset transition duration when scroll naturally settles
+  const onSettle = useCallback(() => {
+    setPreviewTransitionDuration(MAX_TRANSITION_DURATION);
+    scrollVelocityRef.current = 0;
+  }, []);
 
   // Handle slide changes (when snapped)
   const onSelect = useCallback(() => {
@@ -313,17 +352,19 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     emblaApi.on('scroll', onScroll);
     emblaApi.on('reInit', onSelect);
     emblaApi.on('pointerUp', onPointerUp);
+    emblaApi.on('settle', onSettle);
 
     return () => {
       emblaApi.off('select', onSelect);
       emblaApi.off('scroll', onScroll);
       emblaApi.off('reInit', onSelect);
       emblaApi.off('pointerUp', onPointerUp);
+      emblaApi.off('settle', onSettle);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [emblaApi, onSelect, onScroll, onPointerUp]);
+  }, [emblaApi, onSelect, onScroll, onPointerUp, onSettle]);
 
   // Handle tap/click on color swatch
   const handleColorClick = useCallback(
@@ -416,7 +457,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
           style={{
             backgroundColor: currentColor,
             boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-            transition: 'background-color 0.2s ease-out',
+            transition: `background-color ${previewTransitionDuration}ms ease-out`,
           }}
         />
       </div>
