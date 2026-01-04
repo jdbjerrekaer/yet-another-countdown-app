@@ -89,6 +89,20 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
   // Use emojiColor for bars, fallback to primary blue
   const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
+  // Calculate elapsed time for past events
+  let elapsedDays = 0;
+  let elapsedHours = 0;
+  let elapsedMinutes = 0;
+  let elapsedSeconds = 0;
+  if (countdown.isPast && targetDate) {
+    const now = new Date();
+    const elapsed = now.getTime() - targetDate.getTime();
+    elapsedDays = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+    elapsedHours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    elapsedMinutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+    elapsedSeconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+  }
+
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
@@ -118,7 +132,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
             {targetDate && (
               <p className="text-sm text-muted-foreground">
                 {isRecurring 
-                  ? format(targetDate, 'EEEE, MMMM d, yyyy') 
+                  ? `Next: ${format(targetDate, 'EEEE, MMMM d, yyyy')}` 
                   : format(targetDate, 'EEEE, MMMM d, yyyy')}
               </p>
             )}
@@ -132,16 +146,12 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
               <p className="text-6xl font-bold text-primary mb-4">Today!</p>
               <p className="text-4xl">🎉</p>
             </div>
-          ) : countdown.isPast ? (
-            <div className="flex flex-col items-center justify-center">
-              <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-              <p className="text-lg text-muted-foreground mt-2">day{countdown.daysSince !== 1 ? 's' : ''} ago</p>
-            </div>
           ) : (
             <>
               <div className="flex items-center justify-center mb-6">
                 <ProgressBars
                   countdown={countdown}
+                  targetDate={targetDate}
                   remainingPercent={remainingPercent}
                   numBars={8}
                   color={barColor}
@@ -152,19 +162,29 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
               </div>
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-secondary/50 rounded-xl p-3 text-center">
-                  <p className="text-3xl font-bold text-foreground">{countdown.days}</p>
-                  <p className="text-xs text-muted-foreground">Days</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {countdown.isPast ? elapsedDays : countdown.days}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {countdown.isPast ? 'Days ago' : 'Days'}
+                  </p>
                 </div>
                 <div className="bg-secondary/50 rounded-xl p-3 text-center">
-                  <p className="text-3xl font-bold text-foreground">{countdown.hours}</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {countdown.isPast ? elapsedHours : countdown.hours}
+                  </p>
                   <p className="text-xs text-muted-foreground">Hours</p>
                 </div>
                 <div className="bg-secondary/50 rounded-xl p-3 text-center">
-                  <p className="text-3xl font-bold text-foreground">{countdown.minutes}</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {countdown.isPast ? elapsedMinutes : countdown.minutes}
+                  </p>
                   <p className="text-xs text-muted-foreground">Minutes</p>
                 </div>
                 <div className="bg-secondary/50 rounded-xl p-3 text-center">
-                  <p className="text-3xl font-bold text-foreground">{countdown.seconds}</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {countdown.isPast ? elapsedSeconds : countdown.seconds}
+                  </p>
                   <p className="text-xs text-muted-foreground">Seconds</p>
                 </div>
               </div>

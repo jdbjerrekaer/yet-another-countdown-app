@@ -55,6 +55,20 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
   // Use emojiColor for bars, fallback to primary blue
   const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
+  // Calculate elapsed time for past events
+  let elapsedDays = 0;
+  let elapsedHours = 0;
+  let elapsedMinutes = 0;
+  let elapsedSeconds = 0;
+  if (countdown.isPast && targetDate) {
+    const now = new Date();
+    const elapsed = now.getTime() - targetDate.getTime();
+    elapsedDays = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+    elapsedHours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    elapsedMinutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+    elapsedSeconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+  }
+
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
@@ -76,7 +90,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
             </div>
             {targetDate && (
               <p className="text-sm text-muted-foreground">
-                {isRecurring ? format(targetDate, 'MMM d, yyyy') : format(targetDate, 'MMM d, yyyy')}
+                {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
               </p>
             )}
           </div>
@@ -92,6 +106,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
           ) : (
             <ProgressBars
               countdown={countdown}
+              targetDate={targetDate}
               remainingPercent={remainingPercent}
               numBars={10}
               color={barColor}
@@ -103,13 +118,27 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         </div>
 
         {/* Bottom: Time breakdown */}
-        {!countdown.isComplete && (
+        {!(countdown.isComplete && !countdown.isPast) && (
           <div className="flex justify-center gap-6 mt-4">
             {countdown.isPast ? (
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{countdown.daysSince}</p>
-                <p className="text-xs text-muted-foreground">Days ago</p>
-              </div>
+              <>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{elapsedDays}</p>
+                  <p className="text-xs text-muted-foreground">Days ago</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{elapsedHours}</p>
+                  <p className="text-xs text-muted-foreground">Hours</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{elapsedMinutes}</p>
+                  <p className="text-xs text-muted-foreground">Min</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{elapsedSeconds}</p>
+                  <p className="text-xs text-muted-foreground">Sec</p>
+                </div>
+              </>
             ) : (
               <>
                 <div className="text-center">
