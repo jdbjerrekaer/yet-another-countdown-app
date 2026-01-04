@@ -123,6 +123,35 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     skipSnaps: false,
   });
 
+  // Detect when value prop changes from outside (e.g., when editing different event)
+  // and reset initialization to show the correct color
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    // Check if value prop changed from outside
+    const valueChanged = value !== lastValueRef.current;
+    
+    if (valueChanged) {
+      // Only reset initialization if we're already initialized
+      // This prevents resetting during the initial mount
+      if (isInitializedRef.current) {
+        // Get the current selected color using lastIndexRef (updated synchronously)
+        // This ensures we compare with the most recent selection, even if state hasn't updated yet
+        const currentSelectedColor = COLOR_PALETTE[lastIndexRef.current];
+        
+        // If the new value is different from what's currently selected,
+        // reset initialization to allow re-initialization with the new value
+        // This handles the case when editing a different event with a different color
+        if (value !== currentSelectedColor) {
+          isInitializedRef.current = false;
+        }
+      }
+      
+      // Update the tracked value
+      lastValueRef.current = value;
+    }
+  }, [value, emblaApi]);
+
   // Update color from emoji when emoji changes (only if not manually changed)
   useEffect(() => {
     // Skip if no emoji
