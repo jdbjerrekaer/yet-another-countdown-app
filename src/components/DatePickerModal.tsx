@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { format } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import { Input } from '@/components/ui/input';
@@ -177,58 +179,36 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   };
 
   // Handle modal presentation - focus input after modal is fully presented (Safari mobile fix)
-  const handleModalPresent = () => {
+  const handleModalPresent = async () => {
     if (!isEditing && titleInputRef.current) {
       const input = titleInputRef.current;
+      const isNative = Capacitor.isNativePlatform();
       
-      // Safari mobile requires multiple attempts with different strategies
-      // Try multiple times with increasing delays
-      const attempts = [100, 300, 500, 700];
-      
-      attempts.forEach((delay, index) => {
-        setTimeout(() => {
-          if (!input) return;
-          
-          // Strategy 1: Direct focus
+      // On native iOS, use Capacitor Keyboard plugin after a short delay
+      setTimeout(async () => {
+        if (!input) return;
+        
+        try {
+          // Focus the input
           input.focus();
           
-          // Strategy 2: Scroll into view then focus
-          requestAnimationFrame(() => {
-            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            setTimeout(() => {
-              // Strategy 3: Focus again after scroll
-              input.focus();
-              
-              // Strategy 4: Set selection range to ensure focus (for text inputs)
-              if (input.setSelectionRange) {
-                try {
-                  input.setSelectionRange(0, 0);
-                } catch (e) {
-                  // Ignore errors for non-text inputs
-                }
-              }
-              
-              // Strategy 5: Click then focus (for last attempt)
-              if (index === attempts.length - 1 && document.activeElement !== input) {
-                setTimeout(() => {
-                  input.click();
-                  setTimeout(() => {
-                    input.focus();
-                    if (input.setSelectionRange) {
-                      try {
-                        input.setSelectionRange(0, 0);
-                      } catch (e) {
-                        // Ignore errors
-                      }
-                    }
-                  }, 50);
-                }, 100);
-              }
-            }, 50);
-          });
-        }, delay);
-      });
+          // Set selection to trigger cursor
+          if (input.setSelectionRange) {
+            input.setSelectionRange(0, 0);
+          }
+          
+          // On native iOS, explicitly show keyboard using Capacitor
+          if (isNative) {
+            try {
+              await Keyboard.show();
+            } catch (e) {
+              // Keyboard plugin may not be available
+            }
+          }
+        } catch (e) {
+          // Ignore errors
+        }
+      }, 300);
     }
   };
 
@@ -273,14 +253,16 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   };
 
   // Focus input method - transfers focus from proxy input to modal input (Safari mobile fix)
-  const focusInput = () => {
+  const focusInput = async () => {
     if (isEditing) return;
     
+    // On native iOS, use Capacitor Keyboard plugin to show keyboard
+    const isNative = Capacitor.isNativePlatform();
+    
     // Schedule focus attempts for when modal and input are ready
-    // Safari mobile: keyboard should already be open from proxy input focus
     const attempts = [100, 250, 400, 600, 800];
     attempts.forEach((delay) => {
-      setTimeout(() => {
+      setTimeout(async () => {
         const input = titleInputRef.current;
         if (!input) return;
         
@@ -291,12 +273,21 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         
         if (isVisible) {
           try {
-            // Transfer focus from proxy to actual input
+            // Focus the input
             input.focus();
             
             // Set selection to trigger cursor
             if (input.setSelectionRange) {
               input.setSelectionRange(0, 0);
+            }
+            
+            // On native iOS, explicitly show keyboard using Capacitor
+            if (isNative) {
+              try {
+                await Keyboard.show();
+              } catch (e) {
+                // Keyboard plugin may not be available
+              }
             }
           } catch (e) {
             // Ignore errors

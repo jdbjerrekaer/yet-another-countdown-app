@@ -76,7 +76,6 @@ export default function Index() {
   const currentDragRotationRef = useRef<number>(0);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
-  const proxyInputRef = useRef<HTMLInputElement>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -315,16 +314,8 @@ export default function Index() {
     console.log('handleAddNew called, opening modal');
     trigger('medium');
     setEditingEvent(null);
-    
-    // Safari mobile fix: Focus proxy input immediately while in user gesture context
-    // This opens the keyboard, then we transfer focus to the modal input when ready
-    if (proxyInputRef.current) {
-      proxyInputRef.current.focus();
-    }
-    
     setIsModalOpen(true);
-    // Also call focusInput for when modal is ready
-    datePickerModalRef.current?.focusInput();
+    // Note: Focus is now handled by onDidPresent + Capacitor Keyboard.show()
   };
 
   const handleFabClick = () => {
@@ -657,23 +648,6 @@ export default function Index() {
       </IonContent>
 
       {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
-
-      {/* Hidden proxy input for Safari mobile keyboard focus - positioned off-screen */}
-      <input
-        ref={proxyInputRef}
-        type="text"
-        aria-hidden="true"
-        tabIndex={-1}
-        style={{
-          position: 'absolute',
-          left: '-9999px',
-          top: '-9999px',
-          width: '1px',
-          height: '1px',
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-      />
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal
