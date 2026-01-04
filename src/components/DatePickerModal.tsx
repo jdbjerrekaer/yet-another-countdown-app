@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
+import { isSafariMobile } from '@/lib/utils';
 
 // Helper to get gradient from a hex color
 const getGradientFromColor = (hex: string): string => {
@@ -178,37 +179,48 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     onClose();
   };
 
-  // Handle modal presentation - focus input after modal is fully presented (Safari mobile fix)
+  // Handle modal presentation - focus input after modal is fully presented
   const handleModalPresent = async () => {
     if (!isEditing && titleInputRef.current) {
       const input = titleInputRef.current;
       const isNative = Capacitor.isNativePlatform();
       
-      // On native iOS, use Capacitor Keyboard plugin after a short delay
-      setTimeout(async () => {
-        if (!input) return;
-        
-        try {
-          // Focus the input
-          input.focus();
+      // Multiple focus attempts with increasing delays (works for desktop and mobile)
+      const attempts = [100, 250, 400, 600];
+      
+      attempts.forEach(async (delay, index) => {
+        setTimeout(async () => {
+          if (!input) return;
           
-          // Set selection to trigger cursor
-          if (input.setSelectionRange) {
-            input.setSelectionRange(0, 0);
-          }
+          // Check if input is visible and ready
+          const isVisible = input.offsetParent !== null && 
+                           input.offsetWidth > 0 && 
+                           input.offsetHeight > 0;
           
-          // On native iOS, explicitly show keyboard using Capacitor
-          if (isNative) {
+          if (isVisible) {
             try {
-              await Keyboard.show();
+              // Focus the input
+              input.focus();
+              
+              // Set selection to trigger cursor
+              if (input.setSelectionRange) {
+                input.setSelectionRange(0, 0);
+              }
+              
+              // On native iOS, explicitly show keyboard using Capacitor (only on last attempt)
+              if (isNative && index === attempts.length - 1) {
+                try {
+                  await Keyboard.show();
+                } catch (e) {
+                  // Keyboard plugin may not be available
+                }
+              }
             } catch (e) {
-              // Keyboard plugin may not be available
+              // Ignore errors
             }
           }
-        } catch (e) {
-          // Ignore errors
-        }
-      }, 300);
+        }, delay);
+      });
     }
   };
 
@@ -400,6 +412,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   onFocus={() => setIsTitleFocused(true)}
                   onBlur={() => setIsTitleFocused(false)}
                   placeholder="Enter event name"
+                  autoFocus={!isEditing && !Capacitor.isNativePlatform() && !isSafariMobile()}
                   className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10"
                 />
                 {isTitleFocused && title && (
