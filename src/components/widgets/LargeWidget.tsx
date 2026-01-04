@@ -91,6 +91,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
             </div>
           ) : (
             <ProgressBars
+              countdown={countdown}
               remainingPercent={remainingPercent}
               numBars={10}
               color={barColor}

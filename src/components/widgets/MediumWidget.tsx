@@ -90,6 +90,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
         ) : (
           <div className="flex gap-6 items-end w-full">
             <ProgressBars
+              countdown={countdown}
               remainingPercent={remainingPercent}
               numBars={14}
               color={barColor}

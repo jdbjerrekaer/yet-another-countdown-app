@@ -97,6 +97,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           ) : (
             <div className="flex justify-start w-full">
               <ProgressBars
+                countdown={countdown}
                 remainingPercent={remainingPercent}
                 numBars={7}
                 color={barColor}

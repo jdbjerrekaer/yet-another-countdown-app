@@ -141,6 +141,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
             <>
               <div className="flex items-center justify-center mb-6">
                 <ProgressBars
+                  countdown={countdown}
                   remainingPercent={remainingPercent}
                   numBars={8}
                   color={barColor}
