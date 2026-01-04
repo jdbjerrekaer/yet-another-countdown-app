@@ -316,6 +316,12 @@ export default function Index() {
     trigger('medium');
     setEditingEvent(null);
     setIsModalOpen(true);
+    // Focus input immediately while still in user gesture context (Safari mobile fix)
+    // Call synchronously first (within gesture context), then also schedule for next tick
+    datePickerModalRef.current?.focusInput();
+    requestAnimationFrame(() => {
+      datePickerModalRef.current?.focusInput();
+    });
   };
 
   const handleFabClick = () => {
