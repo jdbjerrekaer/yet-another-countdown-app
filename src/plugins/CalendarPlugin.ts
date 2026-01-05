@@ -87,6 +87,13 @@ export interface UpdateWidgetDataResult {
 }
 
 /**
+ * Result from openSettings
+ */
+export interface OpenSettingsResult {
+  opened: boolean;
+}
+
+/**
  * CalendarPlugin interface for accessing iOS Calendar via EventKit
  */
 export interface CalendarPluginInterface {
@@ -115,6 +122,11 @@ export interface CalendarPluginInterface {
    * This syncs countdown events and widget settings to be accessible by iOS widgets
    */
   updateWidgetData(options: UpdateWidgetDataOptions): Promise<UpdateWidgetDataResult>;
+
+  /**
+   * Open the iOS Settings app to allow the user to change permissions
+   */
+  openSettings(): Promise<OpenSettingsResult>;
 }
 
 /**

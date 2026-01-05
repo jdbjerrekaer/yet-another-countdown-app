@@ -18,6 +18,7 @@ export interface ImportableEvent {
   isRecurring: boolean;
   isBirthday: boolean;
   source: 'native' | 'ics';
+  calendarTitle?: string;
   originalEvent: CalendarEvent | ICSEvent;
 }
 
@@ -106,6 +107,7 @@ export async function fetchNativeCalendarEvents(): Promise<ImportableEventsResul
       isRecurring: event.isRecurring,
       isBirthday: event.isBirthday,
       source: 'native' as const,
+      calendarTitle: event.calendarTitle,
       originalEvent: event,
     }));
     
@@ -265,20 +267,35 @@ function suggestColorForEmoji(emoji: string): string {
 
 /**
  * Remove duplicate events based on title and date
+ * For recurring events, we only compare month and day (not year) since
+ * the same yearly event might appear multiple times in a date range
  */
 export function deduplicateEvents(events: ImportableEvent[]): ImportableEvent[] {
-  const seen = new Set<string>();
-  return events.filter(event => {
-    // Create a key based on title and date (ignoring time)
-    const dateStr = event.date.toISOString().split('T')[0];
-    const key = `${event.title.toLowerCase()}-${dateStr}`;
+  const seen = new Map<string, ImportableEvent>();
+  
+  for (const event of events) {
+    // Normalize title: lowercase, trim, remove extra whitespace, normalize unicode
+    const normalizedTitle = event.title
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ')
+      .normalize('NFC');
     
-    if (seen.has(key)) {
-      return false;
+    // For all recurring events, use only month-day to deduplicate
+    // This catches the same yearly event appearing multiple times
+    const month = String(event.date.getMonth() + 1).padStart(2, '0');
+    const day = String(event.date.getDate()).padStart(2, '0');
+    const dateKey = `${month}-${day}`;
+    
+    const key = `${normalizedTitle}-${dateKey}`;
+    
+    // Keep the first occurrence (usually the upcoming one)
+    if (!seen.has(key)) {
+      seen.set(key, event);
     }
-    seen.add(key);
-    return true;
-  });
+  }
+  
+  return Array.from(seen.values());
 }
 
 /**

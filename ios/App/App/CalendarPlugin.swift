@@ -12,7 +12,8 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "checkPermission", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getRecurringEvents", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCalendars", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "updateWidgetData", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "updateWidgetData", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise)
     ]
     
     /// App Group identifier for sharing data with widgets
@@ -51,6 +52,23 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
                     }
                     call.resolve(["granted": granted])
                 }
+            }
+        }
+    }
+    
+    /// Open the iOS Settings app
+    @objc func openSettings(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                if UIApplication.shared.canOpenURL(settingsUrl) {
+                    UIApplication.shared.open(settingsUrl, options: [:]) { success in
+                        call.resolve(["opened": success])
+                    }
+                } else {
+                    call.reject("Cannot open Settings")
+                }
+            } else {
+                call.reject("Invalid Settings URL")
             }
         }
     }

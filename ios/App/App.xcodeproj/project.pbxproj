@@ -12,6 +12,7 @@
 		40897DB8D698C96CB8C49D92 /* Pods_CountdownWidget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
+		MYVC00001FED79650016851F /* MyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = MYVC00002FED79650016851F /* MyViewController.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
@@ -67,6 +68,7 @@
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		MYVC00002FED79650016851F /* MyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyViewController.swift; sourceTree = "<group>"; };
 		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 				A63D32382F0BD8350063570B /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				MYVC00002FED79650016851F /* MyViewController.swift */,
 				A6D2DE2B2F0BE0B2001A82F2 /* CalendarPlugin.m */,
 				A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -379,6 +382,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */,
+				MYVC00001FED79650016851F /* MyViewController.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -440,7 +444,7 @@
 				INFOPLIST_FILE = CountdownWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.countdown.app.CountdownWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown.CountdownWidget;
 				PRODUCT_NAME = CountdownWidget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -570,7 +574,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
-				PRODUCT_BUNDLE_IDENTIFIER = com.countdown.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
@@ -591,7 +595,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.countdown.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
@@ -609,7 +613,7 @@
 				INFOPLIST_FILE = CountdownWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.countdown.app.CountdownWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown.CountdownWidget;
 				PRODUCT_NAME = CountdownWidget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

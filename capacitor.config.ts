@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.countdown.app",
+  appId: "com.jonatanbjerrekaer.countdown",
   appName: "Countdown",
   webDir: "dist",
   server: {

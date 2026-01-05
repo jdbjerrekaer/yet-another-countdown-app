@@ -548,8 +548,60 @@ export default function Index() {
     setCanSaveForm(false);
   };
 
-  const handleOpenCalendarImport = () => {
+  const handleOpenCalendarImport = async () => {
     trigger('light');
+    
+    // On native platforms, request calendar permission first before opening modal
+    if (isNative) {
+      try {
+        const result = await CalendarPlugin.checkPermission();
+        console.log('[Calendar] Permission check result:', result);
+        
+        if (!result.granted) {
+          // Check if permission was already denied (user must go to Settings)
+          // vs not determined (we can request permission)
+          if (result.status === 'denied' || result.status === 'restricted') {
+            console.log('[Calendar] Permission denied/restricted, showing settings dialog');
+            // Permission was previously denied - need to open Settings
+            const { value: shouldOpenSettings } = await Dialog.confirm({
+              title: t('calendar.permissionDeniedTitle'),
+              message: t('calendar.permissionDeniedMessage'),
+              okButtonTitle: t('calendar.openSettings'),
+              cancelButtonTitle: t('modal.cancel'),
+            });
+            
+            if (shouldOpenSettings) {
+              console.log('[Calendar] User wants to open settings');
+              try {
+                const settingsResult = await CalendarPlugin.openSettings();
+                console.log('[Calendar] openSettings result:', settingsResult);
+              } catch (settingsError) {
+                console.error('[Calendar] Failed to open settings:', settingsError);
+              }
+            }
+            return;
+          }
+          
+          // Permission not determined yet, request it
+          console.log('[Calendar] Permission not determined, requesting...');
+          const requestResult = await CalendarPlugin.requestPermission();
+          console.log('[Calendar] Permission request result:', requestResult);
+          
+          if (!requestResult.granted) {
+            // User denied the permission request
+            await Dialog.alert({
+              title: t('calendar.permissionDeniedTitle'),
+              message: t('calendar.permissionDeniedMessage'),
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check/request calendar permission:', error);
+        // Continue to open modal anyway, it will handle errors
+      }
+    }
+    
     setIsCalendarImportOpen(true);
   };
 
@@ -935,7 +987,7 @@ export default function Index() {
         </div>
       </IonContent>
 
-      {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
+      {typeof document !== 'undefined' && !isCalendarImportOpen ? createPortal(fabPortal, document.body) : null}
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal

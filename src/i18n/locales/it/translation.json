@@ -121,7 +121,11 @@
     "icsUrlPlaceholder": "Incolla l'URL del tuo calendario qui",
     "icsUrlHint": "Incolla un URL pubblico di calendario .ics (es. da Google Calendar)",
     "urlRequired": "Inserisci un URL del calendario",
-    "invalidUrl": "Inserisci un URL di calendario .ics valido"
+    "invalidUrl": "Inserisci un URL di calendario .ics valido",
+    "permissionDeniedTitle": "Accesso al calendario negato",
+    "permissionDeniedMessage": "Per favore consenti l'accesso al calendario nelle Impostazioni per importare eventi dal tuo calendario.",
+    "openSettings": "Apri Impostazioni",
+    "clearFilter": "Tutti"
   },
   "aria": {
     "saveEvent": "Salva evento",

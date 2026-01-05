@@ -121,7 +121,11 @@
     "icsUrlPlaceholder": "Paste your calendar URL here",
     "icsUrlHint": "Paste a public .ics calendar URL (e.g., from Google Calendar)",
     "urlRequired": "Please enter a calendar URL",
-    "invalidUrl": "Please enter a valid .ics calendar URL"
+    "invalidUrl": "Please enter a valid .ics calendar URL",
+    "permissionDeniedTitle": "Calendar Access Denied",
+    "permissionDeniedMessage": "Please allow calendar access in Settings to import events from your calendar.",
+    "openSettings": "Open Settings",
+    "clearFilter": "All"
   },
   "aria": {
     "saveEvent": "Save event",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   IonModal,
   IonHeader,
@@ -30,6 +30,7 @@ import {
   sortEventsByDate,
 } from '@/lib/calendarImport';
 import { isValidICSUrl } from '@/lib/icsParser';
+import CalendarPlugin from '@/plugins/CalendarPlugin';
 
 interface CalendarImportModalProps {
   isOpen: boolean;
@@ -45,39 +46,32 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
   // State
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPermissionError, setIsPermissionError] = useState(false);
   const [events, setEvents] = useState<ImportableEvent[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [icsUrl, setIcsUrl] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [selectedCalendars, setSelectedCalendars] = useState<Set<string>>(new Set());
   
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setEvents([]);
-      setSelectedEventIds(new Set());
-      setSearchQuery('');
-      setError(null);
-      setUrlError(null);
-      setIcsUrl('');
-      
-      // Auto-fetch native calendar events on iOS
-      if (isNativeCalendarAvailable()) {
-        fetchNativeEvents();
-      }
-    }
-  }, [isOpen]);
+  // Get unique calendars from events
+  const availableCalendars = [...new Set(events.map(e => e.calendarTitle).filter(Boolean))] as string[];
   
   // Fetch native calendar events
-  const fetchNativeEvents = async () => {
+  const fetchNativeEvents = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setIsPermissionError(false);
     
     try {
       const result = await fetchNativeCalendarEvents();
       
       if (result.error) {
-        setError(result.error);
+        // Check if this is a permission error
+        const isPermDenied = result.error.toLowerCase().includes('permission') || 
+                             result.error.toLowerCase().includes('denied');
+        setIsPermissionError(isPermDenied);
+        setError(isPermDenied ? t('calendar.permissionDeniedMessage') : result.error);
         setEvents([]);
       } else {
         const dedupedEvents = deduplicateEvents(result.events);
@@ -89,6 +83,43 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
     } finally {
       setLoading(false);
     }
+  }, [t]);
+  
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setEvents([]);
+      setSelectedEventIds(new Set());
+      setSearchQuery('');
+      setError(null);
+      setIsPermissionError(false);
+      setUrlError(null);
+      setIcsUrl('');
+      setSelectedCalendars(new Set());
+      
+      // Auto-fetch native calendar events on iOS
+      // Permission is already requested before opening the modal,
+      // so we can proceed directly to fetching events
+      if (isNativeCalendarAvailable()) {
+        fetchNativeEvents();
+      }
+    }
+  }, [isOpen, fetchNativeEvents]);
+  
+  // Open iOS Settings
+  const handleOpenSettings = async () => {
+    trigger('light');
+    try {
+      await CalendarPlugin.openSettings();
+    } catch (error) {
+      console.error('Failed to open settings:', error);
+    }
+  };
+  
+  // Handle Try Again button click
+  const handleTryAgain = () => {
+    trigger('light');
+    fetchNativeEvents();
   };
   
   // Fetch events from ICS URL
@@ -125,10 +156,33 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
     }
   };
   
-  // Filter events by search query
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter events by search query and selected calendars
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+    // If no calendars are selected, show all events
+    // If calendars are selected, only show events from those calendars
+    let matchesCalendar = true;
+    if (selectedCalendars.size > 0) {
+      matchesCalendar = event.calendarTitle !== undefined && 
+                        event.calendarTitle !== null && 
+                        selectedCalendars.has(event.calendarTitle);
+    }
+    return matchesSearch && matchesCalendar;
+  });
+  
+  // Toggle calendar filter
+  const toggleCalendarFilter = (calendarTitle: string) => {
+    trigger('light');
+    setSelectedCalendars(prev => {
+      const next = new Set(prev);
+      if (next.has(calendarTitle)) {
+        next.delete(calendarTitle);
+      } else {
+        next.add(calendarTitle);
+      }
+      return next;
+    });
+  };
   
   // Toggle event selection
   const toggleEventSelection = (eventId: string) => {
@@ -256,9 +310,17 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
               <p>{error}</p>
             </IonText>
             {isNative && (
-              <IonButton onClick={fetchNativeEvents} fill="outline">
-                {t('calendar.tryAgain')}
-              </IonButton>
+              <div className="flex flex-col gap-2">
+                {isPermissionError ? (
+                  <IonButton onClick={handleOpenSettings} fill="solid">
+                    {t('calendar.openSettings')}
+                  </IonButton>
+                ) : (
+                  <IonButton onClick={handleTryAgain} fill="outline">
+                    {t('calendar.tryAgain')}
+                  </IonButton>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -274,6 +336,35 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
                 placeholder={t('calendar.searchPlaceholder')}
                 className="p-0"
               />
+              
+              {/* Calendar filter chips */}
+              {availableCalendars.length > 1 && (
+                <div className="flex flex-wrap gap-2 px-2">
+                  {availableCalendars.map((calendar) => (
+                    <button
+                      key={calendar}
+                      onClick={() => toggleCalendarFilter(calendar)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        selectedCalendars.has(calendar)
+                          ? 'bg-primary text-primary-foreground'
+                          : selectedCalendars.size === 0
+                          ? 'bg-secondary/80 text-foreground/80'
+                          : 'bg-secondary/50 text-muted-foreground'
+                      }`}
+                    >
+                      {calendar}
+                    </button>
+                  ))}
+                  {selectedCalendars.size > 0 && (
+                    <button
+                      onClick={() => setSelectedCalendars(new Set())}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary/30 text-muted-foreground hover:bg-secondary/50 transition-colors"
+                    >
+                      {t('calendar.clearFilter')}
+                    </button>
+                  )}
+                </div>
+              )}
               
               <div className="flex justify-between items-center px-2">
                 <IonText color="medium" className="text-sm">
@@ -302,7 +393,6 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
                   <IonCheckbox
                     slot="start"
                     checked={selectedEventIds.has(event.id)}
-                    onIonChange={() => toggleEventSelection(event.id)}
                     className="ml-4"
                   />
                   <IonLabel className="py-3">
@@ -313,7 +403,10 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
                     <p className="text-sm text-muted-foreground">
                       {formatEventDate(event.date)}
                       {event.isRecurring && (
-                        <span className="ml-2 text-primary">• {t('calendar.yearly')}</span>
+                        <span className="text-primary"> · {t('calendar.yearly')}</span>
+                      )}
+                      {event.calendarTitle && (
+                        <span className="text-muted-foreground/70"> · {event.calendarTitle}</span>
                       )}
                     </p>
                   </IonLabel>
@@ -330,7 +423,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
               <p className="text-lg font-medium">{t('calendar.noEventsTitle')}</p>
               <p className="text-sm">{t('calendar.noEventsMessage')}</p>
             </IonText>
-            <IonButton onClick={fetchNativeEvents} fill="outline">
+            <IonButton onClick={handleTryAgain} fill="outline">
               {t('calendar.refresh')}
             </IonButton>
           </div>
