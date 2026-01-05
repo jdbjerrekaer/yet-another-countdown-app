@@ -490,30 +490,31 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
 
   // Constants for hit area expansion
   const VISIBLE_HEIGHT = 48; // Original visible bar height
-  const HIT_AREA_PADDING = 16; // Extra padding for swipe area (top and bottom)
+  const HIT_AREA_PADDING = 24; // Increased padding for more reliable thumb arc swipes
   const TOTAL_HEIGHT = VISIBLE_HEIGHT + (HIT_AREA_PADDING * 2);
 
   return (
     <div 
-      className="relative" 
+      className="relative z-10" // Added z-index to prevent adjacent elements from stealing focus
       ref={containerRef}
       style={{
-        height: TOTAL_HEIGHT, // 80px
+        height: TOTAL_HEIGHT, // 96px
         marginTop: -HIT_AREA_PADDING,
         marginBottom: -HIT_AREA_PADDING,
       }}
     >
-      {/* Embla viewport - FULL 80px HEIGHT for touch area */}
+      {/* Embla viewport - FULL 96px HEIGHT for touch area */}
       <div
         ref={emblaRef}
         className="absolute inset-0 overflow-hidden"
         style={{
-          touchAction: 'pan-x',
+          touchAction: 'none', // Prevents Safari from stealing the gesture for vertical scroll
           zIndex: 1,
           // Refined SVG mask: using 47px height (slightly smaller than the 48px border) 
           // to ensure colors are always tucked under the border frame.
-          WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='80'%3E%3Crect x='0' y='16.5' width='100%25' height='47' rx='16' ry='16' fill='black'/%3E%3C/svg%3E")`,
-          maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='80'%3E%3Crect x='0' y='16.5' width='100%25' height='47' rx='16' ry='16' fill='black'/%3E%3C/svg%3E")`,
+          // Mask coordinates adjusted for increased HIT_AREA_PADDING (24.5 instead of 16.5)
+          WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='${TOTAL_HEIGHT}'%3E%3Crect x='0' y='24.5' width='100%25' height='47' rx='16' ry='16' fill='black'/%3E%3C/svg%3E")`,
+          maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='${TOTAL_HEIGHT}'%3E%3Crect x='0' y='24.5' width='100%25' height='47' rx='16' ry='16' fill='black'/%3E%3C/svg%3E")`,
         }}
         tabIndex={0}
         role="slider"
