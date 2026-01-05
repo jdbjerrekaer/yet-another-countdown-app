@@ -74,9 +74,10 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
         setError(isPermDenied ? t('calendar.permissionDeniedMessage') : result.error);
         setEvents([]);
       } else {
-        const dedupedEvents = deduplicateEvents(result.events);
-        const sortedEvents = sortEventsByDate(dedupedEvents);
-        setEvents(sortedEvents);
+        // Sort first, then dedupe - this ensures the upcoming occurrence is kept
+        const sortedEvents = sortEventsByDate(result.events);
+        const dedupedEvents = deduplicateEvents(sortedEvents);
+        setEvents(dedupedEvents);
       }
     } catch (err) {
       setError(t('calendar.fetchError'));
@@ -145,9 +146,10 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
         setError(result.error);
         setEvents([]);
       } else {
-        const dedupedEvents = deduplicateEvents(result.events);
-        const sortedEvents = sortEventsByDate(dedupedEvents);
-        setEvents(sortedEvents);
+        // Sort first, then dedupe - this ensures the upcoming occurrence is kept
+        const sortedEvents = sortEventsByDate(result.events);
+        const dedupedEvents = deduplicateEvents(sortedEvents);
+        setEvents(dedupedEvents);
       }
     } catch (err) {
       setError(t('calendar.fetchError'));

@@ -36,7 +36,7 @@ import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } fro
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal } from '@/components/CalendarImportModal';
-import { ImportableEvent, convertToCountdownEvent } from '@/lib/calendarImport';
+import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 
@@ -669,8 +669,12 @@ export default function Index() {
     // Check notification permission once before importing
     const hasPermission = await checkNotificationPermission();
 
+    // Safety net: deduplicate imported events to prevent duplicates
+    // This handles edge cases where duplicates might slip through the import modal
+    const deduplicatedImports = deduplicateEvents(importedEvents);
+
     // Convert and add each event
-    for (const importedEvent of importedEvents) {
+    for (const importedEvent of deduplicatedImports) {
       const eventData = convertToCountdownEvent(importedEvent, generateId);
       const newEvent: CountdownEvent = {
         id: generateId(),

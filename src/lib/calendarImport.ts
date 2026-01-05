@@ -101,7 +101,9 @@ export async function fetchNativeCalendarEvents(): Promise<ImportableEventsResul
     
     // Convert to ImportableEvent format
     const events: ImportableEvent[] = result.events.map(event => ({
-      id: event.id,
+      // Make ID collision-proof by including calendar, title, and date
+      // This ensures "48th Birthday" and "49th Birthday" get different IDs even if they share the same base event.id
+      id: `${event.calendarId || 'unknown'}-${event.title}-${event.startDate}`,
       title: event.title,
       date: new Date(event.startDate),
       isRecurring: event.isRecurring,
@@ -134,7 +136,9 @@ export async function fetchICSCalendarEvents(url: string): Promise<ImportableEve
     
     // Convert to ImportableEvent format
     const events: ImportableEvent[] = yearlyEvents.map(event => ({
-      id: event.uid,
+      // Make ID collision-proof by including uid, summary, and date
+      // This ensures different occurrences of the same recurring event get unique IDs
+      id: `${event.uid}-${event.summary}-${event.dtstart.toISOString()}`,
       title: event.summary,
       date: event.dtstart,
       isRecurring: true,
@@ -151,24 +155,154 @@ export async function fetchICSCalendarEvents(url: string): Promise<ImportableEve
 }
 
 /**
+ * Extract age from birthday title (e.g., "48th Birthday" → 48)
+ * Handles various formats:
+ * - "Kate Bell's 48th Birthday"
+ * - "48. Geburtstag"
+ * - "48º Cumpleaños"
+ * - "48 День рождения"
+ * - "48. Fødselsdag" (Danish/Norwegian)
+ * - "48. Födelsedag" (Swedish)
+ */
+function extractAgeFromTitle(title: string): number | null {
+  // Birthday words for pattern matching (same as normalizeEventTitle)
+  const birthdayWords = 'birthday|bday|geburtstag|cumpleaños|cumpleanos|compleanno|aniversário|aniversario|день рождения|деньрождения|fødselsdag|födelsedag';
+  
+  // Match patterns like "48th", "48.", "48º", "48°", or just "48" before birthday words
+  // Also handles possessive forms like "Kate's 48th Birthday"
+  const patterns = [
+    // Pattern 1: Number with ordinal/symbol before birthday word
+    new RegExp(`\\b(\\d+)[º°.]?\\s*(st|nd|rd|th)?\\s*(${birthdayWords})`, 'i'),
+    // Pattern 2: Number in parentheses or brackets before birthday word
+    new RegExp(`\\((\\d+)\\)\\s*(${birthdayWords})`, 'i'),
+    // Pattern 3: Number with ordinal in parentheses before birthday word
+    new RegExp(`\\((\\d+)(st|nd|rd|th)\\s*(${birthdayWords})\\)`, 'i'),
+  ];
+  
+  for (const pattern of patterns) {
+    const match = title.match(pattern);
+    if (match && match[1]) {
+      const age = parseInt(match[1], 10);
+      // Sanity check: age should be reasonable (between 0 and 150)
+      if (age >= 0 && age <= 150) {
+        return age;
+      }
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Convert an ImportableEvent to a CountdownEvent
  */
 export function convertToCountdownEvent(
   event: ImportableEvent,
   generateId: () => string
 ): Omit<CountdownEvent, 'id' | 'createdAt'> {
-  const emoji = suggestEmojiForEvent(event.title, event.isBirthday);
+  // Clean title using the shared normalizer (removes age patterns)
+  const cleanTitle = normalizeEventTitle(event.title);
+  
+  // Calculate the original date based on age in title (for birthdays)
+  let targetDate = event.date;
+  if (event.isBirthday || event.isRecurring) {
+    const age = extractAgeFromTitle(event.title);
+    if (age !== null && age > 0) {
+      // Calculate original year: if event is "48th Birthday" in 2025, original year is 2025 - 48 = 1977
+      const eventYear = event.date.getFullYear();
+      const originalYear = eventYear - age;
+      targetDate = new Date(event.date);
+      targetDate.setFullYear(originalYear);
+    }
+  }
+  
+  const emoji = suggestEmojiForEvent(cleanTitle, event.isBirthday);
   const emojiColor = suggestColorForEmoji(emoji);
   
   return {
-    title: event.title,
-    targetDate: event.date.toISOString(),
+    title: cleanTitle,
+    targetDate: targetDate.toISOString(),
     emoji,
     emojiColor,
     isRecurring: event.isRecurring,
     isImported: true,
     importedFrom: event.calendarTitle || (event.source === 'native' ? 'Calendar' : 'iCal'),
   };
+}
+
+/**
+ * Normalize event titles by removing age-related patterns and common suffixes
+ * This ensures "Kate Bell's 48th Birthday" and "Kate Bell's 49th Birthday" 
+ * are treated as the same event for deduplication
+ * 
+ * Supports multiple languages:
+ * - English: "48th Birthday", "48 Birthday"
+ * - German: "48. Geburtstag", "48 Geburtstag"
+ * - Spanish: "48º Cumpleaños", "48 Cumpleaños"
+ * - Italian: "48° Compleanno", "48 Compleanno"
+ * - Portuguese: "48º Aniversário", "48 Aniversário"
+ * - Russian: "48 День рождения", "48 день рождения"
+ * - Danish: "48. Fødselsdag", "48 Fødselsdag"
+ * - Norwegian: "48. Fødselsdag", "48 Fødselsdag"
+ * - Swedish: "48. Födelsedag", "48 Födelsedag"
+ */
+function normalizeEventTitle(title: string): string {
+  // Birthday words in various languages (case-insensitive matching)
+  const birthdayWords = [
+    'birthday', 'bday', // English
+    'geburtstag', // German
+    'cumpleaños', 'cumpleanos', // Spanish
+    'compleanno', // Italian
+    'aniversário', 'aniversario', // Portuguese
+    'день рождения', 'деньрождения', // Russian (with/without space)
+    'fødselsdag', // Danish & Norwegian
+    'födelsedag' // Swedish
+  ];
+  
+  // Create a regex pattern that matches any birthday word
+  const birthdayPattern = `(${birthdayWords.join('|')})`;
+  
+  let normalized = title
+    .trim()
+    .replace(/\s+/g, ' ');
+  
+  // Remove embedded age patterns before birthday words
+  // Matches patterns like:
+  // - "48th Birthday" → "Birthday"
+  // - "48. Geburtstag" → "Geburtstag"
+  // - "48º Cumpleaños" → "Cumpleaños"
+  // - "48 День рождения" → "День рождения"
+  // - "48. Fødselsdag" → "Fødselsdag" (Danish/Norwegian)
+  // - "48. Födelsedag" → "Födelsedag" (Swedish)
+  // Handles ordinals (th, st, nd, rd), periods (.), degree symbols (º, °), and plain numbers
+  normalized = normalized.replace(
+    new RegExp(`\\b\\d+[º°.]?\\s*(st|nd|rd|th)?\\s*${birthdayPattern}\\b`, 'gi'),
+    (match, ordinal, birthdayWord) => {
+      // Keep the birthday word, preserving original casing
+      return birthdayWord;
+    }
+  );
+  
+  // Remove trailing age patterns like "#28", "(28)", "(28th birthday)", "(28. Geburtstag)"
+  normalized = normalized
+    .replace(/\s*#\d+$/, '')
+    .replace(
+      new RegExp(`\\s*\\(\\d+[º°.]?\\s*(st|nd|rd|th)?\\s*${birthdayPattern}\\)$`, 'gi'),
+      ''
+    )
+    .replace(/\s*\(\d+[º°.]?\)$/, '')
+    .trim();
+  
+  return normalized;
+}
+
+/**
+ * Normalize title for deduplication (lowercase, normalize unicode)
+ */
+function normalizeTitleForDedup(title: string): string {
+  return normalizeEventTitle(title)
+    .toLowerCase()
+    .normalize('NFC');
 }
 
 /**
@@ -183,7 +317,9 @@ function isBirthdayEvent(title: string): boolean {
     lower.includes('cumpleaños') || // Spanish
     lower.includes('compleanno') || // Italian
     lower.includes('aniversário') || // Portuguese
-    lower.includes('день рождения') // Russian
+    lower.includes('день рождения') || // Russian
+    lower.includes('fødselsdag') || // Danish & Norwegian
+    lower.includes('födelsedag') // Swedish
   );
 }
 
@@ -276,12 +412,8 @@ export function deduplicateEvents(events: ImportableEvent[]): ImportableEvent[] 
   const seen = new Map<string, ImportableEvent>();
   
   for (const event of events) {
-    // Normalize title: lowercase, trim, remove extra whitespace, normalize unicode
-    const normalizedTitle = event.title
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ')
-      .normalize('NFC');
+    // Normalize title using shared normalizer (handles embedded age patterns)
+    const normalizedTitle = normalizeTitleForDedup(event.title);
     
     // For all recurring events, use only month-day to deduplicate
     // This catches the same yearly event appearing multiple times
@@ -292,8 +424,17 @@ export function deduplicateEvents(events: ImportableEvent[]): ImportableEvent[] 
     const key = `${normalizedTitle}-${dateKey}`;
     
     // Keep the first occurrence (usually the upcoming one)
+    // If we already have one, compare dates and keep the one that's sooner
     if (!seen.has(key)) {
       seen.set(key, event);
+    } else {
+      const existing = seen.get(key)!;
+      // Keep the event with the sooner date (upcoming occurrence)
+      const existingNextOccurrence = getNextOccurrence(existing.date);
+      const currentNextOccurrence = getNextOccurrence(event.date);
+      if (currentNextOccurrence < existingNextOccurrence) {
+        seen.set(key, event);
+      }
     }
   }
   
