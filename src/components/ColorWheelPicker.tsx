@@ -120,6 +120,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const hasManualChangeRef = useRef(false);
   const lastEmojiRef = useRef<string | undefined>(emoji);
   const lastValueRef = useRef<string>(value);
+  const clickTriggeredRef = useRef(false); // Track if haptic was triggered by click
   
   // Velocity tracking for smart snapping
   const lastSlideIndexRef = useRef<number>(selectedIndex);
@@ -368,8 +369,11 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const onSettle = useCallback(() => {
     setPreviewTransitionDuration(MAX_TRANSITION_DURATION);
     scrollVelocityRef.current = 0;
-    // Trigger haptic when carousel settles on a color
-    trigger('selection');
+    // Trigger haptic when carousel settles on a color (unless click already triggered it)
+    if (!clickTriggeredRef.current) {
+      trigger('selection');
+    }
+    clickTriggeredRef.current = false;
   }, [trigger]);
 
   // Handle slide changes (when snapped)
@@ -399,7 +403,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       }
       onChange(color);
     }
-  }, [emblaApi, onChange, trigger, onManualChange]);
+  }, [emblaApi, onChange, onManualChange]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -458,9 +462,12 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         onManualChange?.();
       }
       
+      // Mark that click triggered haptic (to avoid double haptic on settle)
+      clickTriggeredRef.current = true;
+      trigger('selection');
+      
       // Scroll to the selected color smoothly (onSelect callback will handle state updates)
       emblaApi.scrollTo(paletteIndex, false);
-      trigger('selection');
     },
     [emblaApi, trigger, onManualChange]
   );
