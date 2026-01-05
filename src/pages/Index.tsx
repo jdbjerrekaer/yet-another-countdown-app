@@ -109,32 +109,9 @@ export default function Index() {
   const [events, setEvents] = useState<CountdownEvent[]>(() => {
     const saved = localStorage.getItem('countdowns');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      // Check if test event already exists
-      const hasTestEvent = parsed.some((e: CountdownEvent) => e.id === 'test-imported-event');
-      if (!hasTestEvent) {
-        // Add test imported event
-        const testEvent: CountdownEvent = {
-          id: 'test-imported-event',
-          title: 'Sarah\'s Birthday',
-          targetDate: (() => {
-            const date = new Date();
-            date.setMonth(date.getMonth() + 2);
-            date.setDate(15);
-            date.setHours(0, 0, 0, 0);
-            return date.toISOString();
-          })(),
-          emoji: '🎂',
-          emojiColor: '#f472b6',
-          isRecurring: true,
-          isImported: true,
-          importedFrom: 'Family Calendar',
-          createdAt: new Date().toISOString(),
-        };
-        return [...parsed, testEvent];
-      }
-      return parsed;
+      return JSON.parse(saved);
     }
+    // Migrate from old single-countdown format if it exists
     const oldSaved = localStorage.getItem('countdown');
     if (oldSaved) {
       const old = JSON.parse(oldSaved);
@@ -146,45 +123,9 @@ export default function Index() {
         isRecurring: false,
         createdAt: new Date().toISOString(),
       };
-      // Add test imported event
-      const testEvent: CountdownEvent = {
-        id: 'test-imported-event',
-        title: 'Sarah\'s Birthday',
-        targetDate: (() => {
-          const date = new Date();
-          date.setMonth(date.getMonth() + 2);
-          date.setDate(15);
-          date.setHours(0, 0, 0, 0);
-          return date.toISOString();
-        })(),
-        emoji: '🎂',
-        emojiColor: '#f472b6',
-        isRecurring: true,
-        isImported: true,
-        importedFrom: 'Family Calendar',
-        createdAt: new Date().toISOString(),
-      };
-      return [migrated, testEvent];
+      return [migrated];
     }
-    // Add test imported event even when starting fresh
-    const testEvent: CountdownEvent = {
-      id: 'test-imported-event',
-      title: 'Sarah\'s Birthday',
-      targetDate: (() => {
-        const date = new Date();
-        date.setMonth(date.getMonth() + 2);
-        date.setDate(15);
-        date.setHours(0, 0, 0, 0);
-        return date.toISOString();
-      })(),
-      emoji: '🎂',
-      emojiColor: '#f472b6',
-      isRecurring: true,
-      isImported: true,
-      importedFrom: 'Family Calendar',
-      createdAt: new Date().toISOString(),
-    };
-    return [testEvent];
+    return [];
   });
 
   useEffect(() => {
