@@ -125,8 +125,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const lastSlideIndexRef = useRef<number>(selectedIndex);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
-  const VELOCITY_THRESHOLD = 0.3; // slides/s - snap if slower than this (reduced for less aggressive snapping)
-  const SNAP_DISTANCE_THRESHOLD = 0.5; // fraction of slide width - only snap if within this distance
+  const VELOCITY_THRESHOLD = 0.2; // slides/s - snap if slower than this (reduced for less aggressive snapping)
+  const SNAP_DISTANCE_THRESHOLD = 0.75; // fraction of slide width - only snap if within this distance
   
   // Velocity-based transition timing constants
   const MIN_TRANSITION_DURATION = 0; // ms - instant at high velocity
@@ -410,17 +410,41 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     emblaApi.on('pointerUp', onPointerUp);
     emblaApi.on('settle', onSettle);
 
+    // Add native wheel listener to allow e.preventDefault()
+    const viewport = emblaApi.rootNode();
+    const onWheelNative = (e: WheelEvent) => {
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (Math.abs(delta) > 10) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!hasManualChangeRef.current) {
+          hasManualChangeRef.current = true;
+          onManualChange?.();
+        }
+        
+        if (delta > 0) {
+          emblaApi.scrollNext();
+        } else {
+          emblaApi.scrollPrev();
+        }
+      }
+    };
+
+    viewport.addEventListener('wheel', onWheelNative, { passive: false });
+
     return () => {
       emblaApi.off('select', onSelect);
       emblaApi.off('scroll', onScroll);
       emblaApi.off('reInit', onSelect);
       emblaApi.off('pointerUp', onPointerUp);
       emblaApi.off('settle', onSettle);
+      viewport.removeEventListener('wheel', onWheelNative);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [emblaApi, onSelect, onScroll, onPointerUp, onSettle]);
+  }, [emblaApi, onSelect, onScroll, onPointerUp, onSettle, onManualChange]);
 
   // Handle tap/click on color swatch
   const handleColorClick = useCallback(
@@ -484,7 +508,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         ref={emblaRef}
         className="absolute inset-0 overflow-hidden"
         style={{
-          touchAction: 'pan-y',
+          touchAction: 'pan-x',
           zIndex: 1,
           // Refined SVG mask: using 47px height (slightly smaller than the 48px border) 
           // to ensure colors are always tucked under the border frame.
