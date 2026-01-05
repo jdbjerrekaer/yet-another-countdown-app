@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
 
 type HapticStyle = 'light' | 'medium' | 'heavy' | 'selection';
@@ -9,17 +9,14 @@ export function useHaptic() {
     // Use native Capacitor haptics on iOS/Android
     if (Capacitor.isNativePlatform()) {
       try {
-        if (style === 'selection') {
-          await Haptics.selectionStart();
-          await Haptics.selectionEnd();
-        } else {
-          const impactStyles: Record<Exclude<HapticStyle, 'selection'>, ImpactStyle> = {
-            light: ImpactStyle.Light,
-            medium: ImpactStyle.Medium,
-            heavy: ImpactStyle.Heavy,
-          };
-          await Haptics.impact({ style: impactStyles[style] });
-        }
+        // Map all styles to impact styles for more reliable haptic feedback
+        const impactStyles: Record<HapticStyle, ImpactStyle> = {
+          light: ImpactStyle.Light,
+          medium: ImpactStyle.Medium,
+          heavy: ImpactStyle.Heavy,
+          selection: ImpactStyle.Light, // Use light impact for selection (more reliable than selectionStart/End)
+        };
+        await Haptics.impact({ style: impactStyles[style] });
         return;
       } catch (e) {
         // Fall through to web fallback
