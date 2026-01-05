@@ -11,6 +11,7 @@ interface SortableCountdownCardProps {
   onDelete: () => void;
   isReordering: boolean;
   isDragDisabled?: boolean;
+  isNative?: boolean;
 }
 
 export function SortableCountdownCard({
@@ -21,6 +22,7 @@ export function SortableCountdownCard({
   onDelete,
   isReordering,
   isDragDisabled = false,
+  isNative = false,
 }: SortableCountdownCardProps) {
   const {
     attributes,
@@ -94,6 +96,7 @@ export function SortableCountdownCard({
         onDelete={onDelete}
         isReordering={isReordering}
         isDragging={isDragging}
+        isNative={isNative}
       />
     </div>
   );

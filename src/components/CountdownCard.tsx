@@ -15,6 +15,7 @@ interface CountdownCardProps {
   onDelete: () => void;
   isReordering?: boolean;
   isDragging?: boolean;
+  isNative?: boolean;
 }
 
 export function CountdownCard({ 
@@ -25,6 +26,7 @@ export function CountdownCard({
   onDelete,
   isReordering = false,
   isDragging = false,
+  isNative = false,
 }: CountdownCardProps) {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
@@ -100,7 +102,7 @@ export function CountdownCard({
   return (
     <div 
       className={`countdown-card-wrapper overflow-hidden ${
-        isSelected ? 'countdown-card-selected' : ''
+        !isNative && isSelected ? 'countdown-card-selected' : ''
       } ${isDragging ? 'countdown-card-dragging' : ''}`}
       style={{
         borderRadius: `${borderRadius}px`,

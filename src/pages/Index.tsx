@@ -837,6 +837,7 @@ export default function Index() {
                           event={event}
                           isSelected={event.id === selectedEventId}
                           isReordering={activeDragId !== null}
+                          isNative={isNative}
                           onSelect={() => {
                             if (shouldIgnoreTap()) return;
                             trigger('light');
@@ -886,6 +887,7 @@ export default function Index() {
                             onDelete={() => {}}
                             isReordering={true}
                             isDragging={true}
+                            isNative={isNative}
                           />
                         </div>
                       );
