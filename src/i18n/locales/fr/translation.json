@@ -1,0 +1,139 @@
+{
+  "app": {
+    "title": "Encore une App de Compte à Rebours",
+    "noCountdowns": "Aucun Compte à Rebours",
+    "createFirst": "Appuyez sur le bouton + ci-dessous pour créer votre premier compte à rebours"
+  },
+  "events": {
+    "title": "Événements",
+    "delete": "Supprimer",
+    "edit": "Modifier"
+  },
+  "widget": {
+    "size": "Taille du Widget",
+    "style": "Style",
+    "appearance": "Apparence",
+    "preview": "Aperçu",
+    "next": "Prochain : {{date}}",
+    "timeSince": "Temps écoulé depuis l'événement",
+    "arrived": "L'événement est arrivé !",
+    "countingDown": "Compte à rebours",
+    "units": {
+      "days": "jour",
+      "days_plural": "jours",
+      "daysShort": "Jours",
+      "hours": "heure",
+      "hours_plural": "heures",
+      "hoursShort": "Heures",
+      "minutes": "minute",
+      "minutes_plural": "minutes",
+      "minutesShort": "Min",
+      "seconds": "seconde",
+      "seconds_plural": "secondes",
+      "secondsShort": "Sec"
+    },
+    "daysAgoText": "il y a",
+    "daysAgoTextUpper": "Il y a",
+    "sizes": {
+      "small": "Petit",
+      "medium": "Moyen",
+      "large": "Grand",
+      "extraLarge": "Très Grand"
+    },
+    "styles": {
+      "focus": "Focus",
+      "visual": "Visuel"
+    },
+    "appearances": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "transparent": "Verre",
+      "tinted": "Teinté"
+    }
+  },
+  "modal": {
+    "editEvent": "Modifier l'Événement",
+    "newEvent": "Nouvel Événement",
+    "titleLabel": "Titre",
+    "eventNamePlaceholder": "Entrez le nom de l'événement",
+    "dateLabel": "Date",
+    "emojiLabel": "Emoji",
+    "colorLabel": "Couleur",
+    "recurringLabel": "Annuel",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer l'Événement",
+    "advancedLabel": "Avancé",
+    "repeatYearlyLabel": "Répéter Annuellement",
+    "repeatYearlySublabel": "Pour les anniversaires, les commémorations",
+    "customEmojiTitle": "Emoji personnalisé",
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Partager l'Événement",
+    "shareLinkCopied": "Lien d'importation copié dans le presse-papiers",
+    "shareError": "Échec du partage de l'événement",
+    "importedFrom": "Importé depuis {{calendar}}"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Date Modifiée",
+      "message": "Vous avez modifié la date de \"{{title}}\" de {{oldDate}} à {{newDate}}. Êtes-vous sûr de vouloir enregistrer ces modifications ?",
+      "save": "Enregistrer les Modifications",
+      "cancel": "Annuler"
+    },
+    "deleteEvent": {
+      "title": "Supprimer l'Événement",
+      "message": "Êtes-vous sûr de vouloir supprimer \"{{title}}\" ? Cette action ne peut pas être annulée.",
+      "delete": "Supprimer",
+      "cancel": "Annuler"
+    },
+    "importEvent": {
+      "title": "Importer l'Événement",
+      "message": "Voulez-vous importer \"{{emoji}} {{title}}\" prévu pour {{date}} ?",
+      "import": "Importer",
+      "cancel": "Annuler"
+    }
+  },
+  "countdown": {
+    "today": "Aujourd'hui ! 🎉",
+    "daysAgo": "il y a {{count}} jour",
+    "daysAgo_plural": "il y a {{count}} jours",
+    "format": "{{days}}j {{hours}}h {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Votre compte à rebours a atteint zéro !"
+  },
+  "calendar": {
+    "importTitle": "Importer depuis le Calendrier",
+    "importButton": "Importer",
+    "fetchEvents": "Récupérer les Événements",
+    "loading": "Chargement des événements du calendrier...",
+    "fetchError": "Échec de la récupération des événements du calendrier",
+    "noEventsTitle": "Aucun Événement Récurrent",
+    "noEventsMessage": "Aucun anniversaire ou commémoration trouvé dans votre calendrier",
+    "eventsFound": "{{count}} événement trouvé",
+    "eventsFound_plural": "{{count}} événements trouvés",
+    "searchPlaceholder": "Rechercher des événements...",
+    "selectAll": "Tout Sélectionner",
+    "deselectAll": "Tout Désélectionner",
+    "yearly": "Annuel",
+    "tryAgain": "Réessayer",
+    "refresh": "Actualiser",
+    "icsUrlLabel": "URL du Calendrier (.ics)",
+    "icsUrlPlaceholder": "Collez votre URL de calendrier ici",
+    "icsUrlHint": "Collez une URL de calendrier .ics publique (par exemple, depuis Google Calendar)",
+    "urlRequired": "Veuillez entrer une URL de calendrier",
+    "invalidUrl": "Veuillez entrer une URL de calendrier .ics valide",
+    "permissionDeniedTitle": "Accès au Calendrier Refusé",
+    "permissionDeniedMessage": "Veuillez autoriser l'accès au calendrier dans les Paramètres pour importer des événements depuis votre calendrier.",
+    "openSettings": "Ouvrir les Paramètres",
+    "clearFilter": "Tous"
+  },
+  "aria": {
+    "saveEvent": "Enregistrer l'événement",
+    "addEvent": "Ajouter un événement",
+    "clearInput": "Effacer la saisie",
+    "colorPicker": "Sélecteur de couleur",
+    "shareEvent": "Partager l'événement",
+    "importFromCalendar": "Importer depuis le calendrier"
+  }
+}

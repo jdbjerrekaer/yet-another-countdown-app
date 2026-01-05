@@ -9,6 +9,7 @@ import itTranslations from './locales/it/translation.json';
 import ptTranslations from './locales/pt/translation.json';
 import deTranslations from './locales/de/translation.json';
 import ruTranslations from './locales/ru/translation.json';
+import frTranslations from './locales/fr/translation.json';
 
 i18n
   .use(LanguageDetector)
@@ -21,9 +22,10 @@ i18n
       pt: { translation: ptTranslations },
       de: { translation: deTranslations },
       ru: { translation: ruTranslations },
+      fr: { translation: frTranslations },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'es', 'it', 'pt', 'de', 'ru'],
+    supportedLngs: ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr'],
     interpolation: {
       escapeValue: false, // React already escapes
     },
