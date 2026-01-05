@@ -70,7 +70,8 @@
     "customEmojiPlaceholder": "🎨",
     "shareEvent": "Share Event",
     "shareLinkCopied": "Import link copied to clipboard",
-    "shareError": "Failed to share event"
+    "shareError": "Failed to share event",
+    "importedFrom": "Imported from {{calendar}}"
   },
   "dialogs": {
     "dateChanged": {

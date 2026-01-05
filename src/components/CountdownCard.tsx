@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
-import { ChevronRight, RefreshCw } from 'lucide-react';
+import { ChevronRight, RefreshCw, CalendarIcon } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
@@ -46,13 +46,23 @@ export function CountdownCard({
         : getNextOccurrenceNumber(new Date(event.targetDate)))
     : (countdown.isPast ? 1 : 0);
 
-  const handleSelect = () => {
+  const handleSelect = (e?: React.MouseEvent) => {
     trigger('light');
-    onSelect();
+    // On native, open edit modal instead of selecting
+    if (isNative) {
+      if (e) {
+        e.stopPropagation();
+      }
+      onEdit();
+    } else {
+      onSelect();
+    }
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleEdit = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     trigger('medium');
     onEdit();
   };
@@ -124,6 +134,8 @@ export function CountdownCard({
         // Force backdrop-filter to none when dragging to prevent transparency
         backdropFilter: isDragging ? 'none' : undefined,
         WebkitBackdropFilter: isDragging ? 'none' : undefined,
+        // Explicitly remove box-shadow on native to prevent any selection outline
+        boxShadow: isNative ? 'none' : undefined,
       }}
     >
       <IonItemSliding 
@@ -180,14 +192,22 @@ export function CountdownCard({
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {countdown.isPast
-                ? t('countdown.daysAgo', { count: countdown.daysSince })
-                : countdown.isComplete
-                  ? t('countdown.today')
-                  : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
-              }
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                {countdown.isPast
+                  ? t('countdown.daysAgo', { count: countdown.daysSince })
+                  : countdown.isComplete
+                    ? t('countdown.today')
+                    : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
+                }
+              </p>
+              {event.isImported && event.importedFrom && (
+                <span className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                  <CalendarIcon className="w-3 h-3" />
+                  {event.importedFrom}
+                </span>
+              )}
+            </div>
           </div>
           
           <button 

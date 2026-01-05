@@ -121,12 +121,17 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const lastEmojiRef = useRef<string | undefined>(emoji);
   const lastValueRef = useRef<string>(value);
   
-  // Velocity tracking for smart snapping
+  // Velocity tracking for smart snapping and haptics
   const lastSlideIndexRef = useRef<number>(selectedIndex);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
   const VELOCITY_THRESHOLD = 0.05; // slides/s - snap if slower than this (reduced for less aggressive snapping)
   const SNAP_DISTANCE_THRESHOLD = 0.75; // fraction of slide width - only snap if within this distance
+  const HAPTIC_VELOCITY_THRESHOLD = 8; // slides/s - trigger haptics only when scrolling slower than this
+  
+  // Track pointer down position to detect taps vs drags
+  const pointerDownPosRef = useRef<{ x: number; y: number; index: number } | null>(null);
+  const TAP_THRESHOLD = 10; // pixels - if moved less than this, it's a tap
   
   // Velocity-based transition timing constants
   const MIN_TRANSITION_DURATION = 0; // ms - instant at high velocity
@@ -396,7 +401,12 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         onManualChange?.();
       }
       onChange(color);
-      trigger('selection');
+      
+      // Only trigger haptics when scrolling slowly (not fast scrolling)
+      // This gives feedback for deliberate selections but not during rapid scrolling
+      if (scrollVelocityRef.current < HAPTIC_VELOCITY_THRESHOLD) {
+        trigger('selection');
+      }
     }
   }, [emblaApi, onChange, trigger, onManualChange]);
 
@@ -446,8 +456,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     };
   }, [emblaApi, onSelect, onScroll, onPointerUp, onSettle, onManualChange]);
 
-  // Handle tap/click on color swatch
-  const handleColorClick = useCallback(
+  // Handle tap/click on color swatch - called when we detect a tap (not a drag)
+  const handleColorTap = useCallback(
     (paletteIndex: number) => {
       if (!emblaApi) return;
       
@@ -462,6 +472,33 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       trigger('selection');
     },
     [emblaApi, trigger, onManualChange]
+  );
+  
+  // Track pointer down to detect taps vs drags
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent, paletteIndex: number) => {
+      pointerDownPosRef.current = { x: e.clientX, y: e.clientY, index: paletteIndex };
+    },
+    []
+  );
+  
+  // Check on pointer up if this was a tap (minimal movement)
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!pointerDownPosRef.current) return;
+      
+      const { x, y, index } = pointerDownPosRef.current;
+      const deltaX = Math.abs(e.clientX - x);
+      const deltaY = Math.abs(e.clientY - y);
+      
+      // If pointer moved less than threshold, treat as tap
+      if (deltaX < TAP_THRESHOLD && deltaY < TAP_THRESHOLD) {
+        handleColorTap(index);
+      }
+      
+      pointerDownPosRef.current = null;
+    },
+    [handleColorTap]
   );
 
   // Keyboard navigation
@@ -532,7 +569,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
                 width: 72,
                 height: TOTAL_HEIGHT,
               }}
-              onClick={() => handleColorClick(i)}
+              onPointerDown={(e) => handlePointerDown(e, i)}
+              onPointerUp={handlePointerUp}
               role="button"
               aria-label={`Select color ${i + 1}`}
             >

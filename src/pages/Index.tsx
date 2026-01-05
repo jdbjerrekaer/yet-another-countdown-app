@@ -109,7 +109,31 @@ export default function Index() {
   const [events, setEvents] = useState<CountdownEvent[]>(() => {
     const saved = localStorage.getItem('countdowns');
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Check if test event already exists
+      const hasTestEvent = parsed.some((e: CountdownEvent) => e.id === 'test-imported-event');
+      if (!hasTestEvent) {
+        // Add test imported event
+        const testEvent: CountdownEvent = {
+          id: 'test-imported-event',
+          title: 'Sarah\'s Birthday',
+          targetDate: (() => {
+            const date = new Date();
+            date.setMonth(date.getMonth() + 2);
+            date.setDate(15);
+            date.setHours(0, 0, 0, 0);
+            return date.toISOString();
+          })(),
+          emoji: '🎂',
+          emojiColor: '#f472b6',
+          isRecurring: true,
+          isImported: true,
+          importedFrom: 'Family Calendar',
+          createdAt: new Date().toISOString(),
+        };
+        return [...parsed, testEvent];
+      }
+      return parsed;
     }
     const oldSaved = localStorage.getItem('countdown');
     if (oldSaved) {
@@ -122,9 +146,45 @@ export default function Index() {
         isRecurring: false,
         createdAt: new Date().toISOString(),
       };
-      return [migrated];
+      // Add test imported event
+      const testEvent: CountdownEvent = {
+        id: 'test-imported-event',
+        title: 'Sarah\'s Birthday',
+        targetDate: (() => {
+          const date = new Date();
+          date.setMonth(date.getMonth() + 2);
+          date.setDate(15);
+          date.setHours(0, 0, 0, 0);
+          return date.toISOString();
+        })(),
+        emoji: '🎂',
+        emojiColor: '#f472b6',
+        isRecurring: true,
+        isImported: true,
+        importedFrom: 'Family Calendar',
+        createdAt: new Date().toISOString(),
+      };
+      return [migrated, testEvent];
     }
-    return [];
+    // Add test imported event even when starting fresh
+    const testEvent: CountdownEvent = {
+      id: 'test-imported-event',
+      title: 'Sarah\'s Birthday',
+      targetDate: (() => {
+        const date = new Date();
+        date.setMonth(date.getMonth() + 2);
+        date.setDate(15);
+        date.setHours(0, 0, 0, 0);
+        return date.toISOString();
+      })(),
+      emoji: '🎂',
+      emojiColor: '#f472b6',
+      isRecurring: true,
+      isImported: true,
+      importedFrom: 'Family Calendar',
+      createdAt: new Date().toISOString(),
+    };
+    return [testEvent];
   });
 
   useEffect(() => {
@@ -1006,6 +1066,8 @@ export default function Index() {
         initialEmoji={editingEvent?.emoji}
         initialEmojiColor={editingEvent?.emojiColor}
         initialIsRecurring={editingEvent?.isRecurring}
+        initialIsImported={editingEvent?.isImported}
+        initialImportedFrom={editingEvent?.importedFrom}
         isEditing={!!editingEvent}
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
         onValidityChange={setCanSaveForm}

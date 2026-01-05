@@ -166,6 +166,8 @@ export function convertToCountdownEvent(
     emoji,
     emojiColor,
     isRecurring: event.isRecurring,
+    isImported: true,
+    importedFrom: event.calendarTitle || (event.source === 'native' ? 'Calendar' : 'iCal'),
   };
 }
 

@@ -6,6 +6,8 @@ export interface CountdownEvent {
   emojiColor?: string;
   isRecurring: boolean;
   createdAt: string;
+  isImported?: boolean;
+  importedFrom?: string; // Calendar name
 }
 
 export type WidgetSize = 'small' | 'medium' | 'large' | 'extraLarge';

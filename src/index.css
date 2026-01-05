@@ -241,11 +241,12 @@
 
   /* Countdown card wrapper styling */
   .countdown-card-wrapper {
-    box-shadow: none;
+    box-shadow: none !important;
   }
 
-  .countdown-card-selected {
-    box-shadow: 0 0 0 2px hsl(var(--primary));
+  /* Only apply selection outline on web (not native) - class is conditionally applied */
+  .countdown-card-wrapper.countdown-card-selected {
+    box-shadow: 0 0 0 2px hsl(var(--primary)) !important;
   }
 
   /* Countdown card styling for Ionic components */
@@ -260,10 +261,26 @@
     --border-width: 0;
     --border-color: transparent;
     --min-height: auto;
+    --ripple-color: transparent;
   }
 
   .countdown-card-item::part(native) {
     overflow: hidden;
+  }
+
+  /* Remove focus outline and active state styling for IonItem */
+  .countdown-card-item:focus,
+  .countdown-card-item:focus-visible,
+  .countdown-card-item:active {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .countdown-card-item::part(native):focus,
+  .countdown-card-item::part(native):focus-visible,
+  .countdown-card-item::part(native):active {
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   /* IonItemSliding container styling */

@@ -40,6 +40,8 @@ interface DatePickerModalProps {
   initialEmoji?: string;
   initialEmojiColor?: string;
   initialIsRecurring?: boolean;
+  initialIsImported?: boolean;
+  initialImportedFrom?: string;
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
   onValidityChange?: (canSave: boolean) => void;
@@ -65,6 +67,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   initialEmoji = '',
   initialEmojiColor,
   initialIsRecurring = false,
+  initialIsImported = false,
+  initialImportedFrom,
   isEditing = false,
   onDelete,
   onValidityChange,
@@ -503,6 +507,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   </button>
                 )}
               </div>
+              {isEditing && initialIsImported && initialImportedFrom && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <span>{t('modal.importedFrom', { calendar: initialImportedFrom })}</span>
+                </div>
+              )}
             </div>
 
             {/* Emoji picker - selected emoji shows the chosen color */}

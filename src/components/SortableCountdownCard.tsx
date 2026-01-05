@@ -83,7 +83,7 @@ export function SortableCountdownCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`sortable-countdown-card ${isDragging ? 'is-dragging' : ''} ${isSelected ? 'is-selected' : ''}`}
+      className={`sortable-countdown-card ${isDragging ? 'is-dragging' : ''} ${!isNative && isSelected ? 'is-selected' : ''}`}
       data-sortable-id={event.id}
       {...attributes}
       {...listeners}
