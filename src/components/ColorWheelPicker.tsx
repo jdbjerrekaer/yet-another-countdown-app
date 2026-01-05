@@ -125,7 +125,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const lastSlideIndexRef = useRef<number>(selectedIndex);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
-  const VELOCITY_THRESHOLD = 0.2; // slides/s - snap if slower than this (reduced for less aggressive snapping)
+  const VELOCITY_THRESHOLD = 0.05; // slides/s - snap if slower than this (reduced for less aggressive snapping)
   const SNAP_DISTANCE_THRESHOLD = 0.75; // fraction of slide width - only snap if within this distance
   
   // Velocity-based transition timing constants
