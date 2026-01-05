@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import EventKit
+import WidgetKit
 
 @objc(CalendarPlugin)
 public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -10,15 +11,22 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "requestPermission", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "checkPermission", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getRecurringEvents", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "getCalendars", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "getCalendars", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateWidgetData", returnType: CAPPluginReturnPromise)
     ]
+    
+    /// App Group identifier for sharing data with widgets
+    private let appGroupIdentifier = "group.countdown.timer.data"
     
     private let eventStore = EKEventStore()
     
     /// Check if calendar permission is granted
     @objc func checkPermission(_ call: CAPPluginCall) {
         let status = EKEventStore.authorizationStatus(for: .event)
-        let granted = status == .authorized || status == .fullAccess
+        var granted = status == .authorized
+        if #available(iOS 17.0, *) {
+            granted = granted || status == .fullAccess
+        }
         call.resolve(["granted": granted, "status": authStatusToString(status)])
     }
     
@@ -147,6 +155,77 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["events": recurringEvents])
     }
     
+    /// Update widget data in shared App Group storage
+    @objc func updateWidgetData(_ call: CAPPluginCall) {
+        guard let eventsArray = call.getArray("events") as? [[String: Any]] else {
+            print("CalendarPlugin: Missing events array in updateWidgetData call")
+            call.reject("Missing events array")
+            return
+        }
+        
+        let appearanceMode = call.getString("appearanceMode") ?? "light"
+        let countdownStyle = call.getString("countdownStyle") ?? "focus"
+        
+        print("CalendarPlugin: Received \(eventsArray.count) events, appearance: \(appearanceMode), style: \(countdownStyle)")
+        
+        guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            print("CalendarPlugin: FAILED to access App Group with identifier: \(appGroupIdentifier)")
+            call.reject("Failed to access App Group storage")
+            return
+        }
+        
+        print("CalendarPlugin: Successfully accessed App Group: \(appGroupIdentifier)")
+        
+        // Convert events array - ensure all values are proper types for JSON encoding
+        var cleanedEvents: [[String: Any]] = []
+        for event in eventsArray {
+            var cleanEvent: [String: Any] = [:]
+            cleanEvent["id"] = event["id"] as? String ?? ""
+            cleanEvent["title"] = event["title"] as? String ?? ""
+            cleanEvent["targetDate"] = event["targetDate"] as? String ?? ""
+            cleanEvent["emoji"] = event["emoji"] as? String ?? "📅"
+            cleanEvent["emojiColor"] = event["emojiColor"] as? String
+            cleanEvent["isRecurring"] = event["isRecurring"] as? Bool ?? false
+            cleanEvent["createdAt"] = event["createdAt"] as? String ?? ISO8601DateFormatter().string(from: Date())
+            cleanedEvents.append(cleanEvent)
+            print("CalendarPlugin: Event - \(cleanEvent["title"] ?? "unknown") targeting \(cleanEvent["targetDate"] ?? "unknown")")
+        }
+        
+        // Store widget data as JSON
+        let widgetData: [String: Any] = [
+            "events": cleanedEvents,
+            "appearanceMode": appearanceMode,
+            "countdownStyle": countdownStyle,
+            "lastUpdated": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: widgetData, options: [.prettyPrinted])
+            userDefaults.set(jsonData, forKey: "widgetData")
+            userDefaults.synchronize()
+            
+            print("CalendarPlugin: Saved \(jsonData.count) bytes to App Group")
+            
+            // Verify the data was saved
+            if let verifyData = userDefaults.data(forKey: "widgetData") {
+                print("CalendarPlugin: Verified data exists: \(verifyData.count) bytes")
+            } else {
+                print("CalendarPlugin: WARNING - Data verification failed!")
+            }
+            
+            // Reload widgets to reflect new data
+            if #available(iOS 14.0, *) {
+                WidgetCenter.shared.reloadAllTimelines()
+                print("CalendarPlugin: Requested widget timeline reload")
+            }
+            
+            call.resolve(["success": true])
+        } catch {
+            print("CalendarPlugin: Failed to serialize: \(error)")
+            call.reject("Failed to serialize widget data: \(error.localizedDescription)")
+        }
+    }
+    
     // MARK: - Helper methods
     
     private func authStatusToString(_ status: EKAuthorizationStatus) -> String {
@@ -159,11 +238,15 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             return "denied"
         case .authorized:
             return "authorized"
-        case .fullAccess:
-            return "fullAccess"
-        case .writeOnly:
-            return "writeOnly"
         @unknown default:
+            // Handle iOS 17+ cases (fullAccess, writeOnly) via raw value check
+            if #available(iOS 17.0, *) {
+                if status == .fullAccess {
+                    return "fullAccess"
+                } else if status == .writeOnly {
+                    return "writeOnly"
+                }
+            }
             return "unknown"
         }
     }

@@ -9,4 +9,5 @@ CAP_PLUGIN(CalendarPlugin, "CalendarPlugin",
     CAP_PLUGIN_METHOD(checkPermission, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(getRecurringEvents, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(getCalendars, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(updateWidgetData, CAPPluginReturnPromise);
 )

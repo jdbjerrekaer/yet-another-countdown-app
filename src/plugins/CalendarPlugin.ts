@@ -58,6 +58,35 @@ export interface GetCalendarsResult {
 }
 
 /**
+ * Widget countdown event data for syncing to native storage
+ */
+export interface WidgetCountdownEvent {
+  id: string;
+  title: string;
+  targetDate: string;
+  emoji: string;
+  emojiColor?: string;
+  isRecurring: boolean;
+  createdAt: string;
+}
+
+/**
+ * Options for updating widget data
+ */
+export interface UpdateWidgetDataOptions {
+  events: WidgetCountdownEvent[];
+  appearanceMode: string;
+  countdownStyle: string;
+}
+
+/**
+ * Result from updateWidgetData
+ */
+export interface UpdateWidgetDataResult {
+  success: boolean;
+}
+
+/**
  * CalendarPlugin interface for accessing iOS Calendar via EventKit
  */
 export interface CalendarPluginInterface {
@@ -80,6 +109,12 @@ export interface CalendarPluginInterface {
    * Get recurring events (birthdays, anniversaries) within a date range
    */
   getRecurringEvents(options: GetRecurringEventsOptions): Promise<GetRecurringEventsResult>;
+
+  /**
+   * Update widget data in native shared storage (App Group)
+   * This syncs countdown events and widget settings to be accessible by iOS widgets
+   */
+  updateWidgetData(options: UpdateWidgetDataOptions): Promise<UpdateWidgetDataResult>;
 }
 
 /**

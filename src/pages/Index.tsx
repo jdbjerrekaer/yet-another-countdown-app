@@ -37,6 +37,8 @@ import { checkNotificationPermission, requestNotificationPermission, scheduleEve
 import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal } from '@/components/CalendarImportModal';
 import { ImportableEvent, convertToCountdownEvent } from '@/lib/calendarImport';
+import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
+import { SharedSelection } from '@/lib/sharedSelection';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -131,7 +133,77 @@ export default function Index() {
     }
   }, [events, selectedEventId]);
 
+  // Debug: Test CalendarPlugin immediately on mount - use direct Capacitor call
+  useEffect(() => {
+    const testPlugin = async () => {
+      const platform = Capacitor.getPlatform();
+      const native = Capacitor.isNativePlatform();
+      
+      // Log directly to native console via a trick
+      console.log('[WidgetSync] Platform:', platform, 'isNative:', native);
+      
+      // Get events from localStorage directly to avoid closure issues
+      const saved = localStorage.getItem('countdowns');
+      const storedEvents = saved ? JSON.parse(saved) : [];
+      
+      console.log('[WidgetSync] Events from localStorage:', storedEvents.length);
+      
+      if (native && storedEvents.length > 0) {
+        try {
+          console.log('[WidgetSync] Calling CalendarPlugin.updateWidgetData...');
+          const testEvents = storedEvents.map((e: CountdownEvent) => ({
+            id: e.id,
+            title: e.title,
+            targetDate: e.targetDate,
+            emoji: e.emoji,
+            emojiColor: e.emojiColor,
+            isRecurring: e.isRecurring,
+            createdAt: e.createdAt,
+          }));
+          
+          console.log('[WidgetSync] Events to sync:', JSON.stringify(testEvents));
+          
+          const result = await CalendarPlugin.updateWidgetData({
+            events: testEvents,
+            appearanceMode: 'light',
+            countdownStyle: 'focus',
+          });
+          console.log('[WidgetSync] SUCCESS! Result:', JSON.stringify(result));
+        } catch (error) {
+          console.error('[WidgetSync] FAILED:', error);
+        }
+      } else {
+        console.log('[WidgetSync] Skipping sync - native:', native, 'events:', storedEvents.length);
+      }
+    };
+    
+    // Run immediately and after delay
+    testPlugin();
+    setTimeout(testPlugin, 2000);
+  }, []);
+
   const selectedEvent = events.find(e => e.id === selectedEventId);
+
+  useEffect(() => {
+    const pushSelectedToWidget = async () => {
+      if (!isNative) return;
+      const event = selectedEvent;
+      if (!event) return;
+      try {
+        await SharedSelection.setSelectedEvent({
+          id: event.id,
+          title: event.title,
+          targetDate: event.targetDate,
+          emoji: event.emoji,
+          emojiColor: event.emojiColor,
+          isRecurring: !!event.isRecurring,
+        });
+      } catch (e) {
+        console.warn('Failed to push selection to widget:', e);
+      }
+    };
+    pushSelectedToWidget();
+  }, [isNative, selectedEvent]);
   
   const targetDate = selectedEvent 
     ? (selectedEvent.isRecurring 
@@ -163,6 +235,46 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('widgetCountdownStyle', selectedCountdownStyle);
   }, [selectedCountdownStyle]);
+
+  // Sync widget data to native storage whenever events or widget settings change
+  useEffect(() => {
+    const syncWidgetData = async () => {
+      console.log('[WidgetSync] Starting sync, isNative:', isNative, 'events count:', events.length);
+      
+      if (!isNative) {
+        console.log('[WidgetSync] Skipping - not native platform');
+        return;
+      }
+      
+      try {
+        // Convert events to widget format
+        const widgetEvents: WidgetCountdownEvent[] = events.map(event => ({
+          id: event.id,
+          title: event.title,
+          targetDate: event.targetDate,
+          emoji: event.emoji,
+          emojiColor: event.emojiColor,
+          isRecurring: event.isRecurring,
+          createdAt: event.createdAt,
+        }));
+
+        console.log('[WidgetSync] Calling updateWidgetData with', widgetEvents.length, 'events');
+        console.log('[WidgetSync] Events:', JSON.stringify(widgetEvents, null, 2));
+        
+        const result = await CalendarPlugin.updateWidgetData({
+          events: widgetEvents,
+          appearanceMode: selectedAppearanceMode,
+          countdownStyle: selectedCountdownStyle,
+        });
+        
+        console.log('[WidgetSync] Success:', result);
+      } catch (error) {
+        console.error('[WidgetSync] Failed to sync widget data:', error);
+      }
+    };
+
+    syncWidgetData();
+  }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative]);
 
   // Check scheduled notifications on app load (for web platform)
   useEffect(() => {
@@ -854,3 +966,4 @@ export default function Index() {
     </IonPage>
   );
 }
+

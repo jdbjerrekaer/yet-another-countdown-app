@@ -5,6 +5,8 @@ import type {
   GetCalendarsResult,
   GetRecurringEventsOptions,
   GetRecurringEventsResult,
+  UpdateWidgetDataOptions,
+  UpdateWidgetDataResult,
 } from './CalendarPlugin';
 
 /**
@@ -32,5 +34,11 @@ export class CalendarPluginWeb extends WebPlugin implements CalendarPluginInterf
   async getRecurringEvents(_options: GetRecurringEventsOptions): Promise<GetRecurringEventsResult> {
     // Web doesn't have native calendar access
     return { events: [] };
+  }
+
+  async updateWidgetData(_options: UpdateWidgetDataOptions): Promise<UpdateWidgetDataResult> {
+    // Web doesn't have native widgets - no-op but return success
+    console.log('CalendarPlugin: Widget data sync is not available on web.');
+    return { success: true };
   }
 }
