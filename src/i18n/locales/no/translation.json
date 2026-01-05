@@ -1,0 +1,139 @@
+{
+  "app": {
+    "title": "Enda En Nedtelling App",
+    "noCountdowns": "Ingen Nedtellinger",
+    "createFirst": "Trykk på + knappen nedenfor for å opprette din første nedtelling"
+  },
+  "events": {
+    "title": "Hendelser",
+    "delete": "Slett",
+    "edit": "Rediger"
+  },
+  "widget": {
+    "size": "Widget Størrelse",
+    "style": "Stil",
+    "appearance": "Utseende",
+    "preview": "Forhåndsvisning",
+    "next": "Neste: {{date}}",
+    "timeSince": "Tid siden hendelse",
+    "arrived": "Hendelse har ankommet!",
+    "countingDown": "Teller ned",
+    "units": {
+      "days": "dag",
+      "days_plural": "dager",
+      "daysShort": "Dager",
+      "hours": "time",
+      "hours_plural": "timer",
+      "hoursShort": "Timer",
+      "minutes": "minutt",
+      "minutes_plural": "minutter",
+      "minutesShort": "Min",
+      "seconds": "sekund",
+      "seconds_plural": "sekunder",
+      "secondsShort": "Sek"
+    },
+    "daysAgoText": "siden",
+    "daysAgoTextUpper": "Dager siden",
+    "sizes": {
+      "small": "Liten",
+      "medium": "Medium",
+      "large": "Stor",
+      "extraLarge": "Ekstra Stor"
+    },
+    "styles": {
+      "focus": "Fokus",
+      "visual": "Visuell"
+    },
+    "appearances": {
+      "light": "Lys",
+      "dark": "Mørk",
+      "transparent": "Glass",
+      "tinted": "Tonet"
+    }
+  },
+  "modal": {
+    "editEvent": "Rediger Hendelse",
+    "newEvent": "Ny Hendelse",
+    "titleLabel": "Tittel",
+    "eventNamePlaceholder": "Skriv inn hendelsesnavn",
+    "dateLabel": "Dato",
+    "emojiLabel": "Emoji",
+    "colorLabel": "Farge",
+    "recurringLabel": "Årlig",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "delete": "Slett Hendelse",
+    "advancedLabel": "Avansert",
+    "repeatYearlyLabel": "Gjenta Årlig",
+    "repeatYearlySublabel": "For bursdager, jubileer",
+    "customEmojiTitle": "Tilpasset emoji",
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Del Hendelse",
+    "shareLinkCopied": "Importlenke kopiert til utklippstavle",
+    "shareError": "Kunne ikke dele hendelse",
+    "importedFrom": "Importert fra {{calendar}}"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Dato Endret",
+      "message": "Du har endret datoen for \"{{title}}\" fra {{oldDate}} til {{newDate}}. Er du sikker på at du vil lagre disse endringene?",
+      "save": "Lagre Endringer",
+      "cancel": "Avbryt"
+    },
+    "deleteEvent": {
+      "title": "Slett Hendelse",
+      "message": "Er du sikker på at du vil slette \"{{title}}\"? Denne handlingen kan ikke angres.",
+      "delete": "Slett",
+      "cancel": "Avbryt"
+    },
+    "importEvent": {
+      "title": "Importer Hendelse",
+      "message": "Vil du importere \"{{emoji}} {{title}}\" planlagt for {{date}}?",
+      "import": "Importer",
+      "cancel": "Avbryt"
+    }
+  },
+  "countdown": {
+    "today": "I dag! 🎉",
+    "daysAgo": "{{count}} dag siden",
+    "daysAgo_plural": "{{count}} dager siden",
+    "format": "{{days}}d {{hours}}t {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Din nedtelling har nådd null!"
+  },
+  "calendar": {
+    "importTitle": "Importer fra Kalender",
+    "importButton": "Importer",
+    "fetchEvents": "Hent Hendelser",
+    "loading": "Laster kalenderhendelser...",
+    "fetchError": "Kunne ikke hente kalenderhendelser",
+    "noEventsTitle": "Ingen Gjentakende Hendelser",
+    "noEventsMessage": "Ingen bursdager eller jubileer funnet i din kalender",
+    "eventsFound": "{{count}} hendelse funnet",
+    "eventsFound_plural": "{{count}} hendelser funnet",
+    "searchPlaceholder": "Søk hendelser...",
+    "selectAll": "Velg Alle",
+    "deselectAll": "Fjern Valg",
+    "yearly": "Årlig",
+    "tryAgain": "Prøv Igjen",
+    "refresh": "Oppdater",
+    "icsUrlLabel": "Kalender URL (.ics)",
+    "icsUrlPlaceholder": "Lim inn din kalender URL her",
+    "icsUrlHint": "Lim inn en offentlig .ics kalender URL (f.eks. fra Google Calendar)",
+    "urlRequired": "Vennligst skriv inn en kalender URL",
+    "invalidUrl": "Vennligst skriv inn en gyldig .ics kalender URL",
+    "permissionDeniedTitle": "Kalendertilgang Nektet",
+    "permissionDeniedMessage": "Tillat kalendertilgang i Innstillinger for å importere hendelser fra din kalender.",
+    "openSettings": "Åpne Innstillinger",
+    "clearFilter": "Alle"
+  },
+  "aria": {
+    "saveEvent": "Lagre hendelse",
+    "addEvent": "Legg til hendelse",
+    "clearInput": "Tøm inndata",
+    "colorPicker": "Fargevelger",
+    "shareEvent": "Del hendelse",
+    "importFromCalendar": "Importer fra kalender"
+  }
+}

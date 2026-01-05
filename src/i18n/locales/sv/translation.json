@@ -1,0 +1,139 @@
+{
+  "app": {
+    "title": "Ännu En Nedräknings App",
+    "noCountdowns": "Inga Nedräkningar",
+    "createFirst": "Tryck på + knappen nedan för att skapa din första nedräkning"
+  },
+  "events": {
+    "title": "Händelser",
+    "delete": "Radera",
+    "edit": "Redigera"
+  },
+  "widget": {
+    "size": "Widget Storlek",
+    "style": "Stil",
+    "appearance": "Utseende",
+    "preview": "Förhandsvisning",
+    "next": "Nästa: {{date}}",
+    "timeSince": "Tid sedan händelse",
+    "arrived": "Händelse har anlänt!",
+    "countingDown": "Räknar ner",
+    "units": {
+      "days": "dag",
+      "days_plural": "dagar",
+      "daysShort": "Dagar",
+      "hours": "timme",
+      "hours_plural": "timmar",
+      "hoursShort": "Timmar",
+      "minutes": "minut",
+      "minutes_plural": "minuter",
+      "minutesShort": "Min",
+      "seconds": "sekund",
+      "seconds_plural": "sekunder",
+      "secondsShort": "Sek"
+    },
+    "daysAgoText": "sedan",
+    "daysAgoTextUpper": "Dagar sedan",
+    "sizes": {
+      "small": "Liten",
+      "medium": "Medium",
+      "large": "Stor",
+      "extraLarge": "Extra Stor"
+    },
+    "styles": {
+      "focus": "Fokus",
+      "visual": "Visuell"
+    },
+    "appearances": {
+      "light": "Ljus",
+      "dark": "Mörk",
+      "transparent": "Glas",
+      "tinted": "Tonerad"
+    }
+  },
+  "modal": {
+    "editEvent": "Redigera Händelse",
+    "newEvent": "Ny Händelse",
+    "titleLabel": "Titel",
+    "eventNamePlaceholder": "Ange händelsens namn",
+    "dateLabel": "Datum",
+    "emojiLabel": "Emoji",
+    "colorLabel": "Färg",
+    "recurringLabel": "Årlig",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Radera Händelse",
+    "advancedLabel": "Avancerat",
+    "repeatYearlyLabel": "Upprepa Årligt",
+    "repeatYearlySublabel": "För födelsedagar, jubileer",
+    "customEmojiTitle": "Anpassad emoji",
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Dela Händelse",
+    "shareLinkCopied": "Importlänk kopierad till urklipp",
+    "shareError": "Kunde inte dela händelse",
+    "importedFrom": "Importerad från {{calendar}}"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Datum Ändrat",
+      "message": "Du har ändrat datumet för \"{{title}}\" från {{oldDate}} till {{newDate}}. Är du säker på att du vill spara dessa ändringar?",
+      "save": "Spara Ändringar",
+      "cancel": "Avbryt"
+    },
+    "deleteEvent": {
+      "title": "Radera Händelse",
+      "message": "Är du säker på att du vill radera \"{{title}}\"? Denna åtgärd kan inte ångras.",
+      "delete": "Radera",
+      "cancel": "Avbryt"
+    },
+    "importEvent": {
+      "title": "Importera Händelse",
+      "message": "Vill du importera \"{{emoji}} {{title}}\" planerad för {{date}}?",
+      "import": "Importera",
+      "cancel": "Avbryt"
+    }
+  },
+  "countdown": {
+    "today": "Idag! 🎉",
+    "daysAgo": "{{count}} dag sedan",
+    "daysAgo_plural": "{{count}} dagar sedan",
+    "format": "{{days}}d {{hours}}t {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Din nedräkning har nått noll!"
+  },
+  "calendar": {
+    "importTitle": "Importera från Kalender",
+    "importButton": "Importera",
+    "fetchEvents": "Hämta Händelser",
+    "loading": "Laddar kalenderhändelser...",
+    "fetchError": "Kunde inte hämta kalenderhändelser",
+    "noEventsTitle": "Inga Återkommande Händelser",
+    "noEventsMessage": "Inga födelsedagar eller jubileer hittades i din kalender",
+    "eventsFound": "{{count}} händelse hittad",
+    "eventsFound_plural": "{{count}} händelser hittade",
+    "searchPlaceholder": "Sök händelser...",
+    "selectAll": "Välj Alla",
+    "deselectAll": "Avmarkera Alla",
+    "yearly": "Årlig",
+    "tryAgain": "Försök Igen",
+    "refresh": "Uppdatera",
+    "icsUrlLabel": "Kalender URL (.ics)",
+    "icsUrlPlaceholder": "Klistra in din kalender URL här",
+    "icsUrlHint": "Klistra in en offentlig .ics kalender URL (t.ex. från Google Calendar)",
+    "urlRequired": "Vänligen ange en kalender URL",
+    "invalidUrl": "Vänligen ange en giltig .ics kalender URL",
+    "permissionDeniedTitle": "Kalendertillgång Nekad",
+    "permissionDeniedMessage": "Tillåt kalendertillgång i Inställningar för att importera händelser från din kalender.",
+    "openSettings": "Öppna Inställningar",
+    "clearFilter": "Alla"
+  },
+  "aria": {
+    "saveEvent": "Spara händelse",
+    "addEvent": "Lägg till händelse",
+    "clearInput": "Rensa inmatning",
+    "colorPicker": "Färgväljare",
+    "shareEvent": "Dela händelse",
+    "importFromCalendar": "Importera från kalender"
+  }
+}

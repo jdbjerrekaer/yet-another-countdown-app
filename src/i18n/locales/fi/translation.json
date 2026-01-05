@@ -1,0 +1,139 @@
+{
+  "app": {
+    "title": "Vielä Yksi Laskuri App",
+    "noCountdowns": "Ei Laskureita",
+    "createFirst": "Napauta + painiketta alla luodaksesi ensimmäisen laskurisi"
+  },
+  "events": {
+    "title": "Tapahtumat",
+    "delete": "Poista",
+    "edit": "Muokkaa"
+  },
+  "widget": {
+    "size": "Widgetin Koko",
+    "style": "Tyyli",
+    "appearance": "Ulkoasu",
+    "preview": "Esikatselu",
+    "next": "Seuraava: {{date}}",
+    "timeSince": "Aika tapahtumasta",
+    "arrived": "Tapahtuma on saapunut!",
+    "countingDown": "Laskee taaksepäin",
+    "units": {
+      "days": "päivä",
+      "days_plural": "päivää",
+      "daysShort": "Päivää",
+      "hours": "tunti",
+      "hours_plural": "tuntia",
+      "hoursShort": "Tuntia",
+      "minutes": "minuutti",
+      "minutes_plural": "minuuttia",
+      "minutesShort": "Min",
+      "seconds": "sekunti",
+      "seconds_plural": "sekuntia",
+      "secondsShort": "Sek"
+    },
+    "daysAgoText": "sitten",
+    "daysAgoTextUpper": "Päivää sitten",
+    "sizes": {
+      "small": "Pieni",
+      "medium": "Keskikokoinen",
+      "large": "Suuri",
+      "extraLarge": "Erittäin Suuri"
+    },
+    "styles": {
+      "focus": "Fokus",
+      "visual": "Visuaalinen"
+    },
+    "appearances": {
+      "light": "Vaalea",
+      "dark": "Tumma",
+      "transparent": "Lasi",
+      "tinted": "Värjätty"
+    }
+  },
+  "modal": {
+    "editEvent": "Muokkaa Tapahtumaa",
+    "newEvent": "Uusi Tapahtuma",
+    "titleLabel": "Otsikko",
+    "eventNamePlaceholder": "Syötä tapahtuman nimi",
+    "dateLabel": "Päivämäärä",
+    "emojiLabel": "Emoji",
+    "colorLabel": "Väri",
+    "recurringLabel": "Vuosittain",
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "delete": "Poista Tapahtuma",
+    "advancedLabel": "Lisäasetukset",
+    "repeatYearlyLabel": "Toista Vuosittain",
+    "repeatYearlySublabel": "Syntymäpäiville, vuosipäiville",
+    "customEmojiTitle": "Mukautettu emoji",
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Jaa Tapahtuma",
+    "shareLinkCopied": "Tuontilinkki kopioitu leikepöydälle",
+    "shareError": "Tapahtuman jakaminen epäonnistui",
+    "importedFrom": "Tuotu {{calendar}}-kalenterista"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Päivämäärä Muutettu",
+      "message": "Olet muuttanut päivämäärän \"{{title}}\" tapahtumalle {{oldDate}} päivämäärästä {{newDate}} päivämäärään. Haluatko varmasti tallentaa nämä muutokset?",
+      "save": "Tallenna Muutokset",
+      "cancel": "Peruuta"
+    },
+    "deleteEvent": {
+      "title": "Poista Tapahtuma",
+      "message": "Haluatko varmasti poistaa \"{{title}}\"? Tätä toimintoa ei voi perua.",
+      "delete": "Poista",
+      "cancel": "Peruuta"
+    },
+    "importEvent": {
+      "title": "Tuo Tapahtuma",
+      "message": "Haluatko tuoda \"{{emoji}} {{title}}\" tapahtuman, joka on suunniteltu {{date}}?",
+      "import": "Tuo",
+      "cancel": "Peruuta"
+    }
+  },
+  "countdown": {
+    "today": "Tänään! 🎉",
+    "daysAgo": "{{count}} päivä sitten",
+    "daysAgo_plural": "{{count}} päivää sitten",
+    "format": "{{days}}pv {{hours}}t {{minutes}}min"
+  },
+  "notifications": {
+    "reachedZero": "Laskurisi on saavuttanut nollan!"
+  },
+  "calendar": {
+    "importTitle": "Tuo Kalenterista",
+    "importButton": "Tuo",
+    "fetchEvents": "Hae Tapahtumat",
+    "loading": "Ladataan kalenteritapahtumia...",
+    "fetchError": "Kalenteritapahtumien hakeminen epäonnistui",
+    "noEventsTitle": "Ei Toistuvia Tapahtumia",
+    "noEventsMessage": "Syntymäpäiviä tai vuosipäiviä ei löytynyt kalenteristasi",
+    "eventsFound": "{{count}} tapahtuma löytyi",
+    "eventsFound_plural": "{{count}} tapahtumaa löytyi",
+    "searchPlaceholder": "Etsi tapahtumia...",
+    "selectAll": "Valitse Kaikki",
+    "deselectAll": "Poista Valinnat",
+    "yearly": "Vuosittain",
+    "tryAgain": "Yritä Uudelleen",
+    "refresh": "Päivitä",
+    "icsUrlLabel": "Kalenterin URL (.ics)",
+    "icsUrlPlaceholder": "Liitä kalenterin URL tähän",
+    "icsUrlHint": "Liitä julkinen .ics kalenterin URL (esim. Google Calendarista)",
+    "urlRequired": "Syötä kalenterin URL",
+    "invalidUrl": "Syötä kelvollinen .ics kalenterin URL",
+    "permissionDeniedTitle": "Kalenterin Käyttöoikeus Evätty",
+    "permissionDeniedMessage": "Salli kalenterin käyttöoikeus Asetuksissa tuodaksesi tapahtumia kalenteristasi.",
+    "openSettings": "Avaa Asetukset",
+    "clearFilter": "Kaikki"
+  },
+  "aria": {
+    "saveEvent": "Tallenna tapahtuma",
+    "addEvent": "Lisää tapahtuma",
+    "clearInput": "Tyhjennä syöte",
+    "colorPicker": "Värinvalitsin",
+    "shareEvent": "Jaa tapahtuma",
+    "importFromCalendar": "Tuo kalenterista"
+  }
+}

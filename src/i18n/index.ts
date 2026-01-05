@@ -12,6 +12,10 @@ import ptTranslations from './locales/pt/translation.json';
 import deTranslations from './locales/de/translation.json';
 import ruTranslations from './locales/ru/translation.json';
 import frTranslations from './locales/fr/translation.json';
+import daTranslations from './locales/da/translation.json';
+import svTranslations from './locales/sv/translation.json';
+import noTranslations from './locales/no/translation.json';
+import fiTranslations from './locales/fi/translation.json';
 
 // Initialize i18n synchronously first
 i18n
@@ -26,9 +30,13 @@ i18n
       de: { translation: deTranslations },
       ru: { translation: ruTranslations },
       fr: { translation: frTranslations },
+      da: { translation: daTranslations },
+      sv: { translation: svTranslations },
+      no: { translation: noTranslations },
+      fi: { translation: fiTranslations },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr'],
+    supportedLngs: ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr', 'da', 'sv', 'no', 'fi'],
     interpolation: {
       escapeValue: false, // React already escapes
     },
@@ -44,7 +52,7 @@ async function checkPreferencesLanguage() {
   if (Capacitor.isNativePlatform()) {
     try {
       const { value } = await Preferences.get({ key: 'app_language' });
-      if (value && ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr'].includes(value)) {
+      if (value && ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr', 'da', 'sv', 'no', 'fi'].includes(value)) {
         if (i18n.language !== value) {
           await i18n.changeLanguage(value);
         }

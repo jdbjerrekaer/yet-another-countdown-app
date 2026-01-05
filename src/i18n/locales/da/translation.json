@@ -1,0 +1,139 @@
+{
+  "app": {
+    "title": "Endnu En Nedtællings App",
+    "noCountdowns": "Ingen Nedtællinger",
+    "createFirst": "Tryk på + knappen nedenfor for at oprette din første nedtælling"
+  },
+  "events": {
+    "title": "Begivenheder",
+    "delete": "Slet",
+    "edit": "Rediger"
+  },
+  "widget": {
+    "size": "Widget Størrelse",
+    "style": "Stil",
+    "appearance": "Udseende",
+    "preview": "Forhåndsvisning",
+    "next": "Næste: {{date}}",
+    "timeSince": "Tid siden begivenhed",
+    "arrived": "Begivenhed er ankommet!",
+    "countingDown": "Tæller ned",
+    "units": {
+      "days": "dag",
+      "days_plural": "dage",
+      "daysShort": "Dage",
+      "hours": "time",
+      "hours_plural": "timer",
+      "hoursShort": "Timer",
+      "minutes": "minut",
+      "minutes_plural": "minutter",
+      "minutesShort": "Min",
+      "seconds": "sekund",
+      "seconds_plural": "sekunder",
+      "secondsShort": "Sek"
+    },
+    "daysAgoText": "siden",
+    "daysAgoTextUpper": "Dage siden",
+    "sizes": {
+      "small": "Lille",
+      "medium": "Medium",
+      "large": "Stor",
+      "extraLarge": "Ekstra Stor"
+    },
+    "styles": {
+      "focus": "Fokus",
+      "visual": "Visuel"
+    },
+    "appearances": {
+      "light": "Lys",
+      "dark": "Mørk",
+      "transparent": "Glas",
+      "tinted": "Toneret"
+    }
+  },
+  "modal": {
+    "editEvent": "Rediger Begivenhed",
+    "newEvent": "Ny Begivenhed",
+    "titleLabel": "Titel",
+    "eventNamePlaceholder": "Indtast begivenhedsnavn",
+    "dateLabel": "Dato",
+    "emojiLabel": "Emoji",
+    "colorLabel": "Farve",
+    "recurringLabel": "Årligt",
+    "save": "Gem",
+    "cancel": "Annuller",
+    "delete": "Slet Begivenhed",
+    "advancedLabel": "Avanceret",
+    "repeatYearlyLabel": "Gentag Årligt",
+    "repeatYearlySublabel": "Til fødselsdage, jubilæer",
+    "customEmojiTitle": "Tilpasset emoji",
+    "customEmojiPlaceholder": "🎨",
+    "shareEvent": "Del Begivenhed",
+    "shareLinkCopied": "Import-link kopieret til udklipsholder",
+    "shareError": "Kunne ikke dele begivenhed",
+    "importedFrom": "Importeret fra {{calendar}}"
+  },
+  "dialogs": {
+    "dateChanged": {
+      "title": "Dato Ændret",
+      "message": "Du har ændret datoen for \"{{title}}\" fra {{oldDate}} til {{newDate}}. Er du sikker på, at du vil gemme disse ændringer?",
+      "save": "Gem Ændringer",
+      "cancel": "Annuller"
+    },
+    "deleteEvent": {
+      "title": "Slet Begivenhed",
+      "message": "Er du sikker på, at du vil slette \"{{title}}\"? Denne handling kan ikke fortrydes.",
+      "delete": "Slet",
+      "cancel": "Annuller"
+    },
+    "importEvent": {
+      "title": "Importer Begivenhed",
+      "message": "Vil du importere \"{{emoji}} {{title}}\" planlagt til {{date}}?",
+      "import": "Importer",
+      "cancel": "Annuller"
+    }
+  },
+  "countdown": {
+    "today": "I dag! 🎉",
+    "daysAgo": "{{count}} dag siden",
+    "daysAgo_plural": "{{count}} dage siden",
+    "format": "{{days}}d {{hours}}t {{minutes}}m"
+  },
+  "notifications": {
+    "reachedZero": "Din nedtælling har nået nul!"
+  },
+  "calendar": {
+    "importTitle": "Importer fra Kalender",
+    "importButton": "Importer",
+    "fetchEvents": "Hent Begivenheder",
+    "loading": "Indlæser kalenderbegivenheder...",
+    "fetchError": "Kunne ikke hente kalenderbegivenheder",
+    "noEventsTitle": "Ingen Tilbagevendende Begivenheder",
+    "noEventsMessage": "Ingen fødselsdage eller jubilæer fundet i din kalender",
+    "eventsFound": "{{count}} begivenhed fundet",
+    "eventsFound_plural": "{{count}} begivenheder fundet",
+    "searchPlaceholder": "Søg begivenheder...",
+    "selectAll": "Vælg Alle",
+    "deselectAll": "Fravælg Alle",
+    "yearly": "Årligt",
+    "tryAgain": "Prøv Igen",
+    "refresh": "Opdater",
+    "icsUrlLabel": "Kalender URL (.ics)",
+    "icsUrlPlaceholder": "Indsæt din kalender URL her",
+    "icsUrlHint": "Indsæt en offentlig .ics kalender URL (f.eks. fra Google Calendar)",
+    "urlRequired": "Indtast venligst en kalender URL",
+    "invalidUrl": "Indtast venligst en gyldig .ics kalender URL",
+    "permissionDeniedTitle": "Kalendertilgang Nægtet",
+    "permissionDeniedMessage": "Tillad venligst kalendertilgang i Indstillinger for at importere begivenheder fra din kalender.",
+    "openSettings": "Åbn Indstillinger",
+    "clearFilter": "Alle"
+  },
+  "aria": {
+    "saveEvent": "Gem begivenhed",
+    "addEvent": "Tilføj begivenhed",
+    "clearInput": "Ryd input",
+    "colorPicker": "Farvevælger",
+    "shareEvent": "Del begivenhed",
+    "importFromCalendar": "Importer fra kalender"
+  }
+}
