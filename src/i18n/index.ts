@@ -17,6 +17,10 @@ import svTranslations from './locales/sv/translation.json';
 import noTranslations from './locales/no/translation.json';
 import fiTranslations from './locales/fi/translation.json';
 
+// Supported languages - keep in sync with iOS Settings.bundle
+export const SUPPORTED_LANGUAGES = ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr', 'da', 'sv', 'no', 'fi'] as const;
+export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+
 // Initialize i18n synchronously first
 i18n
   .use(LanguageDetector)
@@ -36,7 +40,7 @@ i18n
       fi: { translation: fiTranslations },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr', 'da', 'sv', 'no', 'fi'],
+    supportedLngs: SUPPORTED_LANGUAGES,
     interpolation: {
       escapeValue: false, // React already escapes
     },
@@ -52,7 +56,7 @@ async function checkPreferencesLanguage() {
   if (Capacitor.isNativePlatform()) {
     try {
       const { value } = await Preferences.get({ key: 'app_language' });
-      if (value && ['en', 'es', 'it', 'pt', 'de', 'ru', 'fr', 'da', 'sv', 'no', 'fi'].includes(value)) {
+      if (value && SUPPORTED_LANGUAGES.includes(value as SupportedLanguage)) {
         if (i18n.language !== value) {
           await i18n.changeLanguage(value);
         }
