@@ -842,7 +842,8 @@ export default function Index() {
                 </DndContext>
               </section>
 
-              {selectedEvent && (
+              {/* Widget preview section - only show on web, not native apps */}
+              {selectedEvent && !isNative && (
                 <>
                   {/* Size selector */}
                   <section className="space-y-3">

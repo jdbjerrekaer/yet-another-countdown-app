@@ -5,6 +5,7 @@ import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
+import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
 
 interface LargeWidgetProps {
@@ -21,7 +22,7 @@ interface LargeWidgetProps {
 }
 
 function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
-  const baseClasses = 'w-[329px] h-[329px] rounded-[28px] shadow-ios-lg p-6 flex flex-col';
+  const baseClasses = 'rounded-[28px] shadow-ios-lg p-6 flex flex-col';
   
   switch (appearanceMode) {
     case 'light':
@@ -40,11 +41,12 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
 export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, countdownStyle, isRecurring, createdAt, nextOccurrenceNumber }: LargeWidgetProps) {
   const { t } = useTranslation();
   const widgetClasses = getWidgetClasses(appearanceMode);
+  const sizeStyles = getWidgetSizeStyles('large');
   
-  // For tinted mode, generate the background color from emoji color
-  const tintedStyle = appearanceMode === 'tinted' 
-    ? { background: getTintedBackground(emojiColor, true) }
-    : undefined;
+  // Combined style for both size and tinted background
+  const combinedStyle = appearanceMode === 'tinted'
+    ? { ...sizeStyles, background: getTintedBackground(emojiColor, true) }
+    : sizeStyles;
 
   // Calculate progress for visual mode
   const { remainingPercent, isActive } = calculateRemainingPercent(
@@ -74,7 +76,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
-      <div className={widgetClasses} style={tintedStyle}>
+      <div className={widgetClasses} style={combinedStyle}>
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <span className="text-4xl">{emoji}</span>
@@ -172,7 +174,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
 
   // Focus mode layout (original)
   return (
-    <div className={widgetClasses} style={tintedStyle}>
+    <div className={widgetClasses} style={combinedStyle}>
       <div className="flex items-center gap-3 mb-auto">
         <span className="text-4xl">{emoji}</span>
         <div className="flex-1 min-w-0">

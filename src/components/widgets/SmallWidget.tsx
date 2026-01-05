@@ -5,6 +5,7 @@ import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
+import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
 
 interface SmallWidgetProps {
@@ -34,7 +35,7 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
 };
 
 function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
-  const baseClasses = 'w-[155px] h-[155px] rounded-[28px] shadow-ios-lg p-4 flex flex-col';
+  const baseClasses = 'rounded-[28px] shadow-ios-lg p-4 flex flex-col';
   
   switch (appearanceMode) {
     case 'light':
@@ -54,11 +55,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
   const { t } = useTranslation();
   const timeDisplay = getTimeDisplay(countdown);
   const widgetClasses = getWidgetClasses(appearanceMode);
-  
-  // For tinted mode, generate the background color from emoji color
-  const tintedStyle = appearanceMode === 'tinted' 
-    ? { background: getTintedBackground(emojiColor, true) }
-    : undefined;
+  const sizeStyles = getWidgetSizeStyles('small');
 
   // Calculate progress for visual mode
   const { remainingPercent, isActive } = calculateRemainingPercent(
@@ -71,10 +68,15 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
   // Use emojiColor for bars, fallback to primary blue
   const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
+  // Combined style for both size and tinted background
+  const combinedStyle = appearanceMode === 'tinted'
+    ? { ...sizeStyles, background: getTintedBackground(emojiColor, true) }
+    : sizeStyles;
+
   // Visual mode layout - same structure as Focus mode, but replace number with ring
   if (countdownStyle === 'visual') {
     return (
-      <div className={`${widgetClasses} justify-between`} style={tintedStyle}>
+      <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
         <div className="flex items-center justify-between">
           <span className="text-2xl">{emoji}</span>
           {(isRecurring || countdown.isPast) && (
@@ -121,7 +123,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
 
   // Focus mode layout (original)
   return (
-    <div className={`${widgetClasses} justify-between`} style={tintedStyle}>
+    <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
       <div className="flex items-center justify-between">
         <span className="text-2xl">{emoji}</span>
         {(isRecurring || countdown.isPast) && (

@@ -5,6 +5,7 @@ import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
+import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
 
 // Helper function to adjust color brightness for gradient
@@ -31,7 +32,7 @@ interface ExtraLargeWidgetProps {
 }
 
 function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
-  const baseClasses = 'w-[329px] h-[400px] rounded-[28px] shadow-ios-lg p-6 flex flex-col';
+  const baseClasses = 'rounded-[28px] shadow-ios-lg p-6 flex flex-col';
   
   switch (appearanceMode) {
     case 'light':
@@ -74,11 +75,12 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
 
   const elapsedProgress = calculateElapsedProgress();
   const widgetClasses = getWidgetClasses(appearanceMode);
+  const sizeStyles = getWidgetSizeStyles('extraLarge');
   
-  // For tinted mode, generate the background color from emoji color
-  const tintedStyle = appearanceMode === 'tinted' 
-    ? { background: getTintedBackground(emojiColor, true) }
-    : undefined;
+  // Combined style for both size and tinted background
+  const combinedStyle = appearanceMode === 'tinted'
+    ? { ...sizeStyles, background: getTintedBackground(emojiColor, true) }
+    : sizeStyles;
 
   // Calculate remaining progress for visual mode
   const { remainingPercent, isActive } = calculateRemainingPercent(
@@ -108,7 +110,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
-      <div className={widgetClasses} style={tintedStyle}>
+      <div className={widgetClasses} style={combinedStyle}>
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <div 
@@ -200,7 +202,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
 
   // Focus mode layout (original)
   return (
-    <div className={widgetClasses} style={tintedStyle}>
+    <div className={widgetClasses} style={combinedStyle}>
       <div className="flex items-center gap-4 mb-6">
         <div 
           className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
