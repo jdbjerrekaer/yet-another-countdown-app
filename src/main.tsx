@@ -4,8 +4,10 @@ import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { SplashScreen } from "@capacitor/splash-screen";
+import { App as CapacitorApp } from "@capacitor/app";
 import App from "./App.tsx";
 import "./i18n"; // Initialize i18n
+import { checkPreferencesLanguage } from "./i18n";
 
 /* Ionic Core CSS */
 import "@ionic/react/css/core.css";
@@ -58,5 +60,15 @@ async function initNativePlugins() {
 }
 
 initNativePlugins();
+
+// Listen for app state changes to check language preference
+if (Capacitor.isNativePlatform()) {
+  CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+    if (isActive) {
+      // App came to foreground, check if language preference changed
+      await checkPreferencesLanguage();
+    }
+  });
+}
 
 createRoot(document.getElementById("root")!).render(<App />);

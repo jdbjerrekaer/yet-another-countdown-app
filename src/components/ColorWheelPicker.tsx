@@ -482,9 +482,9 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     []
   );
   
-  // Check on pointer up if this was a tap (minimal movement)
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
+  // Listen for pointerup at document level to detect taps
+  useEffect(() => {
+    const handleDocumentPointerUp = (e: PointerEvent) => {
       if (!pointerDownPosRef.current) return;
       
       const { x, y, index } = pointerDownPosRef.current;
@@ -497,9 +497,13 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       }
       
       pointerDownPosRef.current = null;
-    },
-    [handleColorTap]
-  );
+    };
+    
+    document.addEventListener('pointerup', handleDocumentPointerUp);
+    return () => {
+      document.removeEventListener('pointerup', handleDocumentPointerUp);
+    };
+  }, [handleColorTap]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -570,7 +574,6 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
                 height: TOTAL_HEIGHT,
               }}
               onPointerDown={(e) => handlePointerDown(e, i)}
-              onPointerUp={handlePointerUp}
               role="button"
               aria-label={`Select color ${i + 1}`}
             >
