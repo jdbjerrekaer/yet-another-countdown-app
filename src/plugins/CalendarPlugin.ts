@@ -44,9 +44,25 @@ export interface GetRecurringEventsOptions {
 }
 
 /**
+ * Options for fetching all events (not just recurring)
+ */
+export interface GetAllEventsOptions {
+  startDate: string; // ISO8601 format
+  endDate: string; // ISO8601 format
+  calendarId?: string; // Optional: filter by specific calendar
+}
+
+/**
  * Result from getRecurringEvents
  */
 export interface GetRecurringEventsResult {
+  events: CalendarEvent[];
+}
+
+/**
+ * Result from getAllEvents
+ */
+export interface GetAllEventsResult {
   events: CalendarEvent[];
 }
 
@@ -116,6 +132,12 @@ export interface CalendarPluginInterface {
    * Get recurring events (birthdays, anniversaries) within a date range
    */
   getRecurringEvents(options: GetRecurringEventsOptions): Promise<GetRecurringEventsResult>;
+
+  /**
+   * Get ALL events (not just recurring) within a date range
+   * Optionally filter by a specific calendar
+   */
+  getAllEvents(options: GetAllEventsOptions): Promise<GetAllEventsResult>;
 
   /**
    * Update widget data in native shared storage (App Group)

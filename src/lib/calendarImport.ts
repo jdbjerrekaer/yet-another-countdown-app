@@ -121,6 +121,55 @@ export async function fetchNativeCalendarEvents(): Promise<ImportableEventsResul
 }
 
 /**
+ * Fetch ALL events from native iOS Calendar (not just recurring)
+ * Used when a specific calendar is selected or when searching
+ */
+export async function fetchAllNativeCalendarEvents(calendarId?: string): Promise<ImportableEventsResult> {
+  if (!isNativeCalendarAvailable()) {
+    return { events: [], error: 'Native calendar not available' };
+  }
+  
+  try {
+    // Request permission if not already granted
+    const hasPermission = await checkCalendarPermission();
+    if (!hasPermission) {
+      const granted = await requestCalendarPermission();
+      if (!granted) {
+        return { events: [], error: 'Calendar permission denied' };
+      }
+    }
+    
+    // Fetch events for the next 2 years
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 2);
+    
+    const result = await CalendarPlugin.getAllEvents({
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      calendarId,
+    });
+    
+    // Convert to ImportableEvent format
+    const events: ImportableEvent[] = result.events.map(event => ({
+      id: `${event.calendarId || 'unknown'}-${event.title}-${event.startDate}`,
+      title: event.title,
+      date: new Date(event.startDate),
+      isRecurring: event.isRecurring,
+      isBirthday: event.isBirthday,
+      source: 'native' as const,
+      calendarTitle: event.calendarTitle,
+      originalEvent: event,
+    }));
+    
+    return { events };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { events: [], error: `Failed to fetch calendar events: ${errorMessage}` };
+  }
+}
+
+/**
  * Fetch recurring events from an .ics URL
  */
 export async function fetchICSCalendarEvents(url: string): Promise<ImportableEventsResult> {

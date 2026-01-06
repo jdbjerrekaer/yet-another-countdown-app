@@ -5,6 +5,8 @@ import type {
   GetCalendarsResult,
   GetRecurringEventsOptions,
   GetRecurringEventsResult,
+  GetAllEventsOptions,
+  GetAllEventsResult,
   UpdateWidgetDataOptions,
   UpdateWidgetDataResult,
   OpenSettingsResult,
@@ -33,6 +35,11 @@ export class CalendarPluginWeb extends WebPlugin implements CalendarPluginInterf
   }
 
   async getRecurringEvents(_options: GetRecurringEventsOptions): Promise<GetRecurringEventsResult> {
+    // Web doesn't have native calendar access
+    return { events: [] };
+  }
+
+  async getAllEvents(_options: GetAllEventsOptions): Promise<GetAllEventsResult> {
     // Web doesn't have native calendar access
     return { events: [] };
   }

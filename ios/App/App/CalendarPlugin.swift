@@ -11,6 +11,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "requestPermission", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "checkPermission", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getRecurringEvents", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getAllEvents", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCalendars", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateWidgetData", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise)
@@ -171,6 +172,95 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         
         call.resolve(["events": recurringEvents])
+    }
+    
+    /// Get ALL events (not just recurring) within a date range, optionally filtered by calendar
+    @objc func getAllEvents(_ call: CAPPluginCall) {
+        guard let startDateString = call.getString("startDate"),
+              let endDateString = call.getString("endDate") else {
+            call.reject("Missing startDate or endDate parameters")
+            return
+        }
+        
+        let calendarId = call.getString("calendarId") // Optional: filter by specific calendar
+        
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        guard let startDate = dateFormatter.date(from: startDateString) ?? ISO8601DateFormatter().date(from: startDateString),
+              let endDate = dateFormatter.date(from: endDateString) ?? ISO8601DateFormatter().date(from: endDateString) else {
+            call.reject("Invalid date format. Use ISO8601 format.")
+            return
+        }
+        
+        // Get calendars - either specific one or all
+        var calendars: [EKCalendar]
+        if let calId = calendarId, let calendar = eventStore.calendar(withIdentifier: calId) {
+            calendars = [calendar]
+        } else {
+            calendars = eventStore.calendars(for: .event)
+        }
+        
+        // Create predicate for events
+        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
+        let events = eventStore.events(matching: predicate)
+        
+        // Convert all events (not filtering for recurring)
+        var allEvents: [[String: Any]] = []
+        var seenEventIds = Set<String>()
+        
+        for event in events {
+            // Skip duplicates
+            let eventKey = "\(event.title ?? "")-\(event.startDate?.description ?? "")"
+            if seenEventIds.contains(eventKey) {
+                continue
+            }
+            seenEventIds.insert(eventKey)
+            
+            // Check if event is recurring
+            var isYearlyRecurring = false
+            var recurrenceRule: String? = nil
+            
+            if let rules = event.recurrenceRules {
+                for rule in rules {
+                    if rule.frequency == .yearly {
+                        isYearlyRecurring = true
+                        recurrenceRule = "FREQ=YEARLY"
+                        if rule.interval > 1 {
+                            recurrenceRule = "FREQ=YEARLY;INTERVAL=\(rule.interval)"
+                        }
+                        break
+                    }
+                }
+            }
+            
+            // Check if from Birthdays calendar
+            let isBirthdayCalendar = event.calendar.type == .birthday
+            
+            let eventData: [String: Any] = [
+                "id": event.eventIdentifier ?? UUID().uuidString,
+                "title": event.title ?? "Untitled",
+                "startDate": dateFormatter.string(from: event.startDate),
+                "endDate": event.endDate != nil ? dateFormatter.string(from: event.endDate) : "",
+                "isAllDay": event.isAllDay,
+                "isRecurring": isYearlyRecurring || isBirthdayCalendar,
+                "recurrenceRule": recurrenceRule ?? (isBirthdayCalendar ? "FREQ=YEARLY" : ""),
+                "calendarId": event.calendar.calendarIdentifier,
+                "calendarTitle": event.calendar.title,
+                "isBirthday": isBirthdayCalendar,
+                "notes": event.notes ?? ""
+            ]
+            allEvents.append(eventData)
+        }
+        
+        // Sort by start date
+        allEvents.sort { event1, event2 in
+            let date1 = event1["startDate"] as? String ?? ""
+            let date2 = event2["startDate"] as? String ?? ""
+            return date1 < date2
+        }
+        
+        call.resolve(["events": allEvents])
     }
     
     /// Update widget data in shared App Group storage

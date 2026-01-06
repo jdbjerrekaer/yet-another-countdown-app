@@ -24,6 +24,7 @@ import { useHaptic } from '@/hooks/useHaptic';
 import {
   isNativeCalendarAvailable,
   fetchNativeCalendarEvents,
+  fetchAllNativeCalendarEvents,
   fetchICSCalendarEvents,
   ImportableEvent,
   deduplicateEvents,
@@ -47,37 +48,55 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPermissionError, setIsPermissionError] = useState(false);
-  const [events, setEvents] = useState<ImportableEvent[]>([]);
+  const [recurringEvents, setRecurringEvents] = useState<ImportableEvent[]>([]); // Only recurring events (default view)
+  const [allEvents, setAllEvents] = useState<ImportableEvent[]>([]); // All events (for filter/search)
   const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [icsUrl, setIcsUrl] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
   const [selectedCalendars, setSelectedCalendars] = useState<Set<string>>(new Set());
   
-  // Get unique calendars from events
-  const availableCalendars = [...new Set(events.map(e => e.calendarTitle).filter(Boolean))] as string[];
+  // Determine which event set to use based on filters
+  // Show all events when: calendar is selected OR search query is entered
+  const shouldShowAllEvents = selectedCalendars.size > 0 || searchQuery.trim().length > 0;
+  const events = shouldShowAllEvents ? allEvents : recurringEvents;
   
-  // Fetch native calendar events
+  // Get unique calendars from all events (not just recurring)
+  const availableCalendars = [...new Set(allEvents.map(e => e.calendarTitle).filter(Boolean))] as string[];
+  
+  // Fetch native calendar events (both recurring and all)
   const fetchNativeEvents = useCallback(async () => {
     setLoading(true);
     setError(null);
     setIsPermissionError(false);
     
     try {
-      const result = await fetchNativeCalendarEvents();
+      // Fetch both recurring-only and all events in parallel
+      const [recurringResult, allResult] = await Promise.all([
+        fetchNativeCalendarEvents(),
+        fetchAllNativeCalendarEvents(),
+      ]);
       
-      if (result.error) {
+      if (recurringResult.error) {
         // Check if this is a permission error
-        const isPermDenied = result.error.toLowerCase().includes('permission') || 
-                             result.error.toLowerCase().includes('denied');
+        const isPermDenied = recurringResult.error.toLowerCase().includes('permission') || 
+                             recurringResult.error.toLowerCase().includes('denied');
         setIsPermissionError(isPermDenied);
-        setError(isPermDenied ? t('calendar.permissionDeniedMessage') : result.error);
-        setEvents([]);
+        setError(isPermDenied ? t('calendar.permissionDeniedMessage') : recurringResult.error);
+        setRecurringEvents([]);
+        setAllEvents([]);
       } else {
         // Sort first, then dedupe - this ensures the upcoming occurrence is kept
-        const sortedEvents = sortEventsByDate(result.events);
-        const dedupedEvents = deduplicateEvents(sortedEvents);
-        setEvents(dedupedEvents);
+        const sortedRecurring = sortEventsByDate(recurringResult.events);
+        const dedupedRecurring = deduplicateEvents(sortedRecurring);
+        setRecurringEvents(dedupedRecurring);
+        
+        // Process all events too
+        if (!allResult.error) {
+          const sortedAll = sortEventsByDate(allResult.events);
+          const dedupedAll = deduplicateEvents(sortedAll);
+          setAllEvents(dedupedAll);
+        }
       }
     } catch (err) {
       setError(t('calendar.fetchError'));
@@ -89,7 +108,8 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setEvents([]);
+      setRecurringEvents([]);
+      setAllEvents([]);
       setSelectedEventIds(new Set());
       setSearchQuery('');
       setError(null);
@@ -144,12 +164,15 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
       
       if (result.error) {
         setError(result.error);
-        setEvents([]);
+        setRecurringEvents([]);
+        setAllEvents([]);
       } else {
         // Sort first, then dedupe - this ensures the upcoming occurrence is kept
         const sortedEvents = sortEventsByDate(result.events);
         const dedupedEvents = deduplicateEvents(sortedEvents);
-        setEvents(dedupedEvents);
+        // For ICS, all fetched events are recurring, so both arrays are the same
+        setRecurringEvents(dedupedEvents);
+        setAllEvents(dedupedEvents);
       }
     } catch (err) {
       setError(t('calendar.fetchError'));
@@ -215,7 +238,11 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
   // Handle import button click
   const handleImport = () => {
     trigger('medium');
-    const selectedEvents = events.filter(e => selectedEventIds.has(e.id));
+    // Look in both event arrays to find selected events
+    const allAvailableEvents = [...recurringEvents, ...allEvents];
+    // Dedupe by id in case same event appears in both
+    const uniqueEvents = new Map(allAvailableEvents.map(e => [e.id, e]));
+    const selectedEvents = Array.from(uniqueEvents.values()).filter(e => selectedEventIds.has(e.id));
     onImport(selectedEvents);
     onClose();
   };
@@ -328,7 +355,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
         )}
         
         {/* Events list */}
-        {!loading && !error && events.length > 0 && (
+        {!loading && !error && (recurringEvents.length > 0 || allEvents.length > 0) && (
           <>
             {/* Search and select all */}
             <div className="space-y-3 mb-4">
@@ -419,7 +446,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
         )}
         
         {/* Empty state */}
-        {!loading && !error && events.length === 0 && isNative && (
+        {!loading && !error && recurringEvents.length === 0 && isNative && (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <IonText color="medium" className="text-center">
               <p className="text-lg font-medium">{t('calendar.noEventsTitle')}</p>
