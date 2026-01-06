@@ -68,3 +68,27 @@ struct SelectCountdownIntent: WidgetConfigurationIntent {
     }
 }
 
+/// App Intent for selecting three countdowns to display in a triple widget
+@available(iOS 17.0, *)
+struct SelectTripleCountdownIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Select Triple Countdown"
+    static var description = IntentDescription("Choose three countdowns to display")
+    
+    @Parameter(title: "First Countdown")
+    var countdown1: CountdownEventEntity?
+    
+    @Parameter(title: "Second Countdown")
+    var countdown2: CountdownEventEntity?
+    
+    @Parameter(title: "Third Countdown")
+    var countdown3: CountdownEventEntity?
+    
+    init() {}
+    
+    init(countdown1: CountdownEventEntity?, countdown2: CountdownEventEntity?, countdown3: CountdownEventEntity?) {
+        self.countdown1 = countdown1
+        self.countdown2 = countdown2
+        self.countdown3 = countdown3
+    }
+}
+

@@ -28,6 +28,7 @@ import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModa
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
+import { TripleLargeWidget } from '@/components/widgets/TripleLargeWidget';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
@@ -68,6 +69,98 @@ const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; labelKey: string }[] 
 ];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
+
+// Triple Widget Preview Component
+function TripleWidgetPreview({ 
+  events, 
+  appearanceMode,
+  countdownStyle,
+  getNextRecurringDate,
+  getNextOccurrenceNumber
+}: { 
+  events: CountdownEvent[]; 
+  appearanceMode: WidgetAppearanceMode;
+  countdownStyle: WidgetCountdownStyle;
+  getNextRecurringDate: (date: Date) => Date | null;
+  getNextOccurrenceNumber: (date: Date) => number | undefined;
+}) {
+  const event1 = events[0] || null;
+  const event2 = events[1] || null;
+  const event3 = events[2] || null;
+
+  const targetDate1 = event1 
+    ? (event1.isRecurring 
+        ? getNextRecurringDate(new Date(event1.targetDate))
+        : new Date(event1.targetDate))
+    : null;
+  const targetDate2 = event2 
+    ? (event2.isRecurring 
+        ? getNextRecurringDate(new Date(event2.targetDate))
+        : new Date(event2.targetDate))
+    : null;
+  const targetDate3 = event3 
+    ? (event3.isRecurring 
+        ? getNextRecurringDate(new Date(event3.targetDate))
+        : new Date(event3.targetDate))
+    : null;
+
+  const countdown1 = useCountdown(targetDate1);
+  const countdown2 = useCountdown(targetDate2);
+  const countdown3 = useCountdown(targetDate3);
+
+  const occurrenceNumber1 = event1 && event1.isRecurring
+    ? (countdown1.isPast
+        ? getRepetitionCount(new Date(event1.targetDate))
+        : getNextOccurrenceNumber(new Date(event1.targetDate)))
+    : undefined;
+  const occurrenceNumber2 = event2 && event2.isRecurring
+    ? (countdown2.isPast
+        ? getRepetitionCount(new Date(event2.targetDate))
+        : getNextOccurrenceNumber(new Date(event2.targetDate)))
+    : undefined;
+  const occurrenceNumber3 = event3 && event3.isRecurring
+    ? (countdown3.isPast
+        ? getRepetitionCount(new Date(event3.targetDate))
+        : getNextOccurrenceNumber(new Date(event3.targetDate)))
+    : undefined;
+
+  return (
+    <TripleLargeWidget
+      event1={event1 ? {
+        title: event1.title,
+        countdown: countdown1,
+        targetDate: targetDate1,
+        emoji: event1.emoji,
+        emojiColor: event1.emojiColor,
+        isRecurring: event1.isRecurring,
+        nextOccurrenceNumber: occurrenceNumber1,
+        createdAt: new Date(event1.createdAt),
+      } : null}
+      event2={event2 ? {
+        title: event2.title,
+        countdown: countdown2,
+        targetDate: targetDate2,
+        emoji: event2.emoji,
+        emojiColor: event2.emojiColor,
+        isRecurring: event2.isRecurring,
+        nextOccurrenceNumber: occurrenceNumber2,
+        createdAt: new Date(event2.createdAt),
+      } : null}
+      event3={event3 ? {
+        title: event3.title,
+        countdown: countdown3,
+        targetDate: targetDate3,
+        emoji: event3.emoji,
+        emojiColor: event3.emojiColor,
+        isRecurring: event3.isRecurring,
+        nextOccurrenceNumber: occurrenceNumber3,
+        createdAt: new Date(event3.createdAt),
+      } : null}
+      appearanceMode={appearanceMode}
+      countdownStyle={countdownStyle}
+    />
+  );
+}
 
 export default function Index() {
   const { t } = useTranslation();
@@ -963,6 +1056,26 @@ export default function Index() {
                       </div>
                     </div>
                   </section>
+
+                  {/* Triple widget preview */}
+                  {selectedSize === 'large' && events.length > 0 && (
+                    <section className="space-y-3">
+                      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
+                        Triple Countdown Preview
+                      </h2>
+                      <div className="flex justify-center py-4">
+                        <div className="animate-scale-in">
+                          <TripleWidgetPreview
+                            events={events.slice(0, 3)}
+                            appearanceMode={selectedAppearanceMode}
+                            countdownStyle={selectedCountdownStyle}
+                            getNextRecurringDate={getNextRecurringDate}
+                            getNextOccurrenceNumber={getNextOccurrenceNumber}
+                          />
+                        </div>
+                      </div>
+                    </section>
+                  )}
                 </>
               )}
             </div>
