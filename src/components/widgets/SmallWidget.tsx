@@ -6,6 +6,7 @@ import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
 import { getWidgetSizeStyles } from '@/lib/widgetSizes';
+import { formatDateSmart } from '@/lib/utils';
 import { ProgressBars } from './ProgressBars';
 import { FlipDigit } from './FlipDigit';
 
@@ -124,7 +125,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
                 ? `${t('widget.next', { date: format(targetDate, 'MMM d') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
                 : countdown.isPast
                   ? t('countdown.daysAgo', { count: countdown.daysSince })
-                  : format(targetDate, 'MMM d, yyyy')}
+                  : formatDateSmart(targetDate)}
             </p>
           )}
           {countdown.isComplete && !countdown.isPast ? (
@@ -180,7 +181,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
             <p className="text-xs text-muted-foreground truncate mb-1">
               {isRecurring 
                 ? t('widget.next', { date: format(targetDate, 'MMM d') })
-                : format(targetDate, 'MMM d, yyyy')}
+                : formatDateSmart(targetDate)}
             </p>
           )}
           {countdown.isPast ? (
@@ -233,7 +234,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
         <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
         {targetDate && (
           <p className="text-xs text-muted-foreground truncate mb-1">
-            {isRecurring ? t('widget.next', { date: format(targetDate, 'MMM d') }) : format(targetDate, 'MMM d, yyyy')}
+            {isRecurring ? t('widget.next', { date: format(targetDate, 'MMM d') }) : formatDateSmart(targetDate)}
           </p>
         )}
         {countdown.isPast ? (

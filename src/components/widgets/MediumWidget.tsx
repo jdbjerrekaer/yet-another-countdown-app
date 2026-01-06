@@ -6,6 +6,7 @@ import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
 import { getWidgetSizeStyles } from '@/lib/widgetSizes';
+import { formatDateSmart } from '@/lib/utils';
 import { ProgressBars } from './ProgressBars';
 import { FlipDigit } from './FlipDigit';
 
@@ -98,10 +99,10 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
             {targetDate ? (
               <p className="text-xs text-muted-foreground">
                 {isRecurring 
-                  ? `${t('widget.next', { date: format(targetDate, 'MMM d, yyyy') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
+                  ? `${t('widget.next', { date: formatDateSmart(targetDate) })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
                   : countdown.isPast
-                    ? `${format(targetDate, 'MMM d, yyyy')} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
-                    : `${format(targetDate, 'MMM d, yyyy')} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
+                    ? `${formatDateSmart(targetDate)} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
+                    : `${formatDateSmart(targetDate)} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
@@ -164,8 +165,8 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
             {targetDate ? (
               <p className="text-xs text-muted-foreground">
                 {isRecurring 
-                  ? t('widget.next', { date: format(targetDate, 'MMM d, yyyy') })
-                  : format(targetDate, 'MMM d, yyyy')}
+                  ? t('widget.next', { date: formatDateSmart(targetDate) })
+                  : formatDateSmart(targetDate)}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
@@ -221,10 +222,10 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
           {targetDate ? (
             <p className="text-xs text-muted-foreground">
               {isRecurring 
-                ? `${t('widget.next', { date: format(targetDate, 'MMM d, yyyy') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
+                ? `${t('widget.next', { date: formatDateSmart(targetDate) })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
                 : countdown.isPast
-                  ? format(targetDate, 'MMM d, yyyy')
-                  : `${format(targetDate, 'MMM d, yyyy')} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
+                  ? formatDateSmart(targetDate)
+                  : `${formatDateSmart(targetDate)} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">

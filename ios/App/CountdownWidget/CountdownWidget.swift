@@ -931,20 +931,28 @@ struct EventRowView: View {
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        let dateYear = calendar.component(.year, from: date)
+        
         if event.isRecurring {
-            formatter.dateFormat = "'Next:' MMM d, yyyy"
+            formatter.dateFormat = dateYear == currentYear ? "'Next:' MMM d" : "'Next:' MMM d, yyyy"
         } else {
-            formatter.dateFormat = "MMM d, yyyy"
+            formatter.dateFormat = dateYear == currentYear ? "MMM d" : "MMM d, yyyy"
         }
         return formatter.string(from: date)
     }
     
     private func formatDateWithDays(_ date: Date, countdown: CountdownTime, isVisual: Bool) -> String {
         let formatter = DateFormatter()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        let dateYear = calendar.component(.year, from: date)
+        
         if event.isRecurring {
-            formatter.dateFormat = "'Next:' MMM d, yyyy"
+            formatter.dateFormat = dateYear == currentYear ? "'Next:' MMM d" : "'Next:' MMM d, yyyy"
         } else {
-            formatter.dateFormat = "MMM d, yyyy"
+            formatter.dateFormat = dateYear == currentYear ? "MMM d" : "MMM d, yyyy"
         }
         let dateStr = formatter.string(from: date)
         

@@ -243,8 +243,13 @@ struct MediumWidgetView: View {
     
     private func formatDate(_ date: Date, countdown: CountdownTime, countdownStyle: WidgetCountdownStyle) -> String {
         let formatter = DateFormatter()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        let dateYear = calendar.component(.year, from: date)
+        let dateFormat = dateYear == currentYear ? "MMM d" : "MMM d, yyyy"
+        
         if event.isRecurring {
-            formatter.dateFormat = "MMM d, yyyy"
+            formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
             if countdownStyle == .classic {
                 return "Next: \(dateStr)"
@@ -252,10 +257,10 @@ struct MediumWidgetView: View {
             let daysLabel = countdown.days == 1 ? "day" : "days"
             return "Next: \(dateStr) · \(countdown.days) \(daysLabel)"
         } else if countdown.isPast {
-            formatter.dateFormat = "MMM d, yyyy"
+            formatter.dateFormat = dateFormat
             return formatter.string(from: date)
         } else {
-            formatter.dateFormat = "MMM d, yyyy"
+            formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
             if countdownStyle == .classic {
                 return dateStr

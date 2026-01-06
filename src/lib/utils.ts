@@ -1,8 +1,22 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format, getYear } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Formats a date as 'MMM d' if it's in the current year, or 'MMM d, yyyy' otherwise
+ */
+export function formatDateSmart(date: Date): string {
+  const currentYear = getYear(new Date());
+  const dateYear = getYear(date);
+  
+  if (dateYear === currentYear) {
+    return format(date, 'MMM d');
+  }
+  return format(date, 'MMM d, yyyy');
 }
 
 /**

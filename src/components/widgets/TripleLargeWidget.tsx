@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
@@ -6,6 +5,7 @@ import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 import { getTintedBackground } from '@/lib/colorPalette';
 import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
+import { formatDateSmart } from '@/lib/utils';
 import { ProgressBars } from './ProgressBars';
 
 // Helper function to adjust color brightness for gradient
@@ -109,7 +109,7 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             </div>
             {targetDate && (
               <p className="text-xs text-muted-foreground">
-                {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
+                {isRecurring ? `Next: ${formatDateSmart(targetDate)}` : formatDateSmart(targetDate)}
                 {getDaysText()}
               </p>
             )}
@@ -158,7 +158,7 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
           </div>
           {targetDate && (
             <p className="text-xs text-muted-foreground">
-              {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
+              {isRecurring ? `Next: ${formatDateSmart(targetDate)}` : formatDateSmart(targetDate)}
             </p>
           )}
         </div>
