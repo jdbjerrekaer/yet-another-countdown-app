@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,28 +10,80 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Import from "./pages/Import";
 import { DeepLinkHandler } from "./components/DeepLinkHandler";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Capacitor } from "@capacitor/core";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <IonApp>
-        <IonReactRouter basename={import.meta.env.BASE_URL}>
-          <DeepLinkHandler />
-          <IonRouterOutlet>
-            <Route exact path="/" component={Index} />
-            <Route path="/import" component={Import} />
-            <Route path="/404" component={NotFound} />
-            {/* Catch-all redirects to 404 page */}
-            <Redirect to="/404" />
-          </IonRouterOutlet>
-        </IonReactRouter>
-      </IonApp>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Hook to apply system theme preference
+function useSystemTheme() {
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const applyTheme = async (isDark: boolean) => {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.body.classList.add('dark');
+        document.documentElement.classList.add('ion-palette-dark');
+        document.documentElement.style.colorScheme = 'dark';
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await StatusBar.setStyle({ style: Style.Dark });
+          } catch (e) {
+            console.warn("StatusBar style update failed", e);
+          }
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+        document.documentElement.classList.remove('ion-palette-dark');
+        document.documentElement.style.colorScheme = 'light';
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await StatusBar.setStyle({ style: Style.Light });
+          } catch (e) {
+            console.warn("StatusBar style update failed", e);
+          }
+        }
+      }
+    };
+    
+    // Apply initial theme
+    applyTheme(mediaQuery.matches);
+    
+    // Listen for changes
+    const handleChange = (e: MediaQueryListEvent) => {
+      applyTheme(e.matches);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+}
+
+const App = () => {
+  useSystemTheme();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <IonApp>
+          <IonReactRouter basename={import.meta.env.BASE_URL}>
+            <DeepLinkHandler />
+            <IonRouterOutlet>
+              <Route exact path="/" component={Index} />
+              <Route path="/import" component={Import} />
+              <Route path="/404" component={NotFound} />
+              {/* Catch-all redirects to 404 page */}
+              <Redirect to="/404" />
+            </IonRouterOutlet>
+          </IonReactRouter>
+        </IonApp>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

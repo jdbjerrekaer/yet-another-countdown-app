@@ -60,7 +60,7 @@
     --sidebar-ring: 211 100% 50%;
   }
 
-  .dark {
+  .dark, .ion-palette-dark {
     --background: 0 0% 7%;
     --foreground: 0 0% 98%;
 
@@ -99,6 +99,65 @@
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 16%;
     --sidebar-ring: 211 100% 60%;
+
+    /* Map our theme variables to Ionic components in dark mode */
+    --ion-background-color: hsl(var(--background)) !important;
+    --ion-text-color: hsl(var(--foreground)) !important;
+    --ion-border-color: hsl(var(--border)) !important;
+    --ion-item-background: hsl(var(--card)) !important;
+    --ion-toolbar-background: hsl(var(--background)) !important;
+    --ion-tab-bar-background: hsl(var(--background)) !important;
+    --ion-card-background: hsl(var(--card)) !important;
+  }
+
+  /* Custom overrides for a cleaner dark mode look */
+  .dark ion-content, 
+  .ion-palette-dark ion-content {
+    --background: hsl(var(--background)) !important;
+  }
+
+  /* Target segments for iOS 18 style dark mode */
+  .dark ion-segment,
+  .ion-palette-dark ion-segment {
+    --background: hsl(var(--secondary)) !important;
+    background: hsl(var(--secondary)) !important;
+  }
+
+  .dark ion-segment-button,
+  .ion-palette-dark ion-segment-button {
+    --color: hsl(var(--muted-foreground)) !important;
+    --color-checked: hsl(var(--foreground)) !important;
+    --indicator-color: hsl(var(--card)) !important;
+  }
+
+  /* Ensure modal content area matches our background */
+  .dark ion-modal::part(content),
+  .ion-palette-dark ion-modal::part(content) {
+    --background: hsl(var(--background)) !important;
+  }
+
+  .dark ion-toolbar,
+  .ion-palette-dark ion-toolbar {
+    --background: hsl(var(--background)) !important;
+  }
+
+  /* Custom glass effect for dark mode */
+  .dark .ios-glass,
+  .ion-palette-dark .ios-glass {
+    @apply bg-card/60 backdrop-blur-2xl;
+  }
+
+  /* Modal backdrop for dark mode */
+  .dark ion-modal::part(backdrop),
+  .ion-palette-dark ion-modal::part(backdrop) {
+    background: #121212 !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .dark ion-modal,
+  .ion-palette-dark ion-modal {
+    --backdrop-opacity: 1 !important;
   }
 }
 
