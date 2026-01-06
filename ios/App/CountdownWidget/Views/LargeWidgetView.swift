@@ -321,6 +321,32 @@ struct TimeUnitCenteredView: View {
     }
 }
 
+// MARK: - Time Card Large View (for vibrant/accented modes)
+
+struct TimeCardLargeView: View {
+    let value: Int
+    let unit: String
+    let foregroundColor: Color
+    let mutedColor: Color
+    let cardColor: Color
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("\(value)")
+                .font(.system(size: 36, weight: .bold))
+                .foregroundColor(foregroundColor)
+            
+            Text(unit)
+                .font(.system(size: 13))
+                .foregroundColor(mutedColor)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(cardColor)
+        .cornerRadius(16)
+    }
+}
+
 // MARK: - Time Card View
 
 struct TimeCardView: View {
