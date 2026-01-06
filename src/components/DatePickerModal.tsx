@@ -98,6 +98,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const prevSuggestedEmojisRef = useRef<string[]>([]);
   const yearlySuggestionBannerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLIonContentElement | null>(null);
+  const datetimeRef = useRef<HTMLIonDatetimeElement | null>(null);
   const [showYearlySuggestion, setShowYearlySuggestion] = useState(false);
   const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
 
@@ -297,6 +298,71 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       }
     }
   }, [date, isRecurring, showYearlySuggestion, isYearlySuggestionExiting]);
+
+  // Close month/year picker when a month or year is selected
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const datetimeElement = datetimeRef.current;
+    if (!datetimeElement) return;
+    
+    let observer: MutationObserver | null = null;
+    let columnObservers: MutationObserver[] = [];
+    
+    const closeMonthYearPicker = () => {
+      const shadowRoot = datetimeElement.shadowRoot;
+      if (shadowRoot && datetimeElement.classList.contains('month-year-picker-open')) {
+        const toggleButton = shadowRoot.querySelector('.calendar-month-year-toggle');
+        if (toggleButton instanceof HTMLElement) {
+          toggleButton.click();
+        }
+      }
+    };
+    
+    const setupPickerObservers = () => {
+      const shadowRoot = datetimeElement.shadowRoot;
+      if (!shadowRoot) return;
+      
+      // Find picker columns in the datetime-year section
+      const pickerColumns = shadowRoot.querySelectorAll('.datetime-year ion-picker-column');
+      
+      pickerColumns.forEach(column => {
+        const colObserver = new MutationObserver((mutations) => {
+          for (const mutation of mutations) {
+            if (mutation.attributeName === 'value') {
+              setTimeout(closeMonthYearPicker, 200);
+              break;
+            }
+          }
+        });
+        colObserver.observe(column, { attributes: true, attributeFilter: ['value'] });
+        columnObservers.push(colObserver);
+      });
+    };
+    
+    // Watch for when month-year picker opens
+    observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          if (datetimeElement.classList.contains('month-year-picker-open')) {
+            // Picker opened - set up column observers
+            setTimeout(setupPickerObservers, 100);
+          } else {
+            // Picker closed - clean up column observers
+            columnObservers.forEach(obs => obs.disconnect());
+            columnObservers = [];
+          }
+        }
+      }
+    });
+    
+    observer.observe(datetimeElement, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => {
+      observer?.disconnect();
+      columnObservers.forEach(obs => obs.disconnect());
+    };
+  }, [isOpen]);
 
   // Smooth scroll when yearly suggestion banner appears
   useEffect(() => {
@@ -848,6 +914,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 {/* Native Ionic Calendar */}
                 <div className="p-2 flex justify-center">
                   <IonDatetime
+                    ref={datetimeRef}
                     presentation="date"
                     value={date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : undefined}
                     onIonChange={(e) => {

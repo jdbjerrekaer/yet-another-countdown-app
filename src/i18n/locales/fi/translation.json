@@ -37,8 +37,7 @@
     "sizes": {
       "small": "Pieni",
       "medium": "Keskikokoinen",
-      "large": "Suuri",
-      "extraLarge": "Erittäin Suuri"
+      "large": "Suuri"
     },
     "styles": {
       "focus": "Fokus",

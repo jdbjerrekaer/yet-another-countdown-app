@@ -422,15 +422,6 @@ struct CountdownWidgetEntryView: View {
                     countdownStyle: entry.countdownStyle,
                     progress: progress
                 )
-            case .systemExtraLarge:
-                ExtraLargeWidgetView(
-                    event: event,
-                    countdown: countdown,
-                    targetDate: targetDate,
-                    appearanceMode: entry.appearanceMode,
-                    countdownStyle: entry.countdownStyle,
-                    progress: progress
-                )
             @unknown default:
                 SmallWidgetView(
                     event: event,
@@ -477,7 +468,7 @@ struct CountdownTimerWidget: Widget {
             }
             .configurationDisplayName("Countdown Timer")
             .description("Track your events with days, hours, and minutes display.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
+            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         } else {
             return StaticConfiguration(
                 kind: kind,
@@ -510,7 +501,7 @@ struct CountdownVisualWidget: Widget {
             }
             .configurationDisplayName("Countdown Visual")
             .description("Track your events with visual progress bars.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
+            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         } else {
             return StaticConfiguration(
                 kind: kind,

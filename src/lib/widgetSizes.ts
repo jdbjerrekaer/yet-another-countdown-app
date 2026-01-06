@@ -10,7 +10,6 @@ import { Capacitor } from '@capacitor/core';
  * - Small widget: ~41% of screen width (square)
  * - Medium widget: ~87% of screen width, same height as small
  * - Large widget: ~87% of screen width, height ≈ 2.1x small height
- * - Extra Large widget: ~87% of screen width, height ≈ 2.3x small height
  */
 
 export interface WidgetDimensions {
@@ -22,7 +21,6 @@ export interface AllWidgetSizes {
   small: WidgetDimensions;
   medium: WidgetDimensions;
   large: WidgetDimensions;
-  extraLarge: WidgetDimensions;
 }
 
 // Web preview sizes (fixed, for consistent appearance on web)
@@ -30,7 +28,6 @@ const WEB_SIZES: AllWidgetSizes = {
   small: { width: 158, height: 158 },
   medium: { width: 338, height: 170 },
   large: { width: 338, height: 354 },
-  extraLarge: { width: 338, height: 400 },
 };
 
 /**
@@ -56,15 +53,10 @@ function calculateNativeSizes(): AllWidgetSizes {
   const largeWidth = mediumWidth;
   const largeHeight = Math.round(smallHeight * 2.35);
   
-  // Extra Large widget is same width as medium, height is approximately 2.55x small
-  const extraLargeWidth = mediumWidth;
-  const extraLargeHeight = Math.round(smallHeight * 2.55);
-  
   return {
     small: { width: smallWidth, height: smallHeight },
     medium: { width: mediumWidth, height: mediumHeight },
     large: { width: largeWidth, height: largeHeight },
-    extraLarge: { width: extraLargeWidth, height: extraLargeHeight },
   };
 }
 

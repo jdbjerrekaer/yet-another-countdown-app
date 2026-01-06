@@ -39,7 +39,7 @@ Track all your important events with beautiful, customizable countdown timers. P
 ✨ KEY FEATURES
 
 🎯 Widget Previews
-Preview your countdowns in four different widget sizes before adding them to your home screen. See exactly how your countdown will look with real-time previews for Small, Medium, Large, and Extra Large widgets.
+Preview your countdowns in three different widget sizes before adding them to your home screen. See exactly how your countdown will look with real-time previews for Small, Medium, and Large widgets.
 
 🔄 Recurring Events
 Set up yearly recurring countdowns for birthdays, anniversaries, holidays, and more. The app automatically calculates the next occurrence, so you never miss an important date.
@@ -80,7 +80,7 @@ Countdown Timer & Events - Track birthdays, anniversaries, and all your importan
 
 ✨ KEY FEATURES
 
-🎯 Widget Previews - Preview countdowns in 4 widget sizes (Small, Medium, Large, Extra Large) before adding to your home screen
+🎯 Widget Previews - Preview countdowns in 3 widget sizes (Small, Medium, Large) before adding to your home screen
 
 🔄 Recurring Events - Automatically recurring yearly countdowns for birthdays, anniversaries, and holidays
 
@@ -121,7 +121,7 @@ Perfect for birthday countdowns, anniversary tracking, and holiday countdowns. D
 Track all your important moments with beautiful, customizable countdown timers.
 
 ✨ Features:
-• Widget previews in 4 sizes (Small, Medium, Large, Extra Large)
+• Widget previews in 3 sizes (Small, Medium, Large)
 • Recurring yearly events for birthdays and anniversaries
 • Intuitive drag-and-drop sorting
 • Unlimited countdown timers

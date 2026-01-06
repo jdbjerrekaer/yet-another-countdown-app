@@ -1,7 +1,6 @@
 import { SmallWidget } from './widgets/SmallWidget';
 import { MediumWidget } from './widgets/MediumWidget';
 import { LargeWidget } from './widgets/LargeWidget';
-import { ExtraLargeWidget } from './widgets/ExtraLargeWidget';
 import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 
@@ -11,7 +10,7 @@ interface WidgetPreviewProps {
   targetDate: Date | null;
   emoji: string;
   emojiColor?: string;
-  size: 'small' | 'medium' | 'large' | 'extraLarge';
+  size: 'small' | 'medium' | 'large';
   appearanceMode: WidgetAppearanceMode;
   countdownStyle: WidgetCountdownStyle;
   isRecurring?: boolean;
@@ -27,8 +26,6 @@ export function WidgetPreview({ title, countdown, targetDate, emoji, emojiColor,
       return <MediumWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} countdownStyle={countdownStyle} isRecurring={isRecurring} createdAt={createdAt} nextOccurrenceNumber={nextOccurrenceNumber} />;
     case 'large':
       return <LargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} countdownStyle={countdownStyle} isRecurring={isRecurring} createdAt={createdAt} nextOccurrenceNumber={nextOccurrenceNumber} />;
-    case 'extraLarge':
-      return <ExtraLargeWidget title={title} countdown={countdown} targetDate={targetDate} emoji={emoji} emojiColor={emojiColor} appearanceMode={appearanceMode} countdownStyle={countdownStyle} createdAt={createdAt} isRecurring={isRecurring} nextOccurrenceNumber={nextOccurrenceNumber} />;
     default:
       return null;
   }

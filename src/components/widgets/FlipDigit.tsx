@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 interface FlipDigitProps {
   value: number;
   label?: string;
-  size?: 'small' | 'medium' | 'large' | 'extraLarge';
+  size?: 'small' | 'medium' | 'large';
   theme?: 'light' | 'dark';
   className?: string;
   layout?: 'row' | 'column';
@@ -20,7 +20,6 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
     small: { fontSize: 'text-2xl', height: 36, width: 52 },
     medium: { fontSize: 'text-3xl', height: 48, width: 70 },
     large: { fontSize: 'text-4xl', height: 56, width: 90 },
-    extraLarge: { fontSize: 'text-5xl', height: 64, width: 110 },
   };
 
   // Theme colors with proper shadows

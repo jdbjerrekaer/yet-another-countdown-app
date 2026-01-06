@@ -8,11 +8,10 @@ A beautiful, feature-rich countdown timer application built with React and Ionic
 - **Count Up Support** - Select past dates to track time since an event ("days ago")
 - **Recurring Events** - Set up yearly recurring countdowns (birthdays, anniversaries, etc.)
 - **Drag-and-Drop Sorting** - Reorder your countdowns with intuitive drag-and-drop
-- **Widget Previews** - Preview your countdowns in four different widget sizes:
+- **Widget Previews** - Preview your countdowns in three different widget sizes:
   - Small
   - Medium
   - Large
-  - Extra Large
 - **iOS Native Features**:
   - Haptic feedback for better user interaction
   - Native action sheets and dialogs
@@ -193,7 +192,7 @@ yet-another-countdown-app/
 ### Widget Preview
 
 1. Select a countdown by tapping on its card
-2. Choose a widget size (Small, Medium, Large, or Extra Large)
+2. Choose a widget size (Small, Medium, or Large)
 3. View the preview below to see how it will appear as a widget
 
 ### Recurring Events

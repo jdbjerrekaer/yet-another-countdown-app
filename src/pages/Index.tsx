@@ -44,14 +44,11 @@ const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
   { id: 'medium', labelKey: 'widget.sizes.medium' },
   { id: 'large', labelKey: 'widget.sizes.large' },
-  { id: 'extraLarge', labelKey: 'widget.sizes.extraLarge' },
 ];
 
 // Get available widget sizes based on countdown style
 const getAvailableSizes = (countdownStyle: WidgetCountdownStyle): { id: WidgetSize; labelKey: string }[] => {
   return WIDGET_SIZES.filter(size => {
-    // Always exclude extraLarge (not available in iOS)
-    if (size.id === 'extraLarge') return false;
     // Exclude large when classic style is selected
     if (countdownStyle === 'classic' && size.id === 'large') return false;
     return true;

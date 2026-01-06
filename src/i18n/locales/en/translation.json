@@ -37,8 +37,7 @@
     "sizes": {
       "small": "Small",
       "medium": "Medium",
-      "large": "Large",
-      "extraLarge": "Extra Large"
+      "large": "Large"
     },
     "styles": {
       "focus": "Focus",

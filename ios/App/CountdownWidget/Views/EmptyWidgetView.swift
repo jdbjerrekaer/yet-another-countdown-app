@@ -31,8 +31,6 @@ struct EmptyWidgetView: View {
             return 36
         case .systemLarge:
             return 48
-        case .systemExtraLarge:
-            return 56
         @unknown default:
             return 32
         }
@@ -44,7 +42,7 @@ struct EmptyWidgetView: View {
             return 14
         case .systemMedium:
             return 16
-        case .systemLarge, .systemExtraLarge:
+        case .systemLarge:
             return 18
         @unknown default:
             return 14
