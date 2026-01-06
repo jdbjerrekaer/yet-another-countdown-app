@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.jonatanbjerrekaer.countdown",
-  appName: "Countdown",
+  appName: "Yet another Countdown",
   webDir: "dist",
   server: {
     androidScheme: "https",
