@@ -722,4 +722,49 @@
     animation: emoji-disappear 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
     will-change: opacity, transform, filter;
   }
+
+  @keyframes yearlySuggestionEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-10px);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes yearlySuggestionSlideDown {
+    from {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      max-height: 100px;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes yearlySuggestionSlideUp {
+    from {
+      opacity: 1;
+      max-height: 100px;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .yearly-suggestion-expandable {
+    overflow: hidden;
+    opacity: 0;
+    max-height: 0;
+  }
 }

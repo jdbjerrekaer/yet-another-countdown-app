@@ -6,9 +6,10 @@ interface FlipDigitProps {
   size?: 'small' | 'medium' | 'large' | 'extraLarge';
   theme?: 'light' | 'dark';
   className?: string;
+  layout?: 'row' | 'column';
 }
 
-export function FlipDigit({ value, label, size = 'medium', theme = 'dark', className = '' }: FlipDigitProps) {
+export function FlipDigit({ value, label, size = 'medium', theme = 'dark', className = '', layout = 'column' }: FlipDigitProps) {
   const [currentValue, setCurrentValue] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -87,8 +88,10 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
   const newValue = value;
   const oldValue = isFlipping ? prevValue : currentValue;
 
+  const isRowLayout = layout === 'row';
+  
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <div className={`flex ${isRowLayout ? 'flex-row items-center' : 'flex-col items-center'} ${className}`}>
       <div 
         style={{
           position: 'relative',
@@ -225,7 +228,7 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
       </div>
       
       {label && (
-        <p className="text-xs text-muted-foreground mt-1 text-center">
+        <p className={`text-xs text-muted-foreground ${isRowLayout ? 'ml-2' : 'mt-1 text-center'}`}>
           {label}
         </p>
       )}

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
 import { add, checkmark, calendarOutline } from 'ionicons/icons';
-import { format } from 'date-fns';
+import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { Dialog } from '@capacitor/dialog';
@@ -46,6 +46,17 @@ const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'large', labelKey: 'widget.sizes.large' },
   { id: 'extraLarge', labelKey: 'widget.sizes.extraLarge' },
 ];
+
+// Get available widget sizes based on countdown style
+const getAvailableSizes = (countdownStyle: WidgetCountdownStyle): { id: WidgetSize; labelKey: string }[] => {
+  return WIDGET_SIZES.filter(size => {
+    // Always exclude extraLarge (not available in iOS)
+    if (size.id === 'extraLarge') return false;
+    // Exclude large when classic style is selected
+    if (countdownStyle === 'classic' && size.id === 'large') return false;
+    return true;
+  });
+};
 
 const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; labelKey: string }[] = [
   { id: 'light', labelKey: 'widget.appearances.light' },
@@ -215,13 +226,13 @@ export default function Index() {
   
   const countdown = useCountdown(targetDate);
   
-  // Calculate occurrence number for events
+  // Calculate occurrence number for events (only for recurring events)
   const occurrenceNumber = selectedEvent
     ? (selectedEvent.isRecurring
         ? (countdown.isPast
             ? getRepetitionCount(new Date(selectedEvent.targetDate))
             : getNextOccurrenceNumber(new Date(selectedEvent.targetDate)))
-        : (countdown.isPast ? 1 : undefined))
+        : undefined)
     : undefined;
 
   useEffect(() => {
@@ -237,6 +248,19 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('widgetCountdownStyle', selectedCountdownStyle);
   }, [selectedCountdownStyle]);
+
+  // Validate and adjust size when style changes or when size is invalid
+  useEffect(() => {
+    const availableSizes = getAvailableSizes(selectedCountdownStyle);
+    const availableSizeIds = availableSizes.map(s => s.id);
+    
+    // If current size is not available, switch to the first available size
+    if (!availableSizeIds.includes(selectedSize)) {
+      if (availableSizeIds.length > 0) {
+        setSelectedSize(availableSizeIds[0] as WidgetSize);
+      }
+    }
+  }, [selectedCountdownStyle, selectedSize]);
 
   // Sync widget data to native storage whenever events or widget settings change
   useEffect(() => {
@@ -526,21 +550,21 @@ export default function Index() {
     }
   };
 
-  const handleAddNew = () => {
-    console.log('handleAddNew called, opening modal');
+  const handleAddNew = async () => {
+    console.log('handleAddNew called');
     trigger('medium');
     setEditingEvent(null);
     setIsModalOpen(true);
     // Note: Focus is now handled by onDidPresent + Capacitor Keyboard.show()
   };
 
-  const handleFabClick = () => {
+  const handleFabClick = async () => {
     if (isModalOpen) {
       // Modal is open - trigger save
       datePickerModalRef.current?.save();
     } else {
       // Modal is closed - open it
-      handleAddNew();
+      await handleAddNew();
     }
   };
 
@@ -914,10 +938,17 @@ export default function Index() {
                       value={selectedSize}
                       onIonChange={(e) => {
                         trigger('selection');
-                        setSelectedSize(e.detail.value as WidgetSize);
+                        const newSize = e.detail.value as WidgetSize;
+                        const availableSizes = getAvailableSizes(selectedCountdownStyle);
+                        const availableSizeIds = availableSizes.map(s => s.id);
+                        
+                        // Only allow selecting available sizes
+                        if (availableSizeIds.includes(newSize)) {
+                          setSelectedSize(newSize);
+                        }
                       }}
                     >
-                      {WIDGET_SIZES.map((size) => (
+                      {getAvailableSizes(selectedCountdownStyle).map((size) => (
                         <IonSegmentButton key={size.id} value={size.id}>
                           {t(size.labelKey)}
                         </IonSegmentButton>
@@ -934,7 +965,13 @@ export default function Index() {
                       value={selectedCountdownStyle}
                       onIonChange={(e) => {
                         trigger('selection');
-                        setSelectedCountdownStyle(e.detail.value as WidgetCountdownStyle);
+                        const newStyle = e.detail.value as WidgetCountdownStyle;
+                        setSelectedCountdownStyle(newStyle);
+                        
+                        // If switching to classic style and current size is large, switch to medium
+                        if (newStyle === 'classic' && selectedSize === 'large') {
+                          setSelectedSize('medium');
+                        }
                       }}
                     >
                       {WIDGET_COUNTDOWN_STYLES.map((style) => (

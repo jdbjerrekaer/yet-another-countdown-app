@@ -72,7 +72,11 @@
     "shareEvent": "Dela Händelse",
     "shareLinkCopied": "Importlänk kopierad till urklipp",
     "shareError": "Kunde inte dela händelse",
-    "importedFrom": "Importerad från {{calendar}}"
+    "importedFrom": "Importerad från {{calendar}}",
+    "yearlySuggestion": "Detta datum är över ett år sedan. Gör det årligt?",
+    "yearlySuggestionHint": "Gör detta återkommande årligen?",
+    "yearlySuggestionReason": "Detta datum inträffade för över ett år sedan",
+    "enableYearly": "Aktivera"
   },
   "dialogs": {
     "dateChanged": {
@@ -92,6 +96,18 @@
       "message": "Vill du importera \"{{emoji}} {{title}}\" planerad för {{date}}?",
       "import": "Importera",
       "cancel": "Avbryt"
+    },
+    "yearlyMigration": {
+      "title": "Gör Händelser Årliga?",
+      "message": "Du har {{count}} händelse(r) från över ett år sedan. Gör dem årligt återkommande?",
+      "convert": "Konvertera till Årligt",
+      "skip": "Hoppa Över"
+    },
+    "suggestYearly": {
+      "title": "Gör Denna Händelse Årlig?",
+      "message": "Detta datum inträffade för över ett år sedan. Gör den årligt återkommande så den räknar ner igen nästa år?",
+      "enable": "Gör Årlig",
+      "keepOneTime": "Behåll Engångs"
     }
   },
   "countdown": {

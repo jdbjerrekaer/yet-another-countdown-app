@@ -128,7 +128,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
-                  {nextOccurrenceNumber && (
+                  {isRecurring && nextOccurrenceNumber && (
                     <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
                   )}
                 </div>
@@ -223,7 +223,7 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
-                  {nextOccurrenceNumber && (
+                  {isRecurring && nextOccurrenceNumber && (
                     <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
                   )}
                 </div>
@@ -238,9 +238,8 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
         </div>
         
         {countdown.isPast ? (
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <FlipDigit value={countdown.daysSince} size="extraLarge" theme={flipTheme} />
-            <p className="text-xl text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+          <div className="flex-1 flex items-center justify-center">
+            <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="extraLarge" theme={flipTheme} layout="row" />
           </div>
         ) : countdown.isComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -249,10 +248,10 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="grid grid-cols-2 gap-4 w-full">
-              <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="extraLarge" theme={flipTheme} />
-              <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="extraLarge" theme={flipTheme} />
-              <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="extraLarge" theme={flipTheme} />
-              <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="extraLarge" theme={flipTheme} />
+              <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="extraLarge" theme={flipTheme} layout="row" />
+              <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="extraLarge" theme={flipTheme} layout="row" />
+              <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="extraLarge" theme={flipTheme} layout="row" />
+              <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="extraLarge" theme={flipTheme} layout="row" />
             </div>
           </div>
         )}

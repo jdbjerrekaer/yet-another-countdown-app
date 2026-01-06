@@ -72,7 +72,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
-                  {nextOccurrenceNumber && (
+                  {isRecurring && nextOccurrenceNumber && (
                     <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
                   )}
                 </div>
@@ -129,7 +129,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
-                  {nextOccurrenceNumber && (
+                  {isRecurring && nextOccurrenceNumber && (
                     <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
                   )}
                 </div>
@@ -149,15 +149,15 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
         
         {countdown.isPast ? (
           <div className="flex gap-6">
-            <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="medium" theme={flipTheme} />
+            <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="medium" theme={flipTheme} layout="column" />
           </div>
         ) : countdown.isComplete ? (
           <p className="text-3xl font-bold text-primary">{t('countdown.today')}</p>
         ) : (
           <div className="flex gap-6">
-            <FlipDigit value={countdown.days} label={t('widget.units.daysShort', { count: countdown.days })} size="medium" theme={flipTheme} />
-            <FlipDigit value={countdown.hours} label={t('widget.units.hoursShort', { count: countdown.hours })} size="medium" theme={flipTheme} />
-            <FlipDigit value={countdown.minutes} label={t('widget.units.minutesShort', { count: countdown.minutes })} size="medium" theme={flipTheme} />
+            <FlipDigit value={countdown.days} label={t('widget.units.daysShort', { count: countdown.days })} size="medium" theme={flipTheme} layout="column" />
+            <FlipDigit value={countdown.hours} label={t('widget.units.hoursShort', { count: countdown.hours })} size="medium" theme={flipTheme} layout="column" />
+            <FlipDigit value={countdown.minutes} label={t('widget.units.minutesShort', { count: countdown.minutes })} size="medium" theme={flipTheme} layout="column" />
           </div>
         )}
       </div>

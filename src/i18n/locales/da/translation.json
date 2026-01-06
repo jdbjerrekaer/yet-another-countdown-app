@@ -72,7 +72,11 @@
     "shareEvent": "Del Begivenhed",
     "shareLinkCopied": "Import-link kopieret til udklipsholder",
     "shareError": "Kunne ikke dele begivenhed",
-    "importedFrom": "Importeret fra {{calendar}}"
+    "importedFrom": "Importeret fra {{calendar}}",
+    "yearlySuggestion": "Denne dato er over et år siden. Gør den årlig?",
+    "yearlySuggestionHint": "Gør dette tilbagevendende årligt?",
+    "yearlySuggestionReason": "Denne dato fandt sted for over et år siden",
+    "enableYearly": "Aktivér"
   },
   "dialogs": {
     "dateChanged": {
@@ -92,6 +96,18 @@
       "message": "Vil du importere \"{{emoji}} {{title}}\" planlagt til {{date}}?",
       "import": "Importer",
       "cancel": "Annuller"
+    },
+    "yearlyMigration": {
+      "title": "Gør Begivenheder Årlige?",
+      "message": "Du har {{count}} begivenhed(er) fra over et år siden. Gør dem årligt tilbagevendende?",
+      "convert": "Konverter til Årligt",
+      "skip": "Spring Over"
+    },
+    "suggestYearly": {
+      "title": "Gør Denne Begivenhed Årlig?",
+      "message": "Denne dato fandt sted for over et år siden. Gør den årligt tilbagevendende, så den tæller ned igen næste år?",
+      "enable": "Gør Årlig",
+      "keepOneTime": "Behold Engangs"
     }
   },
   "countdown": {

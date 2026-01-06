@@ -71,7 +71,12 @@
     "customEmojiPlaceholder": "🎨",
     "shareEvent": "Compartilhar Evento",
     "shareLinkCopied": "Link de importação copiado para a área de transferência",
-    "shareError": "Erro ao compartilhar evento"
+    "shareError": "Erro ao compartilhar evento",
+    "importedFrom": "Importado de {{calendar}}",
+    "yearlySuggestion": "Esta data é de mais de um ano atrás. Torná-la anual?",
+    "yearlySuggestionHint": "Fazer isso se repetir anualmente?",
+    "yearlySuggestionReason": "Esta data ocorreu há mais de um ano",
+    "enableYearly": "Ativar"
   },
   "dialogs": {
     "dateChanged": {
@@ -91,6 +96,18 @@
       "message": "Deseja importar \"{{emoji}} {{title}}\" agendado para {{date}}?",
       "import": "Importar",
       "cancel": "Cancelar"
+    },
+    "yearlyMigration": {
+      "title": "Tornar Eventos Anuais?",
+      "message": "Você tem {{count}} evento(s) de mais de um ano atrás. Torná-los anuais?",
+      "convert": "Converter para Anual",
+      "skip": "Pular"
+    },
+    "suggestYearly": {
+      "title": "Tornar Este Evento Anual?",
+      "message": "Esta data ocorreu há mais de um ano. Torná-la anual para que conte regressivamente novamente no próximo ano?",
+      "enable": "Tornar Anual",
+      "keepOneTime": "Manter Único"
     }
   },
   "countdown": {

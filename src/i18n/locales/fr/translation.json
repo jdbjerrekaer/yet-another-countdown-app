@@ -72,7 +72,11 @@
     "shareEvent": "Partager l'Événement",
     "shareLinkCopied": "Lien d'importation copié dans le presse-papiers",
     "shareError": "Échec du partage de l'événement",
-    "importedFrom": "Importé depuis {{calendar}}"
+    "importedFrom": "Importé depuis {{calendar}}",
+    "yearlySuggestion": "Cette date remonte à plus d'un an. La rendre annuelle ?",
+    "yearlySuggestionHint": "Rendre cet événement annuel ?",
+    "yearlySuggestionReason": "Cette date remonte à plus d'un an",
+    "enableYearly": "Activer"
   },
   "dialogs": {
     "dateChanged": {
@@ -92,6 +96,18 @@
       "message": "Voulez-vous importer \"{{emoji}} {{title}}\" prévu pour {{date}} ?",
       "import": "Importer",
       "cancel": "Annuler"
+    },
+    "yearlyMigration": {
+      "title": "Rendre les Événements Annuels ?",
+      "message": "Vous avez {{count}} événement(s) datant de plus d'un an. Les rendre annuels ?",
+      "convert": "Convertir en Annuel",
+      "skip": "Ignorer"
+    },
+    "suggestYearly": {
+      "title": "Rendre Cet Événement Annuel ?",
+      "message": "Cette date remonte à plus d'un an. La rendre annuelle pour qu'elle compte à rebours à nouveau l'année prochaine ?",
+      "enable": "Rendre Annuel",
+      "keepOneTime": "Garder Unique"
     }
   },
   "countdown": {

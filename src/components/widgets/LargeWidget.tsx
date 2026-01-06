@@ -9,6 +9,16 @@ import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
 import { FlipDigit } from './FlipDigit';
 
+// Helper function to adjust color brightness for gradient
+function adjustColorBrightness(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+}
+
 interface LargeWidgetProps {
   title: string;
   countdown: CountdownTime;
@@ -79,16 +89,23 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
     return (
       <div className={widgetClasses} style={combinedStyle}>
         {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-4xl">{emoji}</span>
+        <div className="flex items-center gap-4 mb-6">
+          <div 
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-3xl">{emoji}</span>
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-lg font-semibold text-foreground truncate">{title}</p>
+              <p className="text-xl font-bold text-foreground truncate">{title}</p>
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
-                  {nextOccurrenceNumber && (
-                    <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
+                  {isRecurring && nextOccurrenceNumber && (
+                    <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
                   )}
                 </div>
               )}
@@ -180,16 +197,23 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
     
     return (
       <div className={widgetClasses} style={combinedStyle}>
-        <div className="flex items-center gap-3 mb-auto">
-          <span className="text-4xl">{emoji}</span>
+        <div className="flex items-center gap-4 mb-6">
+          <div 
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-3xl">{emoji}</span>
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-lg font-semibold text-foreground truncate">{title}</p>
+              <p className="text-xl font-bold text-foreground truncate">{title}</p>
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
-                  {nextOccurrenceNumber && (
-                    <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
+                  {isRecurring && nextOccurrenceNumber && (
+                    <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
                   )}
                 </div>
               )}
@@ -203,9 +227,8 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         </div>
         
         {countdown.isPast ? (
-          <div className="flex flex-col items-center justify-center flex-1">
-            <FlipDigit value={countdown.daysSince} size="large" theme={flipTheme} />
-            <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+          <div className="flex items-center justify-center flex-1">
+            <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="large" theme={flipTheme} layout="row" />
           </div>
         ) : countdown.isComplete ? (
           <div className="text-center py-8">
@@ -213,10 +236,10 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="large" theme={flipTheme} />
-            <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="large" theme={flipTheme} />
-            <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="large" theme={flipTheme} />
-            <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="large" theme={flipTheme} />
+            <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="large" theme={flipTheme} layout="row" />
+            <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="large" theme={flipTheme} layout="row" />
+            <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="large" theme={flipTheme} layout="row" />
+            <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="large" theme={flipTheme} layout="row" />
           </div>
         )}
       </div>
@@ -226,16 +249,23 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
   // Focus mode layout (original)
   return (
     <div className={widgetClasses} style={combinedStyle}>
-      <div className="flex items-center gap-3 mb-auto">
-        <span className="text-4xl">{emoji}</span>
+      <div className="flex items-center gap-4 mb-6">
+        <div 
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+          style={emojiColor ? { 
+            background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+          } : undefined}
+        >
+          <span className="text-3xl">{emoji}</span>
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-semibold text-foreground truncate">{title}</p>
+            <p className="text-xl font-bold text-foreground truncate">{title}</p>
             {(isRecurring || countdown.isPast) && (
               <div className="flex items-center gap-1 flex-shrink-0">
-                {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
                 {nextOccurrenceNumber && (
-                  <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
                 )}
               </div>
             )}

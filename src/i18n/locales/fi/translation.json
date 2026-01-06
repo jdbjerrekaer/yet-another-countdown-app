@@ -72,7 +72,11 @@
     "shareEvent": "Jaa Tapahtuma",
     "shareLinkCopied": "Tuontilinkki kopioitu leikepöydälle",
     "shareError": "Tapahtuman jakaminen epäonnistui",
-    "importedFrom": "Tuotu {{calendar}}-kalenterista"
+    "importedFrom": "Tuotu {{calendar}}-kalenterista",
+    "yearlySuggestion": "Tämä päivämäärä on yli vuosi sitten. Tehdä siitä vuosittainen?",
+    "yearlySuggestionHint": "Tehdä tästä vuosittain toistuva?",
+    "yearlySuggestionReason": "Tämä päivämäärä sattui yli vuosi sitten",
+    "enableYearly": "Ota Käyttöön"
   },
   "dialogs": {
     "dateChanged": {
@@ -92,6 +96,18 @@
       "message": "Haluatko tuoda \"{{emoji}} {{title}}\" tapahtuman, joka on suunniteltu {{date}}?",
       "import": "Tuo",
       "cancel": "Peruuta"
+    },
+    "yearlyMigration": {
+      "title": "Tee Tapahtumista Vuosittaisia?",
+      "message": "Sinulla on {{count}} tapahtuma(a) yli vuoden takaa. Tehdä niistä vuosittaisia?",
+      "convert": "Muunna Vuosittaiseksi",
+      "skip": "Ohita"
+    },
+    "suggestYearly": {
+      "title": "Tee Tästä Tapahtumasta Vuosittainen?",
+      "message": "Tämä päivämäärä sattui yli vuosi sitten. Tehdä siitä vuosittain toistuva, jotta se laskee taaksepäin taas ensi vuonna?",
+      "enable": "Tee Vuosittainen",
+      "keepOneTime": "Pidä Kertaluontoinen"
     }
   },
   "countdown": {

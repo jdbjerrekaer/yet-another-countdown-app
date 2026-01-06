@@ -39,12 +39,12 @@ export function CountdownCard({
   
   const countdown = useCountdown(targetDate);
   
-  // Calculate occurrence number for events
+  // Calculate occurrence number for events (only for recurring events)
   const occurrenceNumber = event.isRecurring
     ? (countdown.isPast
         ? getRepetitionCount(new Date(event.targetDate))
         : getNextOccurrenceNumber(new Date(event.targetDate)))
-    : (countdown.isPast ? 1 : 0);
+    : 0;
 
   const handleSelect = (e?: React.MouseEvent) => {
     trigger('light');
@@ -184,7 +184,7 @@ export function CountdownCard({
               {(event.isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {event.isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
-                  {occurrenceNumber > 0 && (
+                  {event.isRecurring && occurrenceNumber > 0 && (
                     <span className="text-xs text-primary font-medium">
                       #{occurrenceNumber}
                     </span>

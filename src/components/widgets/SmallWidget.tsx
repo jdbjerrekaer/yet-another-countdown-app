@@ -83,7 +83,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           {(isRecurring || countdown.isPast) && (
             <div className="flex items-center gap-1">
               {isRecurring && <RefreshCw className="w-3 h-3 text-primary" />}
-              {nextOccurrenceNumber && (
+              {isRecurring && nextOccurrenceNumber && (
                 <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
               )}
             </div>
@@ -134,7 +134,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           {(isRecurring || countdown.isPast) && (
             <div className="flex items-center gap-1">
               {isRecurring && <RefreshCw className="w-3 h-3 text-primary" />}
-              {nextOccurrenceNumber && (
+              {isRecurring && nextOccurrenceNumber && (
                 <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
               )}
             </div>
@@ -149,17 +149,23 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
             </p>
           )}
           {countdown.isPast ? (
-            <div className="flex items-baseline gap-2">
-              <FlipDigit value={countdown.daysSince} size="small" theme={flipTheme} />
-              <span className="text-lg font-medium text-muted-foreground">{t('widget.units.days', { count: countdown.daysSince })} {t('widget.daysAgoText')}</span>
-            </div>
+            <FlipDigit 
+              value={countdown.daysSince} 
+              label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')}
+              size="small" 
+              theme={flipTheme} 
+              layout="row"
+            />
           ) : countdown.isComplete ? (
             <p className="text-2xl font-bold text-primary">{t('countdown.today')}</p>
           ) : (
-            <div className="flex items-baseline gap-2">
-              <FlipDigit value={timeDisplay.value} size="small" theme={flipTheme} />
-              <span className="text-lg font-medium text-muted-foreground">{t(`widget.units.${timeDisplay.unit}`, { count: timeDisplay.value })}</span>
-            </div>
+            <FlipDigit 
+              value={timeDisplay.value} 
+              label={t(`widget.units.${timeDisplay.unit}`, { count: timeDisplay.value })}
+              size="small" 
+              theme={flipTheme} 
+              layout="row"
+            />
           )}
         </div>
       </div>

@@ -72,7 +72,11 @@
     "shareEvent": "Share Event",
     "shareLinkCopied": "Import link copied to clipboard",
     "shareError": "Failed to share event",
-    "importedFrom": "Imported from {{calendar}}"
+    "importedFrom": "Imported from {{calendar}}",
+    "yearlySuggestion": "This date is over a year ago. Make it yearly?",
+    "yearlySuggestionHint": "Make this repeat yearly?",
+    "yearlySuggestionReason": "This date occurred over a year ago",
+    "enableYearly": "Enable"
   },
   "dialogs": {
     "dateChanged": {
@@ -92,6 +96,18 @@
       "message": "Do you want to import \"{{emoji}} {{title}}\" scheduled for {{date}}?",
       "import": "Import",
       "cancel": "Cancel"
+    },
+    "yearlyMigration": {
+      "title": "Make Events Yearly?",
+      "message": "You have {{count}} event(s) from over a year ago. Make them repeat yearly?",
+      "convert": "Convert to Yearly",
+      "skip": "Skip"
+    },
+    "suggestYearly": {
+      "title": "Make This Event Yearly?",
+      "message": "This date occurred over a year ago. Make it repeat yearly so it counts down again next year?",
+      "enable": "Make Yearly",
+      "keepOneTime": "Keep One-Time"
     }
   },
   "countdown": {

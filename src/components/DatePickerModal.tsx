@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, differenceInYears } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon } from '@ionic/react';
 import { shareOutline } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { Share } from '@capacitor/share';
+import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
+import { Dialog } from '@capacitor/dialog';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
@@ -94,6 +96,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const [colorPickerKey, setColorPickerKey] = useState(0);
   const [emojiAnimationKey, setEmojiAnimationKey] = useState(0);
   const prevSuggestedEmojisRef = useRef<string[]>([]);
+  const yearlySuggestionBannerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLIonContentElement | null>(null);
+  const [showYearlySuggestion, setShowYearlySuggestion] = useState(false);
+  const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -153,6 +159,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       // Reset emoji animation state when modal opens
       setEmojiAnimationKey(0);
       prevSuggestedEmojisRef.current = [];
+      
+      // Initialize yearly suggestion state based on initial conditions
+      setIsYearlySuggestionExiting(false);
+      // Check if banner should be shown based on initial props
+      const initialShouldShow = dateToSet && !(initialIsRecurring ?? false) && differenceInYears(new Date(), dateToSet) >= 1;
+      setShowYearlySuggestion(initialShouldShow);
       
       // Try to focus immediately when modal opens (while still in user gesture context for Safari mobile)
       if (!isEditing && titleInputRef.current) {
@@ -255,6 +267,84 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     }
   }, [title, date, emoji, onValidityChange]);
 
+  // Manage yearly suggestion banner visibility with exit animation
+  useEffect(() => {
+    const shouldShow = date && !isRecurring && differenceInYears(new Date(), date) >= 1;
+    
+    if (shouldShow) {
+      // Banner should appear
+      if (!showYearlySuggestion) {
+        // Reset exit state and show it
+        setIsYearlySuggestionExiting(false);
+        setShowYearlySuggestion(true);
+      } else if (isYearlySuggestionExiting) {
+        // If it's currently exiting but should show, cancel the exit
+        setIsYearlySuggestionExiting(false);
+      }
+    } else {
+      // Banner should disappear
+      if (showYearlySuggestion && !isYearlySuggestionExiting) {
+        // Trigger exit animation
+        setIsYearlySuggestionExiting(true);
+        
+        // After animation completes, hide the banner
+        const timer = setTimeout(() => {
+          setShowYearlySuggestion(false);
+          setIsYearlySuggestionExiting(false);
+        }, 350); // Match animation duration
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [date, isRecurring, showYearlySuggestion, isYearlySuggestionExiting]);
+
+  // Smooth scroll when yearly suggestion banner appears
+  useEffect(() => {
+    if (showYearlySuggestion && !isYearlySuggestionExiting && yearlySuggestionBannerRef.current) {
+      // Small delay to ensure the element is rendered and animation starts
+      const timer = setTimeout(async () => {
+        if (yearlySuggestionBannerRef.current) {
+          const contentElement = contentRef.current;
+          
+          if (contentElement) {
+            try {
+              // Get current scroll position
+              const scrollElement = await contentElement.getScrollElement();
+              if (scrollElement && yearlySuggestionBannerRef.current) {
+                // Get the banner's position relative to the scroll container
+                const bannerRect = yearlySuggestionBannerRef.current.getBoundingClientRect();
+                const containerRect = scrollElement.getBoundingClientRect();
+                
+                // Calculate how much to scroll to bring banner into view
+                const scrollAmount = bannerRect.top - containerRect.top - 20; // 20px padding from top
+                
+                if (scrollAmount > 0) {
+                  scrollElement.scrollBy({
+                    top: scrollAmount,
+                    behavior: 'smooth',
+                  });
+                }
+              }
+            } catch (error) {
+              // Fallback to scrollIntoView if getScrollElement fails
+              yearlySuggestionBannerRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+              });
+            }
+          } else {
+            // Fallback to scrollIntoView
+            yearlySuggestionBannerRef.current?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [showYearlySuggestion, isYearlySuggestionExiting]);
+
   const handleSave = async () => {
     if (title && date && emoji) {
       // If editing and date has changed, show confirmation dialog
@@ -267,7 +357,51 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         }
       }
       
-      await onSave(title, date, emoji, isRecurring, emojiColor);
+      // Check if creating a new event with a date > 1 year in the past and not recurring
+      let finalIsRecurring = isRecurring;
+      if (!isEditing && !isRecurring && differenceInYears(new Date(), date) >= 1) {
+        // Prompt user to make it yearly
+        const isNative = Capacitor.isNativePlatform();
+        let shouldMakeYearly = false;
+        
+        try {
+          if (isNative) {
+            const result = await ActionSheet.showActions({
+              title: t('dialogs.suggestYearly.title'),
+              message: t('dialogs.suggestYearly.message'),
+              options: [
+                {
+                  title: t('dialogs.suggestYearly.enable'),
+                  style: ActionSheetButtonStyle.Default,
+                },
+                {
+                  title: t('dialogs.suggestYearly.keepOneTime'),
+                  style: ActionSheetButtonStyle.Cancel,
+                },
+              ],
+            });
+            shouldMakeYearly = result.index === 0;
+          } else {
+            // Use Dialog on web platforms
+            const { value } = await Dialog.confirm({
+              title: t('dialogs.suggestYearly.title'),
+              message: t('dialogs.suggestYearly.message'),
+              okButtonTitle: t('dialogs.suggestYearly.enable'),
+              cancelButtonTitle: t('dialogs.suggestYearly.keepOneTime'),
+            });
+            shouldMakeYearly = value;
+          }
+          
+          if (shouldMakeYearly) {
+            finalIsRecurring = true;
+          }
+        } catch (error) {
+          // If dialog fails, log error but continue with user's current choice
+          console.error('Failed to show yearly suggestion dialog:', error);
+        }
+      }
+      
+      await onSave(title, date, emoji, finalIsRecurring, emojiColor);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
       onClose();
@@ -468,7 +602,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
+      <IonContent ref={contentRef} className="ion-padding">
         {/* Form content */}
           <div className="space-y-6">
             {/* Title input */}
@@ -643,21 +777,68 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               />
             </div>
 
-            {/* Recurring toggle */}
-            <div className="bg-secondary/40 rounded-2xl p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <RefreshCw className="w-5 h-5 text-primary" />
+            {/* Recurring toggle with expandable suggestion */}
+            <div className="bg-secondary/40 rounded-2xl overflow-hidden">
+              {/* Main recurring toggle row */}
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{t('modal.repeatYearlyLabel')}</p>
+                    <p className="text-sm text-muted-foreground">{t('modal.repeatYearlySublabel')}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">{t('modal.repeatYearlyLabel')}</p>
-                  <p className="text-sm text-muted-foreground">{t('modal.repeatYearlySublabel')}</p>
-                </div>
+                <IonToggle 
+                  checked={isRecurring} 
+                  onIonChange={(e) => handleRecurringToggle(e.detail.checked)}
+                />
               </div>
-              <IonToggle 
-                checked={isRecurring} 
-                onIonChange={(e) => handleRecurringToggle(e.detail.checked)}
-              />
+              
+              {/* Yearly suggestion - slides out from bottom when date is old */}
+              {showYearlySuggestion && (
+                <div 
+                  ref={yearlySuggestionBannerRef}
+                  className="yearly-suggestion-expandable"
+                  style={{
+                    animation: isYearlySuggestionExiting
+                      ? 'yearlySuggestionSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                      : 'yearlySuggestionSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                  }}
+                >
+                  {/* Divider */}
+                  <div className="mx-4 border-t border-border/50" />
+                  
+                  {/* Suggestion content */}
+                  <div className="p-4 pl-[68px] flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
+                      <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
+                    </div>
+                    <IonButton
+                      onClick={() => {
+                        trigger('medium');
+                        setIsRecurring(true);
+                      }}
+                      fill="solid"
+                      color="dark"
+                      className="flex-shrink-0"
+                      style={{
+                        '--background': '#000000',
+                        '--background-activated': '#1a1a1a',
+                        '--color': '#ffffff',
+                        height: '32px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        margin: 0,
+                      } as React.CSSProperties}
+                    >
+                      {t('modal.enableYearly')}
+                    </IonButton>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Date picker */}

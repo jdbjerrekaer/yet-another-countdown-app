@@ -71,7 +71,12 @@
     "customEmojiPlaceholder": "🎨",
     "shareEvent": "Ereignis teilen",
     "shareLinkCopied": "Import-Link in Zwischenablage kopiert",
-    "shareError": "Fehler beim Teilen des Ereignisses"
+    "shareError": "Fehler beim Teilen des Ereignisses",
+    "importedFrom": "Importiert von {{calendar}}",
+    "yearlySuggestion": "Dieses Datum liegt über ein Jahr zurück. Jährlich wiederholen?",
+    "yearlySuggestionHint": "Jährlich wiederholen?",
+    "yearlySuggestionReason": "Dieses Datum liegt über ein Jahr zurück",
+    "enableYearly": "Aktivieren"
   },
   "dialogs": {
     "dateChanged": {
@@ -91,6 +96,18 @@
       "message": "Möchtest du \"{{emoji}} {{title}}\" für {{date}} importieren?",
       "import": "Importieren",
       "cancel": "Abbrechen"
+    },
+    "yearlyMigration": {
+      "title": "Ereignisse jährlich machen?",
+      "message": "Du hast {{count}} Ereignis(se) von vor über einem Jahr. Sollen sie jährlich wiederholt werden?",
+      "convert": "Zu jährlich konvertieren",
+      "skip": "Überspringen"
+    },
+    "suggestYearly": {
+      "title": "Dieses Ereignis jährlich machen?",
+      "message": "Dieses Datum liegt über ein Jahr zurück. Jährlich wiederholen, damit es nächstes Jahr wieder herunterzählt?",
+      "enable": "Jährlich machen",
+      "keepOneTime": "Einmalig belassen"
     }
   },
   "countdown": {
