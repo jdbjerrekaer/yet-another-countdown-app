@@ -39,6 +39,7 @@ import { CalendarImportModal } from '@/components/CalendarImportModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
+import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -468,6 +469,34 @@ export default function Index() {
 
     handlePendingImport();
   }, [isNative, t]);
+
+  // Handle deep link edit event (when user taps widget to edit an event)
+  useEffect(() => {
+    const handleEditDeepLink = (event: Event) => {
+      const customEvent = event as CustomEvent<EditEventDeepLinkDetail>;
+      const { eventId } = customEvent.detail;
+      
+      console.log('[Index] Received edit deep link for event:', eventId);
+      
+      // Find the event by ID
+      const eventToEdit = events.find(e => e.id === eventId);
+      if (eventToEdit) {
+        console.log('[Index] Found event, opening edit modal:', eventToEdit.title);
+        // Select the event and open edit modal
+        setSelectedEventId(eventId);
+        setEditingEvent(eventToEdit);
+        setIsModalOpen(true);
+        trigger('medium');
+      } else {
+        console.warn('[Index] Event not found for ID:', eventId);
+      }
+    };
+
+    window.addEventListener(EDIT_EVENT_DEEP_LINK, handleEditDeepLink);
+    return () => {
+      window.removeEventListener(EDIT_EVENT_DEEP_LINK, handleEditDeepLink);
+    };
+  }, [events, trigger]);
 
   // Show confirmation dialog when date has changed during edit
   const confirmDateChange = async (eventTitle: string, oldDate: Date, newDate: Date): Promise<boolean> => {

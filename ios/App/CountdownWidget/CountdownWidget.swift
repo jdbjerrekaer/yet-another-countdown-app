@@ -506,6 +506,9 @@ struct CountdownWidgetEntryView: View {
             let countdown = CountdownTime.calculate(from: targetDate)
             let progress = WidgetDataSync.shared.calculateProgress(for: event)
             
+            // Create deep link URL to open edit modal for this event
+            let deepLinkURL = URL(string: "countdownapp://edit?id=\(event.id)")
+            
             switch family {
             case .systemSmall:
                 SmallWidgetView(
@@ -516,6 +519,7 @@ struct CountdownWidgetEntryView: View {
                     countdownStyle: entry.countdownStyle,
                     progress: progress
                 )
+                .widgetURL(deepLinkURL)
             case .systemMedium:
                 MediumWidgetView(
                     event: event,
@@ -525,6 +529,7 @@ struct CountdownWidgetEntryView: View {
                     countdownStyle: entry.countdownStyle,
                     progress: progress
                 )
+                .widgetURL(deepLinkURL)
             case .systemLarge:
                 LargeWidgetView(
                     event: event,
@@ -534,6 +539,7 @@ struct CountdownWidgetEntryView: View {
                     countdownStyle: entry.countdownStyle,
                     progress: progress
                 )
+                .widgetURL(deepLinkURL)
             @unknown default:
                 SmallWidgetView(
                     event: event,
@@ -543,6 +549,7 @@ struct CountdownWidgetEntryView: View {
                     countdownStyle: entry.countdownStyle,
                     progress: progress
                 )
+                .widgetURL(deepLinkURL)
             }
         } else {
             EmptyWidgetView(family: family)
@@ -565,12 +572,14 @@ struct TripleLargeWidgetView: View {
     var body: some View {
         VStack(spacing: 0) {
             if let event1 = event1 {
-                EventRowView(
-                    event: event1,
-                    appearanceMode: appearanceMode,
-                    widgetRenderingMode: widgetRenderingMode,
-                    colorScheme: colorScheme
-                )
+                Link(destination: URL(string: "countdownapp://edit?id=\(event1.id)")!) {
+                    EventRowView(
+                        event: event1,
+                        appearanceMode: appearanceMode,
+                        widgetRenderingMode: widgetRenderingMode,
+                        colorScheme: colorScheme
+                    )
+                }
             } else {
                 EmptyRowView(appearanceMode: appearanceMode)
             }
@@ -579,12 +588,14 @@ struct TripleLargeWidgetView: View {
                 .background(dividerColor)
             
             if let event2 = event2 {
-                EventRowView(
-                    event: event2,
-                    appearanceMode: appearanceMode,
-                    widgetRenderingMode: widgetRenderingMode,
-                    colorScheme: colorScheme
-                )
+                Link(destination: URL(string: "countdownapp://edit?id=\(event2.id)")!) {
+                    EventRowView(
+                        event: event2,
+                        appearanceMode: appearanceMode,
+                        widgetRenderingMode: widgetRenderingMode,
+                        colorScheme: colorScheme
+                    )
+                }
             } else {
                 EmptyRowView(appearanceMode: appearanceMode)
             }
@@ -593,12 +604,14 @@ struct TripleLargeWidgetView: View {
                 .background(dividerColor)
             
             if let event3 = event3 {
-                EventRowView(
-                    event: event3,
-                    appearanceMode: appearanceMode,
-                    widgetRenderingMode: widgetRenderingMode,
-                    colorScheme: colorScheme
-                )
+                Link(destination: URL(string: "countdownapp://edit?id=\(event3.id)")!) {
+                    EventRowView(
+                        event: event3,
+                        appearanceMode: appearanceMode,
+                        widgetRenderingMode: widgetRenderingMode,
+                        colorScheme: colorScheme
+                    )
+                }
             } else {
                 EmptyRowView(appearanceMode: appearanceMode)
             }
@@ -840,27 +853,37 @@ struct CountdownWidgetBundle: WidgetBundle {
         CountdownTimerWidget()   // Focus/Timer style widget
         CountdownVisualWidget()  // Visual/Progress bars style widget
         CountdownClassicWidget() // Classic/Flip digit style widget
-        iOS17TripleWidget()      // Triple countdown widget (iOS 17+)
+        CountdownTripleWidgetWrapper()  // Triple countdown widget (iOS 17+)
     }
 }
 
 // Wrapper to conditionally include iOS 17+ triple widget
-struct iOS17TripleWidget: Widget {
+struct CountdownTripleWidgetWrapper: Widget {
     let kind: String = "CountdownTripleWidget"
     
     var body: some WidgetConfiguration {
         if #available(iOS 17.0, *) {
-            return CountdownTripleWidget().body
+            return AppIntentConfiguration(
+                kind: kind,
+                intent: SelectTripleCountdownIntent.self,
+                provider: CountdownTripleWidgetProvider()
+            ) { entry in
+                TripleCountdownWidgetEntryView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            }
+            .configurationDisplayName("Triple Countdown")
+            .description("Display three countdown events in one widget.")
+            .supportedFamilies([.systemLarge])
         } else {
-            // Return a minimal placeholder for iOS < 17
+            // iOS 16 - triple widget not available, use minimal static config
             return StaticConfiguration(
-                kind: "PlaceholderTriple",
+                kind: kind,
                 provider: CountdownTimerWidgetProviderStatic()
             ) { _ in
                 EmptyView()
             }
-            .configurationDisplayName("")
-            .description("")
+            .configurationDisplayName("Triple Countdown")
+            .description("Requires iOS 17 or later.")
             .supportedFamilies([])
         }
     }

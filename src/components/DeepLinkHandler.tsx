@@ -3,6 +3,13 @@ import { useHistory } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
+// Custom event for edit deep links
+export const EDIT_EVENT_DEEP_LINK = 'editEventDeepLink';
+
+export interface EditEventDeepLinkDetail {
+  eventId: string;
+}
+
 /**
  * Component that handles deep links on native platforms
  * Listens for app URL open events and routes them to the appropriate page
@@ -46,11 +53,44 @@ export function DeepLinkHandler() {
 
   const handleDeepLink = (url: string) => {
     try {
-      const urlObj = new URL(url);
+      console.log('[DeepLink] Handling URL:', url);
+      
+      // Parse the URL - handle both standard URLs and custom scheme URLs
+      // Custom scheme URLs like countdownapp://edit?id=xxx need special handling
+      let pathname = '';
+      let searchParams: URLSearchParams;
+      
+      if (url.startsWith('countdownapp://')) {
+        // Custom scheme URL: countdownapp://edit?id=xxx
+        const withoutScheme = url.replace('countdownapp://', '');
+        const [path, query] = withoutScheme.split('?');
+        pathname = '/' + path;
+        searchParams = new URLSearchParams(query || '');
+      } else {
+        // Standard URL
+        const urlObj = new URL(url);
+        pathname = urlObj.pathname;
+        searchParams = urlObj.searchParams;
+      }
+      
+      console.log('[DeepLink] Parsed - pathname:', pathname, 'params:', Object.fromEntries(searchParams));
+      
+      // Handle edit deep link from widget tap
+      if (pathname === '/edit' || pathname.endsWith('/edit')) {
+        const eventId = searchParams.get('id');
+        if (eventId) {
+          console.log('[DeepLink] Dispatching edit event for:', eventId);
+          // Dispatch custom event that Index.tsx will listen to
+          window.dispatchEvent(new CustomEvent<EditEventDeepLinkDetail>(EDIT_EVENT_DEEP_LINK, {
+            detail: { eventId }
+          }));
+        }
+        return;
+      }
       
       // Route to import page with the full URL as query
-      if (urlObj.pathname === '/import' || urlObj.pathname.endsWith('/import')) {
-        history.push(`/import${urlObj.search}`);
+      if (pathname === '/import' || pathname.endsWith('/import')) {
+        history.push(`/import?${searchParams.toString()}`);
       }
     } catch (error) {
       console.error('Failed to handle deep link:', error);
