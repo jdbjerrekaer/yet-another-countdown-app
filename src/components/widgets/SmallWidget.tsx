@@ -179,7 +179,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
               {isRecurring 
-                ? `${t('widget.next', { date: format(targetDate, 'MMM d') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
+                ? t('widget.next', { date: format(targetDate, 'MMM d') })
                 : format(targetDate, 'MMM d, yyyy')}
             </p>
           )}

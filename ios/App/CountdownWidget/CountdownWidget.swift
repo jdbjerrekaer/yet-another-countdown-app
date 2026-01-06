@@ -21,6 +21,7 @@ struct TripleCountdownWidgetEntry: TimelineEntry {
     let event2: CountdownEvent?
     let event3: CountdownEvent?
     let appearanceMode: WidgetAppearanceMode
+    let countdownStyle: WidgetCountdownStyle
 }
 
 // MARK: - Timeline Provider for iOS 17+ (Focus/Timer Style)
@@ -392,7 +393,7 @@ struct CountdownClassicWidgetProviderStatic: TimelineProvider {
     }
 }
 
-// MARK: - Timeline Provider for Triple Countdown Widget
+// MARK: - Timeline Provider for Triple Countdown Widget (Focus Style)
 
 @available(iOS 17.0, *)
 struct CountdownTripleWidgetProvider: AppIntentTimelineProvider {
@@ -414,7 +415,8 @@ struct CountdownTripleWidgetProvider: AppIntentTimelineProvider {
             event1: placeholderEvent,
             event2: placeholderEvent,
             event3: placeholderEvent,
-            appearanceMode: .light
+            appearanceMode: .light,
+            countdownStyle: .focus
         )
     }
     
@@ -449,7 +451,8 @@ struct CountdownTripleWidgetProvider: AppIntentTimelineProvider {
             event1: event1,
             event2: event2,
             event3: event3,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light
+            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
+            countdownStyle: .focus
         )
     }
     
@@ -484,7 +487,113 @@ struct CountdownTripleWidgetProvider: AppIntentTimelineProvider {
             event1: event1,
             event2: event2,
             event3: event3,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light
+            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
+            countdownStyle: .focus
+        )
+        
+        // Refresh every minute for countdown accuracy
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
+        
+        return Timeline(entries: [entry], policy: .after(nextUpdate))
+    }
+}
+
+// MARK: - Timeline Provider for Triple Countdown Widget (Visual Style)
+
+@available(iOS 17.0, *)
+struct CountdownVisualTripleWidgetProvider: AppIntentTimelineProvider {
+    typealias Entry = TripleCountdownWidgetEntry
+    typealias Intent = SelectTripleCountdownIntent
+    
+    func placeholder(in context: Context) -> TripleCountdownWidgetEntry {
+        let placeholderEvent = CountdownEvent(
+            id: "placeholder",
+            title: "My Event",
+            targetDate: ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400 * 7)),
+            emoji: "🎉",
+            emojiColor: nil,
+            isRecurring: false,
+            createdAt: ISO8601DateFormatter().string(from: Date())
+        )
+        return TripleCountdownWidgetEntry(
+            date: Date(),
+            event1: placeholderEvent,
+            event2: placeholderEvent,
+            event3: placeholderEvent,
+            appearanceMode: .light,
+            countdownStyle: .visual
+        )
+    }
+    
+    func snapshot(for configuration: SelectTripleCountdownIntent, in context: Context) async -> TripleCountdownWidgetEntry {
+        let widgetData = WidgetDataSync.shared.loadWidgetData()
+        let events = widgetData?.events ?? []
+        
+        // Get selected events or use first available
+        let event1: CountdownEvent? = {
+            if let id = configuration.countdown1?.id {
+                return events.first { $0.id == id }
+            }
+            return events.first
+        }()
+        
+        let event2: CountdownEvent? = {
+            if let id = configuration.countdown2?.id {
+                return events.first { $0.id == id }
+            }
+            return events.count > 1 ? events[1] : nil
+        }()
+        
+        let event3: CountdownEvent? = {
+            if let id = configuration.countdown3?.id {
+                return events.first { $0.id == id }
+            }
+            return events.count > 2 ? events[2] : nil
+        }()
+        
+        return TripleCountdownWidgetEntry(
+            date: Date(),
+            event1: event1,
+            event2: event2,
+            event3: event3,
+            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
+            countdownStyle: .visual
+        )
+    }
+    
+    func timeline(for configuration: SelectTripleCountdownIntent, in context: Context) async -> Timeline<TripleCountdownWidgetEntry> {
+        let widgetData = WidgetDataSync.shared.loadWidgetData()
+        let events = widgetData?.events ?? []
+        
+        // Get selected events or use first available
+        let event1: CountdownEvent? = {
+            if let id = configuration.countdown1?.id {
+                return events.first { $0.id == id }
+            }
+            return events.first
+        }()
+        
+        let event2: CountdownEvent? = {
+            if let id = configuration.countdown2?.id {
+                return events.first { $0.id == id }
+            }
+            return events.count > 1 ? events[1] : nil
+        }()
+        
+        let event3: CountdownEvent? = {
+            if let id = configuration.countdown3?.id {
+                return events.first { $0.id == id }
+            }
+            return events.count > 2 ? events[2] : nil
+        }()
+        
+        let entry = TripleCountdownWidgetEntry(
+            date: Date(),
+            event1: event1,
+            event2: event2,
+            event3: event3,
+            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
+            countdownStyle: .visual
         )
         
         // Refresh every minute for countdown accuracy
@@ -565,6 +674,7 @@ struct TripleLargeWidgetView: View {
     let event2: CountdownEvent?
     let event3: CountdownEvent?
     let appearanceMode: WidgetAppearanceMode
+    let countdownStyle: WidgetCountdownStyle
     
     @Environment(\.widgetRenderingMode) var widgetRenderingMode
     @Environment(\.colorScheme) var colorScheme
@@ -576,6 +686,7 @@ struct TripleLargeWidgetView: View {
                     EventRowView(
                         event: event1,
                         appearanceMode: appearanceMode,
+                        countdownStyle: countdownStyle,
                         widgetRenderingMode: widgetRenderingMode,
                         colorScheme: colorScheme
                     )
@@ -592,6 +703,7 @@ struct TripleLargeWidgetView: View {
                     EventRowView(
                         event: event2,
                         appearanceMode: appearanceMode,
+                        countdownStyle: countdownStyle,
                         widgetRenderingMode: widgetRenderingMode,
                         colorScheme: colorScheme
                     )
@@ -608,6 +720,7 @@ struct TripleLargeWidgetView: View {
                     EventRowView(
                         event: event3,
                         appearanceMode: appearanceMode,
+                        countdownStyle: countdownStyle,
                         widgetRenderingMode: widgetRenderingMode,
                         colorScheme: colorScheme
                     )
@@ -637,12 +750,14 @@ struct TripleLargeWidgetView: View {
 struct EventRowView: View {
     let event: CountdownEvent
     let appearanceMode: WidgetAppearanceMode
+    let countdownStyle: WidgetCountdownStyle
     let widgetRenderingMode: WidgetRenderingMode
     let colorScheme: ColorScheme
     
     var body: some View {
         let targetDate = event.isRecurring ? event.getNextRecurringDate() : event.targetDateAsDate
         let countdown = CountdownTime.calculate(from: targetDate)
+        let progress = WidgetDataSync.shared.calculateProgress(for: event)
         
         HStack(spacing: 12) {
             // Emoji badge
@@ -673,32 +788,57 @@ struct EventRowView: View {
             
             Spacer()
             
-            // Days countdown
-            VStack(alignment: .trailing, spacing: 2) {
-                if countdown.isComplete && !countdown.isPast {
-                    Text("Today!")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.blue)
-                } else if countdown.isPast {
-                    Text("\(countdown.daysSince)")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(foregroundColor)
-                    Text(countdown.daysSince == 1 ? "day ago" : "days ago")
-                        .font(.system(size: 11))
-                        .foregroundColor(mutedColor)
-                } else {
-                    Text("\(countdown.days)")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(foregroundColor)
-                    Text(countdown.days == 1 ? "day" : "days")
-                        .font(.system(size: 11))
-                        .foregroundColor(mutedColor)
+            // Countdown display - varies by style
+            if countdownStyle == .visual {
+                // Visual mode - progress bars
+                ProgressBarsView(
+                    progress: progress,
+                    numBars: 6,
+                    color: accentColor,
+                    barWidth: 8,
+                    barHeight: 40
+                )
+                .widgetAccentable(false)
+            } else {
+                // Focus mode - days countdown
+                VStack(alignment: .trailing, spacing: 2) {
+                    if countdown.isComplete && !countdown.isPast {
+                        Text("Today!")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.blue)
+                    } else if countdown.isPast {
+                        Text("\(countdown.daysSince)")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(foregroundColor)
+                        Text(countdown.daysSince == 1 ? "day ago" : "days ago")
+                            .font(.system(size: 11))
+                            .foregroundColor(mutedColor)
+                    } else {
+                        Text("\(countdown.days)")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(foregroundColor)
+                        Text(countdown.days == 1 ? "day" : "days")
+                            .font(.system(size: 11))
+                            .foregroundColor(mutedColor)
+                    }
                 }
             }
         }
         .padding(.horizontal, 16)
         .frame(maxWidth: .infinity)
         .frame(height: 109)
+    }
+    
+    private var accentColor: Color {
+        if widgetRenderingMode == .accented {
+            return .accentColor
+        } else if widgetRenderingMode == .vibrant {
+            return .white
+        } else if let hexColor = event.emojiColor {
+            return Color(hex: hexColor)
+        } else {
+            return .blue
+        }
     }
     
     private var foregroundColor: Color {
@@ -839,7 +979,23 @@ struct TripleCountdownWidgetEntryView: View {
             event1: entry.event1,
             event2: entry.event2,
             event3: entry.event3,
-            appearanceMode: entry.appearanceMode
+            appearanceMode: entry.appearanceMode,
+            countdownStyle: entry.countdownStyle
+        )
+    }
+}
+
+@available(iOS 17.0, *)
+struct TripleVisualCountdownWidgetEntryView: View {
+    var entry: TripleCountdownWidgetEntry
+    
+    var body: some View {
+        TripleLargeWidgetView(
+            event1: entry.event1,
+            event2: entry.event2,
+            event3: entry.event3,
+            appearanceMode: entry.appearanceMode,
+            countdownStyle: .visual
         )
     }
 }
@@ -850,16 +1006,17 @@ struct TripleCountdownWidgetEntryView: View {
 @main
 struct CountdownWidgetBundle: WidgetBundle {
     var body: some Widget {
-        CountdownTimerWidget()   // Focus/Timer style widget
-        CountdownVisualWidget()  // Visual/Progress bars style widget
-        CountdownClassicWidget() // Classic/Flip digit style widget
-        CountdownTripleWidgetWrapper()  // Triple countdown widget (iOS 17+)
+        CountdownTimerWidget()        // Focus/Timer style widget (single event)
+        CountdownTimerTripleWidget()  // Focus/Timer style widget (triple event)
+        CountdownVisualWidget()       // Visual/Progress bars style widget (single event)
+        CountdownVisualTripleWidget() // Visual/Progress bars style widget (triple event)
+        CountdownClassicWidget()      // Classic/Flip digit style widget
     }
 }
 
-// Wrapper to conditionally include iOS 17+ triple widget
-struct CountdownTripleWidgetWrapper: Widget {
-    let kind: String = "CountdownTripleWidget"
+// MARK: - Focus Timer Triple Widget Wrapper
+struct CountdownTimerTripleWidget: Widget {
+    let kind: String = "CountdownTimerTripleWidget"
     
     var body: some WidgetConfiguration {
         if #available(iOS 17.0, *) {
@@ -871,18 +1028,48 @@ struct CountdownTripleWidgetWrapper: Widget {
                 TripleCountdownWidgetEntryView(entry: entry)
                     .containerBackground(.fill.tertiary, for: .widget)
             }
-            .configurationDisplayName("Triple Countdown")
-            .description("Display three countdown events in one widget.")
+            .configurationDisplayName("Countdown Timer (Triple)")
+            .description("Track three events with days display.")
             .supportedFamilies([.systemLarge])
         } else {
-            // iOS 16 - triple widget not available, use minimal static config
             return StaticConfiguration(
                 kind: kind,
                 provider: CountdownTimerWidgetProviderStatic()
             ) { _ in
                 EmptyView()
             }
-            .configurationDisplayName("Triple Countdown")
+            .configurationDisplayName("Countdown Timer (Triple)")
+            .description("Requires iOS 17 or later.")
+            .supportedFamilies([])
+        }
+    }
+}
+
+// MARK: - Visual Triple Widget Wrapper
+struct CountdownVisualTripleWidget: Widget {
+    let kind: String = "CountdownVisualTripleWidget"
+    
+    var body: some WidgetConfiguration {
+        if #available(iOS 17.0, *) {
+            return AppIntentConfiguration(
+                kind: kind,
+                intent: SelectTripleCountdownIntent.self,
+                provider: CountdownVisualTripleWidgetProvider()
+            ) { entry in
+                TripleVisualCountdownWidgetEntryView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            }
+            .configurationDisplayName("Countdown Visual (Triple)")
+            .description("Track three events with progress bars.")
+            .supportedFamilies([.systemLarge])
+        } else {
+            return StaticConfiguration(
+                kind: kind,
+                provider: CountdownVisualWidgetProviderStatic()
+            ) { _ in
+                EmptyView()
+            }
+            .configurationDisplayName("Countdown Visual (Triple)")
             .description("Requires iOS 17 or later.")
             .supportedFamilies([])
         }
