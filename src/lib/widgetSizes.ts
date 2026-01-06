@@ -84,13 +84,14 @@ export function getWidgetSizeClasses(size: keyof AllWidgetSizes): string {
 /**
  * Get inline styles for widget dimensions
  * Useful when dynamic class names aren't supported
+ * Returns minWidth/minHeight to allow widgets to expand if needed
  */
-export function getWidgetSizeStyles(size: keyof AllWidgetSizes): { width: string; height: string } {
+export function getWidgetSizeStyles(size: keyof AllWidgetSizes): { minWidth: string; minHeight: string } {
   const sizes = getWidgetSizes();
   const dim = sizes[size];
   return {
-    width: `${dim.width}px`,
-    height: `${dim.height}px`,
+    minWidth: `${dim.width}px`,
+    minHeight: `${dim.height}px`,
   };
 }
 

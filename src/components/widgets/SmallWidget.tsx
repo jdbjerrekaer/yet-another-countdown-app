@@ -46,7 +46,7 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
 };
 
 function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
-  const baseClasses = 'rounded-[28px] shadow-ios-lg p-4 flex flex-col';
+  const baseClasses = 'rounded-[28px] shadow-ios-lg p-[16px] flex flex-col aspect-square';
   
   switch (appearanceMode) {
     case 'light':
@@ -80,14 +80,16 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
   const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
   // Combined style for both size and tinted background
+  // For small widget, only use minWidth and let aspect-square determine height-based width
+  const smallSizeStyle = { minWidth: sizeStyles.minWidth };
   const combinedStyle = appearanceMode === 'tinted'
-    ? { ...sizeStyles, background: getTintedBackground(emojiColor, true) }
-    : sizeStyles;
+    ? { ...smallSizeStyle, background: getTintedBackground(emojiColor, true) }
+    : smallSizeStyle;
 
   // Visual mode layout - same structure as Focus mode, but replace number with ring
   if (countdownStyle === 'visual') {
     return (
-      <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
+      <div className={`${widgetClasses} gap-5`} style={combinedStyle}>
         <div className="flex items-center justify-between">
           <div 
             className={`w-10 h-10 rounded-xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
@@ -107,7 +109,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           )}
         </div>
         
-        <div>
+        <div className="flex-1 flex flex-col justify-end">
           <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
@@ -145,7 +147,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
     const flipTheme = appearanceMode === 'dark' ? 'dark' : 'light';
     
     return (
-      <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
+      <div className={`${widgetClasses} gap-5`} style={combinedStyle}>
         <div className="flex items-center justify-between">
           <div 
             className={`w-10 h-10 rounded-xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
@@ -165,7 +167,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           )}
         </div>
         
-        <div>
+        <div className="flex-1 flex flex-col justify-end">
           <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
@@ -198,7 +200,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
 
   // Focus mode layout (original)
   return (
-    <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
+    <div className={`${widgetClasses} gap-5`} style={combinedStyle}>
       <div className="flex items-center justify-between">
         <div 
           className={`w-10 h-10 rounded-xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
@@ -218,7 +220,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
         )}
       </div>
       
-      <div>
+      <div className="flex-1 flex flex-col justify-end">
         <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
         {targetDate && (
           <p className="text-xs text-muted-foreground truncate mb-1">

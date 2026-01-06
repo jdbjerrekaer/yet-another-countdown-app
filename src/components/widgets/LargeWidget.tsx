@@ -33,7 +33,7 @@ interface LargeWidgetProps {
 }
 
 function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
-  const baseClasses = 'rounded-[28px] shadow-ios-lg p-6 flex flex-col';
+  const baseClasses = 'rounded-[28px] shadow-ios-lg p-[24px] flex flex-col';
   
   switch (appearanceMode) {
     case 'light':
@@ -87,9 +87,9 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
-      <div className={widgetClasses} style={combinedStyle}>
+      <div className={`${widgetClasses} gap-0`} style={combinedStyle}>
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 pb-6">
           <div 
             className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
             style={emojiColor ? { 
@@ -144,7 +144,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
 
         {/* Bottom: Time breakdown */}
         {!(countdown.isComplete && !countdown.isPast) && (
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="flex justify-center gap-6 pt-4">
             {countdown.isPast ? (
               <>
                 <div className="text-center">
@@ -196,8 +196,8 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
     const flipTheme = appearanceMode === 'dark' ? 'dark' : 'light';
     
     return (
-      <div className={widgetClasses} style={combinedStyle}>
-        <div className="flex items-center gap-4 mb-6">
+      <div className={`${widgetClasses} gap-0`} style={combinedStyle}>
+        <div className="flex items-center gap-4 pb-6">
           <div 
             className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
             style={emojiColor ? { 
@@ -226,30 +226,30 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
           </div>
         </div>
         
-        {countdown.isPast ? (
-          <div className="flex items-center justify-center flex-1">
+        <div className="flex-1 flex items-center justify-center">
+          {countdown.isPast ? (
             <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="large" theme={flipTheme} layout="row" />
-          </div>
-        ) : countdown.isComplete ? (
-          <div className="text-center py-8">
-            <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="large" theme={flipTheme} layout="row" />
-            <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="large" theme={flipTheme} layout="row" />
-            <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="large" theme={flipTheme} layout="row" />
-            <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="large" theme={flipTheme} layout="row" />
-          </div>
-        )}
+          ) : countdown.isComplete ? (
+            <div className="text-center py-8">
+              <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 w-full">
+              <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="large" theme={flipTheme} layout="row" />
+              <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="large" theme={flipTheme} layout="row" />
+              <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="large" theme={flipTheme} layout="row" />
+              <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="large" theme={flipTheme} layout="row" />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   // Focus mode layout (original)
   return (
-    <div className={widgetClasses} style={combinedStyle}>
-      <div className="flex items-center gap-4 mb-6">
+    <div className={`${widgetClasses} gap-0`} style={combinedStyle}>
+      <div className="flex items-center gap-4 pb-6">
         <div 
           className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
           style={emojiColor ? { 
@@ -278,35 +278,37 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         </div>
       </div>
       
-      {countdown.isPast ? (
-        <div className="flex flex-col items-center justify-center flex-1">
-          <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-          <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
-        </div>
-      ) : countdown.isComplete ? (
-        <div className="text-center py-8">
-          <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-            <p className="text-4xl font-bold text-foreground">{countdown.days}</p>
-            <p className="text-sm text-muted-foreground">{t('widget.units.days_plural')}</p>
+      <div className="flex-1 flex items-center justify-center">
+        {countdown.isPast ? (
+          <div className="flex flex-col items-center justify-center">
+            <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
+            <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
           </div>
-          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-            <p className="text-4xl font-bold text-foreground">{countdown.hours}</p>
-            <p className="text-sm text-muted-foreground">{t('widget.units.hours_plural')}</p>
+        ) : countdown.isComplete ? (
+          <div className="text-center py-8">
+            <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
           </div>
-          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-            <p className="text-4xl font-bold text-foreground">{countdown.minutes}</p>
-            <p className="text-sm text-muted-foreground">{t('widget.units.minutes_plural')}</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+              <p className="text-4xl font-bold text-foreground">{countdown.days}</p>
+              <p className="text-sm text-muted-foreground">{t('widget.units.days_plural')}</p>
+            </div>
+            <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+              <p className="text-4xl font-bold text-foreground">{countdown.hours}</p>
+              <p className="text-sm text-muted-foreground">{t('widget.units.hours_plural')}</p>
+            </div>
+            <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+              <p className="text-4xl font-bold text-foreground">{countdown.minutes}</p>
+              <p className="text-sm text-muted-foreground">{t('widget.units.minutes_plural')}</p>
+            </div>
+            <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+              <p className="text-4xl font-bold text-foreground">{countdown.seconds}</p>
+              <p className="text-sm text-muted-foreground">{t('widget.units.seconds_plural')}</p>
+            </div>
           </div>
-          <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-            <p className="text-4xl font-bold text-foreground">{countdown.seconds}</p>
-            <p className="text-sm text-muted-foreground">{t('widget.units.seconds_plural')}</p>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
