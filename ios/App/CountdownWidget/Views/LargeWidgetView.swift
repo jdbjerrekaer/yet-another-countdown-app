@@ -35,7 +35,7 @@ struct LargeWidgetView: View {
                     }
                     
                     if let date = targetDate {
-                        Text(formatDate(date))
+                        Text(formatDate(date, countdown: countdown))
                             .font(.system(size: 14))
                             .foregroundColor(mutedColor)
                             .lineLimit(1)
@@ -289,14 +289,19 @@ struct LargeWidgetView: View {
         return .blue
     }
     
-    private func formatDate(_ date: Date) -> String {
+    private func formatDate(_ date: Date, countdown: CountdownTime) -> String {
         let formatter = DateFormatter()
         if event.isRecurring {
-            formatter.dateFormat = "'Next:' MMM d, yyyy"
+            formatter.dateFormat = "MMM d, yyyy"
+            let dateStr = formatter.string(from: date)
+            let daysLabel = countdown.days == 1 ? "day" : "days"
+            return "Next: \(dateStr) · \(countdown.days) \(daysLabel)"
         } else {
             formatter.dateFormat = "MMM d, yyyy"
+            let dateStr = formatter.string(from: date)
+            let daysLabel = countdown.days == 1 ? "day" : "days"
+            return "\(dateStr) · \(countdown.days) \(daysLabel)"
         }
-        return formatter.string(from: date)
     }
 }
 

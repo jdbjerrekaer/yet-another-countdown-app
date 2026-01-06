@@ -45,6 +45,13 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
   return { value: countdown.seconds, unit: 'seconds' };
 };
 
+const getTimeUnitLabel = (unit: string, value: number, t: (key: string) => string): string => {
+  if (value === 1) {
+    return t(`widget.units.${unit}`);
+  }
+  return t(`widget.units.${unit}_plural`);
+};
+
 function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
   const baseClasses = 'rounded-[28px] shadow-ios-lg p-[16px] flex flex-col aspect-square';
   
@@ -114,7 +121,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
               {isRecurring 
-                ? t('widget.next', { date: format(targetDate, 'MMM d') }) 
+                ? `${t('widget.next', { date: format(targetDate, 'MMM d') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
                 : countdown.isPast
                   ? t('countdown.daysAgo', { count: countdown.daysSince })
                   : format(targetDate, 'MMM d, yyyy')}
@@ -171,7 +178,9 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           <p className="text-sm font-semibold text-foreground truncate mb-1">{title}</p>
           {targetDate && (
             <p className="text-xs text-muted-foreground truncate mb-1">
-              {isRecurring ? t('widget.next', { date: format(targetDate, 'MMM d') }) : format(targetDate, 'MMM d, yyyy')}
+              {isRecurring 
+                ? `${t('widget.next', { date: format(targetDate, 'MMM d') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
+                : format(targetDate, 'MMM d, yyyy')}
             </p>
           )}
           {countdown.isPast ? (
@@ -187,7 +196,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           ) : (
             <FlipDigit 
               value={timeDisplay.value} 
-              label={t(`widget.units.${timeDisplay.unit}`, { count: timeDisplay.value })}
+              label={getTimeUnitLabel(timeDisplay.unit, timeDisplay.value, t)}
               size="small" 
               theme={flipTheme} 
               layout="row"
@@ -235,7 +244,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           <p className="text-2xl font-bold text-primary">{t('countdown.today')}</p>
         ) : (
           <p className="text-3xl font-bold text-foreground tracking-tight">
-            {timeDisplay.value}<span className="text-lg font-medium text-muted-foreground ml-1">{t(`widget.units.${timeDisplay.unit}`, { count: timeDisplay.value })}</span>
+            {timeDisplay.value}<span className="text-lg font-medium text-muted-foreground ml-1">{getTimeUnitLabel(timeDisplay.unit, timeDisplay.value, t)}</span>
           </p>
         )}
       </div>
