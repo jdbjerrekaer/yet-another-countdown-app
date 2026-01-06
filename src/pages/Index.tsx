@@ -852,7 +852,7 @@ export default function Index() {
             <div className="space-y-8 animate-fade-in">
               {/* Events list */}
               <section className="space-y-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                   {t('events.title')}
                 </h2>
                 <DndContext
@@ -866,7 +866,7 @@ export default function Index() {
                     items={events.map((e) => e.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-2" style={{ backgroundColor: 'hsl(var(--background))' }}>
+                    <div className="space-y-2" style={{ backgroundColor: 'hsl(var(--background))', overflow: 'visible' }}>
                       {events.map(event => (
                         <SortableCountdownCard
                           key={event.id}
@@ -937,7 +937,7 @@ export default function Index() {
                 <>
                   {/* Size selector */}
                   <section className="space-y-3">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                       {t('widget.size')}
                     </h2>
                     <IonSegment
@@ -964,7 +964,7 @@ export default function Index() {
 
                   {/* Countdown style selector */}
                   <section className="space-y-3">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                       {t('widget.style')}
                     </h2>
                     <IonSegment
@@ -990,7 +990,7 @@ export default function Index() {
 
                   {/* Appearance mode selector */}
                   <section className="space-y-3">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                       {t('widget.appearance')}
                     </h2>
                     <IonSegment
@@ -1010,7 +1010,7 @@ export default function Index() {
 
                   {/* Widget preview */}
                   <section className="space-y-3">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                       {t('widget.preview')}
                     </h2>
                     <div className="flex justify-center py-4">

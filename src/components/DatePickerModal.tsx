@@ -673,7 +673,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
           <div className="space-y-6">
             {/* Title input */}
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="title" className="text-sm font-medium text-muted-foreground pl-4">
                 {t('modal.titleLabel')}
               </Label>
               <div className="relative">
@@ -686,7 +686,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   onBlur={() => setIsTitleFocused(false)}
                   placeholder={t('modal.eventNamePlaceholder')}
                   autoFocus={!isEditing && !Capacitor.isNativePlatform() && !isSafariMobile()}
-                  className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10"
+                  className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10 pl-4"
                 />
                 {isTitleFocused && title && (
                   <button
@@ -717,7 +717,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">{t('modal.emojiLabel')}</Label>
+              <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.emojiLabel')}</Label>
               <div className="flex gap-2 flex-wrap" key={`emoji-list-${emojiAnimationKey}`}>
                 {suggestedEmojis.map((e, index) => {
                   const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
@@ -727,7 +727,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     <button
                       key={`${e}-${index}-${emojiAnimationKey}`}
                       onClick={() => handleEmojiSelect(e)}
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-95 ${
+                      className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-95 ${
                         emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''
                       } ${
                         isSelected
@@ -751,7 +751,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 {emoji !== '' && !suggestedEmojis.includes(emoji) && !showCustomEmojiInput && (
                   <button
                     onClick={() => {}}
-                    className="w-12 h-12 rounded-xl text-xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
+                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
                     style={{
                       backgroundColor: emojiColor,
                       boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
@@ -763,7 +763,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 )}
                 {/* Custom emoji input or button */}
                 {showCustomEmojiInput ? (
-                  <div className="flex items-center gap-1">
+                  <div 
+                    className={`flex items-center gap-1 ${emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''}`}
+                    style={{ animationDelay: `${suggestedEmojis.length * 30}ms` }}
+                  >
                     <input
                       ref={customEmojiInputRef}
                       type="text"
@@ -791,7 +794,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                         }, 150);
                       }}
                       placeholder={t('modal.customEmojiPlaceholder')}
-                      className="w-12 h-12 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none [&::placeholder]:opacity-30"
+                      className="w-14 h-14 rounded-xl text-2xl text-center border-2 border-primary/50 focus:border-primary outline-none [&::placeholder]:opacity-30"
                       style={{
                         background: getGradientFromColor(emojiColor),
                         color: 'white'
@@ -815,7 +818,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 ) : (
                   <button
                     onClick={handleCustomEmojiClick}
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105 ${
+                    className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105 ${
                       emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''
                     }`}
                     style={{
@@ -831,7 +834,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
             {/* Color picker wheel */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground" style={{ position: 'relative', top: '-8px' }}>{t('modal.colorLabel')}</Label>
+              <Label className="text-sm font-medium text-muted-foreground pl-4" style={{ position: 'relative', top: '-8px' }}>{t('modal.colorLabel')}</Label>
               <ColorWheelPicker 
                 key={colorPickerKey}
                 value={emojiColor} 
@@ -909,7 +912,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             
             {/* Date picker */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">{t('modal.dateLabel')}</Label>
+              <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.dateLabel')}</Label>
               <div className="rounded-2xl bg-secondary/40 overflow-hidden">
                 {/* Native Ionic Calendar */}
                 <div className="p-2 flex justify-center">
