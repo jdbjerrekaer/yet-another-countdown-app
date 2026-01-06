@@ -5,7 +5,6 @@ import { shareOutline } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { Share } from '@capacitor/share';
-import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { Dialog } from '@capacitor/dialog';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -426,44 +425,25 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       // Check if creating a new event with a date > 1 year in the past and not recurring
       let finalIsRecurring = isRecurring;
       if (!isEditing && !isRecurring && differenceInYears(new Date(), date) >= 1) {
-        // Prompt user to make it yearly
-        const isNative = Capacitor.isNativePlatform();
+        // Prompt user to make it yearly using native Dialog (wider, with highlighted primary button)
         let shouldMakeYearly = false;
         
         try {
-          if (isNative) {
-            const result = await ActionSheet.showActions({
-              title: t('dialogs.suggestYearly.title'),
-              message: t('dialogs.suggestYearly.message'),
-              options: [
-                {
-                  title: t('dialogs.suggestYearly.enable'),
-                  style: ActionSheetButtonStyle.Default,
-                },
-                {
-                  title: t('dialogs.suggestYearly.keepOneTime'),
-                  style: ActionSheetButtonStyle.Cancel,
-                },
-              ],
-            });
-            shouldMakeYearly = result.index === 0;
-          } else {
-            // Use Dialog on web platforms
-            const { value } = await Dialog.confirm({
-              title: t('dialogs.suggestYearly.title'),
-              message: t('dialogs.suggestYearly.message'),
-              okButtonTitle: t('dialogs.suggestYearly.enable'),
-              cancelButtonTitle: t('dialogs.suggestYearly.keepOneTime'),
-            });
-            shouldMakeYearly = value;
-          }
+          const { value } = await Dialog.confirm({
+            title: t('dialogs.suggestYearly.title'),
+            message: t('dialogs.suggestYearly.message'),
+            okButtonTitle: t('dialogs.suggestYearly.enable'),
+            cancelButtonTitle: t('dialogs.suggestYearly.keepOneTime'),
+          });
+          shouldMakeYearly = value;
           
           if (shouldMakeYearly) {
             finalIsRecurring = true;
           }
         } catch (error) {
-          // If dialog fails, log error but continue with user's current choice
-          console.error('Failed to show yearly suggestion dialog:', error);
+          // If dialog is dismissed, treat it as "keep one-time" - don't make it yearly
+          // shouldMakeYearly already defaults to false, so event will be created as one-time
+          console.error('Yearly suggestion dialog dismissed or failed:', error);
         }
       }
       

@@ -4,7 +4,6 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegme
 import { add, checkmark, calendarOutline } from 'ionicons/icons';
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
-import { ActionSheet, ActionSheetButtonStyle } from '@capacitor/action-sheet';
 import { Dialog } from '@capacitor/dialog';
 import {
   DndContext,
@@ -329,41 +328,16 @@ export default function Index() {
         const dateFormatted = format(eventDate, 'MMM d, yyyy');
         
         // Show confirmation dialog
-        let confirmed = false;
-        
-        if (isNative) {
-          const result = await ActionSheet.showActions({
-            title: t('dialogs.importEvent.title'),
-            message: t('dialogs.importEvent.message', { 
-              title: payload.title, 
-              emoji: payload.emoji,
-              date: dateFormatted 
-            }),
-            options: [
-              {
-                title: t('dialogs.importEvent.import'),
-                style: ActionSheetButtonStyle.Default,
-              },
-              {
-                title: t('dialogs.importEvent.cancel'),
-                style: ActionSheetButtonStyle.Cancel,
-              },
-            ],
-          });
-          confirmed = result.index === 0;
-        } else {
-          const { value } = await Dialog.confirm({
-            title: t('dialogs.importEvent.title'),
-            message: t('dialogs.importEvent.message', { 
-              title: payload.title, 
-              emoji: payload.emoji,
-              date: dateFormatted 
-            }),
-            okButtonTitle: t('dialogs.importEvent.import'),
-            cancelButtonTitle: t('dialogs.importEvent.cancel'),
-          });
-          confirmed = value;
-        }
+        const { value: confirmed } = await Dialog.confirm({
+          title: t('dialogs.importEvent.title'),
+          message: t('dialogs.importEvent.message', { 
+            title: payload.title, 
+            emoji: payload.emoji,
+            date: dateFormatted 
+          }),
+          okButtonTitle: t('dialogs.importEvent.import'),
+          cancelButtonTitle: t('dialogs.importEvent.cancel'),
+        });
 
         if (confirmed) {
           // Create new event from imported payload
@@ -404,41 +378,19 @@ export default function Index() {
 
   // Show confirmation dialog when date has changed during edit
   const confirmDateChange = async (eventTitle: string, oldDate: Date, newDate: Date): Promise<boolean> => {
-    let confirmed = false;
-    
     // Format dates for display
     const oldDateFormatted = format(oldDate, 'MMM d, yyyy');
     const newDateFormatted = format(newDate, 'MMM d, yyyy');
 
-    // Use ActionSheet only on native platforms
-    if (isNative) {
-      const result = await ActionSheet.showActions({
-        title: t('dialogs.dateChanged.title'),
-        message: t('dialogs.dateChanged.message', { title: eventTitle, oldDate: oldDateFormatted, newDate: newDateFormatted }),
-        options: [
-          {
-            title: t('dialogs.dateChanged.save'),
-            style: ActionSheetButtonStyle.Default,
-          },
-          {
-            title: t('dialogs.dateChanged.cancel'),
-            style: ActionSheetButtonStyle.Cancel,
-          },
-        ],
-      });
-      confirmed = result.index === 0;
-    } else {
-      // Use Dialog on web platforms
-      const { value } = await Dialog.confirm({
-        title: t('dialogs.dateChanged.title'),
-        message: t('dialogs.dateChanged.message', { title: eventTitle, oldDate: oldDateFormatted, newDate: newDateFormatted }),
-        okButtonTitle: t('dialogs.dateChanged.save'),
-        cancelButtonTitle: t('dialogs.dateChanged.cancel'),
-      });
-      confirmed = value;
-    }
+    // Use Dialog for consistent wider dialog appearance
+    const { value } = await Dialog.confirm({
+      title: t('dialogs.dateChanged.title'),
+      message: t('dialogs.dateChanged.message', { title: eventTitle, oldDate: oldDateFormatted, newDate: newDateFormatted }),
+      okButtonTitle: t('dialogs.dateChanged.save'),
+      cancelButtonTitle: t('dialogs.dateChanged.cancel'),
+    });
 
-    return confirmed;
+    return value;
   };
 
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
@@ -493,34 +445,14 @@ export default function Index() {
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
     let confirmed = false;
 
-    // Use ActionSheet only on native platforms
-    if (isNative) {
-      // Use ActionSheet for native destructive button styling
-      const result = await ActionSheet.showActions({
-        title: t('dialogs.deleteEvent.title'),
-        message: t('dialogs.deleteEvent.message', { title: event.title }),
-        options: [
-          {
-            title: t('dialogs.deleteEvent.delete'),
-            style: ActionSheetButtonStyle.Destructive,
-          },
-          {
-            title: t('dialogs.deleteEvent.cancel'),
-            style: ActionSheetButtonStyle.Cancel,
-          },
-        ],
-      });
-      confirmed = result.index === 0;
-    } else {
-      // Use Dialog on web platforms (including Safari PWA and mobile Safari)
-      const { value } = await Dialog.confirm({
-        title: t('dialogs.deleteEvent.title'),
-        message: t('dialogs.deleteEvent.message', { title: event.title }),
-        okButtonTitle: t('dialogs.deleteEvent.delete'),
-        cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
-      });
-      confirmed = value;
-    }
+    // Use Dialog for consistent wider dialog appearance
+    const { value } = await Dialog.confirm({
+      title: t('dialogs.deleteEvent.title'),
+      message: t('dialogs.deleteEvent.message', { title: event.title }),
+      okButtonTitle: t('dialogs.deleteEvent.delete'),
+      cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
+    });
+    confirmed = value;
 
     if (confirmed) {
       // Delete button was pressed
