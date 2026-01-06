@@ -779,7 +779,7 @@ struct EventRowView: View {
                 }
                 
                 if let date = targetDate {
-                    Text(formatDate(date))
+                    Text(formatDateWithDays(date, countdown: countdown, isVisual: countdownStyle == .visual))
                         .font(.system(size: 12))
                         .foregroundColor(mutedColor)
                         .lineLimit(1)
@@ -790,7 +790,7 @@ struct EventRowView: View {
             
             // Countdown display - varies by style
             if countdownStyle == .visual {
-                // Visual mode - progress bars
+                // Visual mode - progress bars only (days shown on date line)
                 ProgressBarsView(
                     progress: progress,
                     numBars: 6,
@@ -937,6 +937,29 @@ struct EventRowView: View {
             formatter.dateFormat = "MMM d, yyyy"
         }
         return formatter.string(from: date)
+    }
+    
+    private func formatDateWithDays(_ date: Date, countdown: CountdownTime, isVisual: Bool) -> String {
+        let formatter = DateFormatter()
+        if event.isRecurring {
+            formatter.dateFormat = "'Next:' MMM d, yyyy"
+        } else {
+            formatter.dateFormat = "MMM d, yyyy"
+        }
+        let dateStr = formatter.string(from: date)
+        
+        // Only append days text in visual mode
+        guard isVisual else { return dateStr }
+        
+        if countdown.isComplete && !countdown.isPast {
+            return dateStr + " · Today!"
+        } else if countdown.isPast {
+            let dayText = countdown.daysSince == 1 ? "day" : "days"
+            return dateStr + " · \(countdown.daysSince) \(dayText) ago"
+        } else {
+            let dayText = countdown.days == 1 ? "day" : "days"
+            return dateStr + " · \(countdown.days) \(dayText)"
+        }
     }
 }
 

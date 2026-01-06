@@ -73,6 +73,17 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
   // Use emojiColor for bars, fallback to primary blue
   const barColor = emojiColor || 'hsl(211, 100%, 50%)';
 
+  // Helper to get days text
+  const getDaysText = () => {
+    if (countdown.isComplete && !countdown.isPast) {
+      return ` · ${t('countdown.today')}`;
+    } else if (countdown.isPast) {
+      return ` · ${countdown.daysSince} ${countdown.daysSince === 1 ? t('widget.units.day') : t('widget.units.days_plural')} ${t('widget.daysAgoText')}`;
+    } else {
+      return ` · ${countdown.days} ${countdown.days === 1 ? t('widget.units.day') : t('widget.units.days_plural')}`;
+    }
+  };
+
   // Visual mode layout
   if (countdownStyle === 'visual') {
     return (
@@ -88,7 +99,7 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             <span className="text-xl">{emoji}</span>
           </div>
           
-          {/* Event info */}
+          {/* Event info with days text on date line */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="text-base font-semibold text-foreground truncate">{title}</p>
@@ -99,6 +110,7 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             {targetDate && (
               <p className="text-xs text-muted-foreground">
                 {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
+                {getDaysText()}
               </p>
             )}
           </div>
