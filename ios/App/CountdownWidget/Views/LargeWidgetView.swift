@@ -74,6 +74,43 @@ struct LargeWidgetView: View {
                         }
                     }
                 }
+            } else if countdownStyle == .classic {
+                // Classic mode - flip clock style
+                if countdown.isPast {
+                    VStack(spacing: 8) {
+                        FlipDigitView(value: countdown.daysSince, fontSize: 36)
+                        Text(countdown.daysSince == 1 ? "day ago" : "days ago")
+                            .font(.system(size: 18))
+                            .foregroundColor(mutedColor)
+                    }
+                } else {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.days, fontSize: 36)
+                            Text("days")
+                                .font(.system(size: 13))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.hours, fontSize: 36)
+                            Text("hours")
+                                .font(.system(size: 13))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.minutes, fontSize: 36)
+                            Text("minutes")
+                                .font(.system(size: 13))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.seconds, fontSize: 36)
+                            Text("seconds")
+                                .font(.system(size: 13))
+                                .foregroundColor(mutedColor)
+                        }
+                    }
+                }
             } else {
                 // Focus mode - large grid display
                 if countdown.isPast {

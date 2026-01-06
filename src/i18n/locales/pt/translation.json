@@ -42,7 +42,8 @@
     },
     "styles": {
       "focus": "Foco",
-      "visual": "Visual"
+      "visual": "Visual",
+      "classic": "Clássico"
     },
     "appearances": {
       "light": "Claro",

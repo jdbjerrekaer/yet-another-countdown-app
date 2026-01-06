@@ -27,6 +27,7 @@
 		A63D32342F0BCF250063570B /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322C2F0BCF250063570B /* MediumWidgetView.swift */; };
 		A63D32352F0BCF250063570B /* WidgetDataSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32272F0BCF250063570B /* WidgetDataSync.swift */; };
 		A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32252F0BCF250063570B /* CountdownEvent.swift */; };
+		FLIPDIG022F0BCF250063570B /* FlipDigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */; };
 		A63D32372F0BCF250063570B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A63D32242F0BCF250063570B /* Assets.xcassets */; };
 		A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */; };
 		A6D2DE2E2F0BE0B2001A82F2 /* CalendarPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = A6D2DE2B2F0BE0B2001A82F2 /* CalendarPlugin.m */; };
@@ -81,6 +82,7 @@
 		A63D32252F0BCF250063570B /* CountdownEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEvent.swift; sourceTree = "<group>"; };
 		A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountdownIntent.swift; sourceTree = "<group>"; };
 		A63D32272F0BCF250063570B /* WidgetDataSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSync.swift; sourceTree = "<group>"; };
+		FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipDigitView.swift; sourceTree = "<group>"; };
 		A63D32292F0BCF250063570B /* EmptyWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyWidgetView.swift; sourceTree = "<group>"; };
 		A63D322A2F0BCF250063570B /* ExtraLargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraLargeWidgetView.swift; sourceTree = "<group>"; };
 		A63D322B2F0BCF250063570B /* LargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetView.swift; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				A63D32252F0BCF250063570B /* CountdownEvent.swift */,
+				FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */,
 				A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */,
 				A63D32272F0BCF250063570B /* WidgetDataSync.swift */,
 			);
@@ -396,6 +399,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */,
+				FLIPDIG022F0BCF250063570B /* FlipDigitView.swift in Sources */,
 				A63D32302F0BCF250063570B /* SmallWidgetView.swift in Sources */,
 				A63D32352F0BCF250063570B /* WidgetDataSync.swift in Sources */,
 				A63D32332F0BCF250063570B /* EmptyWidgetView.swift in Sources */,

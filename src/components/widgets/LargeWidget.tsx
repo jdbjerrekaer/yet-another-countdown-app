@@ -7,6 +7,7 @@ import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
 import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
+import { FlipDigit } from './FlipDigit';
 
 interface LargeWidgetProps {
   title: string;
@@ -166,6 +167,56 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
                 </div>
               </>
             )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Classic mode layout - flip clock style
+  if (countdownStyle === 'classic') {
+    // Use dark theme only for dark appearance mode, light theme for all others
+    const flipTheme = appearanceMode === 'dark' ? 'dark' : 'light';
+    
+    return (
+      <div className={widgetClasses} style={combinedStyle}>
+        <div className="flex items-center gap-3 mb-auto">
+          <span className="text-4xl">{emoji}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-lg font-semibold text-foreground truncate">{title}</p>
+              {(isRecurring || countdown.isPast) && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                  {nextOccurrenceNumber && (
+                    <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            {targetDate && (
+              <p className="text-sm text-muted-foreground">
+                {isRecurring ? `Next: ${format(targetDate, 'MMM d, yyyy')}` : format(targetDate, 'MMM d, yyyy')}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {countdown.isPast ? (
+          <div className="flex flex-col items-center justify-center flex-1">
+            <FlipDigit value={countdown.daysSince} size="large" theme={flipTheme} />
+            <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+          </div>
+        ) : countdown.isComplete ? (
+          <div className="text-center py-8">
+            <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="large" theme={flipTheme} />
+            <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="large" theme={flipTheme} />
+            <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="large" theme={flipTheme} />
+            <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="large" theme={flipTheme} />
           </div>
         )}
       </div>

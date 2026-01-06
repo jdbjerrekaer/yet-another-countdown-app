@@ -42,7 +42,8 @@
     },
     "styles": {
       "focus": "Фокус",
-      "visual": "Визуальный"
+      "visual": "Визуальный",
+      "classic": "Классический"
     },
     "appearances": {
       "light": "Светлый",

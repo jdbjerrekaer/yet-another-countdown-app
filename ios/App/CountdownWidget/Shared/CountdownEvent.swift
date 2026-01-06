@@ -75,6 +75,7 @@ enum WidgetAppearanceMode: String, Codable {
 enum WidgetCountdownStyle: String, Codable {
     case focus
     case visual
+    case classic
 }
 
 /// Container for all widget data synced from the React app

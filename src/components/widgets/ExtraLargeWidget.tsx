@@ -7,6 +7,7 @@ import { getTintedBackground } from '@/lib/colorPalette';
 import { calculateRemainingPercent } from '@/lib/widgetProgress';
 import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
+import { FlipDigit } from './FlipDigit';
 
 // Helper function to adjust color brightness for gradient
 function adjustColorBrightness(hex: string, percent: number): string {
@@ -196,6 +197,65 @@ export function ExtraLargeWidget({ title, countdown, targetDate, emoji, emojiCol
             </>
           )}
         </div>
+      </div>
+    );
+  }
+
+  // Classic mode layout - flip clock style
+  if (countdownStyle === 'classic') {
+    // Use dark theme only for dark appearance mode, light theme for all others
+    const flipTheme = appearanceMode === 'dark' ? 'dark' : 'light';
+    
+    return (
+      <div className={widgetClasses} style={combinedStyle}>
+        <div className="flex items-center gap-4 mb-6">
+          <div 
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-3xl">{emoji}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-xl font-bold text-foreground truncate">{title}</p>
+              {(isRecurring || countdown.isPast) && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {isRecurring && <RefreshCw className="w-4 h-4 text-primary" />}
+                  {nextOccurrenceNumber && (
+                    <span className="text-sm text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            {targetDate && (
+              <p className="text-sm text-muted-foreground">
+                {isRecurring ? `Next: ${format(targetDate, 'EEEE, MMMM d, yyyy')}` : format(targetDate, 'EEEE, MMMM d, yyyy')}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {countdown.isPast ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <FlipDigit value={countdown.daysSince} size="extraLarge" theme={flipTheme} />
+            <p className="text-xl text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+          </div>
+        ) : countdown.isComplete ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <p className="text-6xl font-bold text-primary mb-4">{t('countdown.today')}</p>
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="grid grid-cols-2 gap-4 w-full">
+              <FlipDigit value={countdown.days} label={t('widget.units.days_plural')} size="extraLarge" theme={flipTheme} />
+              <FlipDigit value={countdown.hours} label={t('widget.units.hours_plural')} size="extraLarge" theme={flipTheme} />
+              <FlipDigit value={countdown.minutes} label={t('widget.units.minutes_plural')} size="extraLarge" theme={flipTheme} />
+              <FlipDigit value={countdown.seconds} label={t('widget.units.seconds_plural')} size="extraLarge" theme={flipTheme} />
+            </div>
+          </div>
+        )}
       </div>
     );
   }

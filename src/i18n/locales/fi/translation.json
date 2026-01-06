@@ -42,7 +42,8 @@
     },
     "styles": {
       "focus": "Fokus",
-      "visual": "Visuaalinen"
+      "visual": "Visuaalinen",
+      "classic": "Klassinen"
     },
     "appearances": {
       "light": "Vaalea",

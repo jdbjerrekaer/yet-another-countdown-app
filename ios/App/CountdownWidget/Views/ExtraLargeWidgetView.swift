@@ -88,6 +88,43 @@ struct ExtraLargeWidgetView: View {
                         }
                     }
                 }
+            } else if countdownStyle == .classic {
+                // Classic mode - flip clock style
+                if countdown.isPast {
+                    VStack(spacing: 8) {
+                        FlipDigitView(value: countdown.daysSince, fontSize: 48)
+                        Text(countdown.daysSince == 1 ? "day ago" : "days ago")
+                            .font(.system(size: 20))
+                            .foregroundColor(mutedColor)
+                    }
+                } else {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.days, fontSize: 48)
+                            Text("days")
+                                .font(.system(size: 14))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.hours, fontSize: 48)
+                            Text("hours")
+                                .font(.system(size: 14))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.minutes, fontSize: 48)
+                            Text("minutes")
+                                .font(.system(size: 14))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(spacing: 4) {
+                            FlipDigitView(value: countdown.seconds, fontSize: 48)
+                            Text("seconds")
+                                .font(.system(size: 14))
+                                .foregroundColor(mutedColor)
+                        }
+                    }
+                }
             } else {
                 // Focus mode - large grid display
                 if countdown.isPast {

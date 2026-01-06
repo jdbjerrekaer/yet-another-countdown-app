@@ -59,6 +59,39 @@ struct MediumWidgetView: View {
                     barWidth: 15,
                     barHeight: 52
                 )
+            } else if countdownStyle == .classic {
+                // Classic mode - flip clock style
+                if countdown.isPast {
+                    HStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            FlipDigitView(value: countdown.daysSince, fontSize: 28)
+                            Text("Days ago")
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
+                        }
+                    }
+                } else {
+                    HStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            FlipDigitView(value: countdown.days, fontSize: 28)
+                            Text("Days")
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            FlipDigitView(value: countdown.hours, fontSize: 28)
+                            Text("Hours")
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            FlipDigitView(value: countdown.minutes, fontSize: 28)
+                            Text("Min")
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
+                        }
+                    }
+                }
             } else {
                 // Focus mode - time breakdown
                 if countdown.isPast {

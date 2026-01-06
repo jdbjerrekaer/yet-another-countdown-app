@@ -57,6 +57,7 @@ const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; labelKey: string }[] 
 const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; labelKey: string }[] = [
   { id: 'focus', labelKey: 'widget.styles.focus' },
   { id: 'visual', labelKey: 'widget.styles.visual' },
+  { id: 'classic', labelKey: 'widget.styles.classic' },
 ];
 
 const generateId = () => Math.random().toString(36).substr(2, 9);

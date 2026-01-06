@@ -58,6 +58,14 @@ struct SmallWidgetView: View {
                         barHeight: 36
                     )
                     .padding(.top, 4)
+                } else if countdownStyle == .classic {
+                    // Classic mode - flip clock style
+                    HStack(alignment: .lastTextBaseline, spacing: 8) {
+                        FlipDigitView(value: primaryValue, fontSize: 28)
+                        Text(primaryUnit)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(mutedColor)
+                    }
                 } else {
                     // Focus mode - number display
                     HStack(alignment: .lastTextBaseline, spacing: 2) {

@@ -42,7 +42,8 @@
     },
     "styles": {
       "focus": "Fokus",
-      "visual": "Visuell"
+      "visual": "Visuell",
+      "classic": "Klassisch"
     },
     "appearances": {
       "light": "Hell",
