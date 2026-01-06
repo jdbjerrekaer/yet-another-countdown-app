@@ -824,8 +824,13 @@ export default function Index() {
           <IonToolbar>
             <IonTitle size="large">{t('app.title')}</IonTitle>
             <IonButtons slot="end">
-              <IonButton onClick={handleOpenCalendarImport} aria-label={t('aria.importFromCalendar')}>
-                <IonIcon icon={calendarOutline} slot="icon-only" />
+              <IonButton onClick={handleOpenCalendarImport} aria-label={t('aria.importFromCalendar')} style={{
+                '--padding-start': '8px',
+                '--padding-end': '8px',
+                width: '37px',
+                height: '38px',
+              } as React.CSSProperties}>
+                <IonIcon icon={calendarOutline} />
               </IonButton>
             </IonButtons>
           </IonToolbar>
