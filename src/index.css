@@ -321,6 +321,24 @@
     contain: paint;
   }
 
+  /* When swiping, disable clipping to allow card to reach screen edge */
+  .countdown-card-wrapper.countdown-card-swiping {
+    overflow: visible !important;
+    contain: none !important;
+    z-index: 10;
+    /* Ensure proper stacking context */
+    isolation: isolate;
+  }
+
+  /* Ensure Ionic internals don't re-clip during swipe */
+  .countdown-card-wrapper.countdown-card-swiping ion-item-sliding {
+    overflow: visible !important;
+  }
+
+  .countdown-card-wrapper.countdown-card-swiping ion-item-options {
+    overflow: visible !important;
+  }
+
   /* Sortable countdown card drag styling */
   .sortable-countdown-card {
     will-change: transform;

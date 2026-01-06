@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
 import { ChevronRight, RefreshCw, CalendarIcon } from 'lucide-react';
@@ -32,6 +32,7 @@ export function CountdownCard({
   const { trigger } = useHaptic();
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
   const hapticTriggeredRef = useRef(false);
+  const [isSliding, setIsSliding] = useState(false);
   
   const targetDate = event.isRecurring 
     ? getNextRecurringDate(new Date(event.targetDate))
@@ -79,9 +80,37 @@ export function CountdownCard({
     onDelete();
   };
 
+  // Check if the sliding item has returned to closed position
+  const checkIfClosed = useCallback(async () => {
+    if (!slidingRef.current) return;
+    try {
+      const openAmount = await slidingRef.current.getOpenAmount();
+      if (Math.abs(openAmount) <= 2) {
+        setIsSliding(false);
+        hapticTriggeredRef.current = false;
+      }
+    } catch {
+      // Ignore errors if element is unmounted
+    }
+  }, []);
+
+  // Poll to check if sliding is closed after drag ends
+  useEffect(() => {
+    if (!isSliding) return;
+    
+    // Start polling when sliding begins
+    const intervalId = setInterval(checkIfClosed, 100);
+    
+    return () => clearInterval(intervalId);
+  }, [isSliding, checkIfClosed]);
+
   const handleDrag = (e: CustomEvent) => {
     // IonItemSliding drag event provides amount in pixels
     const amount = (e.detail as any)?.amount || 0;
+    // Set sliding state when swiping starts
+    if (Math.abs(amount) > 2) {
+      setIsSliding(true);
+    }
     // Calculate progress (0 to 1) based on swipe amount
     // Max swipe is typically around 80-100px for the delete button
     const maxSwipe = 80;
@@ -96,16 +125,6 @@ export function CountdownCard({
     }
   };
 
-  const handleDragEnd = () => {
-    // Reset haptic trigger flag for next swipe
-    hapticTriggeredRef.current = false;
-  };
-
-  const handleClose = () => {
-    // Reset haptic trigger flag for next swipe
-    hapticTriggeredRef.current = false;
-  };
-
   // Keep border radius constant at 1rem (16px) - the wrapper clips everything
   const borderRadius = 16;
 
@@ -113,7 +132,9 @@ export function CountdownCard({
     <div 
       className={`countdown-card-wrapper overflow-hidden ${
         !isNative && isSelected ? 'countdown-card-selected' : ''
-      } ${isDragging ? 'countdown-card-dragging' : ''}`}
+      } ${isDragging ? 'countdown-card-dragging' : ''} ${
+        isSliding ? 'countdown-card-swiping' : ''
+      }`}
       style={{
         borderRadius: `${borderRadius}px`,
         // Safari-specific prefix to prevent black border-radius rendering bug
@@ -142,8 +163,6 @@ export function CountdownCard({
         ref={slidingRef}
         disabled={isReordering}
         onIonDrag={handleDrag}
-        onIonDragEnd={handleDragEnd}
-        onIonClose={handleClose}
         style={{
           borderRadius: 'inherit',
           overflow: 'hidden',
