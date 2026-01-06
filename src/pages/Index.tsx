@@ -159,6 +159,10 @@ export default function Index() {
       const saved = localStorage.getItem('countdowns');
       const storedEvents = saved ? JSON.parse(saved) : [];
       
+      // Get saved appearance mode and countdown style from localStorage
+      const savedAppearanceMode = localStorage.getItem('widgetAppearanceMode') || 'light';
+      const savedCountdownStyle = localStorage.getItem('widgetCountdownStyle') || 'focus';
+      
       console.log('[WidgetSync] Events from localStorage:', storedEvents.length);
       
       if (native && storedEvents.length > 0) {
@@ -178,8 +182,8 @@ export default function Index() {
           
           const result = await CalendarPlugin.updateWidgetData({
             events: testEvents,
-            appearanceMode: 'light',
-            countdownStyle: 'focus',
+            appearanceMode: savedAppearanceMode,
+            countdownStyle: savedCountdownStyle,
           });
           console.log('[WidgetSync] SUCCESS! Result:', JSON.stringify(result));
         } catch (error) {

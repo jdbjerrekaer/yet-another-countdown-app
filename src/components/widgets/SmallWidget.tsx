@@ -9,6 +9,16 @@ import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
 import { FlipDigit } from './FlipDigit';
 
+// Helper function to adjust color brightness for gradient
+function adjustColorBrightness(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+}
+
 interface SmallWidgetProps {
   title: string;
   countdown: CountdownTime;
@@ -79,7 +89,14 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
     return (
       <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
         <div className="flex items-center justify-between">
-          <span className="text-2xl">{emoji}</span>
+          <div 
+            className={`w-10 h-10 rounded-xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-xl">{emoji}</span>
+          </div>
           {(isRecurring || countdown.isPast) && (
             <div className="flex items-center gap-1">
               {isRecurring && <RefreshCw className="w-3 h-3 text-primary" />}
@@ -130,7 +147,14 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
     return (
       <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
         <div className="flex items-center justify-between">
-          <span className="text-2xl">{emoji}</span>
+          <div 
+            className={`w-10 h-10 rounded-xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-xl">{emoji}</span>
+          </div>
           {(isRecurring || countdown.isPast) && (
             <div className="flex items-center gap-1">
               {isRecurring && <RefreshCw className="w-3 h-3 text-primary" />}
@@ -176,7 +200,14 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
   return (
     <div className={`${widgetClasses} justify-between`} style={combinedStyle}>
       <div className="flex items-center justify-between">
-        <span className="text-2xl">{emoji}</span>
+        <div 
+          className={`w-10 h-10 rounded-xl flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+          style={emojiColor ? { 
+            background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+          } : undefined}
+        >
+          <span className="text-xl">{emoji}</span>
+        </div>
         {(isRecurring || countdown.isPast) && (
           <div className="flex items-center gap-1">
             {isRecurring && <RefreshCw className="w-3 h-3 text-primary" />}

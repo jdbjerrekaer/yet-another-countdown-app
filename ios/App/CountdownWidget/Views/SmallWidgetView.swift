@@ -10,13 +10,14 @@ struct SmallWidgetView: View {
     let countdownStyle: WidgetCountdownStyle
     let progress: Double
     
+    @Environment(\.widgetRenderingMode) var widgetRenderingMode
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header with emoji
+            // Header with emoji badge
             HStack {
-                Text(event.emoji)
-                    .font(.system(size: 24))
-                    .widgetAccentable(false)
+                emojiBadgeView
                 
                 Spacer()
                 
@@ -57,14 +58,27 @@ struct SmallWidgetView: View {
                         barWidth: 12,
                         barHeight: 36
                     )
+                    .widgetAccentable(false)
                     .padding(.top, 4)
                 } else if countdownStyle == .classic {
                     // Classic mode - flip clock style
-                    HStack(alignment: .lastTextBaseline, spacing: 8) {
-                        FlipDigitView(value: primaryValue, fontSize: 28)
-                        Text(primaryUnit)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(mutedColor)
+                    // In vibrant/accented modes, use simple text instead of flip digits
+                    if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
+                        HStack(alignment: .lastTextBaseline, spacing: 2) {
+                            Text("\(primaryValue)")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(foregroundColor)
+                            Text(primaryUnit)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(mutedColor)
+                        }
+                    } else {
+                        HStack(alignment: .lastTextBaseline, spacing: 8) {
+                            FlipDigitView(value: primaryValue, fontSize: 28, theme: flipDigitTheme)
+                            Text(primaryUnit)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(mutedColor)
+                        }
                     }
                 } else {
                     // Focus mode - number display
@@ -135,6 +149,84 @@ struct SmallWidgetView: View {
             return .secondary
         case .tinted:
             return .secondary
+        }
+    }
+    
+    private var flipDigitTheme: FlipDigitView.FlipDigitTheme {
+        // For Clear (vibrant) and Tinted (accented) modes, always use light theme
+        if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
+            return .light
+        }
+        // Use system color scheme to determine flip digit theme
+        // This ensures the flip digits match the actual widget background
+        if colorScheme == .dark || appearanceMode == .dark {
+            return .dark
+        }
+        return .light
+    }
+    
+    @ViewBuilder
+    private var emojiBadgeView: some View {
+        ZStack {
+            badgeBackgroundView
+            
+            // Render emoji as image to preserve colors in Clear/Tinted modes
+            if let emojiImage = emojiToImage(event.emoji, size: 20) {
+                if #available(iOS 18.0, *) {
+                    Image(uiImage: emojiImage)
+                        .widgetAccentedRenderingMode(.fullColor)
+                } else {
+                    Image(uiImage: emojiImage)
+                }
+            } else {
+                Text(event.emoji)
+                    .font(.system(size: 20))
+            }
+        }
+    }
+    
+    private func emojiToImage(_ emoji: String, size: CGFloat) -> UIImage? {
+        let font = UIFont.systemFont(ofSize: size)
+        let attributes = [NSAttributedString.Key.font: font]
+        let size = (emoji as NSString).size(withAttributes: attributes)
+        
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        (emoji as NSString).draw(at: .zero, withAttributes: attributes)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image
+    }
+    
+    @ViewBuilder
+    private var badgeBackgroundView: some View {
+        // Handle different rendering modes
+        if widgetRenderingMode == .accented {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.accentColor.opacity(0.3))
+                .frame(width: 40, height: 40)
+        } else if widgetRenderingMode == .vibrant {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.2))
+                .frame(width: 40, height: 40)
+        } else if let hexColor = event.emojiColor {
+            // For full color mode, use the emoji color gradient
+            let color = Color(hex: hexColor)
+            RoundedRectangle(cornerRadius: 12)
+                .fill(LinearGradient(
+                    colors: [color, color.opacity(0.7)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .frame(width: 40, height: 40)
+        } else {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(LinearGradient(
+                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .frame(width: 40, height: 40)
         }
     }
     

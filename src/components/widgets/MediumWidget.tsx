@@ -9,6 +9,16 @@ import { getWidgetSizeStyles } from '@/lib/widgetSizes';
 import { ProgressBars } from './ProgressBars';
 import { FlipDigit } from './FlipDigit';
 
+// Helper function to adjust color brightness for gradient
+function adjustColorBrightness(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+}
+
 interface MediumWidgetProps {
   title: string;
   countdown: CountdownTime;
@@ -65,10 +75,17 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
     return (
       <div className={`${widgetClasses} flex-col justify-between`} style={combinedStyle}>
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{emoji}</span>
+          <div 
+            className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-2xl">{emoji}</span>
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-semibold text-foreground truncate">{title}</p>
+              <p className="font-bold text-foreground truncate">{title}</p>
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
@@ -122,10 +139,17 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
     return (
       <div className={`${widgetClasses} flex-col justify-between`} style={combinedStyle}>
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{emoji}</span>
+          <div 
+            className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+            style={emojiColor ? { 
+              background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+            } : undefined}
+          >
+            <span className="text-2xl">{emoji}</span>
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-semibold text-foreground truncate">{title}</p>
+              <p className="font-bold text-foreground truncate">{title}</p>
               {(isRecurring || countdown.isPast) && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
@@ -168,10 +192,17 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
   return (
     <div className={`${widgetClasses} flex-col justify-between`} style={combinedStyle}>
       <div className="flex items-center gap-3">
-        <span className="text-3xl">{emoji}</span>
+        <div 
+          className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${!emojiColor ? 'gradient-accent' : ''}`}
+          style={emojiColor ? { 
+            background: `linear-gradient(135deg, ${emojiColor} 0%, ${adjustColorBrightness(emojiColor, 20)} 100%)` 
+          } : undefined}
+        >
+          <span className="text-2xl">{emoji}</span>
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="font-semibold text-foreground truncate">{title}</p>
+            <p className="font-bold text-foreground truncate">{title}</p>
             {(isRecurring || countdown.isPast) && (
               <div className="flex items-center gap-1 flex-shrink-0">
                 {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}

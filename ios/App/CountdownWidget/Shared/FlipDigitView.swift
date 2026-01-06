@@ -4,6 +4,61 @@ import SwiftUI
 struct FlipDigitView: View {
     let value: Int
     let fontSize: CGFloat
+    var theme: FlipDigitTheme = .dark
+    
+    enum FlipDigitTheme {
+        case light
+        case dark
+        
+        var backgroundColor: Color {
+            switch self {
+            case .light: return Color(red: 0.96, green: 0.96, blue: 0.96) // #f5f5f5
+            case .dark: return Color(red: 0.1, green: 0.1, blue: 0.1) // #1a1a1a
+            }
+        }
+        
+        var backgroundDarker: Color {
+            switch self {
+            case .light: return Color(red: 0.91, green: 0.91, blue: 0.91) // #e8e8e8
+            case .dark: return Color(red: 0.06, green: 0.06, blue: 0.06) // #0f0f0f
+            }
+        }
+        
+        var textColor: Color {
+            switch self {
+            case .light: return Color(red: 0.12, green: 0.16, blue: 0.22) // #1f2937
+            case .dark: return .white
+            }
+        }
+        
+        var dividerColor: Color {
+            switch self {
+            case .light: return Color.black.opacity(0.25)
+            case .dark: return Color.black.opacity(0.8)
+            }
+        }
+        
+        var dividerShadowColor: Color {
+            switch self {
+            case .light: return Color.white.opacity(0.5)
+            case .dark: return Color.white.opacity(0.1)
+            }
+        }
+        
+        var cardShadowOpacity: Double {
+            switch self {
+            case .light: return 0.15
+            case .dark: return 0.3
+            }
+        }
+        
+        var topShadowOpacity: Double {
+            switch self {
+            case .light: return 0.08
+            case .dark: return 0.6
+            }
+        }
+    }
     
     // Calculate dimensions based on font size
     private var halfHeight: CGFloat {
@@ -30,55 +85,27 @@ struct FlipDigitView: View {
     
     var body: some View {
         ZStack(alignment: .center) {
-            // Background card
+            // Background card with shadow
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(red: 0.1, green: 0.1, blue: 0.1))
-                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 2)
+                .fill(theme.backgroundColor)
+                .shadow(color: .black.opacity(theme.cardShadowOpacity), radius: 2, x: 0, y: 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.black.opacity(theme == .light ? 0.08 : 0.2), lineWidth: 1)
                 )
             
-            VStack(spacing: 0) {
-                // Top half
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(red: 0.1, green: 0.1, blue: 0.1))
-                        .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
-                    
-                    Text("\(value)")
-                        .font(.system(size: fontSize, weight: .bold))
-                        .foregroundColor(.white)
-                }
-                .frame(height: halfHeight)
-                .clipped()
-                
-                // Divider line
-                Rectangle()
-                    .fill(Color.black.opacity(0.8))
-                    .frame(height: 1)
-                    .shadow(color: .white.opacity(0.1), radius: 0.5, y: 0.5)
-                
-                // Bottom half
-                ZStack {
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color(red: 0.1, green: 0.1, blue: 0.1),
-                            Color(red: 0.06, green: 0.06, blue: 0.06)
-                        ]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: -1)
-                    
-                    Text("\(value)")
-                        .font(.system(size: fontSize, weight: .bold))
-                        .foregroundColor(.white.opacity(0.3))
-                }
-                .frame(height: halfHeight)
-                .clipped()
-            }
+            // Single centered number
+            Text("\(value)")
+                .font(.system(size: fontSize, weight: .bold))
+                .foregroundColor(theme.textColor)
+            
+            // Divider line in the middle
+            Rectangle()
+                .fill(theme.dividerColor)
+                .frame(height: 1)
+                .shadow(color: theme.dividerShadowColor, radius: 0.5, y: 0.5)
         }
         .frame(width: cardWidth, height: cardHeight)
+        .widgetAccentable(false)
     }
 }
