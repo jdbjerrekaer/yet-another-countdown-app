@@ -18,7 +18,7 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
   // Font sizes and dimensions
   const sizeConfig = {
     small: { fontSize: 'text-2xl', height: 36, width: 52 },
-    medium: { fontSize: 'text-3xl', height: 48, width: 70 },
+    medium: { fontSize: 'text-xl', height: 36, width: 56 },
     large: { fontSize: 'text-4xl', height: 56, width: 90 },
   };
 
