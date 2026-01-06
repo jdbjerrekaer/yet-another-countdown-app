@@ -121,11 +121,14 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const lastEmojiRef = useRef<string | undefined>(emoji);
   const lastValueRef = useRef<string>(value);
   const clickTriggeredRef = useRef(false); // Track if haptic was triggered by click
+  const lastHapticIndexRef = useRef(selectedIndex); // Track index for haptic ticking
+  const settleHapticTriggeredRef = useRef(false); // Prevent double haptics on settle
   
   // Velocity tracking for transition timing
   const lastSlideIndexRef = useRef<number>(selectedIndex);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
+  const HAPTIC_VELOCITY_THRESHOLD = 10; // slides/s - trigger haptics when slower than this
   
   // Velocity-based transition timing constants
   const MIN_TRANSITION_DURATION = 0; // ms - instant at high velocity
@@ -137,8 +140,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     loop: true,
     align: 'center',
     containScroll: false,
-    dragFree: true,
-    skipSnaps: false,
+    dragFree: false, // Enable native snapping behavior
+    skipSnaps: true, // Allow skipping snaps during fast swipes for smooth feel
   });
 
   // Detect when value prop changes from outside (e.g., when editing different event)
@@ -282,7 +285,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const onScroll = useCallback(() => {
     if (!emblaApi) return;
     
-    // Track velocity for smart snapping based on slide indices
+    // Track velocity based on slide indices
     const currentTime = Date.now();
     const slideIndex = emblaApi.selectedScrollSnap();
     const slideCount = COLOR_PALETTE.length;
@@ -299,6 +302,15 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       // Convert to slides per second
       scrollVelocityRef.current = (slideDelta / timeDelta) * 1000; // slides/s
     }
+
+    // Haptic Ticking: detect when we pass a slide boundary while scrolling
+    if (slideIndex !== lastHapticIndexRef.current) {
+      // Trigger haptic if we're scrolling slowly enough to feel individual snaps
+      if (scrollVelocityRef.current < HAPTIC_VELOCITY_THRESHOLD) {
+        trigger('selection');
+      }
+      lastHapticIndexRef.current = slideIndex;
+    }
     
     lastSlideIndexRef.current = currentSlideIndex;
     lastScrollTimeRef.current = currentTime;
@@ -313,11 +325,6 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       if (!emblaApi) return;
       
       // Get the currently selected slide index (this works during scrolling too)
-      const slideIndex = emblaApi.selectedScrollSnap();
-      const slideCount = COLOR_PALETTE.length;
-      
-      // Map the slide index back to palette index (handle looping)
-      // Embla creates multiple copies of slides for looping, so we use modulo
       const paletteIndex = ((slideIndex % slideCount) + slideCount) % slideCount;
       const colorAtCenter = COLOR_PALETTE[paletteIndex];
       
@@ -328,41 +335,32 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         setPreviewColor(colorAtCenter);
       }
     });
-  }, [emblaApi, calculateTransitionDuration]);
+  }, [emblaApi, calculateTransitionDuration, trigger]);
 
-  // Handle pointer up - just reset transition duration, let Embla handle momentum naturally
+  // Handle pointer up - reset transition duration
   const onPointerUp = useCallback(() => {
-    // Reset transition duration to smooth when interaction ends
+    if (!emblaApi) return;
     setPreviewTransitionDuration(MAX_TRANSITION_DURATION);
-    // Don't force snap here - let the carousel momentum play out naturally
-    // The settle event will fire when it comes to rest
-  }, []);
+  }, [emblaApi]);
 
-  // Handle settle - reset transition duration when scroll naturally settles
+  // Handle settle - reset velocity and clear flags
   const onSettle = useCallback(() => {
-    console.log('[ColorWheelPicker] onSettle fired, clickTriggeredRef:', clickTriggeredRef.current);
+    if (!emblaApi) return;
     setPreviewTransitionDuration(MAX_TRANSITION_DURATION);
     scrollVelocityRef.current = 0;
-    // Trigger haptic when carousel settles on a color (unless click already triggered it)
-    if (!clickTriggeredRef.current) {
-      console.log('[ColorWheelPicker] Triggering haptic from onSettle');
-      trigger('selection');
-    }
     clickTriggeredRef.current = false;
-  }, [trigger]);
+    settleHapticTriggeredRef.current = false;
+  }, [emblaApi]);
 
-  // Handle slide changes (when snapped)
+  // Handle slide changes (when snapped or settled)
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     
     // Don't update state until we're properly initialized
-    // This prevents overwriting the correct initial value with index 0
     if (!isInitializedRef.current) return;
 
     const slideIndex = emblaApi.selectedScrollSnap();
     const slideCount = COLOR_PALETTE.length;
-    
-    // Map the slide index back to palette index (handle looping)
     const paletteIndex = ((slideIndex % slideCount) + slideCount) % slideCount;
     
     setSelectedIndex(paletteIndex);
@@ -371,14 +369,18 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
 
     if (paletteIndex !== lastIndexRef.current) {
       lastIndexRef.current = paletteIndex;
-      // Mark as manually changed when user interacts
       if (!hasManualChangeRef.current) {
         hasManualChangeRef.current = true;
         onManualChange?.();
       }
       onChange(color);
+
+      // Trigger landing haptic if it's a slow snap or the final settle
+      if (!clickTriggeredRef.current) {
+        trigger('selection');
+      }
     }
-  }, [emblaApi, onChange, onManualChange]);
+  }, [emblaApi, onChange, onManualChange, trigger]);
 
   useEffect(() => {
     if (!emblaApi) return;
