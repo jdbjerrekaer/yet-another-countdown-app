@@ -840,6 +840,29 @@ struct CountdownWidgetBundle: WidgetBundle {
         CountdownTimerWidget()   // Focus/Timer style widget
         CountdownVisualWidget()  // Visual/Progress bars style widget
         CountdownClassicWidget() // Classic/Flip digit style widget
+        iOS17TripleWidget()      // Triple countdown widget (iOS 17+)
+    }
+}
+
+// Wrapper to conditionally include iOS 17+ triple widget
+struct iOS17TripleWidget: Widget {
+    let kind: String = "CountdownTripleWidget"
+    
+    var body: some WidgetConfiguration {
+        if #available(iOS 17.0, *) {
+            return CountdownTripleWidget().body
+        } else {
+            // Return a minimal placeholder for iOS < 17
+            return StaticConfiguration(
+                kind: "PlaceholderTriple",
+                provider: CountdownTimerWidgetProviderStatic()
+            ) { _ in
+                EmptyView()
+            }
+            .configurationDisplayName("")
+            .description("")
+            .supportedFamilies([])
+        }
     }
 }
 
