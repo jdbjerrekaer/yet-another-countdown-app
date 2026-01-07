@@ -893,7 +893,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Date picker */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.dateLabel')}</Label>
-              <div className="rounded-2xl bg-secondary/40 overflow-hidden">
+              <div className="bg-secondary/40 rounded-2xl overflow-hidden">
                 {/* Native Ionic Calendar */}
                 <div className="p-2 flex justify-center">
                   <IonDatetime
