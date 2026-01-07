@@ -239,6 +239,7 @@ If you prefer to deploy manually:
 2. **Deploy the `dist` folder** to GitHub Pages:
    - Use the `gh-pages` branch method, or
    - Use GitHub Actions manually from the Actions tab
+    npm run build && npx cap sync ios && npx cap open ios
 
 ### Other Web Deployment Options
 
