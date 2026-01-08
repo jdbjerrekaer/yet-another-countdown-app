@@ -124,7 +124,9 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
               {isRecurring 
                 ? `${t('widget.next', { date: format(targetDate, 'MMM d') })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
                 : countdown.isPast
-                  ? t('countdown.daysAgo', { count: countdown.daysSince })
+                  ? countdown.daysSince === 1 
+                    ? t('countdown.daysAgo', { count: 1 })
+                    : t('countdown.daysAgo_plural', { count: countdown.daysSince })
                   : formatDateSmart(targetDate)}
             </p>
           )}
@@ -187,7 +189,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           {countdown.isPast ? (
             <FlipDigit 
               value={countdown.daysSince} 
-              label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')}
+              label={(countdown.daysSince === 1 ? 'Day' : t('widget.units.daysShort')) + ' ' + t('widget.daysAgoText')}
               size="small" 
               theme={flipTheme} 
               layout="row"
@@ -239,7 +241,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
         )}
         {countdown.isPast ? (
           <p className="text-3xl font-bold text-foreground tracking-tight">
-            {countdown.daysSince}<span className="text-lg font-medium text-muted-foreground ml-1">{t('widget.units.days', { count: countdown.daysSince })} {t('widget.daysAgoText')}</span>
+            {countdown.daysSince}<span className="text-lg font-medium text-muted-foreground ml-1">{countdown.daysSince === 1 ? t('widget.units.days') : t('widget.units.days_plural')} {t('widget.daysAgoText')}</span>
           </p>
         ) : countdown.isComplete ? (
           <p className="text-2xl font-bold text-primary">{t('countdown.today')}</p>

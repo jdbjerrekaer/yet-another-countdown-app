@@ -101,7 +101,9 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
                 {isRecurring 
                   ? `${t('widget.next', { date: formatDateSmart(targetDate) })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
                   : countdown.isPast
-                    ? `${formatDateSmart(targetDate)} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
+                    ? `${formatDateSmart(targetDate)} · ${countdown.daysSince === 1 
+                      ? t('countdown.daysAgo', { count: 1 })
+                      : t('countdown.daysAgo_plural', { count: countdown.daysSince })}`
                     : `${formatDateSmart(targetDate)} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
               </p>
             ) : (
@@ -179,7 +181,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
         <div className="flex-1 flex items-end">
           {countdown.isPast ? (
             <div className="flex gap-6">
-              <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={countdown.daysSince} label={(countdown.daysSince === 1 ? 'Day' : t('widget.units.daysShort')) + ' ' + t('widget.daysAgoText')} size="medium" theme={flipTheme} layout="column" />
             </div>
           ) : countdown.isComplete ? (
             <p className="text-3xl font-bold text-primary">{t('countdown.today')}</p>
@@ -240,7 +242,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
           <div className="flex gap-6">
             <div>
               <p className="text-3xl font-bold text-foreground">{countdown.daysSince}</p>
-              <p className="text-xs text-muted-foreground">{t('widget.units.daysShort', { count: countdown.daysSince })} {t('widget.daysAgoText')}</p>
+              <p className="text-xs text-muted-foreground">{countdown.daysSince === 1 ? 'Day' : t('widget.units.daysShort')} {t('widget.daysAgoText')}</p>
             </div>
           </div>
         ) : countdown.isComplete ? (

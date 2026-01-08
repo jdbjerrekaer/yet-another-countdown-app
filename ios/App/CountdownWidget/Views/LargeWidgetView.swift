@@ -68,7 +68,7 @@ struct LargeWidgetView: View {
                     // Time breakdown
                     HStack(spacing: 24) {
                         if countdown.isPast {
-                            TimeUnitCenteredView(value: countdown.daysSince, unit: "Days ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
+                            TimeUnitCenteredView(value: countdown.daysSince, unit: countdown.daysSince == 1 ? "Day ago" : "Days ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
                         } else {
                             TimeUnitCenteredView(value: countdown.days, unit: "Days", foregroundColor: foregroundColor, mutedColor: mutedColor)
                             TimeUnitCenteredView(value: countdown.hours, unit: "Hours", foregroundColor: foregroundColor, mutedColor: mutedColor)

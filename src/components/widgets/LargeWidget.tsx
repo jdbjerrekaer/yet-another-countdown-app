@@ -116,7 +116,9 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
                 {isRecurring 
                   ? t('widget.next', { date: formatDateSmart(targetDate) }) 
                   : countdown.isPast
-                    ? `${formatDateSmart(targetDate)} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
+                    ? `${formatDateSmart(targetDate)} · ${countdown.daysSince === 1 
+                      ? t('countdown.daysAgo', { count: 1 })
+                      : t('countdown.daysAgo_plural', { count: countdown.daysSince })}`
                     : formatDateSmart(targetDate)}
               </p>
             )}
@@ -229,7 +231,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         
         <div className="flex-1 flex items-center justify-center">
           {countdown.isPast ? (
-            <FlipDigit value={countdown.daysSince} label={t('widget.units.daysShort', { count: countdown.daysSince }) + ' ' + t('widget.daysAgoText')} size="large" theme={flipTheme} layout="row" />
+            <FlipDigit value={countdown.daysSince} label={(countdown.daysSince === 1 ? 'Day' : t('widget.units.daysShort')) + ' ' + t('widget.daysAgoText')} size="large" theme={flipTheme} layout="row" />
           ) : countdown.isComplete ? (
             <div className="text-center py-8">
               <p className="text-5xl font-bold text-primary">{t('countdown.today')}</p>
@@ -283,7 +285,9 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         {countdown.isPast ? (
           <div className="flex flex-col items-center justify-center">
             <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-            <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+            <p className="text-lg text-muted-foreground mt-2">{countdown.daysSince === 1 
+              ? t('countdown.daysAgo', { count: 1 })
+              : t('countdown.daysAgo_plural', { count: countdown.daysSince })}</p>
           </div>
         ) : countdown.isComplete ? (
           <div className="text-center py-8">

@@ -78,9 +78,9 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
     if (countdown.isComplete && !countdown.isPast) {
       return ` · ${t('countdown.today')}`;
     } else if (countdown.isPast) {
-      return ` · ${countdown.daysSince} ${countdown.daysSince === 1 ? t('widget.units.day') : t('widget.units.days_plural')} ${t('widget.daysAgoText')}`;
+      return ` · ${countdown.daysSince} ${countdown.daysSince === 1 ? t('widget.units.days') : t('widget.units.days_plural')} ${t('widget.daysAgoText')}`;
     } else {
-      return ` · ${countdown.days} ${countdown.days === 1 ? t('widget.units.day') : t('widget.units.days_plural')}`;
+      return ` · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`;
     }
   };
 
@@ -173,14 +173,14 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             <div>
               <p className="text-2xl font-bold text-foreground">{countdown.daysSince}</p>
               <p className="text-xs text-muted-foreground">
-                {countdown.daysSince === 1 ? t('widget.units.day') + ' ' + t('widget.daysAgoText') : t('widget.units.days_plural') + ' ' + t('widget.daysAgoText')}
+                {countdown.daysSince === 1 ? t('widget.units.days') + ' ' + t('widget.daysAgoText') : t('widget.units.days_plural') + ' ' + t('widget.daysAgoText')}
               </p>
             </div>
           ) : (
             <div>
               <p className="text-2xl font-bold text-foreground">{countdown.days}</p>
               <p className="text-xs text-muted-foreground">
-                {countdown.days === 1 ? t('widget.units.day') : t('widget.units.days_plural')}
+                {countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}
               </p>
             </div>
           )}

@@ -82,7 +82,7 @@ struct MediumWidgetView: View {
                         HStack(spacing: 24) {
                             VStack(alignment: .leading, spacing: 2) {
                                 FlipDigitView(value: countdown.daysSince, fontSize: 28, theme: flipDigitTheme)
-                                Text("Days ago")
+                                Text(countdown.daysSince == 1 ? "Day ago" : "Days ago")
                                     .font(.system(size: 11))
                                     .foregroundColor(mutedColor)
                             }

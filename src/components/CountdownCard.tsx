@@ -214,7 +214,9 @@ export function CountdownCard({
             <div className="flex items-center gap-2">
               <p className="text-sm text-muted-foreground">
                 {countdown.isPast
-                  ? t('countdown.daysAgo', { count: countdown.daysSince })
+                  ? countdown.daysSince === 1 
+                    ? t('countdown.daysAgo', { count: 1 })
+                    : t('countdown.daysAgo_plural', { count: countdown.daysSince })
                   : countdown.isComplete
                     ? t('countdown.today')
                     : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
