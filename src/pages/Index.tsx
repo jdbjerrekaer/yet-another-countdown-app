@@ -42,6 +42,7 @@ import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { toast } from 'sonner';
+import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -195,7 +196,10 @@ export default function Index() {
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
-  const isDev = import.meta.env.MODE !== 'production';
+  const [isDevBuild, setIsDevBuild] = useState(import.meta.env.MODE !== 'production');
+  const [devAdsEnabled, setDevAdsEnabled] = useState(false);
+  const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
+  const placeholderHeight = 50;
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -252,16 +256,80 @@ export default function Index() {
     };
   }, [isNative, isModalOpen, isCalendarImportOpen]);
 
+  useEffect(() => {
+    if (!isNative) return;
+    const loadBuildInfo = async () => {
+      try {
+        const info = await BuildInfo.getBuildType();
+        setIsDevBuild(info.buildType === 'debug');
+        AdsManager.setDevBuild(info.buildType === 'debug');
+      } catch (error) {
+        console.warn('[BuildInfo] Failed to read build type', error);
+      }
+    };
+    loadBuildInfo();
+  }, [isNative]);
+
+  useEffect(() => {
+    if (!isNative || !isDevBuild) return;
+    const loadDevAdsState = async () => {
+      const enabled = await AdsManager.getDevAdsEnabled();
+      setDevAdsEnabled(enabled);
+      setShowAdPlaceholder(enabled && AdsManager.getBannerStatus() !== 'visible');
+    };
+
+    loadDevAdsState();
+    const unsubscribe = AdsManager.onBannerStatusChange((status) => {
+      setShowAdPlaceholder(devAdsEnabled && status !== 'visible');
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [isNative, isDevBuild, devAdsEnabled]);
+
+  useEffect(() => {
+    if (!isDevBuild) return;
+    if (!devAdsEnabled) {
+      setShowAdPlaceholder(false);
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.adPlaceholder;
+        document.documentElement.style.setProperty('--ad-banner-height', '0px');
+      }
+      if (isNative) {
+        void AdsManager.hideBanner();
+      }
+    }
+  }, [isDevBuild, devAdsEnabled, isNative]);
+
+  useEffect(() => {
+    if (!isDevBuild) return;
+    const bannerStatus = AdsManager.getBannerStatus();
+    if (showAdPlaceholder) {
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.adPlaceholder = 'true';
+      }
+      document.documentElement.style.setProperty('--ad-banner-height', `${placeholderHeight}px`);
+    } else if (bannerStatus !== 'visible') {
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.adPlaceholder;
+      }
+      document.documentElement.style.setProperty('--ad-banner-height', '0px');
+    }
+  }, [isDevBuild, showAdPlaceholder, placeholderHeight, devAdsEnabled]);
+
   const handleTitlePressStart = () => {
-    if (!isDev || titlePressTimeoutRef.current !== null) return;
+    if (!isDevBuild || titlePressTimeoutRef.current !== null) return;
     titlePressTimeoutRef.current = window.setTimeout(async () => {
       const enabled = await AdsManager.toggleDevAdsEnabled();
+      setDevAdsEnabled(enabled);
       if (enabled) {
-        toast.success('Ads enabled for this device (dev builds).');
+        toast.success('Test ads ON (dev build).');
         await AdsManager.showBanner();
       } else {
         toast.message('Ads disabled for this device (dev builds).');
         await AdsManager.hideBanner();
+      setShowAdPlaceholder(false);
       }
     }, 700);
   };
@@ -927,7 +995,7 @@ export default function Index() {
               </span>
             </IonTitle>
             <IonButtons slot="end">
-              {isDev && (
+              {isDevBuild && (
                 <span className="mr-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
                   Dev
                 </span>
@@ -1170,6 +1238,18 @@ export default function Index() {
       </IonContent>
 
       {typeof document !== 'undefined' && !isCalendarImportOpen ? createPortal(fabPortal, document.body) : null}
+
+      {isDevBuild && devAdsEnabled && showAdPlaceholder && (
+        <div
+          className="fixed left-0 right-0 z-40 flex items-center justify-center border-t border-border bg-muted/80 text-[11px] uppercase tracking-wide text-muted-foreground"
+          style={{
+            height: `${placeholderHeight}px`,
+            bottom: 'calc(env(safe-area-inset-bottom) + 6px)',
+          }}
+        >
+          Ad placeholder (dev)
+        </div>
+      )}
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal
