@@ -688,7 +688,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 )}
               </div>
               {isEditing && initialIsImported && initialImportedFrom && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 pl-4">
                   <CalendarIcon className="w-3.5 h-3.5" />
                   <span>{t('modal.importedFrom', { calendar: initialImportedFrom })}</span>
                 </div>
