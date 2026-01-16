@@ -927,6 +927,11 @@ export default function Index() {
               </span>
             </IonTitle>
             <IonButtons slot="end">
+              {isDev && (
+                <span className="mr-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                  Dev
+                </span>
+              )}
               <IonButton onClick={handleOpenCalendarImport} aria-label={t('aria.importFromCalendar')} style={{
                 '--padding-start': '8px',
                 '--padding-end': '8px',

@@ -27,7 +27,7 @@ PODS:
     - Capacitor
   - Google-Mobile-Ads-SDK (11.3.0):
     - GoogleUserMessagingPlatform (>= 1.1)
-  - GoogleUserMessagingPlatform (3.1.0)
+  - GoogleUserMessagingPlatform (2.7.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -43,6 +43,7 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - GoogleUserMessagingPlatform (~> 2.1)
 
 SPEC REPOS:
   trunk:
@@ -92,8 +93,8 @@ SPEC CHECKSUMS:
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
   Google-Mobile-Ads-SDK: 301a16c461c331ba34ff4dab40a22ab7c147af61
-  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
+  GoogleUserMessagingPlatform: a8b56893477f67212fbc8411c139e61d463349f5
 
-PODFILE CHECKSUM: e1c527a2bc6606f8328865c66e4b594e390050f3
+PODFILE CHECKSUM: b92ca2b8050c70b6788a3246dcf063d10f017181
 
 COCOAPODS: 1.16.2

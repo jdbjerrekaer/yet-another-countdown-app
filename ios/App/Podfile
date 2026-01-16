@@ -1,6 +1,6 @@
 require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
-platform :ios, '13.0'
+platform :ios, '14.0'
 use_frameworks!
 
 # workaround to avoid Xcode caching of Pods that requires
@@ -26,7 +26,8 @@ end
 
 target 'App' do
   capacitor_pods
-  # Add your Pods here
+  # Pin UMP to v2.x for AdMob plugin compatibility
+  pod 'GoogleUserMessagingPlatform', '~> 2.1'
 end
 
 target 'CountdownWidget' do
