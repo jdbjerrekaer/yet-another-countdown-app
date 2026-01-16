@@ -5,6 +5,9 @@ PODS:
     - Capacitor
   - CapacitorApp (6.0.3):
     - Capacitor
+  - CapacitorCommunityAdmob (6.2.0):
+    - Capacitor
+    - Google-Mobile-Ads-SDK (= 11.3.0)
   - CapacitorCordova (6.2.1)
   - CapacitorDialog (6.0.3):
     - Capacitor
@@ -22,11 +25,15 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.3):
     - Capacitor
+  - Google-Mobile-Ads-SDK (11.3.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (3.1.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorActionSheet (from `../../node_modules/@capacitor/action-sheet`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCommunityAdmob (from `../../node_modules/@capacitor-community/admob`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorDialog (from `../../node_modules/@capacitor/dialog`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
@@ -37,6 +44,11 @@ DEPENDENCIES:
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
 
+SPEC REPOS:
+  trunk:
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
+
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
@@ -44,6 +56,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/action-sheet"
   CapacitorApp:
     :path: "../../node_modules/@capacitor/app"
+  CapacitorCommunityAdmob:
+    :path: "../../node_modules/@capacitor-community/admob"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorDialog:
@@ -67,6 +81,7 @@ SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
   CapacitorActionSheet: 5890e40977d36eb204a9d21f8bfb55bc39f1afa8
   CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
+  CapacitorCommunityAdmob: 52a6ebbec5e4c277d2694657becd42bcadbe369a
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorDialog: ee2e2bf8684020da1f64a7185a337405046acd23
   CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
@@ -76,7 +91,9 @@ SPEC CHECKSUMS:
   CapacitorShare: 77ff779e3b7c6ae9fb5461e52cf7ef805d429491
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
+  Google-Mobile-Ads-SDK: 301a16c461c331ba34ff4dab40a22ab7c147af61
+  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
 
-PODFILE CHECKSUM: baa1c2175cf6292ca5ed08bccf908a6ff4779f75
+PODFILE CHECKSUM: e1c527a2bc6606f8328865c66e4b594e390050f3
 
 COCOAPODS: 1.16.2

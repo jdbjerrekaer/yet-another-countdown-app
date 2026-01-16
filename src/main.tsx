@@ -8,6 +8,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import App from "./App.tsx";
 import "./i18n"; // Initialize i18n
 import { checkPreferencesLanguage } from "./i18n";
+import { AdsManager } from "./lib/ads/adsManager";
 
 /* Ionic Core CSS */
 import "@ionic/react/css/core.css";
@@ -66,6 +67,12 @@ async function initNativePlugins() {
       await SplashScreen.hide();
     } catch (e) {
       console.warn("SplashScreen plugin error:", e);
+    }
+
+    try {
+      await AdsManager.init();
+    } catch (e) {
+      console.warn("AdMob initialization error:", e);
     }
   }
 }

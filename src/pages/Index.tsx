@@ -40,6 +40,7 @@ import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/l
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
+import { AdsManager } from '@/lib/ads/adsManager';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -235,6 +236,18 @@ export default function Index() {
       setSelectedEventId(events[0].id);
     }
   }, [events, selectedEventId]);
+
+  useEffect(() => {
+    if (!isNative) return;
+    if (isModalOpen || isCalendarImportOpen) {
+      void AdsManager.hideBanner();
+    } else {
+      void AdsManager.showBanner();
+    }
+    return () => {
+      void AdsManager.hideBanner();
+    };
+  }, [isNative, isModalOpen, isCalendarImportOpen]);
 
   // Debug: Test CalendarPlugin immediately on mount - use direct Capacitor call
   useEffect(() => {
@@ -516,6 +529,8 @@ export default function Index() {
   };
 
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
+    const saveKind = editingEvent ? 'edit' : 'create';
+
     // Request notification permission when creating or editing an event
     const hasPermission = await checkNotificationPermission();
     if (!hasPermission) {
@@ -557,6 +572,8 @@ export default function Index() {
       await scheduleEventNotification(newEvent.id, title, targetDateForNotification, emoji);
     }
     setEditingEvent(null);
+
+    void AdsManager.maybeShowInterstitialAfterSave({ kind: saveKind });
   };
 
   const handleEdit = (event: CountdownEvent) => {
@@ -891,7 +908,10 @@ export default function Index() {
         </IonHeader>
 
         {/* Main content */}
-        <div className="pb-12">
+        <div
+          className="pb-12"
+          style={{ paddingBottom: 'calc(3rem + var(--ad-banner-height, 0px))' }}
+        >
           {events.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
               <div className="w-20 h-20 rounded-3xl gradient-accent flex items-center justify-center shadow-ios-lg mb-6 animate-float">
