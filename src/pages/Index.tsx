@@ -41,6 +41,7 @@ import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { AdsManager } from '@/lib/ads/adsManager';
+import { toast } from 'sonner';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -190,9 +191,11 @@ export default function Index() {
   const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
+  const titlePressTimeoutRef = useRef<number | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
+  const isDev = import.meta.env.MODE !== 'production';
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -248,6 +251,26 @@ export default function Index() {
       void AdsManager.hideBanner();
     };
   }, [isNative, isModalOpen, isCalendarImportOpen]);
+
+  const handleTitlePressStart = () => {
+    if (!isDev || titlePressTimeoutRef.current !== null) return;
+    titlePressTimeoutRef.current = window.setTimeout(async () => {
+      const enabled = await AdsManager.toggleDevAdsEnabled();
+      if (enabled) {
+        toast.success('Ads enabled for this device (dev builds).');
+        await AdsManager.showBanner();
+      } else {
+        toast.message('Ads disabled for this device (dev builds).');
+        await AdsManager.hideBanner();
+      }
+    }, 700);
+  };
+
+  const handleTitlePressEnd = () => {
+    if (titlePressTimeoutRef.current === null) return;
+    window.clearTimeout(titlePressTimeoutRef.current);
+    titlePressTimeoutRef.current = null;
+  };
 
   // Debug: Test CalendarPlugin immediately on mount - use direct Capacitor call
   useEffect(() => {
@@ -893,7 +916,16 @@ export default function Index() {
         {/* iOS large title header */}
         <IonHeader>
           <IonToolbar>
-            <IonTitle size="large">{t('app.title')}</IonTitle>
+            <IonTitle size="large">
+              <span
+                onPointerDown={handleTitlePressStart}
+                onPointerUp={handleTitlePressEnd}
+                onPointerLeave={handleTitlePressEnd}
+                onPointerCancel={handleTitlePressEnd}
+              >
+                {t('app.title')}
+              </span>
+            </IonTitle>
             <IonButtons slot="end">
               <IonButton onClick={handleOpenCalendarImport} aria-label={t('aria.importFromCalendar')} style={{
                 '--padding-start': '8px',

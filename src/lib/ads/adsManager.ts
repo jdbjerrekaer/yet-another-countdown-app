@@ -23,6 +23,7 @@ const PREF_HAS_CREATED_ONCE = "ads_hasCreatedOnce";
 const PREF_HAS_EDITED_ONCE = "ads_hasEditedOnce";
 const PREF_LAST_INTERSTITIAL_AT = "ads_lastInterstitialAt";
 const PREF_SAVE_COUNT_SINCE_INTERSTITIAL = "ads_saveCountSinceLastInterstitial";
+const PREF_DEV_ADS_ENABLED = "ads_devEnabled";
 
 let isInitialized = false;
 let bannerVisible = false;
@@ -56,6 +57,27 @@ const setBool = async (key: string, value: boolean) => {
 
 const setNumber = async (key: string, value: number) => {
   await Preferences.set({ key, value: String(Math.floor(value)) });
+};
+
+const getDevAdsEnabled = async () => {
+  const { value } = await Preferences.get({ key: PREF_DEV_ADS_ENABLED });
+  if (value === null) {
+    await Preferences.set({ key: PREF_DEV_ADS_ENABLED, value: "false" });
+    return false;
+  }
+  return value === "true";
+};
+
+const setDevAdsEnabled = async (enabled: boolean) => {
+  await Preferences.set({
+    key: PREF_DEV_ADS_ENABLED,
+    value: enabled ? "true" : "false",
+  });
+};
+
+const isAdsEnabled = async () => {
+  if (!IS_TESTING) return true;
+  return getDevAdsEnabled();
 };
 
 const prepareInterstitial = async () => {
@@ -101,6 +123,8 @@ const resetSaveCount = async () => {
 export const AdsManager = {
   init: async () => {
     if (!Capacitor.isNativePlatform() || isInitialized) return;
+    const enabled = await isAdsEnabled();
+    if (!enabled) return;
     isInitialized = true;
 
     try {
@@ -173,6 +197,15 @@ export const AdsManager = {
 
   showBanner: async () => {
     if (!Capacitor.isNativePlatform()) return;
+    const enabled = await isAdsEnabled();
+    if (!enabled) {
+      await AdsManager.hideBanner();
+      return;
+    }
+    if (!isInitialized) {
+      await AdsManager.init();
+    }
+    if (!isInitialized) return;
     if (bannerVisible) return;
     bannerVisible = true;
 
@@ -207,6 +240,8 @@ export const AdsManager = {
 
   maybeShowInterstitialAfterSave: async ({ kind }: { kind: SaveKind }) => {
     if (!Capacitor.isNativePlatform()) return;
+    const enabled = await isAdsEnabled();
+    if (!enabled) return;
     if (!isInitialized) {
       await AdsManager.init();
     }
@@ -251,5 +286,13 @@ export const AdsManager = {
       console.warn("[Ads] Interstitial show failed", error);
       await prepareInterstitial();
     }
+  },
+  getDevAdsEnabled,
+  setDevAdsEnabled,
+  toggleDevAdsEnabled: async () => {
+    const enabled = await getDevAdsEnabled();
+    const next = !enabled;
+    await setDevAdsEnabled(next);
+    return next;
   },
 };
