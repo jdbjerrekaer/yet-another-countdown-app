@@ -72,7 +72,6 @@ export const RemoveAdsModal = ({
       })
       .catch((err) => {
         console.warn("[Purchases] Failed to load products", err);
-        // On dev builds, don't show error if we can't load real products
         if (!isDevBuild) {
           setError(t("iap.loadError"));
         }
@@ -86,14 +85,12 @@ export const RemoveAdsModal = ({
     setActionLoadingId(productId);
     try {
       if (isDevBuild) {
-        // Simulate purchase on dev build
         await new Promise((resolve) => setTimeout(resolve, 800));
         await PurchasesManager.setDebugEntitlement(true, productId);
       } else {
         await PurchasesManager.purchaseRemoveAds(productId);
       }
       
-      // Fire confetti on success
       confetti({
         particleCount: 150,
         spread: 70,

@@ -85,7 +85,6 @@ export const PurchasesManager = {
     isInitialized = true;
 
     if (isDevBuild) {
-      // Reset entitlement on dev build app start as requested
       await Preferences.remove({ key: PREF_REMOVE_ADS });
       await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
     }
@@ -94,6 +93,7 @@ export const PurchasesManager = {
     entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
 
     if (!Capacitor.isNativePlatform()) return;
+    if (isDevBuild) return;
 
     try {
       InAppPurchase2.verbosity = InAppPurchase2.ERROR;
@@ -150,6 +150,30 @@ export const PurchasesManager = {
   getProducts: async (): Promise<IAPProduct[]> => {
     await PurchasesManager.init();
     if (!Capacitor.isNativePlatform()) return [];
+    
+    if (isDevBuild) {
+      return REMOVE_ADS_PRODUCTS.map((item) => {
+        const mockProduct = {
+          id: item.id,
+          alias: undefined,
+          type: InAppPurchase2.NON_CONSUMABLE,
+          state: InAppPurchase2.VALID,
+          title: item.tier === "supporter" ? "Remove Ads + Supporter" : "Remove Ads",
+          description: item.tier === "supporter" 
+            ? "Ad-free plus a thank you for supporting the app."
+            : "Remove banners and interstitials.",
+          priceMicros: item.tier === "supporter" ? 4990000 : 2990000,
+          price: item.tier === "supporter" ? "€4.99" : "€2.99",
+          currency: "EUR",
+          loaded: true,
+          valid: true,
+          canPurchase: true,
+          owned: false,
+        } as IAPProduct;
+        return mockProduct;
+      });
+    }
+    
     await ensureReady();
     return REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
       Boolean,
