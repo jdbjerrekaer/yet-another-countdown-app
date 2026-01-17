@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons, IonToggle } from '@ionic/react';
 import { add, checkmark, calendarOutline } from 'ionicons/icons';
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
@@ -38,6 +38,7 @@ import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal } from '@/components/CalendarImportModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
+import ICloudSyncPlugin from '@/plugins/ICloudSyncPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { AdsManager } from '@/lib/ads/adsManager';
@@ -72,7 +73,35 @@ const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; labelKey: string }[] 
   { id: 'classic', labelKey: 'widget.styles.classic' },
 ];
 
+const LOCAL_STORAGE_KEYS = {
+  countdowns: 'countdowns',
+  lastModified: 'countdownsLastModified',
+  icloudEnabled: 'icloudSyncEnabled',
+  icloudLastSyncedAt: 'icloudLastSyncedAt',
+};
+
+const ICLOUD_STORAGE_KEYS = {
+  countdowns: 'countdowns_blob',
+  lastModified: 'countdowns_lastModified',
+};
+
 const generateId = () => Math.random().toString(36).substr(2, 9);
+const getIsoNow = () => new Date().toISOString();
+
+const normalizeCountdownEvents = (events: CountdownEvent[]): CountdownEvent[] => {
+  const now = getIsoNow();
+  return events.map(event => ({
+    ...event,
+    createdAt: event.createdAt || now,
+    updatedAt: event.updatedAt || event.createdAt || now,
+  }));
+};
+
+const maxIsoTimestamp = (a?: string | null, b?: string | null) => {
+  if (!a) return b ?? '';
+  if (!b) return a;
+  return a > b ? a : b;
+};
 
 // Triple Widget Preview Component
 function TripleWidgetPreview({ 
@@ -193,6 +222,13 @@ export default function Index() {
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
+  const eventsRef = useRef<CountdownEvent[]>([]);
+  const localLastModifiedRef = useRef<string>('');
+  const isApplyingRemoteRef = useRef(false);
+  const isSyncingRef = useRef(false);
+  const lastAppliedCloudModifiedRef = useRef<string | null>(null);
+  const lastPushedModifiedRef = useRef<string | null>(null);
+  const iCloudPushTimeoutRef = useRef<number | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -216,10 +252,11 @@ export default function Index() {
   });
   const sensors = useSensors(pointerSensor, touchSensor);
   
-  const [events, setEvents] = useState<CountdownEvent[]>(() => {
-    const saved = localStorage.getItem('countdowns');
+  const initialEvents = useMemo(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.countdowns);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved) as CountdownEvent[];
+      return normalizeCountdownEvents(parsed);
     }
     // Migrate from old single-countdown format if it exists
     const oldSaved = localStorage.getItem('countdown');
@@ -231,18 +268,52 @@ export default function Index() {
         targetDate: old.targetDate,
         emoji: old.emoji,
         isRecurring: false,
-        createdAt: new Date().toISOString(),
+        createdAt: getIsoNow(),
+        updatedAt: getIsoNow(),
       };
       return [migrated];
     }
     return [];
+  }, []);
+
+  const [events, setEvents] = useState<CountdownEvent[]>(initialEvents);
+  const [localLastModified, setLocalLastModified] = useState<string>(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.lastModified);
+    if (saved) {
+      return saved;
+    }
+    const latest = initialEvents.reduce((max, event) => maxIsoTimestamp(max, event.updatedAt), '');
+    return latest || getIsoNow();
   });
+  const [icloudEnabled, setIcloudEnabled] = useState(() => {
+    return localStorage.getItem(LOCAL_STORAGE_KEYS.icloudEnabled) === 'true';
+  });
+  const [icloudAvailable, setIcloudAvailable] = useState<boolean | null>(null);
+  const [icloudStatus, setIcloudStatus] = useState<'idle' | 'checking' | 'unavailable' | 'syncing' | 'error'>('idle');
+  const [icloudLastSyncedAt, setIcloudLastSyncedAt] = useState<string | null>(() => {
+    return localStorage.getItem(LOCAL_STORAGE_KEYS.icloudLastSyncedAt);
+  });
+  const activeEvents = useMemo(() => events.filter(event => !event.deletedAt), [events]);
 
   useEffect(() => {
-    if (events.length > 0 && !selectedEventId) {
-      setSelectedEventId(events[0].id);
+    if (activeEvents.length > 0) {
+      if (!selectedEventId || !activeEvents.some(event => event.id === selectedEventId)) {
+        setSelectedEventId(activeEvents[0].id);
+      }
+      return;
     }
-  }, [events, selectedEventId]);
+    if (selectedEventId) {
+      setSelectedEventId(null);
+    }
+  }, [activeEvents, selectedEventId]);
+
+  useEffect(() => {
+    eventsRef.current = events;
+  }, [events]);
+
+  useEffect(() => {
+    localLastModifiedRef.current = localLastModified;
+  }, [localLastModified]);
 
   useEffect(() => {
     if (!isNative) return;
@@ -356,8 +427,9 @@ export default function Index() {
       console.log('[WidgetSync] Platform:', platform, 'isNative:', native);
       
       // Get events from localStorage directly to avoid closure issues
-      const saved = localStorage.getItem('countdowns');
-      const storedEvents = saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.countdowns);
+      const storedEventsRaw = saved ? (JSON.parse(saved) as CountdownEvent[]) : [];
+      const storedEvents = normalizeCountdownEvents(storedEventsRaw).filter(event => !event.deletedAt);
       
       // Get saved appearance mode and countdown style from localStorage
       const savedAppearanceMode = localStorage.getItem('widgetAppearanceMode') || 'light';
@@ -399,7 +471,7 @@ export default function Index() {
     setTimeout(testPlugin, 2000);
   }, []);
 
-  const selectedEvent = events.find(e => e.id === selectedEventId);
+  const selectedEvent = activeEvents.find(e => e.id === selectedEventId);
 
   useEffect(() => {
     const pushSelectedToWidget = async () => {
@@ -440,8 +512,301 @@ export default function Index() {
     : undefined;
 
   useEffect(() => {
-    localStorage.setItem('countdowns', JSON.stringify(events));
-  }, [events]);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.countdowns, JSON.stringify(events));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.lastModified, localLastModified);
+  }, [events, localLastModified]);
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.icloudEnabled, String(icloudEnabled));
+  }, [icloudEnabled]);
+
+  useEffect(() => {
+    if (icloudLastSyncedAt) {
+      localStorage.setItem(LOCAL_STORAGE_KEYS.icloudLastSyncedAt, icloudLastSyncedAt);
+    } else {
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.icloudLastSyncedAt);
+    }
+  }, [icloudLastSyncedAt]);
+
+  const parseStoredEvents = (value: string | null): CountdownEvent[] => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value) as CountdownEvent[];
+      return normalizeCountdownEvents(parsed);
+    } catch (error) {
+      console.warn('[iCloudSync] Failed to parse stored events:', error);
+      return [];
+    }
+  };
+
+  const mergeCountdownEvents = (
+    localEvents: CountdownEvent[],
+    remoteEvents: CountdownEvent[],
+    localModified: string,
+    remoteModified: string
+  ): CountdownEvent[] => {
+    const localMap = new Map(localEvents.map(event => [event.id, event]));
+    const remoteMap = new Map(remoteEvents.map(event => [event.id, event]));
+    const mergedMap = new Map<string, CountdownEvent>();
+
+    const allIds = new Set<string>([...localMap.keys(), ...remoteMap.keys()]);
+    allIds.forEach(id => {
+      const localEvent = localMap.get(id);
+      const remoteEvent = remoteMap.get(id);
+      if (!localEvent && remoteEvent) {
+        mergedMap.set(id, remoteEvent);
+        return;
+      }
+      if (localEvent && !remoteEvent) {
+        mergedMap.set(id, localEvent);
+        return;
+      }
+      if (localEvent && remoteEvent) {
+        const localUpdated = localEvent.updatedAt || localEvent.createdAt;
+        const remoteUpdated = remoteEvent.updatedAt || remoteEvent.createdAt;
+        mergedMap.set(id, remoteUpdated > localUpdated ? remoteEvent : localEvent);
+      }
+    });
+
+    const baseOrder = remoteModified > localModified ? remoteEvents : localEvents;
+    const mergedOrder: CountdownEvent[] = [];
+    const usedIds = new Set<string>();
+
+    baseOrder.forEach(event => {
+      const merged = mergedMap.get(event.id);
+      if (merged && !usedIds.has(event.id)) {
+        mergedOrder.push(merged);
+        usedIds.add(event.id);
+      }
+    });
+
+    const remaining = Array.from(mergedMap.values()).filter(event => !usedIds.has(event.id));
+    remaining.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+    return [...mergedOrder, ...remaining];
+  };
+
+  const applyMergedEvents = async (mergedEvents: CountdownEvent[], mergedLastModified: string) => {
+    const previousEvents = eventsRef.current;
+    const prevMap = new Map(previousEvents.map(event => [event.id, event]));
+    const nextMap = new Map(mergedEvents.map(event => [event.id, event]));
+
+    try {
+      const hasPermission = await checkNotificationPermission();
+      if (hasPermission) {
+        for (const [id, prevEvent] of prevMap.entries()) {
+          const nextEvent = nextMap.get(id);
+          if (!nextEvent) continue;
+          if (prevEvent.deletedAt && !nextEvent.deletedAt) {
+            continue;
+          }
+          if (!prevEvent.deletedAt && nextEvent.deletedAt) {
+            await cancelEventNotification(id);
+          }
+        }
+
+        for (const nextEvent of mergedEvents) {
+          if (nextEvent.deletedAt) {
+            continue;
+          }
+          const prevEvent = prevMap.get(nextEvent.id);
+          if (!prevEvent || prevEvent.deletedAt) {
+            const targetDateForNotification = nextEvent.isRecurring
+              ? getNextRecurringDate(new Date(nextEvent.targetDate))
+              : new Date(nextEvent.targetDate);
+            if (targetDateForNotification) {
+              await scheduleEventNotification(nextEvent.id, nextEvent.title, targetDateForNotification, nextEvent.emoji);
+            }
+            continue;
+          }
+          const shouldReschedule = prevEvent.targetDate !== nextEvent.targetDate ||
+            prevEvent.title !== nextEvent.title ||
+            prevEvent.emoji !== nextEvent.emoji ||
+            prevEvent.isRecurring !== nextEvent.isRecurring;
+          if (shouldReschedule) {
+            await cancelEventNotification(nextEvent.id);
+            const targetDateForNotification = nextEvent.isRecurring
+              ? getNextRecurringDate(new Date(nextEvent.targetDate))
+              : new Date(nextEvent.targetDate);
+            if (targetDateForNotification) {
+              await scheduleEventNotification(nextEvent.id, nextEvent.title, targetDateForNotification, nextEvent.emoji);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[iCloudSync] Failed to reconcile notifications:', error);
+    }
+
+    isApplyingRemoteRef.current = true;
+    setEvents(mergedEvents);
+    setLocalLastModified(mergedLastModified);
+    setTimeout(() => {
+      isApplyingRemoteRef.current = false;
+    }, 0);
+  };
+
+  const pushCountdownsToICloud = async (eventsToPush: CountdownEvent[], lastModified: string) => {
+    try {
+      setIcloudStatus('syncing');
+      await ICloudSyncPlugin.setString({
+        key: ICLOUD_STORAGE_KEYS.countdowns,
+        value: JSON.stringify(eventsToPush),
+      });
+      await ICloudSyncPlugin.setString({
+        key: ICLOUD_STORAGE_KEYS.lastModified,
+        value: lastModified,
+      });
+      lastPushedModifiedRef.current = lastModified;
+      setIcloudLastSyncedAt(getIsoNow());
+      setIcloudStatus('idle');
+    } catch (error) {
+      console.warn('[iCloudSync] Failed to push data:', error);
+      setIcloudStatus('error');
+    }
+  };
+
+  const pullAndMergeFromICloud = async () => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+    setIcloudStatus('syncing');
+
+    try {
+      const [blobResult, modifiedResult] = await Promise.all([
+        ICloudSyncPlugin.getString({ key: ICLOUD_STORAGE_KEYS.countdowns }),
+        ICloudSyncPlugin.getString({ key: ICLOUD_STORAGE_KEYS.lastModified }),
+      ]);
+
+      const remoteEvents = parseStoredEvents(blobResult.value);
+      const remoteLastModified = modifiedResult.value || '';
+      const localEvents = eventsRef.current;
+      const localLastModified = localLastModifiedRef.current;
+
+      if (!remoteEvents.length && !remoteLastModified) {
+        if (localEvents.length > 0) {
+          await pushCountdownsToICloud(localEvents, localLastModified);
+        }
+        setIcloudStatus('idle');
+        isSyncingRef.current = false;
+        return;
+      }
+
+      if (remoteLastModified && remoteLastModified === lastAppliedCloudModifiedRef.current) {
+        setIcloudStatus('idle');
+        isSyncingRef.current = false;
+        return;
+      }
+
+      if (localEvents.length === 0 && remoteEvents.length > 0) {
+        const mergedLastModified = remoteLastModified || getIsoNow();
+        await applyMergedEvents(remoteEvents, mergedLastModified);
+        lastAppliedCloudModifiedRef.current = remoteLastModified || null;
+        setIcloudLastSyncedAt(getIsoNow());
+        if (!remoteLastModified) {
+          await pushCountdownsToICloud(remoteEvents, mergedLastModified);
+        }
+        setIcloudStatus('idle');
+        isSyncingRef.current = false;
+        return;
+      }
+
+      if (localEvents.length > 0 && remoteEvents.length > 0) {
+        const merged = mergeCountdownEvents(localEvents, remoteEvents, localLastModified, remoteLastModified);
+        const mergedLastModified = maxIsoTimestamp(localLastModified, remoteLastModified);
+        await applyMergedEvents(merged, mergedLastModified || getIsoNow());
+        lastAppliedCloudModifiedRef.current = remoteLastModified || null;
+        setIcloudLastSyncedAt(getIsoNow());
+        if (localLastModified > remoteLastModified) {
+          await pushCountdownsToICloud(merged, mergedLastModified);
+        }
+        setIcloudStatus('idle');
+        isSyncingRef.current = false;
+        return;
+      }
+
+      if (remoteEvents.length > 0) {
+        const mergedLastModified = remoteLastModified || getIsoNow();
+        await applyMergedEvents(remoteEvents, mergedLastModified);
+        lastAppliedCloudModifiedRef.current = remoteLastModified || null;
+        setIcloudLastSyncedAt(getIsoNow());
+        if (!remoteLastModified) {
+          await pushCountdownsToICloud(remoteEvents, mergedLastModified);
+        }
+      }
+      setIcloudStatus('idle');
+    } catch (error) {
+      console.warn('[iCloudSync] Failed to pull data:', error);
+      setIcloudStatus('error');
+    } finally {
+      isSyncingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (!isNative) {
+      setIcloudAvailable(false);
+      setIcloudStatus('unavailable');
+      return;
+    }
+
+    let cancelled = false;
+    const checkAvailability = async () => {
+      setIcloudStatus('checking');
+      try {
+        const result = await ICloudSyncPlugin.isAvailable();
+        if (cancelled) return;
+        setIcloudAvailable(result.available);
+        setIcloudStatus(result.available ? 'idle' : 'unavailable');
+        if (result.available && icloudEnabled) {
+          await pullAndMergeFromICloud();
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.warn('[iCloudSync] Availability check failed:', error);
+        setIcloudAvailable(false);
+        setIcloudStatus('error');
+      }
+    };
+
+    checkAvailability();
+    return () => {
+      cancelled = true;
+    };
+  }, [isNative, icloudEnabled]);
+
+  useEffect(() => {
+    if (!icloudEnabled || !isNative || !icloudAvailable) return;
+    let listener: { remove: () => Promise<void> } | null = null;
+
+    const subscribe = async () => {
+      listener = await ICloudSyncPlugin.addListener('kvStoreDidChange', (event) => {
+        const keys = event.keys || [];
+        if (!keys.includes(ICLOUD_STORAGE_KEYS.countdowns) && !keys.includes(ICLOUD_STORAGE_KEYS.lastModified)) {
+          return;
+        }
+        void pullAndMergeFromICloud();
+      });
+    };
+
+    void subscribe();
+
+    return () => {
+      if (listener) {
+        void listener.remove();
+      }
+    };
+  }, [icloudEnabled, isNative, icloudAvailable]);
+
+  useEffect(() => {
+    if (!icloudEnabled || !isNative || !icloudAvailable) return;
+    if (isApplyingRemoteRef.current) return;
+    if (lastPushedModifiedRef.current === localLastModified) return;
+    if (iCloudPushTimeoutRef.current) {
+      window.clearTimeout(iCloudPushTimeoutRef.current);
+    }
+    iCloudPushTimeoutRef.current = window.setTimeout(() => {
+      void pushCountdownsToICloud(eventsRef.current, localLastModifiedRef.current);
+    }, 800);
+  }, [events, localLastModified, icloudEnabled, isNative, icloudAvailable]);
 
   // Persist appearance mode to localStorage
   useEffect(() => {
@@ -469,7 +834,7 @@ export default function Index() {
   // Sync widget data to native storage whenever events or widget settings change
   useEffect(() => {
     const syncWidgetData = async () => {
-      console.log('[WidgetSync] Starting sync, isNative:', isNative, 'events count:', events.length);
+      console.log('[WidgetSync] Starting sync, isNative:', isNative, 'events count:', activeEvents.length);
       
       if (!isNative) {
         console.log('[WidgetSync] Skipping - not native platform');
@@ -478,7 +843,7 @@ export default function Index() {
       
       try {
         // Convert events to widget format
-        const widgetEvents: WidgetCountdownEvent[] = events.map(event => ({
+        const widgetEvents: WidgetCountdownEvent[] = activeEvents.map(event => ({
           id: event.id,
           title: event.title,
           targetDate: event.targetDate,
@@ -504,7 +869,7 @@ export default function Index() {
     };
 
     syncWidgetData();
-  }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative]);
+  }, [activeEvents, selectedAppearanceMode, selectedCountdownStyle, isNative]);
 
   // Check scheduled notifications on app load (for web platform)
   useEffect(() => {
@@ -545,6 +910,7 @@ export default function Index() {
 
         if (confirmed) {
           // Create new event from imported payload
+          const now = getIsoNow();
           const newEvent: CountdownEvent = {
             id: generateId(),
             title: payload.title,
@@ -552,11 +918,13 @@ export default function Index() {
             emoji: payload.emoji,
             emojiColor: payload.emojiColor,
             isRecurring: payload.isRecurring,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
+            updatedAt: now,
           };
           
           setEvents(prev => [...prev, newEvent]);
           setSelectedEventId(newEvent.id);
+          setLocalLastModified(now);
           
           // Schedule notification only if permission is already granted (don't prompt on import)
           const hasPermission = await checkNotificationPermission();
@@ -589,7 +957,7 @@ export default function Index() {
       console.log('[Index] Received edit deep link for event:', eventId);
       
       // Find the event by ID
-      const eventToEdit = events.find(e => e.id === eventId);
+      const eventToEdit = activeEvents.find(e => e.id === eventId);
       if (eventToEdit) {
         console.log('[Index] Found event, opening edit modal:', eventToEdit.title);
         // Select the event and open edit modal
@@ -635,14 +1003,16 @@ export default function Index() {
     }
 
     if (editingEvent) {
+      const now = getIsoNow();
       // Cancel old notification and schedule new one
       await cancelEventNotification(editingEvent.id);
       
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
-          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring }
+          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring, updatedAt: now, deletedAt: undefined }
           : e
       ));
+      setLocalLastModified(now);
       
       // Schedule notification for the updated event
       const targetDateForNotification = isRecurring 
@@ -650,6 +1020,7 @@ export default function Index() {
         : date;
       await scheduleEventNotification(editingEvent.id, title, targetDateForNotification, emoji);
     } else {
+      const now = getIsoNow();
       const newEvent: CountdownEvent = {
         id: generateId(),
         title,
@@ -657,10 +1028,12 @@ export default function Index() {
         emoji,
         emojiColor,
         isRecurring,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       };
       setEvents(prev => [...prev, newEvent]);
       setSelectedEventId(newEvent.id);
+      setLocalLastModified(now);
       
       // Schedule notification for the new event
       const targetDateForNotification = isRecurring 
@@ -695,22 +1068,27 @@ export default function Index() {
       trigger('heavy');
       const eventId = event.id;
       const wasSelected = selectedEventId === eventId;
+      const now = getIsoNow();
       
       // Cancel the notification for this event
       await cancelEventNotification(eventId);
       
       setEvents(prev => {
-        const filtered = prev.filter(e => e.id !== eventId);
+        const updated = prev.map(e => 
+          e.id === eventId ? { ...e, deletedAt: now, updatedAt: now } : e
+        );
+        const activeAfterDelete = updated.filter(e => !e.deletedAt);
         // Update selected event if the deleted event was selected
         if (wasSelected) {
-          if (filtered.length > 0) {
-            setSelectedEventId(filtered[0].id);
+          if (activeAfterDelete.length > 0) {
+            setSelectedEventId(activeAfterDelete[0].id);
           } else {
             setSelectedEventId(null);
           }
         }
-        return filtered;
+        return updated;
       });
+      setLocalLastModified(now);
 
       void AdsManager.maybeShowInterstitialAfterSave({ kind: "delete" });
 
@@ -806,6 +1184,7 @@ export default function Index() {
   const handleCalendarImport = async (importedEvents: ImportableEvent[]) => {
     // Check notification permission once before importing
     const hasPermission = await checkNotificationPermission();
+    const now = getIsoNow();
 
     // Safety net: deduplicate imported events to prevent duplicates
     // This handles edge cases where duplicates might slip through the import modal
@@ -817,7 +1196,8 @@ export default function Index() {
       const newEvent: CountdownEvent = {
         id: generateId(),
         ...eventData,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       };
       
       setEvents(prev => [...prev, newEvent]);
@@ -837,6 +1217,7 @@ export default function Index() {
       // This is handled by the useEffect that selects first event if none selected
     }
     
+    setLocalLastModified(now);
     trigger('medium');
   };
 
@@ -956,11 +1337,19 @@ export default function Index() {
     lastDragEndTs.current = Date.now();
 
     if (over && active.id !== over.id) {
+      const now = getIsoNow();
       setEvents((prev) => {
-        const oldIndex = prev.findIndex((e) => e.id === active.id);
-        const newIndex = prev.findIndex((e) => e.id === over.id);
-        return arrayMove(prev, oldIndex, newIndex);
+        const activeList = prev.filter(event => !event.deletedAt);
+        const deletedList = prev.filter(event => event.deletedAt);
+        const oldIndex = activeList.findIndex((e) => e.id === active.id);
+        const newIndex = activeList.findIndex((e) => e.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) {
+          return prev;
+        }
+        const reordered = arrayMove(activeList, oldIndex, newIndex);
+        return [...reordered, ...deletedList];
       });
+      setLocalLastModified(now);
       trigger('light');
     }
   };
@@ -1031,7 +1420,7 @@ export default function Index() {
           className="pb-12"
           style={{ paddingBottom: 'calc(3rem + var(--ad-banner-height, 0px))' }}
         >
-          {events.length === 0 ? (
+          {activeEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
               <div className="w-20 h-20 rounded-3xl gradient-accent flex items-center justify-center shadow-ios-lg mb-6 animate-float">
                 <span className="text-4xl">⏳</span>
@@ -1056,11 +1445,11 @@ export default function Index() {
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
-                    items={events.map((e) => e.id)}
+                    items={activeEvents.map((e) => e.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-2" style={{ backgroundColor: 'hsl(var(--background))', overflow: 'visible' }}>
-                      {events.map(event => (
+                      {activeEvents.map(event => (
                         <SortableCountdownCard
                           key={event.id}
                           event={event}
@@ -1086,7 +1475,7 @@ export default function Index() {
                     dropAnimation={null}
                   >
                     {activeDragId ? (() => {
-                      const activeEvent = events.find(e => e.id === activeDragId);
+                      const activeEvent = activeEvents.find(e => e.id === activeDragId);
                       if (!activeEvent) return null;
                       return (
                         <div 
@@ -1124,6 +1513,42 @@ export default function Index() {
                   </DragOverlay>
                 </DndContext>
               </section>
+
+              {isNative && (
+                <section className="space-y-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
+                    {t('icloud.title')}
+                  </h2>
+                  <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3 shadow-ios-sm">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{t('icloud.toggle')}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(() => {
+                            if (!icloudEnabled) return t('icloud.statusDisabled');
+                            if (icloudStatus === 'checking') return t('icloud.statusChecking');
+                            if (icloudStatus === 'syncing') return t('icloud.statusSyncing');
+                            if (icloudStatus === 'error') return t('icloud.statusError');
+                            if (icloudAvailable === false) return t('icloud.statusUnavailable');
+                            if (icloudLastSyncedAt) {
+                              return t('icloud.statusLastSynced', {
+                                date: format(new Date(icloudLastSyncedAt), 'MMM d, h:mm a'),
+                              });
+                            }
+                            return t('icloud.statusReady');
+                          })()}
+                        </p>
+                      </div>
+                      <IonToggle
+                        checked={icloudEnabled}
+                        onIonChange={(e) => setIcloudEnabled(Boolean(e.detail.checked))}
+                        aria-label={t('icloud.toggleAria')}
+                        disabled={icloudStatus === 'checking' || icloudAvailable === false}
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* Widget preview section - only show on web, not native apps */}
               {selectedEvent && !isNative && (
@@ -1226,7 +1651,7 @@ export default function Index() {
                   </section>
 
                   {/* Triple widget preview */}
-                  {selectedSize === 'large' && events.length > 0 && (
+                  {selectedSize === 'large' && activeEvents.length > 0 && (
                     <section className="space-y-3">
                       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                         Triple Countdown Preview
@@ -1234,7 +1659,7 @@ export default function Index() {
                       <div className="flex justify-center py-4">
                         <div className="animate-scale-in">
                           <TripleWidgetPreview
-                            events={events.slice(0, 3)}
+                            events={activeEvents.slice(0, 3)}
                             appearanceMode={selectedAppearanceMode}
                             countdownStyle={selectedCountdownStyle}
                             getNextRecurringDate={getNextRecurringDate}

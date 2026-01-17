@@ -6,6 +6,8 @@ export interface CountdownEvent {
   emojiColor?: string;
   isRecurring: boolean;
   createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
   isImported?: boolean;
   importedFrom?: string; // Calendar name
 }

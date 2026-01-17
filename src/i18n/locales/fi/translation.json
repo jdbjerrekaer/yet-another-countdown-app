@@ -144,6 +144,18 @@
     "openSettings": "Avaa Asetukset",
     "clearFilter": "Kaikki"
   },
+  "icloud": {
+    "title": "iCloud Sync",
+    "toggle": "Sync countdowns via iCloud",
+    "toggleAria": "Toggle iCloud sync",
+    "statusDisabled": "Sync is off",
+    "statusChecking": "Checking iCloud availability...",
+    "statusUnavailable": "iCloud is not available on this device",
+    "statusSyncing": "Syncing...",
+    "statusError": "Sync error — try again",
+    "statusReady": "Ready to sync",
+    "statusLastSynced": "Last synced {{date}}"
+  },
   "aria": {
     "saveEvent": "Tallenna tapahtuma",
     "addEvent": "Lisää tapahtuma",
