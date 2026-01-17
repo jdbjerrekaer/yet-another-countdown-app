@@ -292,7 +292,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
         {!isNative && (
           <div className="space-y-4 mb-6">
             <div className="space-y-2">
-              <Label htmlFor="ics-url" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="ics-url" className="text-sm font-medium text-muted-foreground pl-4">
                 {t('calendar.icsUrlLabel')}
               </Label>
               <Input
@@ -314,6 +314,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
               expand="block"
               onClick={fetchICSEvents}
               disabled={loading || !icsUrl.trim()}
+              className="black-button"
             >
               {loading ? <IonSpinner name="crescent" /> : t('calendar.fetchEvents')}
             </IonButton>

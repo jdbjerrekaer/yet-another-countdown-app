@@ -535,7 +535,7 @@
   .fab-portal {
     position: fixed;
     right: calc(32px + env(safe-area-inset-right));
-    bottom: calc(48px + env(safe-area-inset-bottom) + var(--ad-banner-height, 0px) + 56px);
+    bottom: calc(16px + env(safe-area-inset-bottom) + var(--ad-banner-height, 0px) + 56px);
     z-index: 50;
   }
 
@@ -635,6 +635,80 @@
   ion-content div.space-y-8,
   ion-content div.space-y-3 {
     position: relative !important;
+  }
+
+  /* Header Brand Layout */
+  .header-brand-container {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    padding: 0.5rem 0;
+    padding-left: 0.2rem; /* pl-2 to align with EVENTS heading (toolbar px-2 + pl-2 = pl-4) */
+  }
+
+  .header-brand-line1 {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.6;
+    margin-bottom: 0.1rem;
+  }
+
+  .header-brand-line2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: hsl(var(--foreground));
+  }
+
+  .header-dev-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid hsl(var(--primary) / 0.2);
+    margin-top: 0.2rem;
+  }
+
+  .header-action-button {
+    --background: transparent;
+    --background-hover: transparent;
+    --background-activated: transparent;
+    --color: hsl(210 100% 56%); /* iOS system blue */
+    --border-radius: 0;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    font-size: 1.2rem;
+    --box-shadow: none;
+    --ripple-color: hsl(210 100% 56% / 0.2);
+  }
+
+  .dark .header-action-button {
+    --color: hsl(210 100% 60%); /* Slightly lighter blue for dark mode */
+  }
+
+  .header-action-button ion-icon {
+    font-size: 1.5rem;
+  }
+
+  .black-button {
+    --background: #000000;
+    --background-hover: #1a1a1a;
+    --background-activated: #333333;
+    --color: #ffffff;
   }
 }
 

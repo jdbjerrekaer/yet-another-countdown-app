@@ -982,30 +982,33 @@ export default function Index() {
 
       <IonContent fullscreen className="ion-padding">
         {/* iOS large title header */}
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle size="large">
-              <span
+        <IonHeader className="ion-no-border">
+          <IonToolbar className="px-2 pt-4">
+            <IonTitle size="large" className="ion-no-padding">
+              <div
+                className="header-brand-container"
                 onPointerDown={handleTitlePressStart}
                 onPointerUp={handleTitlePressEnd}
                 onPointerLeave={handleTitlePressEnd}
                 onPointerCancel={handleTitlePressEnd}
               >
-                {t('app.title')}
-              </span>
+                <div className="header-brand-line1">YET ANOTHER</div>
+                <div className="flex items-center gap-2">
+                  <span className="header-brand-line2">COUNTDOWN APP</span>
+                  {isDevBuild && (
+                    <span className="header-dev-badge">
+                      Dev
+                    </span>
+                  )}
+                </div>
+              </div>
             </IonTitle>
-            <IonButtons slot="end">
-              {isDevBuild && (
-                <span className="mr-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                  Dev
-                </span>
-              )}
-              <IonButton onClick={handleOpenCalendarImport} aria-label={t('aria.importFromCalendar')} style={{
-                '--padding-start': '8px',
-                '--padding-end': '8px',
-                width: '37px',
-                height: '38px',
-              } as React.CSSProperties}>
+            <IonButtons slot="end" className="pr-2 pt-2">
+              <IonButton 
+                onClick={handleOpenCalendarImport} 
+                aria-label={t('aria.importFromCalendar')}
+                className="header-action-button"
+              >
                 <IonIcon icon={calendarOutline} />
               </IonButton>
             </IonButtons>
