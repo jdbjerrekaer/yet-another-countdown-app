@@ -644,13 +644,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       isOpen={isOpen}
       onDidDismiss={handleDismiss}
       onDidPresent={handleModalPresent}
+      aria-labelledby="modal-title"
     >
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleClose}>{t('modal.cancel')}</IonButton>
           </IonButtons>
-          <IonTitle>
+          <IonTitle id="modal-title">
             {isEditing ? t('modal.editEvent') : t('modal.newEvent')}
           </IonTitle>
           {isEditing && title && date && emoji && (
@@ -695,7 +696,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                         titleInputRef.current?.focus();
                       }, 0);
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-secondary/80 active:bg-secondary text-muted-foreground hover:text-foreground animate-blur-in"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center hover:bg-secondary/80 active:bg-secondary text-muted-foreground hover:text-foreground animate-blur-in"
                     aria-label={t('aria.clearInput')}
                   >
                     <X className="w-4 h-4" />
@@ -752,6 +753,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
                       transform: 'scale(1.1)'
                     }}
+                    aria-label={t('aria.selectedEmoji', { emoji })}
                   >
                     {emoji}
                   </button>
@@ -819,7 +821,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     style={{
                       animationDelay: `${suggestedEmojis.length * 30}ms`,
                     }}
-                    title={t('modal.customEmojiTitle')}
+                    aria-label={t('modal.customEmojiTitle')}
                   >
                     <Plus className="w-6 h-6 text-muted-foreground" />
                   </button>
@@ -971,6 +973,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     type="button"
                     onClick={handleDeleteClick}
                     className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
+                    aria-label={t('aria.deleteEvent')}
                   >
                     <Trash2 className="w-4 h-4" />
                     {t('modal.delete')}

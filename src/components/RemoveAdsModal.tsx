@@ -126,13 +126,13 @@ export const RemoveAdsModal = ({
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose}>
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} aria-labelledby="iap-modal-title">
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={onClose}>{t("modal.cancel")}</IonButton>
           </IonButtons>
-          <IonTitle>{t("iap.title")}</IonTitle>
+          <IonTitle id="iap-modal-title">{t("iap.title")}</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
@@ -207,6 +207,7 @@ export const RemoveAdsModal = ({
                     className="black-button mt-4"
                     disabled={!isNative || hasRemoveAds || isBusy}
                     onClick={() => handlePurchase(productId)}
+                    aria-label={`${t('iap.purchase')} ${labels ? t(labels.titleKey) : product?.title}`}
                   >
                     {isBusy ? (
                       <IonSpinner name="crescent" />
@@ -230,6 +231,7 @@ export const RemoveAdsModal = ({
             fill="outline"
             onClick={handleRestore}
             disabled={!isNative || restoreLoading}
+            aria-label={t('iap.restorePurchases')}
           >
             {restoreLoading ? (
               <IonSpinner name="crescent" />
