@@ -247,6 +247,43 @@ struct GetCountdownIntent: AppIntent {
 }
 
 @available(iOS 16.0, *)
+struct GetCountdownRelativeTimeIntent: AppIntent {
+    static var title: LocalizedStringResource = "Get Countdown Relative Time"
+    static var description = IntentDescription("Get relative time until a countdown.")
+
+    @Parameter(title: "Countdown")
+    var countdown: CountdownEventEntity
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
+        guard let event = CountdownStorage.shared.event(withId: countdown.id) else {
+            throw CountdownIntentError.notFound
+        }
+
+        guard let targetDate = CountdownStorage.shared.parseDate(from: event.targetDate) else {
+            let fallback = "I could not read the date for \(event.title)."
+            return .result(value: fallback, dialog: IntentDialog(stringLiteral: fallback))
+        }
+
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
+        let startOfTarget = calendar.startOfDay(for: targetDate)
+        let dayDelta = calendar.dateComponents([.day], from: startOfToday, to: startOfTarget).day ?? 0
+
+        let relative: String
+        if dayDelta == 0 {
+            relative = "today"
+        } else if dayDelta > 0 {
+            relative = "in \(dayDelta) days"
+        } else {
+            relative = "\(abs(dayDelta)) days ago"
+        }
+
+        let summary = "\(event.title) is \(relative)."
+        return .result(value: summary, dialog: IntentDialog(stringLiteral: summary))
+    }
+}
+
+@available(iOS 16.0, *)
 struct CountdownShortcutsProvider: AppShortcutsProvider {
     @AppShortcutsBuilder
     static var appShortcuts: [AppShortcut] {
@@ -276,6 +313,15 @@ struct CountdownShortcutsProvider: AppShortcutsProvider {
             ],
             shortTitle: "Get Countdown",
             systemImageName: "info.circle"
+        )
+        AppShortcut(
+            intent: GetCountdownRelativeTimeIntent(),
+            phrases: [
+                "How long until my countdown in \(.applicationName)",
+                "How long until my \(.applicationName) countdown"
+            ],
+            shortTitle: "Countdown Relative Time",
+            systemImageName: "clock"
         )
     }
 }
