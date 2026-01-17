@@ -1107,7 +1107,27 @@ export default function Index() {
             '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
           } as React.CSSProperties : undefined}
         >
-          <IonIcon icon={isModalOpen ? checkmark : add} />
+          <div className="relative w-full h-full flex items-center justify-center">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={isModalOpen ? 'checkmark' : 'add'}
+                initial={{ rotate: -90, opacity: 0, scale: 0.3 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                exit={{ rotate: 90, opacity: 0, scale: 0.3 }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 600, 
+                  damping: 35 
+                }}
+                className="flex items-center justify-center"
+              >
+                <IonIcon 
+                  icon={isModalOpen ? checkmark : add} 
+                  style={{ fontSize: '28px' }}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </IonFabButton>
       </motion.div>
     </div>
