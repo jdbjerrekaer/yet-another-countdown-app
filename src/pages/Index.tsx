@@ -860,6 +860,11 @@ export default function Index() {
     setCanSaveForm(false);
   };
 
+  const handleOpenRemoveAds = () => {
+    trigger('light');
+    setIsRemoveAdsOpen(true);
+  };
+
   const handleOpenCalendarImport = async () => {
     trigger('light');
     
@@ -1136,7 +1141,7 @@ export default function Index() {
             <IonButtons slot="end" className="pr-2 pt-2">
               {!hasRemoveAds && (
                 <IonButton
-                  onClick={() => setIsRemoveAdsOpen(true)}
+                  onClick={handleOpenRemoveAds}
                   aria-label={t('aria.openRemoveAds')}
                   className="header-action-button"
                 >

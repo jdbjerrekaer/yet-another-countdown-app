@@ -62,6 +62,7 @@
     "recurringLabel": "Yearly",
     "save": "Save",
     "cancel": "Cancel",
+    "close": "Close",
     "delete": "Delete Event",
     "advancedLabel": "Advanced",
     "repeatYearlyLabel": "Repeat Yearly",
@@ -178,7 +179,7 @@
     "tiers": {
       "standard": {
         "title": "Remove Ads",
-        "description": "Remove banners and interstitials."
+        "description": "Enjoy a clean, uninterrupted countdown experience."
       },
       "supporter": {
         "title": "Remove Ads + Supporter",
