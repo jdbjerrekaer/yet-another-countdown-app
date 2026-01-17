@@ -248,8 +248,8 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
     onClose();
   };
   
-  // Handle close
-  const handleClose = () => {
+  // Handle close button click (with haptics)
+  const handleCloseClick = () => {
     trigger('light');
     onClose();
   };
@@ -269,11 +269,11 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
   };
   
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose}>
+    <IonModal isOpen={isOpen} onDidDismiss={onClose}>
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={handleClose}>{t('modal.cancel')}</IonButton>
+            <IonButton onClick={handleCloseClick}>{t('modal.cancel')}</IonButton>
           </IonButtons>
           <IonTitle>{t('calendar.importTitle')}</IonTitle>
           <IonButtons slot="end">

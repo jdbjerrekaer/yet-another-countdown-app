@@ -60,7 +60,7 @@ export const RemoveAdsModal = ({
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
-  const handleClose = () => {
+  const handleCloseClick = () => {
     trigger('light');
     onClose();
   };
@@ -160,11 +160,11 @@ export const RemoveAdsModal = ({
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose} aria-labelledby="iap-modal-title">
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} aria-labelledby="iap-modal-title">
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={handleClose} className="text-primary font-medium">{t("modal.close")}</IonButton>
+            <IonButton onClick={handleCloseClick} className="text-primary font-medium">{t("modal.close")}</IonButton>
           </IonButtons>
           <IonTitle id="iap-modal-title" className="font-semibold">{t("iap.title")}</IonTitle>
         </IonToolbar>
@@ -238,14 +238,14 @@ export const RemoveAdsModal = ({
                 return (
                   <motion.div
                     key={productId}
-                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ 
                       type: 'spring', 
-                      stiffness: 400, 
-                      damping: 25,
-                      delay: 0.3 + index * 0.1 
+                      stiffness: 500, 
+                      damping: 35,
+                      delay: 0.1 + index * 0.05 
                     }}
                     className={`relative overflow-hidden rounded-2xl border ${
                       isSupporter
@@ -305,7 +305,18 @@ export const RemoveAdsModal = ({
             </AnimatePresence>
           </div>
 
-          <div className="flex flex-col gap-6 pt-2 pb-8">
+          <motion.div 
+            key={`disclaimer-${isOpen}`}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ 
+              type: 'spring', 
+              stiffness: 500, 
+              damping: 35,
+              delay: 0.1 + orderedProductIds.length * 0.05 
+            }}
+            className="flex flex-col gap-2 pt-2 pb-8"
+          >
             <div className="text-center px-6">
               <p className="text-[10px] text-muted-foreground/60 leading-normal">
                 {t("iap.disclaimer")}
@@ -337,7 +348,7 @@ export const RemoveAdsModal = ({
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </IonContent>
     </IonModal>

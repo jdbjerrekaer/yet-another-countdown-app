@@ -715,7 +715,11 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.emojiLabel')}</Label>
-              <div className="flex gap-2 flex-wrap">
+              <motion.div 
+                layout="size"
+                className="flex gap-2 flex-wrap"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
                 <AnimatePresence mode="popLayout">
                   {suggestedEmojis.map((e, index) => {
                     const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
@@ -724,13 +728,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     return (
                       <motion.button
                         key={`${e}-${index}`}
-                        layout
-                        initial={{ scale: 0.8, opacity: 0 }}
+                        initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ 
                           scale: isSelected ? 1.1 : 1, 
                           opacity: 1 
                         }}
-                        exit={{ scale: 0.8, opacity: 0 }}
+                        exit={{ scale: 0.95, opacity: 0 }}
                         whileTap={{ scale: isSelected ? 1.05 : 0.9 }}
                         transition={{ 
                           type: 'spring', 
@@ -738,18 +741,22 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           damping: 25,
                           delay: index * 0.02 
                         }}
+                        layout={false}
+                        style={{
+                          willChange: 'transform, opacity',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                          ...(isSelected ? { 
+                            backgroundColor: emojiColor,
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                          } : {}),
+                        }}
                         onClick={() => handleEmojiSelect(e)}
                         className={`w-14 h-14 rounded-xl flex items-center justify-center ${
                           isSelected
                             ? 'border-[3px] border-white/90 text-xl'
                             : 'bg-secondary/50 hover:bg-secondary text-2xl'
                         }`}
-                        style={{
-                          ...(isSelected ? { 
-                            backgroundColor: emojiColor,
-                            boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                          } : {}),
-                        }}
                       >
                         {e}
                       </motion.button>
@@ -759,15 +766,24 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis) and input is not showing */}
                 {emoji !== '' && !suggestedEmojis.includes(emoji) && !showCustomEmojiInput && (
                   <motion.button
-                    layout
-                    initial={{ scale: 0.8, opacity: 0 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1.1, opacity: 1 }}
-                    onClick={() => {}}
-                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center border-[3px] border-white/90"
+                    transition={{ 
+                      type: 'spring', 
+                      stiffness: 400, 
+                      damping: 25,
+                      delay: suggestedEmojis.length * 0.02
+                    }}
+                    layout={false}
                     style={{
+                      willChange: 'transform, opacity',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
                       backgroundColor: emojiColor,
                       boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
                     }}
+                    onClick={() => {}}
+                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center border-[3px] border-white/90"
                     aria-label={t('aria.selectedEmoji', { emoji })}
                   >
                     {emoji}
@@ -776,8 +792,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 {/* Custom emoji input or button */}
                 {showCustomEmojiInput ? (
                   <motion.div 
-                    layout
-                    initial={{ scale: 0.8, opacity: 0 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="flex items-center gap-1"
                   >
@@ -824,19 +839,30 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   </motion.div>
                 ) : (
                   <motion.button
-                    layout
-                    initial={{ scale: 0.8, opacity: 0 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     whileTap={{ scale: 0.9 }}
                     whileHover={{ scale: 1.05 }}
-                    onClick={handleCustomEmojiClick}
+                    transition={{ 
+                      type: 'spring', 
+                      stiffness: 400, 
+                      damping: 25,
+                      delay: suggestedEmojis.length * 0.02
+                    }}
+                    layout={false}
+                    style={{
+                      willChange: 'transform, opacity',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
                     className="w-14 h-14 rounded-xl flex items-center justify-center border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50"
+                    onClick={handleCustomEmojiClick}
                     aria-label={t('modal.customEmojiTitle')}
                   >
                     <Plus className="w-6 h-6 text-muted-foreground" />
                   </motion.button>
                 )}
-              </div>
+              </motion.div>
             </div>
 
             {/* Color picker wheel */}
@@ -854,8 +880,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             </div>
 
             {/* Recurring toggle with expandable suggestion */}
-            <motion.div 
-              layout
+            <div 
               className="bg-secondary/40 rounded-2xl overflow-hidden"
             >
               {/* Main recurring toggle row */}
@@ -883,7 +908,13 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    layout={false}
                     className="overflow-hidden"
+                    style={{
+                      willChange: 'height, opacity',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
                   >
                     {/* Divider */}
                     <div className="mx-4 border-t border-border/50" />
@@ -918,7 +949,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
             
             {/* Date picker */}
             <div className="space-y-2">
