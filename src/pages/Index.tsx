@@ -1135,6 +1135,7 @@ export default function Index() {
         right: 'calc(32px + env(safe-area-inset-right))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isModalOpen ? 100000 : 50,
+        display: isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
       <motion.div

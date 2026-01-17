@@ -57,7 +57,7 @@ async function initNativePlugins() {
 
     try {
       // Configure keyboard behavior
-      await Keyboard.setResizeMode({ mode: KeyboardResize.Body });
+      await Keyboard.setResizeMode({ mode: KeyboardResize.None });
       await Keyboard.setScroll({ isDisabled: false });
     } catch (e) {
       console.warn("Keyboard plugin error:", e);
