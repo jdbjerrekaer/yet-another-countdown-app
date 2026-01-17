@@ -846,6 +846,7 @@ export default function Index() {
   };
 
   const handleFabClick = async () => {
+    trigger('medium');
     if (isModalOpen) {
       // Modal is open - trigger save
       datePickerModalRef.current?.save();

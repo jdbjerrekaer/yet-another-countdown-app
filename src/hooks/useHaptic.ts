@@ -2,9 +2,51 @@ import { useCallback } from 'react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
 
+/**
+ * Haptic feedback intensity levels.
+ * 
+ * See HAPTIC_GUIDELINES.md for detailed usage guidelines:
+ * - 'light': Subtle, frequent interactions (selections, navigation, minor actions)
+ * - 'medium': Significant actions that commit changes (saves, edits, primary actions)
+ * - 'heavy': Destructive or irreversible actions (deletions, critical warnings)
+ * - 'selection': Used for selection feedback (maps to light impact)
+ */
 type HapticStyle = 'light' | 'medium' | 'heavy' | 'selection';
 
+/**
+ * Hook for providing haptic feedback across platforms.
+ * 
+ * Automatically handles platform differences:
+ * - Native (iOS/Android): Uses Capacitor Haptics API
+ * - Web: Falls back to navigator.vibrate with appropriate durations
+ * 
+ * @returns Object with trigger function for haptic feedback
+ * 
+ * @example
+ * ```tsx
+ * const { trigger } = useHaptic();
+ * 
+ * // Light: Simple selection
+ * trigger('light');
+ * 
+ * // Medium: Save action
+ * trigger('medium');
+ * 
+ * // Heavy: Delete confirmation
+ * trigger('heavy');
+ * ```
+ * 
+ * @see HAPTIC_GUIDELINES.md for detailed usage guidelines
+ */
 export function useHaptic() {
+  /**
+   * Triggers haptic feedback with the specified intensity level.
+   * 
+   * @param style - The intensity level ('light' | 'medium' | 'heavy' | 'selection')
+   *                Defaults to 'light' if not specified.
+   * 
+   * @see HAPTIC_GUIDELINES.md for when to use each level
+   */
   const trigger = useCallback(async (style: HapticStyle = 'light') => {
     // Use native Capacitor haptics on iOS/Android
     if (Capacitor.isNativePlatform()) {
