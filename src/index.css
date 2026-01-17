@@ -111,6 +111,46 @@
     --ion-card-background: hsl(var(--card)) !important;
   }
 
+  /* Ad Integration */
+  .ad-container-bar {
+    @apply fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center;
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid hsl(var(--border) / 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -4px 12px -4px hsl(0 0% 0% / 0.05);
+  }
+
+  .dark .ad-container-bar,
+  .ion-palette-dark .ad-container-bar {
+    background: hsl(var(--background) / 0.7);
+    border-top: 1px solid hsl(var(--border) / 0.3);
+    box-shadow: 0 -4px 12px -4px hsl(0 0% 0% / 0.2);
+  }
+
+  .ad-placeholder {
+    @apply flex items-center justify-center text-[9px] uppercase tracking-[0.15em] font-bold text-muted-foreground/30;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ad-placeholder-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      hsl(var(--muted) / 0.5) 50%,
+      transparent 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
   /* Custom overrides for a cleaner dark mode look */
   .dark ion-content, 
   .ion-palette-dark ion-content {

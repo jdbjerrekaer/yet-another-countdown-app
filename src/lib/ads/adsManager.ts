@@ -58,12 +58,9 @@ const debugInfoListeners = new Set<(info: typeof debugInfo) => void>();
 const setBannerHeight = (height: number) => {
   if (typeof document === "undefined") return;
   const safeHeight = Number.isFinite(height) ? height : 0;
-  if (
-    safeHeight === 0 &&
-    document.documentElement.dataset.adPlaceholder === "true"
-  ) {
-    return;
-  }
+  
+  // Always update the property if it's non-zero
+  // or if we are hidden (to reset it)
   document.documentElement.style.setProperty(
     "--ad-banner-height",
     `${Math.max(0, Math.round(safeHeight))}px`,

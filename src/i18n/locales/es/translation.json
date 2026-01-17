@@ -151,5 +151,9 @@
     "colorPicker": "Selector de color",
     "shareEvent": "Compartir evento",
     "importFromCalendar": "Importar del calendario"
+  },
+  "ads": {
+    "loading": "Cargando anuncio...",
+    "webPlaceholder": "Anuncio"
   }
 }

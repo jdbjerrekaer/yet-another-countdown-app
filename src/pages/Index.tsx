@@ -199,7 +199,7 @@ export default function Index() {
   const [isDevBuild, setIsDevBuild] = useState(import.meta.env.MODE !== 'production');
   const [devAdsEnabled, setDevAdsEnabled] = useState(false);
   const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
-  const placeholderHeight = 50;
+  const placeholderHeight = 60; // Increased to match adaptive banners better
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -271,16 +271,23 @@ export default function Index() {
   }, [isNative]);
 
   useEffect(() => {
-    if (!isNative || !isDevBuild) return;
-    const loadDevAdsState = async () => {
-      const enabled = await AdsManager.getDevAdsEnabled();
+    // On web, always show placeholder (ads don't load on web)
+    if (!isNative) {
+      setShowAdPlaceholder(true);
+      return;
+    }
+
+    // On native, handle ad state
+    const loadAdsState = async () => {
+      const enabled = isDevBuild ? await AdsManager.getDevAdsEnabled() : true;
       setDevAdsEnabled(enabled);
       setShowAdPlaceholder(enabled && AdsManager.getBannerStatus() !== 'visible');
     };
 
-    loadDevAdsState();
+    loadAdsState();
     const unsubscribe = AdsManager.onBannerStatusChange((status) => {
-      setShowAdPlaceholder(devAdsEnabled && status !== 'visible');
+      const enabled = isDevBuild ? devAdsEnabled : true;
+      setShowAdPlaceholder(enabled && status === 'hidden'); // Only show placeholder while hidden/loading
     });
 
     return () => {
@@ -303,7 +310,6 @@ export default function Index() {
   }, [isDevBuild, devAdsEnabled, isNative]);
 
   useEffect(() => {
-    if (!isDevBuild) return;
     const bannerStatus = AdsManager.getBannerStatus();
     if (showAdPlaceholder) {
       if (typeof document !== 'undefined') {
@@ -316,7 +322,7 @@ export default function Index() {
       }
       document.documentElement.style.setProperty('--ad-banner-height', '0px');
     }
-  }, [isDevBuild, showAdPlaceholder, placeholderHeight, devAdsEnabled]);
+  }, [showAdPlaceholder, placeholderHeight]);
 
   const handleTitlePressStart = () => {
     if (!isDevBuild || titlePressTimeoutRef.current !== null) return;
@@ -1247,15 +1253,18 @@ export default function Index() {
 
       {typeof document !== 'undefined' && !isCalendarImportOpen ? createPortal(fabPortal, document.body) : null}
 
-      {isDevBuild && devAdsEnabled && showAdPlaceholder && (
-        <div
-          className="fixed left-0 right-0 z-40 flex items-center justify-center border-t border-border bg-muted/80 text-[11px] uppercase tracking-wide text-muted-foreground"
-          style={{
-            height: `${placeholderHeight}px`,
-            bottom: 0,
+      {/* Ad Integration Bar - Background for the ad area (only show when loading/placeholder is active) */}
+      {showAdPlaceholder && (
+        <div 
+          className="ad-container-bar"
+          style={{ 
+            height: `calc(${placeholderHeight}px + env(safe-area-inset-bottom))`
           }}
         >
-          Ad placeholder (dev)
+          <div className="ad-placeholder ad-placeholder-shimmer">
+            <span className="mr-2 opacity-50 border border-muted-foreground/30 px-1 rounded-[3px] text-[8px] leading-tight">AD</span>
+            {!isNative ? t('ads.webPlaceholder') : t('ads.loading')}
+          </div>
         </div>
       )}
 

@@ -201,6 +201,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     onClose();
   };
 
+  const handleDismiss = () => {
+    onClose();
+  };
+
   // Handle modal presentation - focus input after modal is fully presented
   const handleModalPresent = async () => {
     if (!isEditing && titleInputRef.current) {
@@ -627,7 +631,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   return (
     <IonModal
       isOpen={isOpen}
-      onDidDismiss={handleClose}
+      onDidDismiss={handleDismiss}
       onDidPresent={handleModalPresent}
     >
       <IonHeader>

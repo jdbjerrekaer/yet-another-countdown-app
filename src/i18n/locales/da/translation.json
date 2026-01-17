@@ -151,5 +151,9 @@
     "colorPicker": "Farvevælger",
     "shareEvent": "Del begivenhed",
     "importFromCalendar": "Importer fra kalender"
+  },
+  "ads": {
+    "loading": "Annonce indlæses...",
+    "webPlaceholder": "Reklame"
   }
 }
