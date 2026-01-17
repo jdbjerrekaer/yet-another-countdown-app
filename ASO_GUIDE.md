@@ -40,12 +40,12 @@ These are longer, more specific search terms:
 ## App Store Connect Metadata
 
 ### App Name (30 characters max)
-**Recommended:** `Countdown Timer & Events`
+**Recommended:** `Yet Another Countdown`
 
 **Why:** 
-- Includes primary keyword "countdown timer"
-- "Events" broadens appeal
-- Leaves room for App Store to add "™" or other marks
+- Includes primary keyword "countdown"
+- Distinctive brand voice with "Yet Another"
+- Still clean and iOS-friendly
 
 **Alternatives:**
 - `Countdown Timer Pro` (if positioning as premium)
@@ -53,11 +53,11 @@ These are longer, more specific search terms:
 - `Countdown & Events` (shorter, still keyword-rich)
 
 ### Subtitle (30 characters max)
-**Recommended:** `Birthday & Anniversary Tracker`
+**Recommended:** `Events & Birthdays`
 
 **Why:**
-- Includes high-intent keywords: "birthday" and "anniversary"
-- "Tracker" is a common search term
+- Includes high-intent keywords: "events" and "birthdays"
+- Simple, Apple-like phrasing
 - Highlights specific use cases
 
 **Alternatives:**
@@ -66,7 +66,7 @@ These are longer, more specific search terms:
 - `Recurring Event Tracker`
 
 ### Keywords Field (100 characters max)
-**Recommended:** `countdown timer,event countdown,birthday countdown,anniversary tracker,timer app,countdown app,event tracker,birthday tracker,anniversary countdown,days until,countdown widget,recurring events`
+**Recommended:** `timer,days until,widget,recurring,reminders,holidays,calendar,age,years,tracker,planner`
 
 **Tips:**
 - Use commas to separate keywords (no spaces after commas)
@@ -78,13 +78,13 @@ These are longer, more specific search terms:
 
 **First 3 Lines (Critical - Visible without "More"):**
 ```
-Countdown Timer & Events - The Ultimate Countdown App
+Yet Another Countdown
 
-Track all your important events with beautiful, customizable countdown timers. Perfect for birthdays, anniversaries, holidays, and any special occasion.
+Track the dates that matter with clean, iOS-style countdowns. Create unlimited events for birthdays, anniversaries, holidays, and more.
 ```
 
 **Why:**
-- Includes primary keywords in first line
+- Includes primary keyword in first line
 - Clear value proposition
 - Mentions key use cases (birthdays, anniversaries)
 
@@ -112,27 +112,28 @@ Track all your important events with beautiful, customizable countdown timers. P
 ### Screenshots (Critical for Conversion)
 
 **Screenshot 1:** Main screen with multiple countdowns
-- Text overlay: "Track All Your Events"
+- Text overlay: "Track the dates that matter"
 - Show variety: birthday, anniversary, holiday
 
 **Screenshot 2:** Widget preview feature
-- Text overlay: "Preview Widgets Before Adding"
+- Text overlay: "Preview widgets"
 - Show different widget sizes side-by-side
 
 **Screenshot 3:** Recurring events setup
-- Text overlay: "Recurring Events for Birthdays & Anniversaries"
+- Text overlay: "Yearly events"
 - Show the recurring toggle enabled
 
 **Screenshot 4:** Drag-and-drop demonstration
-- Text overlay: "Organize with Drag-and-Drop"
+- Text overlay: "Drag to reorder"
 - Show cards being reordered
 
 **Screenshot 5:** Customization options
-- Text overlay: "Beautiful Customization"
+- Text overlay: "Calm appearance modes"
 - Show appearance modes and styles
 
 ### Screenshot Best Practices
 - Use text overlays to highlight features
+- Use iOS blue (#007AFF) on soft neutrals (#F8F8F8)
 - Show real use cases (not generic examples)
 - Use arrows or highlights to draw attention
 - Keep text concise and readable

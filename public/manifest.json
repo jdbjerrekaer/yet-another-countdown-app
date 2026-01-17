@@ -1,7 +1,7 @@
 {
-  "name": "Yet Another Countdown App",
-  "short_name": "Yet another Countdown",
-  "description": "A beautiful, feature-rich countdown timer application. Create and manage multiple countdown timers with support for recurring events and widget previews.",
+  "name": "Yet Another Countdown",
+  "short_name": "Yet Another Countdown",
+  "description": "A clean, iOS-style countdown for birthdays, anniversaries, holidays, and more. Recurring events, widget previews, and calendar import included.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

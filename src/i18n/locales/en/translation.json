@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Yet Another Countdown App",
+    "title": "Yet Another Countdown",
     "noCountdowns": "No Countdowns",
     "createFirst": "Tap the + button below to create your first countdown"
   },

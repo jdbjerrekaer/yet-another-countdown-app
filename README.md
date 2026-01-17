@@ -1,6 +1,6 @@
-# Yet Another Countdown App
+# Yet Another Countdown
 
-A beautiful, feature-rich countdown timer application built with React and Ionic. Create and manage multiple countdown timers with support for recurring events, widget previews, and native iOS features.
+A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Track birthdays, anniversaries, holidays, and launches with recurring events, widget previews, and native iOS polish.
 
 ## Features
 

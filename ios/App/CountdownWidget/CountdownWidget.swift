@@ -1059,8 +1059,8 @@ struct CountdownTimerTripleWidget: Widget {
                 TripleCountdownWidgetEntryView(entry: entry)
                     .containerBackground(.fill.tertiary, for: .widget)
             }
-            .configurationDisplayName("Countdown Timer (Triple)")
-            .description("Track three events with days display.")
+            .configurationDisplayName("Yet Another Countdown (Triple)")
+            .description("Track three events with days remaining.")
             .supportedFamilies([.systemLarge])
         } else {
             return StaticConfiguration(
@@ -1069,7 +1069,7 @@ struct CountdownTimerTripleWidget: Widget {
             ) { _ in
                 EmptyView()
             }
-            .configurationDisplayName("Countdown Timer (Triple)")
+            .configurationDisplayName("Yet Another Countdown (Triple)")
             .description("Requires iOS 17 or later.")
             .supportedFamilies([])
         }
@@ -1123,8 +1123,8 @@ struct CountdownTimerWidget: Widget {
                 CountdownWidgetEntryView(entry: entry)
                     .containerBackground(.fill.tertiary, for: .widget)
             }
-            .configurationDisplayName("Countdown Timer")
-            .description("Track your events with days, hours, and minutes display.")
+            .configurationDisplayName("Yet Another Countdown")
+            .description("Track your events with days, hours, and minutes.")
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         } else {
             return StaticConfiguration(
@@ -1133,8 +1133,8 @@ struct CountdownTimerWidget: Widget {
             ) { entry in
                 CountdownWidgetEntryView(entry: entry)
             }
-            .configurationDisplayName("Countdown Timer")
-            .description("Track your events with days, hours, and minutes display.")
+            .configurationDisplayName("Yet Another Countdown")
+            .description("Track your events with days, hours, and minutes.")
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         }
     }

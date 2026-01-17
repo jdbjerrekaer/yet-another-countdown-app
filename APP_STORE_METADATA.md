@@ -3,133 +3,112 @@
 This document contains optimized App Store metadata for App Store Optimization (ASO).
 
 ## App Name (30 characters max)
-**Countdown Timer & Events**
+**Yet Another Countdown**
 
 *Alternative options:*
-- Countdown Timer Pro
-- Event Countdown App
-- Countdown & Events
+- Yet Another Countdown App
+- Yet Another Countdown - Events
+- Yet Another Countdown - Dates
 
 ## Subtitle (30 characters max)
-**Birthday & Anniversary Tracker**
+**Events & Birthdays**
 
 *Alternative options:*
-- Track Events & Birthdays
-- Widget Countdown Timer
-- Recurring Event Tracker
+- Birthdays, Anniversaries
+- Dates That Matter
+- Events You Care About
 
 ## Keywords (100 characters max)
-**countdown timer,event countdown,birthday countdown,anniversary tracker,timer app,countdown app,event tracker,birthday tracker,anniversary countdown,days until,countdown widget,recurring events**
+**timer,days until,widget,recurring,reminders,holidays,calendar,age,years,tracker,planner**
 
-*Character count: 99/100*
+*Character count: 86/100*
 
 *Keyword breakdown:*
-- Primary: countdown timer, event countdown, birthday countdown, anniversary tracker
-- Secondary: timer app, countdown app, event tracker, birthday tracker
-- Supporting: anniversary countdown, days until, countdown widget, recurring events
+- Primary: timer, days until, widget
+- Secondary: recurring, reminders, holidays, calendar
+- Supporting: age, years, tracker, planner
 
 ## Description (4000 characters max)
 
-**Version 1 (Full - 1,234 characters):**
+**Version 1 (Full - 1,104 characters):**
 
-Countdown Timer & Events - The Ultimate Countdown App
+Yet Another Countdown
 
-Track all your important events with beautiful, customizable countdown timers. Perfect for birthdays, anniversaries, holidays, and any special occasion.
+Track the dates that matter with clean, iOS-style countdowns. Create unlimited events for birthdays, anniversaries, holidays, launches, and more.
 
-✨ KEY FEATURES
+KEY FEATURES
 
-🎯 Widget Previews
-Preview your countdowns in three different widget sizes before adding them to your home screen. See exactly how your countdown will look with real-time previews for Small, Medium, and Large widgets.
+Widget previews
+See your countdown in Small, Medium, and Large widgets before adding it to your Home Screen.
 
-🔄 Recurring Events
-Set up yearly recurring countdowns for birthdays, anniversaries, holidays, and more. The app automatically calculates the next occurrence, so you never miss an important date.
+Yearly recurring events
+Perfect for birthdays and anniversaries. The app calculates the next occurrence automatically.
 
-🎨 Drag-and-Drop Sorting
-Organize your countdowns with intuitive drag-and-drop. Long-press any countdown card and drag it to reorder your events exactly how you want them.
+Count down and count up
+Future dates count down. Past dates show days since.
 
-📱 Multiple Countdown Timers
-Create unlimited countdown timers for all your events. Track birthdays, anniversaries, holidays, vacations, deadlines, and more - all in one beautiful app.
+Drag and drop sorting
+Reorder your events with a long press and a gentle drag.
 
-⏰ Count Up Support
-Select past dates to track time since an event occurred. Perfect for anniversaries, milestones, and remembering special moments.
+Calendar import
+Bring in birthdays and anniversaries from your calendar in seconds.
 
-🔔 Smart Notifications
-Get notified when your countdown events arrive. Never miss a birthday or anniversary again.
+Notifications
+Get a reminder when your countdown reaches zero.
 
-🎭 Beautiful Customization
-Choose from multiple appearance modes (Light, Dark, Glass, Tinted) and countdown styles (Focus, Visual) to match your personal style.
+Designed for iOS
+Haptics, native dialogs, and a calm interface that stays out of your way.
 
-💫 Native iOS Experience
-Enjoy haptic feedback, native action sheets, and smooth animations designed specifically for iOS.
-
-Perfect for:
-• Birthday countdowns
-• Anniversary tracking
-• Holiday countdowns
-• Vacation planning
-• Event reminders
-• Milestone tracking
-
-Download now and start tracking your most important moments!
+No accounts required. Your data stays on your device.
 
 ---
 
-**Version 2 (Concise - 678 characters):**
+**Version 2 (Concise - 604 characters):**
 
-Countdown Timer & Events - Track birthdays, anniversaries, and all your important events with beautiful, customizable countdown timers.
+Yet Another Countdown
 
-✨ KEY FEATURES
+Track the dates that matter with clean, iOS-style countdowns. Create unlimited events for birthdays, anniversaries, holidays, and more.
 
-🎯 Widget Previews - Preview countdowns in 3 widget sizes (Small, Medium, Large) before adding to your home screen
+Features:
+- Widget previews in Small, Medium, and Large
+- Yearly recurring events
+- Count up for past dates
+- Drag and drop sorting
+- Calendar import
+- Notifications
 
-🔄 Recurring Events - Automatically recurring yearly countdowns for birthdays, anniversaries, and holidays
-
-🎨 Drag-and-Drop - Intuitively reorder your countdowns with smooth drag-and-drop
-
-📱 Unlimited Timers - Create unlimited countdown timers for birthdays, anniversaries, holidays, vacations, and more
-
-⏰ Count Up Mode - Track time since past events occurred
-
-🔔 Smart Notifications - Never miss an important date
-
-Perfect for birthday countdowns, anniversary tracking, holiday countdowns, and event reminders. Download now!
+No accounts required. Your data stays on your device.
 
 ---
 
-**Version 3 (Short - 400 characters):**
+**Version 3 (Short - 337 characters):**
 
-Track birthdays, anniversaries, and all your important events with beautiful countdown timers.
+Track the dates that matter with clean, iOS-style countdowns.
 
-✨ Features:
-• Widget previews in 4 sizes
-• Recurring yearly events
-• Drag-and-drop sorting
-• Unlimited countdown timers
-• Count up mode for past dates
-• Smart notifications
+Features:
+- Widget previews
+- Yearly recurring events
+- Count up for past dates
+- Drag and drop sorting
+- Calendar import
+- Notifications
 
-Perfect for birthday countdowns, anniversary tracking, and holiday countdowns. Download now!
+No accounts required. Your data stays on your device.
 
 ## Promotional Text (170 characters max)
-**New: Enhanced widget previews! See exactly how your countdowns will look before adding them to your home screen. Plus improved recurring event support for birthdays and anniversaries.**
+**A calm, iOS-style countdown for birthdays, anniversaries, and the dates you want to remember. Widget previews and yearly events included.**
 
 ## What's New (4000 characters max)
 **Version 1.0.0**
 
-🎉 Welcome to Countdown Timer & Events!
+Welcome to Yet Another Countdown.
 
-Track all your important moments with beautiful, customizable countdown timers.
-
-✨ Features:
-• Widget previews in 3 sizes (Small, Medium, Large)
-• Recurring yearly events for birthdays and anniversaries
-• Intuitive drag-and-drop sorting
-• Unlimited countdown timers
-• Count up mode for past dates
-• Smart notifications
-• Beautiful customization options
-
-Perfect for tracking birthdays, anniversaries, holidays, and special events!
+- Widget previews in Small, Medium, and Large
+- Yearly recurring events for birthdays and anniversaries
+- Count up for past dates
+- Drag and drop sorting
+- Calendar import
+- Notifications
 
 ## App Category
 **Primary:** Utilities
@@ -139,22 +118,22 @@ Perfect for tracking birthdays, anniversaries, holidays, and special events!
 **4+** (No objectionable content)
 
 ## Support URL
-[Your support URL]
+https://jdbjerrekaer.github.io/portfolio/projects/countdown/
 
 ## Marketing URL
-[Your marketing URL]
+https://jdbjerrekaer.github.io/portfolio/projects/countdown/
 
 ## Privacy Policy URL
-[Your privacy policy URL]
+https://jdbjerrekaer.github.io/yet-another-countdown-app/privacy-policy.html
 
 ## Screenshots Recommendations
 
 ### iPhone 6.7" Display (Required)
-1. Main screen showing multiple countdown cards
-2. Widget preview screen showing different sizes
-3. Event creation/edit screen
-4. Recurring event setup screen
-5. Drag-and-drop reordering demonstration
+1. Main list with multiple events (birthdays, holidays, launches)
+2. Widget preview showing Small, Medium, Large
+3. Event creation screen with emoji and color
+4. Yearly toggle for birthdays and anniversaries
+5. Drag and drop reordering in progress
 
 ### iPhone 6.5" Display (Required)
 Same as above
@@ -163,35 +142,34 @@ Same as above
 Same as above
 
 ### iPad Pro 12.9" (Optional)
-1. Main screen with multiple countdowns
+1. Main list with multiple events
 2. Widget preview showcase
 3. Event management screen
 
 ## App Preview Video Recommendations
 
-1. **0-3 seconds:** Show app icon and tagline
-2. **3-8 seconds:** Demonstrate creating a birthday countdown
-3. **8-15 seconds:** Show widget preview feature
-4. **15-22 seconds:** Demonstrate drag-and-drop sorting
-5. **22-30 seconds:** Show recurring event setup and final CTA
+1. **0-3 seconds:** App icon and a calm tagline
+2. **3-8 seconds:** Create a birthday countdown
+3. **8-15 seconds:** Show widget previews
+4. **15-22 seconds:** Drag to reorder events
+5. **22-30 seconds:** Yearly toggle and final CTA
 
 ## ASO Optimization Tips
 
 ### Keyword Strategy
-- Primary keywords are included in the app name and subtitle
-- Keywords are naturally integrated into the description
-- Focus on high-intent keywords: "countdown timer", "birthday countdown", "anniversary tracker"
+- "Countdown" is in the app name
+- Events and birthdays are in the subtitle
+- Supporting terms live in the keyword field (timer, widget, recurring, calendar)
 
 ### Description Optimization
-- First 3 lines are keyword-rich and compelling
-- Features are clearly listed with emojis for visual appeal
-- Benefits are highlighted (not just features)
-- Call-to-action included
+- First lines state the value and use cases
+- Features listed with short, scannable lines
+- Calm, Apple-like tone throughout
 
 ### Visual Assets
-- Screenshots should showcase unique features (widget previews, drag-and-drop)
-- Use text overlays on screenshots to highlight key features
-- Show real use cases (birthday, anniversary, holiday)
+- Use clean overlays with iOS blue (#007AFF) on soft neutrals (#F8F8F8)
+- Keep copy short and calm (3-5 words)
+- Show real use cases (birthdays, anniversaries, holidays)
 
 ### Localization
 Consider localizing for:
