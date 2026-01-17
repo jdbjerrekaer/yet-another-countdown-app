@@ -1,6 +1,6 @@
 # Yet Another Countdown
 
-A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Simple to use, with no paywalls or locked features. Track birthdays, anniversaries, holidays, and launches with recurring events, widget previews, and native iOS polish.
+A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Core features are free, with optional iOS ads to support development and a one-time Remove Ads purchase (no subscription). Track birthdays, anniversaries, holidays, and launches with recurring events, widget previews, and native iOS polish.
 
 ## Features
 
@@ -12,6 +12,9 @@ A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Simple 
   - Small
   - Medium
   - Large
+- **Dark Mode** - Refined dark theme with iOS-native styling
+- **Siri Shortcuts (App Intents)** - Create and query countdowns with voice or Shortcuts
+- **Ad Support (iOS)** - Optional ads with a one-time Remove Ads purchase (no subscription)
 - **iOS Native Features**:
   - Haptic feedback for better user interaction
   - Native action sheets and dialogs
@@ -20,6 +23,9 @@ A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Simple 
 - **Local Storage** - All countdowns are automatically saved locally
 - **Mobile-First Design** - Responsive design optimized for mobile devices
 - **Beautiful UI** - Modern, iOS-inspired interface with smooth animations
+- **Privacy & Consent** - Clear privacy policy and consent controls for ads
+
+Privacy policy: `/privacy-policy.html`
 
 ## Tech Stack
 
