@@ -410,30 +410,23 @@ export default function Index() {
   useEffect(() => {
     if (!isNative) return;
 
-    let showListener: any;
-    let hideListener: any;
+    let showListener: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
+    let hideListener: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
 
     const setupListeners = async () => {
-      const show = await Keyboard.addListener('keyboardWillShow', (info) => {
+      showListener = await Keyboard.addListener('keyboardWillShow', (info) => {
         setKeyboardHeight(info.keyboardHeight);
       });
-      showListener = show;
-
-      const hide = await Keyboard.addListener('keyboardWillHide', () => {
+      hideListener = await Keyboard.addListener('keyboardWillHide', () => {
         setKeyboardHeight(0);
       });
-      hideListener = hide;
     };
 
     setupListeners();
 
     return () => {
-      if (showListener) {
-        showListener.remove();
-      }
-      if (hideListener) {
-        hideListener.remove();
-      }
+      showListener?.remove();
+      hideListener?.remove();
     };
   }, [isNative]);
 
@@ -1140,6 +1133,7 @@ export default function Index() {
       style={{
         position: 'fixed',
         right: 'calc(32px + env(safe-area-inset-right))',
+        bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isModalOpen ? 100000 : 50,
       }}
     >
@@ -1168,6 +1162,12 @@ export default function Index() {
                   type: 'spring', 
                   stiffness: 600, 
                   damping: 35 
+                }}
+                layout={false}
+                style={{
+                  willChange: 'transform, opacity',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
                 }}
                 className="flex items-center justify-center"
               >

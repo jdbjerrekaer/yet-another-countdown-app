@@ -602,17 +602,6 @@
     --margin-end: 32px;
   }
 
-  /* FAB portal: keep the same IonFabButton usable above ion-modal overlays */
-  .fab-portal {
-    position: fixed;
-    right: calc(32px + env(safe-area-inset-right));
-    bottom: calc(16px + env(safe-area-inset-bottom) + 56px);
-    z-index: 50;
-  }
-
-  .fab-portal.fab-portal--above-modal {
-    z-index: 100000;
-  }
 
   ion-fab-button:hover {
     --box-shadow: 0 6px 20px -4px hsl(0 0% 0% / 0.25), 
