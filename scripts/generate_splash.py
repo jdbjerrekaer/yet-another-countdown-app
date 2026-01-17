@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate iOS splash screen images from app icon.
+Generate iOS splash screen images from app icons.
 Creates splash screens with the app icon centered on background color #f8f8f8
 """
 
@@ -8,7 +8,7 @@ import sys
 import os
 
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image
 except ImportError:
     print("Pillow (PIL) is required. Install with: pip3 install Pillow")
     sys.exit(1)
@@ -51,11 +51,16 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     
-    icon_path = os.path.join(project_root, 'new-app-icon.png')
+    icon_light_path = os.path.join(project_root, 'Icon-Light-1024x1024.png')
+    icon_dark_path = os.path.join(project_root, 'Icon-Dark-1024x1024.png')
     splash_dir = os.path.join(project_root, 'ios/App/App/Assets.xcassets/Splash.imageset')
     
-    if not os.path.exists(icon_path):
-        print(f"Error: App icon not found at {icon_path}")
+    if not os.path.exists(icon_light_path):
+        print(f"Error: Light app icon not found at {icon_light_path}")
+        sys.exit(1)
+
+    if not os.path.exists(icon_dark_path):
+        print(f"Error: Dark app icon not found at {icon_dark_path}")
         sys.exit(1)
     
     if not os.path.exists(splash_dir):
@@ -68,12 +73,20 @@ def main():
     splash_3x = os.path.join(splash_dir, 'splash-2732x2732.png')
     splash_2x = os.path.join(splash_dir, 'splash-2732x2732-1.png')
     splash_1x = os.path.join(splash_dir, 'splash-2732x2732-2.png')
+
+    splash_3x_dark = os.path.join(splash_dir, 'splash-2732x2732-dark.png')
+    splash_2x_dark = os.path.join(splash_dir, 'splash-2732x2732-1-dark.png')
+    splash_1x_dark = os.path.join(splash_dir, 'splash-2732x2732-2-dark.png')
     
     print("Generating splash screen images...")
     # Use larger scale (65%) to make the icon more prominent
-    create_splash_screen(icon_path, splash_3x, size, icon_scale=0.65)
-    create_splash_screen(icon_path, splash_2x, size, icon_scale=0.65)
-    create_splash_screen(icon_path, splash_1x, size, icon_scale=0.65)
+    create_splash_screen(icon_light_path, splash_3x, size, icon_scale=0.65)
+    create_splash_screen(icon_light_path, splash_2x, size, icon_scale=0.65)
+    create_splash_screen(icon_light_path, splash_1x, size, icon_scale=0.65)
+
+    create_splash_screen(icon_dark_path, splash_3x_dark, size, icon_scale=0.65)
+    create_splash_screen(icon_dark_path, splash_2x_dark, size, icon_scale=0.65)
+    create_splash_screen(icon_dark_path, splash_1x_dark, size, icon_scale=0.65)
     
     print("\n✅ All splash screen images generated successfully!")
 

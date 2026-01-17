@@ -195,6 +195,7 @@ export default function Index() {
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
+  const hasSyncedFromAppGroupRef = useRef(false);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -242,11 +243,93 @@ export default function Index() {
     return [];
   });
 
+  const parseTimestamp = (value?: string | null) => {
+    if (!value) return 0;
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
+  const mergeEventLists = (
+    primaryEvents: CountdownEvent[],
+    secondaryEvents: CountdownEvent[]
+  ): CountdownEvent[] => {
+    const secondaryById = new Map(secondaryEvents.map(event => [event.id, event]));
+    const merged: CountdownEvent[] = [];
+
+    primaryEvents.forEach(primaryEvent => {
+      const secondaryEvent = secondaryById.get(primaryEvent.id);
+      if (secondaryEvent) {
+        merged.push({
+          ...secondaryEvent,
+          ...primaryEvent,
+          isImported: primaryEvent.isImported ?? secondaryEvent.isImported,
+          importedFrom: primaryEvent.importedFrom ?? secondaryEvent.importedFrom,
+        });
+      } else {
+        merged.push(primaryEvent);
+      }
+    });
+
+    secondaryEvents.forEach(secondaryEvent => {
+      if (!merged.some(event => event.id === secondaryEvent.id)) {
+        merged.push(secondaryEvent);
+      }
+    });
+
+    return merged;
+  };
+
   useEffect(() => {
     if (events.length > 0 && !selectedEventId) {
       setSelectedEventId(events[0].id);
     }
   }, [events, selectedEventId]);
+
+  useEffect(() => {
+    if (!isNative || hasSyncedFromAppGroupRef.current) return;
+    hasSyncedFromAppGroupRef.current = true;
+
+    const syncFromAppGroup = async () => {
+      const localEvents: CountdownEvent[] = (() => {
+        const saved = localStorage.getItem('countdowns');
+        return saved ? JSON.parse(saved) : [];
+      })();
+      const localUpdated = localStorage.getItem('countdownsLastUpdated');
+
+      try {
+        const { widgetData } = await CalendarPlugin.getWidgetData();
+        if (!widgetData || !Array.isArray(widgetData.events)) {
+          return;
+        }
+
+        const appGroupEvents = widgetData.events;
+        const appGroupUpdated = widgetData.lastUpdated;
+        const appGroupIsNewer = parseTimestamp(appGroupUpdated) > parseTimestamp(localUpdated);
+        const preferAppGroup = appGroupIsNewer || (localEvents.length === 0 && appGroupEvents.length > 0);
+
+        const mergedEvents = preferAppGroup
+          ? mergeEventLists(appGroupEvents, localEvents)
+          : mergeEventLists(localEvents, appGroupEvents);
+
+        setEvents(mergedEvents);
+
+        if (preferAppGroup) {
+          const appearanceMatches = WIDGET_APPEARANCE_MODES.some(mode => mode.id === widgetData.appearanceMode);
+          const styleMatches = WIDGET_COUNTDOWN_STYLES.some(style => style.id === widgetData.countdownStyle);
+          if (appearanceMatches) {
+            setSelectedAppearanceMode(widgetData.appearanceMode as WidgetAppearanceMode);
+          }
+          if (styleMatches) {
+            setSelectedCountdownStyle(widgetData.countdownStyle as WidgetCountdownStyle);
+          }
+        }
+      } catch (error) {
+        console.warn('[WidgetSync] Failed to read App Group data:', error);
+      }
+    };
+
+    syncFromAppGroup();
+  }, [isNative]);
 
   useEffect(() => {
     if (!isNative) return;
@@ -471,6 +554,7 @@ export default function Index() {
 
   useEffect(() => {
     localStorage.setItem('countdowns', JSON.stringify(events));
+    localStorage.setItem('countdownsLastUpdated', new Date().toISOString());
   }, [events]);
 
   // Persist appearance mode to localStorage

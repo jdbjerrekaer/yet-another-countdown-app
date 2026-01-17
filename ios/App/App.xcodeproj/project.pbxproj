@@ -27,6 +27,7 @@
 		A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32252F0BCF250063570B /* CountdownEvent.swift */; };
 		A63D32372F0BCF250063570B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A63D32242F0BCF250063570B /* Assets.xcassets */; };
 		A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F1A2 /* CountdownIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */; };
 		B6174CD4190B08F557A8B211 /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23DE9C22ECC85FF6C0538F38 /* CountdownWidget.swift */; };
 		E5DB9B45E898B0A532022637 /* CountdownWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 0D1F3BFBDCF22C9A502EB8FD /* CountdownWidget.appex */; };
 		FLIPDIG022F0BCF250063570B /* FlipDigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */; };
@@ -88,6 +89,7 @@
 		A63D32392F0BD9030063570B /* CountdownWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CountdownWidget.entitlements; sourceTree = "<group>"; };
 		A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarPlugin.swift; sourceTree = "<group>"; };
 		A6D2DE2B2F0BE0B2001A82F2 /* CalendarPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarPlugin.m; sourceTree = "<group>"; };
+		B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownIntents.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				MYVC00002FED79650016851F /* MyViewController.swift */,
 				A6D2DE2B2F0BE0B2001A82F2 /* CalendarPlugin.m */,
 				A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */,
+				B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -404,6 +407,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F1A2 /* CountdownIntents.swift in Sources */,
 				MYVC00001FED79650016851F /* MyViewController.swift in Sources */,
 				A60AD3392F1A581900BDE34B /* BuildInfoPlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,

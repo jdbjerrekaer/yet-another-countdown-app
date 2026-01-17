@@ -13,6 +13,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getRecurringEvents", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getAllEvents", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCalendars", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getWidgetData", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateWidgetData", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise)
     ]
@@ -333,6 +334,31 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Failed to serialize widget data: \(error.localizedDescription)")
         }
     }
+
+    /// Read widget data from shared App Group storage
+    @objc func getWidgetData(_ call: CAPPluginCall) {
+        guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            call.reject("Failed to access App Group storage")
+            return
+        }
+
+        guard let jsonData = userDefaults.data(forKey: "widgetData") else {
+            call.resolve(["widgetData": NSNull()])
+            return
+        }
+
+        do {
+            let jsonObject = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            if let widgetData = jsonObject as? [String: Any] {
+                call.resolve(["widgetData": widgetData])
+            } else {
+                call.resolve(["widgetData": NSNull()])
+            }
+        } catch {
+            call.reject("Failed to read widget data: \(error.localizedDescription)")
+        }
+    }
+
     
     // MARK: - Helper methods
     

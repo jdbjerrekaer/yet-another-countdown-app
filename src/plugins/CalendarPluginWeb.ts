@@ -7,6 +7,7 @@ import type {
   GetRecurringEventsResult,
   GetAllEventsOptions,
   GetAllEventsResult,
+  GetWidgetDataResult,
   UpdateWidgetDataOptions,
   UpdateWidgetDataResult,
   OpenSettingsResult,
@@ -48,6 +49,10 @@ export class CalendarPluginWeb extends WebPlugin implements CalendarPluginInterf
     // Web doesn't have native widgets - no-op but return success
     console.log('CalendarPlugin: Widget data sync is not available on web.');
     return { success: true };
+  }
+
+  async getWidgetData(): Promise<GetWidgetDataResult> {
+    return { widgetData: null };
   }
 
   async openSettings(): Promise<OpenSettingsResult> {

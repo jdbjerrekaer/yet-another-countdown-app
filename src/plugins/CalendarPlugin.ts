@@ -87,6 +87,26 @@ export interface WidgetCountdownEvent {
 }
 
 /**
+ * Widget data stored in App Group storage
+ */
+export interface WidgetData {
+  events: WidgetCountdownEvent[];
+  appearanceMode: string;
+  countdownStyle: string;
+  lastUpdated?: string;
+}
+
+/**
+ * Result from getWidgetData
+ */
+export interface GetWidgetDataResult {
+  widgetData: WidgetData | null;
+}
+
+/**
+ * Result from getAppShortcutsStatus
+ */
+/**
  * Options for updating widget data
  */
 export interface UpdateWidgetDataOptions {
@@ -138,6 +158,11 @@ export interface CalendarPluginInterface {
    * Optionally filter by a specific calendar
    */
   getAllEvents(options: GetAllEventsOptions): Promise<GetAllEventsResult>;
+
+  /**
+   * Read widget data from native shared storage (App Group)
+   */
+  getWidgetData(): Promise<GetWidgetDataResult>;
 
   /**
    * Update widget data in native shared storage (App Group)
