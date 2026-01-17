@@ -98,6 +98,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const yearlySuggestionBannerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLIonContentElement | null>(null);
   const datetimeRef = useRef<HTMLIonDatetimeElement | null>(null);
+  const isInitialOpenRef = useRef(false);
   const [showYearlySuggestion, setShowYearlySuggestion] = useState(false);
   const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
 
@@ -133,6 +134,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   useEffect(() => {
     // Only reset when transitioning from closed to open
     if (isOpen && !prevIsOpenRef.current) {
+      isInitialOpenRef.current = true;
+      
       setTitle(initialTitle || '');
       // Ensure initial date has 8am time for new events
       let dateToSet = initialDate;
@@ -166,6 +169,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       const initialShouldShow = dateToSet && !(initialIsRecurring ?? false) && differenceInYears(new Date(), dateToSet) >= 1;
       setShowYearlySuggestion(initialShouldShow);
       
+      setTimeout(() => {
+        isInitialOpenRef.current = false;
+      }, 500);
+      
       // Try to focus immediately when modal opens (while still in user gesture context for Safari mobile)
       if (!isEditing && titleInputRef.current) {
         // Immediate attempt while in user gesture context
@@ -192,6 +199,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
           }
         });
       }
+    }
+    // Reset ref when modal closes
+    if (!isOpen && prevIsOpenRef.current) {
+      isInitialOpenRef.current = false;
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, initialTitle, initialDate, initialEmoji, initialEmojiColor, initialIsRecurring, isEditing]);
@@ -369,7 +380,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   // Smooth scroll when yearly suggestion banner appears
   useEffect(() => {
-    if (showYearlySuggestion && !isYearlySuggestionExiting && yearlySuggestionBannerRef.current) {
+    if (showYearlySuggestion && !isYearlySuggestionExiting && yearlySuggestionBannerRef.current && !isInitialOpenRef.current) {
       // Small delay to ensure the element is rendered and animation starts
       const timer = setTimeout(async () => {
         if (yearlySuggestionBannerRef.current) {
