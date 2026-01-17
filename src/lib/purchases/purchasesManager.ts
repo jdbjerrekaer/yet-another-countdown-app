@@ -8,6 +8,7 @@ import {
 type EntitlementListener = (entitled: boolean) => void;
 
 const PREF_REMOVE_ADS = "iap_remove_ads_entitlement";
+const PREF_REMOVE_ADS_PRODUCT_ID = "iap_remove_ads_product_id";
 
 const REMOVE_ADS_PRODUCTS = [
   {
@@ -21,12 +22,17 @@ const REMOVE_ADS_PRODUCTS = [
 ];
 
 let isInitialized = false;
+let isDevBuild = false;
 let hasRemoveAdsEntitlement = false;
 let readyPromise: Promise<void> | null = null;
 let readyResolve: (() => void) | null = null;
 const entitlementListeners = new Set<EntitlementListener>();
 
-const setEntitlement = async (value: boolean, persist = true) => {
+const setEntitlement = async (
+  value: boolean,
+  persist = true,
+  productId?: string,
+) => {
   if (hasRemoveAdsEntitlement === value) return;
   hasRemoveAdsEntitlement = value;
   if (persist) {
@@ -34,6 +40,15 @@ const setEntitlement = async (value: boolean, persist = true) => {
       key: PREF_REMOVE_ADS,
       value: value ? "true" : "false",
     });
+    if (value && productId) {
+      await Preferences.set({
+        key: PREF_REMOVE_ADS_PRODUCT_ID,
+        value: productId,
+      });
+    }
+    if (!value) {
+      await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
+    }
   }
   entitlementListeners.forEach((listener) => listener(value));
 };
@@ -69,6 +84,12 @@ export const PurchasesManager = {
     if (isInitialized) return;
     isInitialized = true;
 
+    if (isDevBuild) {
+      // Reset entitlement on dev build app start as requested
+      await Preferences.remove({ key: PREF_REMOVE_ADS });
+      await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
+    }
+
     await loadLocalEntitlement();
     entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
 
@@ -98,14 +119,14 @@ export const PurchasesManager = {
 
       InAppPurchase2.when("product").approved((product) => {
         if (isRemoveAdsProduct(product.id)) {
-          void setEntitlement(true);
+          void setEntitlement(true, !isDevBuild, product.id);
           product.finish();
         }
       });
 
       InAppPurchase2.when("product").owned((product) => {
         if (isRemoveAdsProduct(product.id)) {
-          void setEntitlement(true);
+          void setEntitlement(true, !isDevBuild, product.id);
         }
       });
 
@@ -120,6 +141,10 @@ export const PurchasesManager = {
     } catch (error) {
       console.warn("[Purchases] Initialization failed", error);
     }
+  },
+
+  setDevBuild: (isDev: boolean) => {
+    isDevBuild = isDev;
   },
 
   getProducts: async (): Promise<IAPProduct[]> => {
@@ -144,7 +169,7 @@ export const PurchasesManager = {
     });
     const product = InAppPurchase2.get(productId);
     if (product?.owned) {
-      await setEntitlement(true);
+      await setEntitlement(true, true, productId);
     }
   },
 
@@ -153,6 +178,9 @@ export const PurchasesManager = {
     if (!Capacitor.isNativePlatform()) return;
     await refreshStore();
     await ensureReady();
+  },
+  setDebugEntitlement: async (value: boolean, productId?: string) => {
+    await setEntitlement(value, true, productId);
   },
 
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,

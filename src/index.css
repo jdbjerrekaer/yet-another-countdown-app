@@ -575,7 +575,7 @@
   .fab-portal {
     position: fixed;
     right: calc(32px + env(safe-area-inset-right));
-    bottom: calc(16px + env(safe-area-inset-bottom) + var(--ad-banner-height, 0px) + 56px);
+    bottom: calc(16px + env(safe-area-inset-bottom) + 56px);
     z-index: 50;
   }
 

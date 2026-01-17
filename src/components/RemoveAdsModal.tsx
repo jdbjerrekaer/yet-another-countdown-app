@@ -12,6 +12,7 @@ import {
 } from "@ionic/react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { IAPProduct } from "@awesome-cordova-plugins/in-app-purchase-2";
 import { PurchasesManager } from "@/lib/purchases/purchasesManager";
 
@@ -20,6 +21,7 @@ type RemoveAdsModalProps = {
   onClose: () => void;
   isNative: boolean;
   hasRemoveAds: boolean;
+  isDevBuild?: boolean;
 };
 
 const productLabels: Record<
@@ -42,6 +44,7 @@ export const RemoveAdsModal = ({
   onClose,
   isNative,
   hasRemoveAds,
+  isDevBuild,
 }: RemoveAdsModalProps) => {
   const { t } = useTranslation();
   const [products, setProducts] = useState<IAPProduct[]>([]);
@@ -69,17 +72,36 @@ export const RemoveAdsModal = ({
       })
       .catch((err) => {
         console.warn("[Purchases] Failed to load products", err);
-        setError(t("iap.loadError"));
+        // On dev builds, don't show error if we can't load real products
+        if (!isDevBuild) {
+          setError(t("iap.loadError"));
+        }
       })
       .finally(() => setLoading(false));
-  }, [isOpen, isNative, t]);
+  }, [isOpen, isNative, t, isDevBuild]);
 
   const getProductById = (id: string) => products.find((p) => p.id === id);
 
   const handlePurchase = async (productId: string) => {
     setActionLoadingId(productId);
     try {
-      await PurchasesManager.purchaseRemoveAds(productId);
+      if (isDevBuild) {
+        // Simulate purchase on dev build
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        await PurchasesManager.setDebugEntitlement(true, productId);
+      } else {
+        await PurchasesManager.purchaseRemoveAds(productId);
+      }
+      
+      // Fire confetti on success
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#007AFF", "#5856D6", "#FF2D55"],
+        zIndex: 20000,
+      });
+
       toast.success(t("iap.purchaseSuccess"));
     } catch (err) {
       console.warn("[Purchases] Purchase failed", err);
@@ -152,7 +174,7 @@ export const RemoveAdsModal = ({
               const labels = productLabels[productId];
               const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
               const priceLabel =
-                product?.price || t("iap.priceFallback");
+                product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
               const isBusy = actionLoadingId === productId;
 
               return (

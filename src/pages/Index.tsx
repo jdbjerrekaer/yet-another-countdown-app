@@ -265,26 +265,34 @@ export default function Index() {
   }, [isNative, isModalOpen, isCalendarImportOpen, hasRemoveAds]);
 
   useEffect(() => {
-    if (!isNative) return;
-    const loadBuildInfo = async () => {
-      try {
-        const info = await BuildInfo.getBuildType();
-        setIsDevBuild(info.buildType === 'debug');
-        AdsManager.setDevBuild(info.buildType === 'debug');
-      } catch (error) {
-        console.warn('[BuildInfo] Failed to read build type', error);
-      }
-    };
-    loadBuildInfo();
-  }, [isNative]);
-
-  useEffect(() => {
     const unsubscribe = PurchasesManager.onEntitlementChange(setHasRemoveAds);
-    void PurchasesManager.init();
     return () => {
       unsubscribe?.();
     };
   }, []);
+
+  useEffect(() => {
+    const loadBuildInfo = async () => {
+      try {
+        if (isNative) {
+          const info = await BuildInfo.getBuildType();
+          const isDebug = info.buildType === 'debug';
+          setIsDevBuild(isDebug);
+          AdsManager.setDevBuild(isDebug);
+          PurchasesManager.setDevBuild(isDebug);
+        } else {
+          setIsDevBuild(import.meta.env.MODE !== 'production');
+          AdsManager.setDevBuild(import.meta.env.MODE !== 'production');
+          PurchasesManager.setDevBuild(import.meta.env.MODE !== 'production');
+        }
+        await PurchasesManager.init();
+      } catch (error) {
+        console.warn('[BuildInfo] Failed to read build type', error);
+        await PurchasesManager.init();
+      }
+    };
+    loadBuildInfo();
+  }, [isNative]);
 
   useEffect(() => {
     // On web, always show placeholder (ads don't load on web)
@@ -345,15 +353,19 @@ export default function Index() {
   const handleTitlePressStart = () => {
     if (!isDevBuild || titlePressTimeoutRef.current !== null) return;
     titlePressTimeoutRef.current = window.setTimeout(async () => {
-      const enabled = await AdsManager.toggleDevAdsEnabled();
-      setDevAdsEnabled(enabled);
-      if (enabled) {
-        toast.success('Test ads ON (dev build).');
-        await AdsManager.showBanner();
-      } else {
-        toast.message('Ads disabled for this device (dev builds).');
+      const nextValue = !hasRemoveAds;
+      await PurchasesManager.setDebugEntitlement(
+        nextValue,
+        "com.countdown.app.remove_ads_supporter",
+      );
+      setHasRemoveAds(nextValue);
+      if (nextValue) {
+        toast.success('Ad-free enabled (dev build).');
         await AdsManager.hideBanner();
-      setShowAdPlaceholder(false);
+        setShowAdPlaceholder(false);
+      } else {
+        toast.message('Ad-free disabled (dev build).');
+        await AdsManager.showBanner();
       }
     }, 700);
   };
@@ -1334,6 +1346,7 @@ export default function Index() {
         onClose={() => setIsRemoveAdsOpen(false)}
         isNative={isNative}
         hasRemoveAds={hasRemoveAds}
+        isDevBuild={isDevBuild}
       />
 
     </IonPage>
