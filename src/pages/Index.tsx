@@ -705,7 +705,10 @@ export default function Index() {
         }
         return filtered;
       });
-      return true; // Deletion confirmed
+
+      void AdsManager.maybeShowInterstitialAfterSave({ kind: "delete" });
+
+      return true;
     } else {
       // Cancel button was pressed
       trigger('light');
@@ -1247,7 +1250,7 @@ export default function Index() {
           className="fixed left-0 right-0 z-40 flex items-center justify-center border-t border-border bg-muted/80 text-[11px] uppercase tracking-wide text-muted-foreground"
           style={{
             height: `${placeholderHeight}px`,
-            bottom: 'calc(env(safe-area-inset-bottom) + 6px)',
+            bottom: 0,
           }}
         >
           Ad placeholder (dev)

@@ -9,7 +9,7 @@ import {
   InterstitialAdPluginEvents,
 } from "@capacitor-community/admob";
 
-type SaveKind = "create" | "edit";
+type SaveKind = "create" | "edit" | "delete";
 
 const BANNER_AD_ID = "ca-app-pub-2483551077156189/1520554438";
 const INTERSTITIAL_AD_ID = "ca-app-pub-2483551077156189/3401430555";
@@ -17,11 +17,10 @@ const IS_DEV_BUILD_FALLBACK = import.meta.env.MODE !== "production";
 let isDevBuildRuntime = IS_DEV_BUILD_FALLBACK;
 let allowPersonalizedAds = false;
 
-const COOLDOWN_MS = 120_000;
-const SAVE_COUNT_THRESHOLD = 3;
 
 const PREF_HAS_CREATED_ONCE = "ads_hasCreatedOnce";
 const PREF_HAS_EDITED_ONCE = "ads_hasEditedOnce";
+const PREF_HAS_DELETED_ONCE = "ads_hasDeletedOnce";
 const PREF_LAST_INTERSTITIAL_AT = "ads_lastInterstitialAt";
 const PREF_SAVE_COUNT_SINCE_INTERSTITIAL = "ads_saveCountSinceLastInterstitial";
 const PREF_DEV_ADS_ENABLED = "ads_devEnabled";
@@ -30,6 +29,9 @@ let isInitialized = false;
 let bannerVisible = false;
 let interstitialReady = false;
 let interstitialLoading = false;
+let interstitialLoadPromise: Promise<void> | null = null;
+let interstitialLoadResolve: (() => void) | null = null;
+let interstitialLoadReject: ((error: Error) => void) | null = null;
 let bannerStatus: "hidden" | "visible" | "failed" = "hidden";
 const bannerStatusListeners = new Set<
   (status: "hidden" | "visible" | "failed") => void
@@ -123,9 +125,42 @@ const getIsTestingAds = async () => {
   return enabled;
 };
 
-const prepareInterstitial = async () => {
-  if (interstitialLoading) return;
+const PREPARE_TIMEOUT_MS = 30_000; // 30 seconds timeout
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_BASE_MS = 5_000; // 5 seconds base delay
+
+let lastPrepareError: Error | null = null;
+
+const prepareInterstitial = async (retryCount = 0): Promise<void> => {
+  if (interstitialLoadPromise) return interstitialLoadPromise;
+  if (interstitialReady) return Promise.resolve();
+
   interstitialLoading = true;
+
+  interstitialLoadPromise = new Promise<void>((resolve, reject) => {
+    interstitialLoadResolve = resolve;
+    interstitialLoadReject = reject;
+
+    const timeoutId = setTimeout(() => {
+      interstitialLoading = false;
+      interstitialLoadPromise = null;
+      interstitialLoadResolve = null;
+      interstitialLoadReject = null;
+      reject(new Error("Interstitial ad preparation timed out"));
+    }, PREPARE_TIMEOUT_MS);
+
+    const originalResolve = resolve;
+    const originalReject = reject;
+    interstitialLoadResolve = () => {
+      clearTimeout(timeoutId);
+      originalResolve();
+    };
+    interstitialLoadReject = (error: Error) => {
+      clearTimeout(timeoutId);
+      originalReject(error);
+    };
+  });
+
   const isTestingAds = await getIsTestingAds();
   try {
     await AdMob.prepareInterstitial({
@@ -134,33 +169,145 @@ const prepareInterstitial = async () => {
       npa: !allowPersonalizedAds,
     });
   } catch (error) {
-    interstitialLoading = false;
-    interstitialReady = false;
     console.warn("[Ads] Interstitial prepare failed", error);
+    lastPrepareError = error instanceof Error ? error : new Error(String(error));
+
+    if (retryCount < MAX_RETRY_ATTEMPTS) {
+      const delayMs = RETRY_DELAY_BASE_MS * Math.pow(2, retryCount);
+      const rejectFn = interstitialLoadReject;
+      interstitialLoadPromise = null;
+      interstitialLoadResolve = null;
+      interstitialLoadReject = null;
+      interstitialLoading = false;
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+
+      try {
+        return await prepareInterstitial(retryCount + 1);
+      } catch (retryError) {
+        if (rejectFn) {
+          rejectFn(retryError instanceof Error ? retryError : new Error(String(retryError)));
+        }
+        throw retryError;
+      }
+    } else {
+      interstitialLoading = false;
+      interstitialReady = false;
+      const rejectFn = interstitialLoadReject;
+      const errorToThrow = lastPrepareError || new Error("Interstitial ad preparation failed");
+      interstitialLoadPromise = null;
+      interstitialLoadResolve = null;
+      interstitialLoadReject = null;
+      lastPrepareError = null;
+      if (rejectFn) {
+        rejectFn(errorToThrow);
+      }
+      throw errorToThrow;
+    }
   }
+
+  if (retryCount === 0) {
+    lastPrepareError = null;
+  }
+
+  return interstitialLoadPromise;
 };
 
-const shouldShowInterstitial = async () => {
-  const lastShownAt = await getNumber(PREF_LAST_INTERSTITIAL_AT);
-  if (Date.now() - lastShownAt < COOLDOWN_MS) {
-    return false;
+const shouldShowInterstitial = async () => true;
+
+const incrementSaveCount = async () => {};
+
+const resetSaveCount = async () => {};
+
+const resetConsent = async () => {
+  if (!Capacitor.isNativePlatform()) return;
+  
+  console.log("[Ads] Resetting UMP consent as requested from Settings");
+  
+  try {
+    // Reset UMP consent state
+    await AdMob.resetConsentInfo();
+    console.log("[Ads] UMP consent info reset successfully");
+    
+    // Reset personalized ads flag (will be recomputed after consent flow)
+    allowPersonalizedAds = false;
+    
+    // Update debug info
+    debugInfo.consentStatus = "UNKNOWN";
+    debugInfo.consentFormAvailable = false;
+    debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+    
+    // Request consent info again to re-trigger UMP flow
+    let consentStatus = AdmobConsentStatus.UNKNOWN;
+    try {
+      const consentInfo = await AdMob.requestConsentInfo();
+      consentStatus = consentInfo.status;
+      debugInfo.consentStatus = consentInfo.status as ConsentStatus;
+      debugInfo.consentFormAvailable = consentInfo.isConsentFormAvailable;
+      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+      
+      // Show consent form if required (for EEA/UK users)
+      if (
+        consentInfo.isConsentFormAvailable &&
+        consentStatus === AdmobConsentStatus.REQUIRED
+      ) {
+        console.log("[Ads] Showing UMP consent form after reset");
+        const { status } = await AdMob.showConsentForm();
+        consentStatus = status;
+        debugInfo.consentStatus = status as ConsentStatus;
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+      }
+    } catch (error) {
+      console.warn("[Ads] UMP consent flow failed after reset", error);
+      debugInfo.consentStatus = "UNKNOWN";
+      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+    }
+    
+    // Read current ATT status (do NOT attempt to reset ATT - it cannot be reset programmatically)
+    try {
+      const trackingInfo = await AdMob.trackingAuthorizationStatus();
+      debugInfo.trackingStatus = trackingInfo.status as TrackingStatus;
+      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+      
+      // Note: We do NOT request ATT authorization here - it can only be reset by user in iOS Settings
+      // or by reinstalling the app. The current status is read-only.
+    } catch (error) {
+      console.warn("[Ads] Failed to read ATT tracking status", error);
+      debugInfo.trackingStatus = "unknown";
+      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+    }
+    
+    // Recompute personalized ads flag based on:
+    // - UMP consent status (OBTAINED or NOT_REQUIRED)
+    // - Current ATT status (read-only, not reset)
+    try {
+      const trackingStatus = await AdMob.trackingAuthorizationStatus();
+      allowPersonalizedAds =
+        (consentStatus === AdmobConsentStatus.OBTAINED ||
+          consentStatus === AdmobConsentStatus.NOT_REQUIRED) &&
+        trackingStatus.status === "authorized";
+      console.log("[Ads] Personalized ads allowed:", allowPersonalizedAds, {
+        consentStatus,
+        trackingStatus: trackingStatus.status,
+      });
+    } catch (error) {
+      allowPersonalizedAds = false;
+      console.warn("[Ads] Failed to determine personalized ads status", error);
+    }
+    
+    // Reload interstitial ad with new consent settings if ads are initialized
+    if (isInitialized && interstitialReady) {
+      interstitialReady = false;
+      void prepareInterstitial().catch((error) => {
+        console.warn("[Ads] Failed to prepare interstitial after consent reset", error);
+      });
+    }
+    
+    console.log("[Ads] UMP consent reset completed successfully");
+  } catch (error) {
+    console.error("[Ads] Failed to reset UMP consent", error);
+    throw error;
   }
-
-  const saveCount = await getNumber(PREF_SAVE_COUNT_SINCE_INTERSTITIAL);
-  if (saveCount < SAVE_COUNT_THRESHOLD) {
-    return false;
-  }
-
-  return true;
-};
-
-const incrementSaveCount = async () => {
-  const saveCount = await getNumber(PREF_SAVE_COUNT_SINCE_INTERSTITIAL);
-  await setNumber(PREF_SAVE_COUNT_SINCE_INTERSTITIAL, saveCount + 1);
-};
-
-const resetSaveCount = async () => {
-  await setNumber(PREF_SAVE_COUNT_SINCE_INTERSTITIAL, 0);
 };
 
 export const AdsManager = {
@@ -255,21 +402,40 @@ export const AdsManager = {
     AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
       interstitialReady = true;
       interstitialLoading = false;
+      lastPrepareError = null;
+      if (interstitialLoadResolve) {
+        interstitialLoadResolve();
+        interstitialLoadPromise = null;
+        interstitialLoadResolve = null;
+        interstitialLoadReject = null;
+      }
     });
 
     AdMob.addListener(InterstitialAdPluginEvents.Dismissed, async () => {
       interstitialReady = false;
-      await prepareInterstitial();
+      void prepareInterstitial().catch(() => {});
     });
 
     AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, async () => {
       interstitialReady = false;
-      await prepareInterstitial();
+      if (interstitialLoadReject) {
+        interstitialLoadReject(new Error("Interstitial ad failed to show"));
+        interstitialLoadPromise = null;
+        interstitialLoadResolve = null;
+        interstitialLoadReject = null;
+      }
+      void prepareInterstitial().catch(() => {});
     });
 
     AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
       interstitialReady = false;
       interstitialLoading = false;
+      if (interstitialLoadReject) {
+        interstitialLoadReject(new Error("Interstitial ad failed to load"));
+        interstitialLoadPromise = null;
+        interstitialLoadResolve = null;
+        interstitialLoadReject = null;
+      }
     });
 
     await prepareInterstitial();
@@ -329,8 +495,10 @@ export const AdsManager = {
     if (!Capacitor.isNativePlatform()) return;
     const enabled = await isAdsEnabled();
     if (!enabled) return;
+
     if (!isInitialized) {
       await AdsManager.init();
+      if (!isInitialized) return;
     }
 
     if (kind === "create") {
@@ -349,29 +517,43 @@ export const AdsManager = {
       }
     }
 
+    if (kind === "delete") {
+      const hasDeletedOnce = await getBool(PREF_HAS_DELETED_ONCE);
+      if (!hasDeletedOnce) {
+        await setBool(PREF_HAS_DELETED_ONCE, true);
+        return;
+      }
+    }
+
     await incrementSaveCount();
     const shouldShow = await shouldShowInterstitial();
+
     if (!shouldShow) {
-      if (!interstitialReady) {
-        await prepareInterstitial();
+      if (!interstitialReady && !interstitialLoading) {
+        void prepareInterstitial().catch(() => {});
       }
       return;
     }
 
     if (!interstitialReady) {
-      await prepareInterstitial();
-      return;
+      try {
+        await prepareInterstitial();
+        if (!interstitialReady) return;
+      } catch {
+        return;
+      }
     }
 
-    interstitialReady = false;
     await setNumber(PREF_LAST_INTERSTITIAL_AT, Date.now());
     await resetSaveCount();
 
     try {
       await AdMob.showInterstitial();
+      interstitialReady = false;
     } catch (error) {
       console.warn("[Ads] Interstitial show failed", error);
-      await prepareInterstitial();
+      interstitialReady = false;
+      void prepareInterstitial().catch(() => {});
     }
   },
   getDevAdsEnabled,
@@ -400,4 +582,5 @@ export const AdsManager = {
     listener(bannerStatus);
     return () => bannerStatusListeners.delete(listener);
   },
+  resetConsent,
 };

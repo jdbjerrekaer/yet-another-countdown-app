@@ -1,0 +1,20 @@
+diff --git a/node_modules/@capacitor-community/admob/ios/Sources/AdMobPlugin/Banner/BannerExecutor.swift b/node_modules/@capacitor-community/admob/ios/Sources/AdMobPlugin/Banner/BannerExecutor.swift
+index 1fdb654..cdebb50 100644
+--- a/node_modules/@capacitor-community/admob/ios/Sources/AdMobPlugin/Banner/BannerExecutor.swift
++++ b/node_modules/@capacitor-community/admob/ios/Sources/AdMobPlugin/Banner/BannerExecutor.swift
+@@ -114,11 +114,14 @@ class BannerExecutor: NSObject, GADBannerViewDelegate {
+             bannerView.translatesAutoresizingMaskIntoConstraints = false
+             bannerView.tag = 2743243288699 // rand
+             rootViewController.view.addSubview(bannerView)
++            // For BOTTOM_CENTER position, use view.bottomAnchor instead of safeAreaLayoutGuide.bottomAnchor
++            // to extend banner to absolute bottom edge of device
++            let bottomConstraintItem = adPosition == "TOP_CENTER" ? rootViewController.view.safeAreaLayoutGuide : rootViewController.view
+             rootViewController.view.addConstraints(
+                 [NSLayoutConstraint(item: bannerView,
+                                     attribute: adPosition == "TOP_CENTER" ? .top : .bottom,
+                                     relatedBy: .equal,
+-                                    toItem: rootViewController.view.safeAreaLayoutGuide,
++                                    toItem: bottomConstraintItem,
+                                     attribute: adPosition == "TOP_CENTER" ? .top : .bottom,
+                                     multiplier: 1,
+                                     constant: CGFloat(Int(Margin) * -1)),

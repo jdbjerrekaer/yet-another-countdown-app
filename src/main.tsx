@@ -5,6 +5,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { App as CapacitorApp } from "@capacitor/app";
+import { Preferences } from "@capacitor/preferences";
 import App from "./App.tsx";
 import "./i18n"; // Initialize i18n
 import { checkPreferencesLanguage } from "./i18n";
@@ -79,12 +80,59 @@ async function initNativePlugins() {
 
 initNativePlugins();
 
-// Listen for app state changes to check language preference
+// Check for consent reset trigger from iOS Settings
+async function checkConsentResetFlag() {
+  if (!Capacitor.isNativePlatform()) return;
+  
+  let triggerDetected = false;
+  
+  try {
+    const { value } = await Preferences.get({ key: "reset_consent_trigger" });
+    if (value === "1") {
+      triggerDetected = true;
+      console.log("[App] Consent reset trigger detected from iOS Settings");
+    }
+  } catch (error) {
+    console.warn("[App] Failed to read consent reset trigger:", error);
+    return; // Can't proceed if we can't read the value
+  }
+  
+  if (!triggerDetected) {
+    return; // No trigger detected, nothing to do
+  }
+  
+  // Reset the Settings value FIRST (before calling resetConsent) to ensure users can
+  // always trigger the reset again, even if the consent reset process fails.
+  // This guarantees the Settings UI will show "No" and allow another attempt.
+  try {
+    await Preferences.set({ key: "reset_consent_trigger", value: "0" });
+    console.log("[App] Settings value reset to default (users can trigger again)");
+  } catch (error) {
+    console.error("[App] Failed to reset Settings value - this may prevent future resets:", error);
+    // Continue anyway - try to reset consent even if Settings write failed
+  }
+  
+  // Now trigger the UMP consent reset (ATT is not reset)
+  try {
+    await AdsManager.resetConsent();
+    console.log("[App] UMP consent reset completed successfully");
+  } catch (error) {
+    console.error("[App] UMP consent reset failed, but Settings value was already reset:", error);
+    // Don't throw - the Settings reset already happened, so user can try again
+  }
+}
+
+// Check consent reset flag on app launch
+checkConsentResetFlag();
+
+// Listen for app state changes to check language preference and consent reset flag
 if (Capacitor.isNativePlatform()) {
   CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
     if (isActive) {
       // App came to foreground, check if language preference changed
       await checkPreferencesLanguage();
+      // Check if consent reset was requested from Settings
+      await checkConsentResetFlag();
     }
   });
 }
