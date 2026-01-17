@@ -654,6 +654,9 @@
     letter-spacing: 0.2em;
     opacity: 0.6;
     margin-bottom: 0.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .header-brand-line2 {
@@ -666,16 +669,16 @@
   .header-dev-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.15rem 0.5rem;
+    padding: 0.1rem 0.4rem;
     border-radius: 99px;
     background: hsl(var(--primary) / 0.1);
     color: hsl(var(--primary));
-    font-size: 0.65rem;
+    font-size: 0.5rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border: 1px solid hsl(var(--primary) / 0.2);
-    margin-top: 0.2rem;
+    margin-top: 0;
   }
 
   .header-action-button {

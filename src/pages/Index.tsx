@@ -995,14 +995,16 @@ export default function Index() {
                 onPointerLeave={handleTitlePressEnd}
                 onPointerCancel={handleTitlePressEnd}
               >
-                <div className="header-brand-line1">YET ANOTHER</div>
-                <div className="flex items-center gap-2">
-                  <span className="header-brand-line2">COUNTDOWN APP</span>
+                <div className="header-brand-line1">
+                  YET ANOTHER
                   {isDevBuild && (
                     <span className="header-dev-badge">
-                      Dev
+                      DEV
                     </span>
                   )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="header-brand-line2">COUNTDOWN</span>
                 </div>
               </div>
             </IonTitle>
