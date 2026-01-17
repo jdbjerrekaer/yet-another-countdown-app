@@ -205,6 +205,14 @@
 @layer base {
   * {
     @apply border-border;
+    /* Prevent text selection and double-tap zoom on all elements by default */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent double-tap zoom - manipulation disables pinch-zoom and double-tap zoom */
+    touch-action: manipulation;
   }
 
   body {
@@ -212,6 +220,29 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Allow selection for input and textarea elements */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+  }
+
+  /* Prevent image dragging */
+  img {
+    -webkit-user-drag: none;
+    user-drag: none;
+    pointer-events: auto;
+  }
+  
+  /* Ensure buttons and interactive elements don't allow text selection */
+  button, a, ion-button, ion-fab-button, ion-segment-button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 }
 

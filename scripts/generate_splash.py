@@ -13,7 +13,7 @@ except ImportError:
     print("Pillow (PIL) is required. Install with: pip3 install Pillow")
     sys.exit(1)
 
-def create_splash_screen(icon_path, output_path, size=2732, icon_scale=0.65):
+def create_splash_screen(icon_path, output_path, size=2732, icon_scale=0.65, bg_color=(248, 248, 248)):
     """
     Create a splash screen image.
     
@@ -23,9 +23,6 @@ def create_splash_screen(icon_path, output_path, size=2732, icon_scale=0.65):
         size: Size of the splash screen (2732x2732)
         icon_scale: Scale of icon relative to splash screen (0.45 = 45% of width)
     """
-    # Background color #f8f8f8
-    bg_color = (248, 248, 248)
-    
     # Create background
     splash = Image.new('RGB', (size, size), bg_color)
     
@@ -80,13 +77,16 @@ def main():
     
     print("Generating splash screen images...")
     # Use larger scale (65%) to make the icon more prominent
-    create_splash_screen(icon_light_path, splash_3x, size, icon_scale=0.65)
-    create_splash_screen(icon_light_path, splash_2x, size, icon_scale=0.65)
-    create_splash_screen(icon_light_path, splash_1x, size, icon_scale=0.65)
+    light_bg = (248, 248, 248)
+    dark_bg = (16, 16, 16)
 
-    create_splash_screen(icon_dark_path, splash_3x_dark, size, icon_scale=0.65)
-    create_splash_screen(icon_dark_path, splash_2x_dark, size, icon_scale=0.65)
-    create_splash_screen(icon_dark_path, splash_1x_dark, size, icon_scale=0.65)
+    create_splash_screen(icon_light_path, splash_3x, size, icon_scale=0.65, bg_color=light_bg)
+    create_splash_screen(icon_light_path, splash_2x, size, icon_scale=0.65, bg_color=light_bg)
+    create_splash_screen(icon_light_path, splash_1x, size, icon_scale=0.65, bg_color=light_bg)
+
+    create_splash_screen(icon_dark_path, splash_3x_dark, size, icon_scale=0.65, bg_color=dark_bg)
+    create_splash_screen(icon_dark_path, splash_2x_dark, size, icon_scale=0.65, bg_color=dark_bg)
+    create_splash_screen(icon_dark_path, splash_1x_dark, size, icon_scale=0.65, bg_color=dark_bg)
     
     print("\n✅ All splash screen images generated successfully!")
 
