@@ -721,6 +721,20 @@
     margin-top: 0;
   }
 
+  .header-adfree-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    background: hsl(var(--success, 142 71% 45%) / 0.12);
+    color: hsl(var(--success, 142 71% 45%));
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid hsl(var(--success, 142 71% 45%) / 0.2);
+  }
+
   .header-action-button {
     --background: transparent;
     --background-hover: transparent;

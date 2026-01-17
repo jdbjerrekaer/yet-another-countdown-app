@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
+import { PurchasesManager } from "@/lib/purchases/purchasesManager";
 import {
   AdMob,
   AdmobConsentStatus,
@@ -111,6 +112,8 @@ const setDevAdsEnabled = async (enabled: boolean) => {
 };
 
 const isAdsEnabled = async () => {
+  await PurchasesManager.init();
+  if (PurchasesManager.hasRemoveAdsEntitlement()) return false;
   if (!isDevBuildRuntime) return true;
   const enabled = await getDevAdsEnabled();
   return enabled;

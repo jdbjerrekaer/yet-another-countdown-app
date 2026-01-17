@@ -150,10 +150,41 @@
     "clearInput": "Eingabe löschen",
     "colorPicker": "Farbauswahl",
     "shareEvent": "Ereignis teilen",
-    "importFromCalendar": "Aus Kalender importieren"
+    "importFromCalendar": "Aus Kalender importieren",
+    "openRemoveAds": "Open remove ads options"
   },
   "ads": {
     "loading": "Anzeige wird geladen...",
     "webPlaceholder": "Werbung"
+  },
+  "iap": {
+    "title": "Remove Ads",
+    "headline": "Go ad-free",
+    "subheadline": "Enjoy a clean, focused countdown experience.",
+    "cta": "Unlock",
+    "alreadyUnlocked": "You're ad-free",
+    "restore": "Restore Purchases",
+    "restoreSuccess": "Purchases restored.",
+    "restoreNone": "No previous purchases found.",
+    "restoreError": "Restore failed. Please try again.",
+    "purchaseSuccess": "You're now ad-free.",
+    "purchaseError": "Purchase failed. Please try again.",
+    "loadError": "Unable to load products right now.",
+    "loadingProducts": "Loading offers...",
+    "priceFallback": "-",
+    "webUnavailable": "Purchases are available on the iOS app.",
+    "disclaimer": "One-time purchase. Restore any time after reinstalling.",
+    "adFreeBadge": "Ad-free",
+    "tiers": {
+      "standard": {
+        "title": "Remove Ads",
+        "description": "Remove banners and interstitials."
+      },
+      "supporter": {
+        "title": "Remove Ads + Supporter",
+        "description": "Ad-free plus a thank you for supporting the app.",
+        "badge": "Supporter"
+      }
+    }
   }
 }

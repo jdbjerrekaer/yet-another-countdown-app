@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
-import { add, checkmark, calendarOutline } from 'ionicons/icons';
+import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons';
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
@@ -36,11 +36,13 @@ import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } fro
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal } from '@/components/CalendarImportModal';
+import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { AdsManager } from '@/lib/ads/adsManager';
+import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { toast } from 'sonner';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
@@ -200,6 +202,8 @@ export default function Index() {
   const [devAdsEnabled, setDevAdsEnabled] = useState(false);
   const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
   const placeholderHeight = 60; // Increased to match adaptive banners better
+  const [hasRemoveAds, setHasRemoveAds] = useState(false);
+  const [isRemoveAdsOpen, setIsRemoveAdsOpen] = useState(false);
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -246,6 +250,10 @@ export default function Index() {
 
   useEffect(() => {
     if (!isNative) return;
+    if (hasRemoveAds) {
+      void AdsManager.hideBanner();
+      return;
+    }
     if (isModalOpen || isCalendarImportOpen) {
       void AdsManager.hideBanner();
     } else {
@@ -254,7 +262,7 @@ export default function Index() {
     return () => {
       void AdsManager.hideBanner();
     };
-  }, [isNative, isModalOpen, isCalendarImportOpen]);
+  }, [isNative, isModalOpen, isCalendarImportOpen, hasRemoveAds]);
 
   useEffect(() => {
     if (!isNative) return;
@@ -271,33 +279,43 @@ export default function Index() {
   }, [isNative]);
 
   useEffect(() => {
+    const unsubscribe = PurchasesManager.onEntitlementChange(setHasRemoveAds);
+    void PurchasesManager.init();
+    return () => {
+      unsubscribe?.();
+    };
+  }, []);
+
+  useEffect(() => {
     // On web, always show placeholder (ads don't load on web)
     if (!isNative) {
-      setShowAdPlaceholder(true);
+      setShowAdPlaceholder(!hasRemoveAds);
       return;
     }
 
     // On native, handle ad state
     const loadAdsState = async () => {
       const enabled = isDevBuild ? await AdsManager.getDevAdsEnabled() : true;
+      const adsAllowed = enabled && !hasRemoveAds;
       setDevAdsEnabled(enabled);
-      setShowAdPlaceholder(enabled && AdsManager.getBannerStatus() !== 'visible');
+      setShowAdPlaceholder(adsAllowed && AdsManager.getBannerStatus() !== 'visible');
     };
 
     loadAdsState();
     const unsubscribe = AdsManager.onBannerStatusChange((status) => {
       const enabled = isDevBuild ? devAdsEnabled : true;
-      setShowAdPlaceholder(enabled && status === 'hidden'); // Only show placeholder while hidden/loading
+      const adsAllowed = enabled && !hasRemoveAds;
+      setShowAdPlaceholder(adsAllowed && status === 'hidden'); // Only show placeholder while hidden/loading
     });
 
     return () => {
       unsubscribe?.();
     };
-  }, [isNative, isDevBuild, devAdsEnabled]);
+  }, [isNative, isDevBuild, devAdsEnabled, hasRemoveAds]);
 
   useEffect(() => {
     if (!isDevBuild) return;
-    if (!devAdsEnabled) {
+    if (!devAdsEnabled || hasRemoveAds) {
       setShowAdPlaceholder(false);
       if (typeof document !== 'undefined') {
         delete document.documentElement.dataset.adPlaceholder;
@@ -307,7 +325,7 @@ export default function Index() {
         void AdsManager.hideBanner();
       }
     }
-  }, [isDevBuild, devAdsEnabled, isNative]);
+  }, [isDevBuild, devAdsEnabled, isNative, hasRemoveAds]);
 
   useEffect(() => {
     const bannerStatus = AdsManager.getBannerStatus();
@@ -1008,6 +1026,11 @@ export default function Index() {
                       DEV
                     </span>
                   )}
+                  {hasRemoveAds && (
+                    <span className="header-adfree-badge">
+                      {t('iap.adFreeBadge')}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="header-brand-line2">COUNTDOWN</span>
@@ -1015,6 +1038,15 @@ export default function Index() {
               </div>
             </IonTitle>
             <IonButtons slot="end" className="pr-2 pt-2">
+              {!hasRemoveAds && (
+                <IonButton
+                  onClick={() => setIsRemoveAdsOpen(true)}
+                  aria-label={t('aria.openRemoveAds')}
+                  className="header-action-button"
+                >
+                  <IonIcon icon={sparklesOutline} />
+                </IonButton>
+              )}
               <IonButton 
                 onClick={handleOpenCalendarImport} 
                 aria-label={t('aria.importFromCalendar')}
@@ -1295,6 +1327,13 @@ export default function Index() {
         isOpen={isCalendarImportOpen}
         onClose={() => setIsCalendarImportOpen(false)}
         onImport={handleCalendarImport}
+      />
+
+      <RemoveAdsModal
+        isOpen={isRemoveAdsOpen}
+        onClose={() => setIsRemoveAdsOpen(false)}
+        isNative={isNative}
+        hasRemoveAds={hasRemoveAds}
       />
 
     </IonPage>

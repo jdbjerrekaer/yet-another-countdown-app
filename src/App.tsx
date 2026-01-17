@@ -12,6 +12,7 @@ import Import from "./pages/Import";
 import { DeepLinkHandler } from "./components/DeepLinkHandler";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
+import { PurchasesManager } from "@/lib/purchases/purchasesManager";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,10 @@ function useSystemTheme() {
 
 const App = () => {
   useSystemTheme();
+
+  useEffect(() => {
+    void PurchasesManager.init();
+  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>
