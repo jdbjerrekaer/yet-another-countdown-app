@@ -158,7 +158,7 @@ export const PurchasesManager = {
           alias: undefined,
           type: InAppPurchase2.NON_CONSUMABLE,
           state: InAppPurchase2.VALID,
-          title: item.tier === "supporter" ? "Remove Ads + Supporter" : "Remove Ads",
+          title: item.tier === "supporter" ? "Remove Ads" : "Remove Ads",
           description: item.tier === "supporter" 
             ? "Ad-free plus a thank you for supporting the app."
             : "Remove banners and interstitials.",

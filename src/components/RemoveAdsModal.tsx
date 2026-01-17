@@ -156,27 +156,29 @@ export const RemoveAdsModal = ({
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={onClose} className="text-muted-foreground">{t("modal.close")}</IonButton>
+            <IonButton onClick={onClose} className="text-primary font-medium">{t("modal.close")}</IonButton>
           </IonButtons>
-          <IonTitle id="iap-modal-title">{t("iap.title")}</IonTitle>
+          <IonTitle id="iap-modal-title" className="font-semibold">{t("iap.title")}</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding">
-        <div className="max-w-md mx-auto space-y-8">
-          <div className="space-y-3 text-center pt-4">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-2 animate-scale-in">
-              <Sparkles className="w-8 h-8 text-primary" />
+      <IonContent className="ion-padding" style={{ "--padding-bottom": "var(--ad-banner-height, 0px)" } as React.CSSProperties}>
+        <div className="max-w-md mx-auto space-y-8 pb-8">
+          <div className="flex flex-col gap-2 text-center pt-4">
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-1 animate-scale-in">
+              <Sparkles className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              {t("iap.headline")}
-            </h2>
-            <p className="text-muted-foreground text-sm px-4">
-              {t("iap.subheadline")}
-            </p>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                {t("iap.headline")}
+              </h2>
+              <p className="text-muted-foreground text-sm px-4 leading-normal">
+                {t("iap.subheadline")}
+              </p>
+            </div>
           </div>
 
           {!isNative && (
-            <div className="bg-secondary/50 rounded-2xl p-4 text-center text-sm text-muted-foreground border border-border/50">
+            <div className="bg-secondary/40 rounded-2xl p-4 text-center text-sm text-muted-foreground border border-border/40">
               {t("iap.webUnavailable")}
             </div>
           )}
@@ -191,14 +193,14 @@ export const RemoveAdsModal = ({
           )}
 
           {error && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 text-center">
+            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center">
               <IonText color="danger" className="text-sm font-medium">
                 {error}
               </IonText>
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {orderedProductIds.map((productId, index) => {
               const product = getProductById(productId);
               const labels = productLabels[productId];
@@ -212,60 +214,57 @@ export const RemoveAdsModal = ({
               return (
                 <div
                   key={productId}
-                  className={`relative overflow-hidden rounded-3xl border transition-all duration-300 ${
+                  className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
                     isSupporter
-                      ? "border-primary/30 bg-primary/5 shadow-sm"
-                      : "border-border bg-secondary/30"
+                      ? "border-primary/20 bg-primary/5"
+                      : "border-border/60 bg-secondary/20"
                   } p-5 animate-slide-up`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-2xl flex-shrink-0 ${
-                      isSupporter ? "bg-primary text-primary-foreground" : "bg-background text-foreground"
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isSupporter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                     }`}>
-                      <Icon className="w-6 h-6" />
+                      <Icon className="w-5 h-5" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-foreground truncate">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-base font-bold text-foreground truncate">
                           {labels ? t(labels.titleKey) : product?.title}
                         </h3>
                         {badge && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-primary-foreground uppercase tracking-wider">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary uppercase tracking-wider">
                             {badge}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                      <p className="text-xs text-muted-foreground leading-snug">
                         {labels ? t(labels.descriptionKey) : product?.description}
                       </p>
-                      
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="text-xl font-bold text-foreground">
-                          {priceLabel}
-                        </div>
-                        
-                        <IonButton
-                          className={`min-w-[100px] h-10 font-bold tracking-tight rounded-xl ${
-                            isSupporter ? "black-button" : ""
-                          }`}
-                          disabled={(!isNative && !isDevBuild) || hasRemoveAds || isBusy}
-                          onClick={() => handlePurchase(productId)}
-                        >
-                          {isBusy ? (
-                            <IonSpinner name="crescent" />
-                          ) : hasRemoveAds ? (
-                            <div className="flex items-center gap-1.5">
-                              <Check className="w-4 h-4" />
-                              <span>{t("iap.alreadyUnlocked")}</span>
-                            </div>
-                          ) : (
-                            t("iap.cta")
-                          )}
-                        </IonButton>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-sm font-bold text-foreground mb-1">
+                        {priceLabel}
                       </div>
+                      <IonButton
+                        size="small"
+                        fill={isSupporter ? "solid" : "clear"}
+                        className={`font-bold tracking-tight m-0 h-8 ${
+                          isSupporter ? "black-button min-w-[80px]" : "text-primary min-w-[70px]"
+                        }`}
+                        disabled={(!isNative && !isDevBuild) || hasRemoveAds || isBusy}
+                        onClick={() => handlePurchase(productId)}
+                      >
+                        {isBusy ? (
+                          <IonSpinner name="crescent" className="w-4 h-4" />
+                        ) : hasRemoveAds ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          t("iap.cta")
+                        )}
+                      </IonButton>
                     </div>
                   </div>
                 </div>
@@ -273,37 +272,38 @@ export const RemoveAdsModal = ({
             })}
           </div>
 
-          <div className="flex flex-col gap-4 pt-4">
-            <div className="text-center">
-              <p className="text-[11px] text-muted-foreground/70 max-w-[280px] mx-auto leading-normal">
+          <div className="flex flex-col gap-6 pt-2 pb-8">
+            <div className="text-center px-6">
+              <p className="text-[10px] text-muted-foreground/60 leading-normal">
                 {t("iap.disclaimer")}
               </p>
             </div>
 
-            <IonButton
-              fill="clear"
-              size="small"
-              onClick={handleRestore}
-              className="text-muted-foreground font-medium lowercase tracking-tight"
-              disabled={(!isNative && !isDevBuild) || restoreLoading}
-            >
-              {restoreLoading ? (
-                <IonSpinner name="crescent" className="mr-2" />
-              ) : (
-                t("iap.restore")
-              )}
-            </IonButton>
+            <div className="flex flex-col gap-3">
+              <IonButton
+                fill="clear"
+                onClick={handleRestore}
+                className="text-primary text-sm font-semibold h-10 m-0"
+                disabled={(!isNative && !isDevBuild) || restoreLoading}
+              >
+                {restoreLoading ? (
+                  <IonSpinner name="crescent" className="w-4 h-4" />
+                ) : (
+                  t("iap.restore")
+                )}
+              </IonButton>
 
-            {restoreError && (
-              <div className="bg-destructive/5 rounded-xl p-3 text-center animate-fade-in">
-                <p className="text-xs font-medium text-destructive">{restoreError}</p>
-              </div>
-            )}
-            {restoreMessage && (
-              <div className="bg-secondary/50 rounded-xl p-3 text-center animate-fade-in">
-                <p className="text-xs font-medium text-muted-foreground">{restoreMessage}</p>
-              </div>
-            )}
+              {restoreError && (
+                <div className="bg-destructive/5 rounded-xl p-3 text-center animate-fade-in">
+                  <p className="text-[11px] font-medium text-destructive">{restoreError}</p>
+                </div>
+              )}
+              {restoreMessage && (
+                <div className="bg-secondary/50 rounded-xl p-3 text-center animate-fade-in">
+                  <p className="text-[11px] font-medium text-muted-foreground">{restoreMessage}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </IonContent>
