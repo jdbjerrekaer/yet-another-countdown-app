@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { Share } from '@capacitor/share';
 import { Dialog } from '@capacitor/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
@@ -714,55 +715,71 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.emojiLabel')}</Label>
-              <div className="flex gap-2 flex-wrap" key={`emoji-list-${emojiAnimationKey}`}>
-                {suggestedEmojis.map((e, index) => {
-                  const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
-                  const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
-                  
-                  return (
-                    <button
-                      key={`${e}-${index}-${emojiAnimationKey}`}
-                      onClick={() => handleEmojiSelect(e)}
-                      className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-95 ${
-                        emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''
-                      } ${
-                        isSelected
-                          ? 'border-[3px] border-white/90 text-xl'
-                          : 'bg-secondary/50 hover:bg-secondary text-2xl'
-                      }`}
-                      style={{
-                        ...(isSelected ? { 
-                          backgroundColor: emojiColor,
-                          boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                        } : {}),
-                        animationDelay: `${index * 30}ms`,
-                        transform: isSelected ? 'scale(1.1)' : undefined,
-                      }}
-                    >
-                      {e}
-                    </button>
-                  );
-                })}
+              <div className="flex gap-2 flex-wrap">
+                <AnimatePresence mode="popLayout">
+                  {suggestedEmojis.map((e, index) => {
+                    const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
+                    const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
+                    
+                    return (
+                      <motion.button
+                        key={`${e}-${index}`}
+                        layout
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ 
+                          scale: isSelected ? 1.1 : 1, 
+                          opacity: 1 
+                        }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        whileTap={{ scale: isSelected ? 1.05 : 0.9 }}
+                        transition={{ 
+                          type: 'spring', 
+                          stiffness: 400, 
+                          damping: 25,
+                          delay: index * 0.02 
+                        }}
+                        onClick={() => handleEmojiSelect(e)}
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                          isSelected
+                            ? 'border-[3px] border-white/90 text-xl'
+                            : 'bg-secondary/50 hover:bg-secondary text-2xl'
+                        }`}
+                        style={{
+                          ...(isSelected ? { 
+                            backgroundColor: emojiColor,
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                          } : {}),
+                        }}
+                      >
+                        {e}
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
                 {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis) and input is not showing */}
                 {emoji !== '' && !suggestedEmojis.includes(emoji) && !showCustomEmojiInput && (
-                  <button
+                  <motion.button
+                    layout
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1.1, opacity: 1 }}
                     onClick={() => {}}
-                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center transition-all duration-300 border-[3px] border-white/90"
+                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center border-[3px] border-white/90"
                     style={{
                       backgroundColor: emojiColor,
                       boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                      transform: 'scale(1.1)'
                     }}
                     aria-label={t('aria.selectedEmoji', { emoji })}
                   >
                     {emoji}
-                  </button>
+                  </motion.button>
                 )}
                 {/* Custom emoji input or button */}
                 {showCustomEmojiInput ? (
-                  <div 
-                    className={`flex items-center gap-1 ${emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''}`}
-                    style={{ animationDelay: `${suggestedEmojis.length * 30}ms` }}
+                  <motion.div 
+                    layout
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex items-center gap-1"
                   >
                     <input
                       ref={customEmojiInputRef}
@@ -804,27 +821,20 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       autoCapitalize="off"
                       spellCheck="false"
                     />
-                    {/* OK button only visible on larger screens - mobile uses keyboard return key */}
-                    <button
-                      onClick={handleCustomEmojiSubmit}
-                      className="hidden md:flex w-10 h-10 rounded-xl bg-primary text-primary-foreground items-center justify-center text-sm font-medium"
-                    >
-                      OK
-                    </button>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <button
+                  <motion.button
+                    layout
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
                     onClick={handleCustomEmojiClick}
-                    className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105 ${
-                      emojiAnimationKey > 0 ? 'emoji-suggestion-enter' : ''
-                    }`}
-                    style={{
-                      animationDelay: `${suggestedEmojis.length * 30}ms`,
-                    }}
+                    className="w-14 h-14 rounded-xl flex items-center justify-center border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50"
                     aria-label={t('modal.customEmojiTitle')}
                   >
                     <Plus className="w-6 h-6 text-muted-foreground" />
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </div>
@@ -844,7 +854,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             </div>
 
             {/* Recurring toggle with expandable suggestion */}
-            <div className="bg-secondary/40 rounded-2xl overflow-hidden">
+            <motion.div 
+              layout
+              className="bg-secondary/40 rounded-2xl overflow-hidden"
+            >
               {/* Main recurring toggle row */}
               <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -863,49 +876,49 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               </div>
               
               {/* Yearly suggestion - slides out from bottom when date is old */}
-              {showYearlySuggestion && (
-                <div 
-                  ref={yearlySuggestionBannerRef}
-                  className="yearly-suggestion-expandable"
-                  style={{
-                    animation: isYearlySuggestionExiting
-                      ? 'yearlySuggestionSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-                      : 'yearlySuggestionSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                  }}
-                >
-                  {/* Divider */}
-                  <div className="mx-4 border-t border-border/50" />
-                  
-                  {/* Suggestion content */}
-                  <div className="p-4 pl-[68px] flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
-                      <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
+              <AnimatePresence>
+                {showYearlySuggestion && !isYearlySuggestionExiting && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="overflow-hidden"
+                  >
+                    {/* Divider */}
+                    <div className="mx-4 border-t border-border/50" />
+                    
+                    {/* Suggestion content */}
+                    <div className="p-4 pl-[68px] flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
+                        <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
+                      </div>
+                      <IonButton
+                        onClick={() => {
+                          trigger('medium');
+                          setIsRecurring(true);
+                        }}
+                        fill="solid"
+                        color="dark"
+                        className="flex-shrink-0"
+                        style={{
+                          '--background': '#000000',
+                          '--background-activated': '#1a1a1a',
+                          '--color': '#ffffff',
+                          height: '32px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          margin: 0,
+                        } as React.CSSProperties}
+                      >
+                        {t('modal.enableYearly')}
+                      </IonButton>
                     </div>
-                    <IonButton
-                      onClick={() => {
-                        trigger('medium');
-                        setIsRecurring(true);
-                      }}
-                      fill="solid"
-                      color="dark"
-                      className="flex-shrink-0"
-                      style={{
-                        '--background': '#000000',
-                        '--background-activated': '#1a1a1a',
-                        '--color': '#ffffff',
-                        height: '32px',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        margin: 0,
-                      } as React.CSSProperties}
-                    >
-                      {t('modal.enableYearly')}
-                    </IonButton>
-                  </div>
-                </div>
-              )}
-            </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
             
             {/* Date picker */}
             <div className="space-y-2">

@@ -18,6 +18,7 @@ import {
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
@@ -370,28 +371,43 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
               {/* Calendar filter chips */}
               {availableCalendars.length > 1 && (
                 <div className="flex flex-wrap gap-2 px-2">
-                  {availableCalendars.map((calendar) => (
-                    <button
-                      key={calendar}
-                      onClick={() => toggleCalendarFilter(calendar)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                        selectedCalendars.has(calendar)
-                          ? 'bg-primary text-primary-foreground'
-                          : selectedCalendars.size === 0
-                          ? 'bg-secondary/80 text-foreground/80'
-                          : 'bg-secondary/50 text-muted-foreground'
-                      }`}
-                    >
-                      {calendar}
-                    </button>
-                  ))}
+                  <AnimatePresence mode="popLayout">
+                    {availableCalendars.map((calendar, index) => (
+                      <motion.button
+                        key={calendar}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ 
+                          type: 'spring', 
+                          stiffness: 400, 
+                          damping: 25,
+                          delay: index * 0.03 
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => toggleCalendarFilter(calendar)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                          selectedCalendars.has(calendar)
+                            ? 'bg-primary text-primary-foreground'
+                            : selectedCalendars.size === 0
+                            ? 'bg-secondary/80 text-foreground/80'
+                            : 'bg-secondary/50 text-muted-foreground'
+                        }`}
+                      >
+                        {calendar}
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
                   {selectedCalendars.size > 0 && (
-                    <button
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedCalendars(new Set())}
                       className="px-3 py-1.5 rounded-full text-xs font-medium bg-secondary/30 text-muted-foreground hover:bg-secondary/50 transition-colors"
                     >
                       {t('calendar.clearFilter')}
-                    </button>
+                    </motion.button>
                   )}
                 </div>
               )}
@@ -413,35 +429,50 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
             
             {/* Event list */}
             <IonList className="rounded-xl overflow-hidden">
-              {filteredEvents.map((event) => (
-                <IonItem
-                  key={event.id}
-                  button
-                  onClick={() => toggleEventSelection(event.id)}
-                  className="ion-no-padding"
-                >
-                  <IonCheckbox
-                    slot="start"
-                    checked={selectedEventIds.has(event.id)}
-                    className="ml-4"
-                  />
-                  <IonLabel className="py-3">
-                    <h2 className="flex items-center gap-2">
-                      <span>{getEventEmoji(event)}</span>
-                      <span className="font-medium">{event.title}</span>
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {formatEventDate(event.date)}
-                      {event.isRecurring && (
-                        <span className="text-primary"> · {t('calendar.yearly')}</span>
-                      )}
-                      {event.calendarTitle && (
-                        <span className="text-muted-foreground/70"> · {event.calendarTitle}</span>
-                      )}
-                    </p>
-                  </IonLabel>
-                </IonItem>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {filteredEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ 
+                      type: 'spring', 
+                      stiffness: 400, 
+                      damping: 25,
+                      delay: Math.min(index * 0.02, 0.3) 
+                    }}
+                    layout
+                  >
+                    <IonItem
+                      button
+                      onClick={() => toggleEventSelection(event.id)}
+                      className="ion-no-padding"
+                    >
+                      <IonCheckbox
+                        slot="start"
+                        checked={selectedEventIds.has(event.id)}
+                        className="ml-4"
+                      />
+                      <IonLabel className="py-3">
+                        <h2 className="flex items-center gap-2">
+                          <span>{getEventEmoji(event)}</span>
+                          <span className="font-medium">{event.title}</span>
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          {formatEventDate(event.date)}
+                          {event.isRecurring && (
+                            <span className="text-primary"> · {t('calendar.yearly')}</span>
+                          )}
+                          {event.calendarTitle && (
+                            <span className="text-muted-foreground/70"> · {event.calendarTitle}</span>
+                          )}
+                        </p>
+                      </IonLabel>
+                    </IonItem>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </IonList>
           </>
         )}

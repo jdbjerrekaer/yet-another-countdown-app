@@ -5,6 +5,7 @@ import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
   closestCenter,
@@ -1091,17 +1092,23 @@ export default function Index() {
 
   const fabPortal = (
     <div className={`fab-portal${isModalOpen ? ' fab-portal--above-modal' : ''}`}>
-      <IonFabButton 
-        onClick={handleFabClick} 
-        aria-label={isModalOpen ? t('aria.saveEvent') : t('aria.addEvent')}
-        disabled={isModalOpen && !canSaveForm}
-        style={isModalOpen && !canSaveForm ? { 
-          '--background': 'var(--ion-color-medium, #92949c)',
-          '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
-        } as React.CSSProperties : undefined}
+      <motion.div
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       >
-        <IonIcon icon={isModalOpen ? checkmark : add} />
-      </IonFabButton>
+        <IonFabButton 
+          onClick={handleFabClick} 
+          aria-label={isModalOpen ? t('aria.saveEvent') : t('aria.addEvent')}
+          disabled={isModalOpen && !canSaveForm}
+          style={isModalOpen && !canSaveForm ? { 
+            '--background': 'var(--ion-color-medium, #92949c)',
+            '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
+          } as React.CSSProperties : undefined}
+        >
+          <IonIcon icon={isModalOpen ? checkmark : add} />
+        </IonFabButton>
+      </motion.div>
     </div>
   );
 
@@ -1140,21 +1147,33 @@ export default function Index() {
             </IonTitle>
             <IonButtons slot="end" className="pr-2 pt-2">
               {!hasRemoveAds && (
-                <IonButton
-                  onClick={handleOpenRemoveAds}
-                  aria-label={t('aria.openRemoveAds')}
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                >
+                  <IonButton
+                    onClick={handleOpenRemoveAds}
+                    aria-label={t('aria.openRemoveAds')}
+                    className="header-action-button"
+                  >
+                    <IonIcon icon={sparklesOutline} />
+                  </IonButton>
+                </motion.div>
+              )}
+              <motion.div
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              >
+                <IonButton 
+                  onClick={handleOpenCalendarImport} 
+                  aria-label={t('aria.importFromCalendar')}
                   className="header-action-button"
                 >
-                  <IonIcon icon={sparklesOutline} />
+                  <IonIcon icon={calendarOutline} />
                 </IonButton>
-              )}
-              <IonButton 
-                onClick={handleOpenCalendarImport} 
-                aria-label={t('aria.importFromCalendar')}
-                className="header-action-button"
-              >
-                <IonIcon icon={calendarOutline} />
-              </IonButton>
+              </motion.div>
             </IonButtons>
           </IonToolbar>
         </IonHeader>
@@ -1193,25 +1212,40 @@ export default function Index() {
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-2" style={{ backgroundColor: 'hsl(var(--background))', overflow: 'visible' }}>
-                      {events.map(event => (
-                        <SortableCountdownCard
-                          key={event.id}
-                          event={event}
-                          isSelected={event.id === selectedEventId}
-                          isReordering={activeDragId !== null}
-                          isNative={isNative}
-                          onSelect={() => {
-                            if (shouldIgnoreTap()) return;
-                            trigger('light');
-                            setSelectedEventId(event.id);
-                          }}
-                          onEdit={() => {
-                            if (shouldIgnoreTap()) return;
-                            handleEdit(event);
-                          }}
-                          onDelete={() => handleDeleteRequest(event)}
-                        />
-                      ))}
+                      <AnimatePresence mode="popLayout">
+                        {events.map((event, index) => (
+                          <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                            transition={{ 
+                              type: 'spring', 
+                              stiffness: 300, 
+                              damping: 30,
+                              delay: activeDragId ? 0 : index * 0.05 // Stagger only on initial load/new items
+                            }}
+                            layout
+                          >
+                            <SortableCountdownCard
+                              event={event}
+                              isSelected={event.id === selectedEventId}
+                              isReordering={activeDragId !== null}
+                              isNative={isNative}
+                              onSelect={() => {
+                                if (shouldIgnoreTap()) return;
+                                trigger('light');
+                                setSelectedEventId(event.id);
+                              }}
+                              onEdit={() => {
+                                if (shouldIgnoreTap()) return;
+                                handleEdit(event);
+                              }}
+                              onDelete={() => handleDeleteRequest(event)}
+                            />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
                   </SortableContext>
                   <DragOverlay 
@@ -1340,21 +1374,29 @@ export default function Index() {
                       {t('widget.preview')}
                     </h2>
                     <div className="flex justify-center py-4">
-                      <div className="animate-scale-in" key={`${selectedEventId}-${selectedSize}`}>
-                        <WidgetPreview
-                          title={selectedEvent.title}
-                          countdown={countdown}
-                          targetDate={targetDate}
-                          emoji={selectedEvent.emoji}
-                          emojiColor={selectedEvent.emojiColor}
-                          size={selectedSize}
-                          appearanceMode={selectedAppearanceMode}
-                          countdownStyle={selectedCountdownStyle}
-                          isRecurring={selectedEvent.isRecurring}
-                          createdAt={new Date(selectedEvent.createdAt)}
-                          nextOccurrenceNumber={occurrenceNumber}
-                        />
-                      </div>
+                      <AnimatePresence mode="wait">
+                        <motion.div 
+                          key={`${selectedEventId}-${selectedSize}-${selectedAppearanceMode}-${selectedCountdownStyle}`}
+                          initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+                          transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                        >
+                          <WidgetPreview
+                            title={selectedEvent.title}
+                            countdown={countdown}
+                            targetDate={targetDate}
+                            emoji={selectedEvent.emoji}
+                            emojiColor={selectedEvent.emojiColor}
+                            size={selectedSize}
+                            appearanceMode={selectedAppearanceMode}
+                            countdownStyle={selectedCountdownStyle}
+                            isRecurring={selectedEvent.isRecurring}
+                            createdAt={new Date(selectedEvent.createdAt)}
+                            nextOccurrenceNumber={occurrenceNumber}
+                          />
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
                   </section>
 
