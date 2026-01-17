@@ -31,6 +31,14 @@ final class CountdownStorage {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
+    private let fallbackIsoFormatter = ISO8601DateFormatter()
+    private let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = .current
+        return formatter
+    }()
 
     private init() {}
 
@@ -75,16 +83,19 @@ final class CountdownStorage {
         title: String,
         targetDate: Date,
         emoji: String,
+        emojiColor: String?,
         isRecurring: Bool
     ) -> CountdownEvent {
         let trimmedEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
         let safeEmoji = trimmedEmoji.isEmpty ? defaultEmoji : trimmedEmoji
+        let trimmedColor = emojiColor?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let safeColor = trimmedColor?.isEmpty == true ? nil : trimmedColor
         let event = CountdownEvent(
             id: UUID().uuidString,
             title: title,
             targetDate: isoFormatter.string(from: targetDate),
             emoji: safeEmoji,
-            emojiColor: nil,
+            emojiColor: safeColor,
             isRecurring: isRecurring,
             createdAt: isoFormatter.string(from: Date())
         )
@@ -104,6 +115,14 @@ final class CountdownStorage {
 
     func event(withId id: String) -> CountdownEvent? {
         loadEvents().first { $0.id == id }
+    }
+
+    func parseDate(from isoString: String) -> Date? {
+        isoFormatter.date(from: isoString) ?? fallbackIsoFormatter.date(from: isoString)
+    }
+
+    func formatDateForDisplay(_ date: Date) -> String {
+        displayFormatter.string(from: date)
     }
 }
 
@@ -162,24 +181,33 @@ struct CreateCountdownIntent: AppIntent {
     @Parameter(title: "Emoji", default: "📅")
     var emoji: String
 
-    @Parameter(title: "Recurring", default: false)
-    var isRecurring: Bool
+    @Parameter(title: "Emoji Color (Hex)")
+    var emojiColor: String?
+
+    @Parameter(title: "Recurring (Override)")
+    var isRecurringOverride: Bool?
 
     static var parameterSummary: some ParameterSummary {
         Summary("Create \(\.$title) on \(\.$targetDate)")
     }
 
     func perform() async throws -> some IntentResult & ReturnsValue<CountdownEventEntity> & ProvidesDialog {
+        let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? Date.distantPast
+        let autoRecurring = targetDate < oneYearAgo
+        let resolvedRecurring = isRecurringOverride ?? autoRecurring
+
         let created = CountdownStorage.shared.addEvent(
             title: title,
             targetDate: targetDate,
             emoji: emoji,
-            isRecurring: isRecurring
+            emojiColor: emojiColor,
+            isRecurring: resolvedRecurring
         )
+        let formattedDate = CountdownStorage.shared.formatDateForDisplay(targetDate)
         let entity = CountdownEventEntity(id: created.id, title: created.title, emoji: created.emoji)
         return .result(
             value: entity,
-            dialog: IntentDialog("Created countdown \(created.emoji) \(created.title).")
+            dialog: IntentDialog("Created \(created.emoji) \(created.title) for \(formattedDate).")
         )
     }
 }
@@ -192,7 +220,7 @@ struct ListCountdownsIntent: AppIntent {
     func perform() async throws -> some IntentResult & ReturnsValue<[CountdownEventEntity]> & ProvidesDialog {
         let events = CountdownStorage.shared.loadEvents()
         let entities = events.map { CountdownEventEntity(id: $0.id, title: $0.title, emoji: $0.emoji) }
-        let dialog = entities.isEmpty ? "You do not have any countdowns yet." : "Found \(entities.count) countdowns."
+        let dialog = entities.isEmpty ? "You do not have any countdowns yet." : "You have \(entities.count) countdowns."
         return .result(value: entities, dialog: IntentDialog(stringLiteral: dialog))
     }
 }
@@ -210,7 +238,10 @@ struct GetCountdownIntent: AppIntent {
             throw CountdownIntentError.notFound
         }
 
-        let summary = "\(event.emoji) \(event.title) on \(event.targetDate)"
+        let formattedDate = CountdownStorage.shared.parseDate(from: event.targetDate)
+            .map { CountdownStorage.shared.formatDateForDisplay($0) }
+            ?? event.targetDate
+        let summary = "\(event.emoji) \(event.title) on \(formattedDate)"
         return .result(value: summary, dialog: IntentDialog(stringLiteral: summary))
     }
 }
