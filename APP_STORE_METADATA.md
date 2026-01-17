@@ -34,7 +34,7 @@ This document contains optimized App Store metadata for App Store Optimization (
 
 Yet Another Countdown
 
-Track the dates that matter with clean, iOS-style countdowns. Create unlimited events for birthdays, anniversaries, holidays, launches, and more.
+Track the dates that matter with clean, iOS-style countdowns. Simple to use, no paywalls, and no features locked away. Create unlimited events for birthdays, anniversaries, holidays, launches, and more.
 
 KEY FEATURES
 
@@ -59,7 +59,7 @@ Get a reminder when your countdown reaches zero.
 Designed for iOS
 Haptics, native dialogs, and a calm interface that stays out of your way.
 
-No accounts required. Your data stays on your device.
+No accounts required. No paywalls. Your data stays on your device.
 
 ---
 
@@ -67,7 +67,7 @@ No accounts required. Your data stays on your device.
 
 Yet Another Countdown
 
-Track the dates that matter with clean, iOS-style countdowns. Create unlimited events for birthdays, anniversaries, holidays, and more.
+Track the dates that matter with clean, iOS-style countdowns. Simple to use with no paywalls or locked features. Create unlimited events for birthdays, anniversaries, holidays, and more.
 
 Features:
 - Widget previews in Small, Medium, and Large
@@ -77,13 +77,13 @@ Features:
 - Calendar import
 - Notifications
 
-No accounts required. Your data stays on your device.
+No accounts required. No paywalls. Your data stays on your device.
 
 ---
 
 **Version 3 (Short - 337 characters):**
 
-Track the dates that matter with clean, iOS-style countdowns.
+Track the dates that matter with clean, iOS-style countdowns. Simple to use, with no paywalls or locked features.
 
 Features:
 - Widget previews
@@ -93,10 +93,10 @@ Features:
 - Calendar import
 - Notifications
 
-No accounts required. Your data stays on your device.
+No accounts required. No paywalls. Your data stays on your device.
 
 ## Promotional Text (170 characters max)
-**A calm, iOS-style countdown for birthdays, anniversaries, and the dates you want to remember. Widget previews and yearly events included.**
+**A calm, iOS-style countdown with no paywalls. Simple to use for birthdays, anniversaries, and the dates you want to remember.**
 
 ## What's New (4000 characters max)
 **Version 1.0.0**

@@ -1,6 +1,6 @@
 # Yet Another Countdown
 
-A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Track birthdays, anniversaries, holidays, and launches with recurring events, widget previews, and native iOS polish.
+A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Simple to use, with no paywalls or locked features. Track birthdays, anniversaries, holidays, and launches with recurring events, widget previews, and native iOS polish.
 
 ## Features
 
