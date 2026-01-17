@@ -5,6 +5,7 @@ import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
+import { Keyboard } from '@capacitor/keyboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -200,6 +201,7 @@ export default function Index() {
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isDevBuild, setIsDevBuild] = useState(import.meta.env.MODE !== 'production');
   const [devAdsEnabled, setDevAdsEnabled] = useState(false);
   const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
@@ -404,6 +406,36 @@ export default function Index() {
       unsubscribe?.();
     };
   }, [isNative, isDevBuild, devAdsEnabled, hasRemoveAds]);
+
+  useEffect(() => {
+    if (!isNative) return;
+
+    let showListener: any;
+    let hideListener: any;
+
+    const setupListeners = async () => {
+      const show = await Keyboard.addListener('keyboardWillShow', (info) => {
+        setKeyboardHeight(info.keyboardHeight);
+      });
+      showListener = show;
+
+      const hide = await Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardHeight(0);
+      });
+      hideListener = hide;
+    };
+
+    setupListeners();
+
+    return () => {
+      if (showListener) {
+        showListener.remove();
+      }
+      if (hideListener) {
+        hideListener.remove();
+      }
+    };
+  }, [isNative]);
 
   useEffect(() => {
     if (!isDevBuild) return;
@@ -1092,7 +1124,25 @@ export default function Index() {
   };
 
   const fabPortal = (
-    <div className={`fab-portal${isModalOpen ? ' fab-portal--above-modal' : ''}`}>
+    <motion.div 
+      className={`fab-portal${isModalOpen ? ' fab-portal--above-modal' : ''}`}
+      animate={{
+        bottom: isNative && keyboardHeight > 0 
+          ? `calc(16px + env(safe-area-inset-bottom) + ${keyboardHeight}px)` 
+          : 'calc(16px + env(safe-area-inset-bottom) + 56px)'
+      }}
+      transition={{ 
+        type: 'spring', 
+        stiffness: 400, 
+        damping: 30,
+        duration: 0.3
+      }}
+      style={{
+        position: 'fixed',
+        right: 'calc(32px + env(safe-area-inset-right))',
+        zIndex: isModalOpen ? 100000 : 50,
+      }}
+    >
       <motion.div
         whileTap={{ scale: 0.9 }}
         whileHover={{ scale: 1.05 }}
@@ -1130,7 +1180,7 @@ export default function Index() {
           </div>
         </IonFabButton>
       </motion.div>
-    </div>
+    </motion.div>
   );
 
   return (
@@ -1218,9 +1268,11 @@ export default function Index() {
             <div className="space-y-8 animate-fade-in">
               {/* Events list */}
               <section className="space-y-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
-                  {t('events.title')}
-                </h2>
+                {!isNative && (
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
+                    {t('events.title')}
+                  </h2>
+                )}
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
