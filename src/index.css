@@ -576,6 +576,15 @@
     width: 100% !important;
     max-width: 350px;
     border-radius: 1rem;
+    --wheel-highlight-background: transparent !important;
+    /* Match bg-secondary/40: secondary (95% lightness) at 40% opacity over background (98% lightness) ≈ rgb(247, 247, 247) */
+    --wheel-fade-background-rgb: 247, 247, 247;
+  }
+
+  /* Dark mode: Match bg-secondary/40: secondary (15% lightness) at 40% opacity over background (7% lightness) ≈ rgb(26, 26, 26) */
+  .dark ion-datetime.datetime-fixed-width.month-year-picker-open,
+  .ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open {
+    --wheel-fade-background-rgb: 26, 26, 26;
   }
 
   /* Target the month-year picker specifically */
@@ -583,6 +592,17 @@
     width: 100% !important;
     max-width: 350px;
     border-radius: 1rem;
+  }
+
+  /* Remove background colors from month/year picker columns but keep selection visible */
+  ion-datetime.datetime-fixed-width::part(wheel-item) {
+    background: transparent;
+  }
+
+  ion-datetime.datetime-fixed-width::part(wheel-item active) {
+    background: transparent !important;
+    color: var(--ion-color-primary, #3880ff);
+    font-weight: 600;
   }
 
   /* iOS 26 FAB Button Styling */
