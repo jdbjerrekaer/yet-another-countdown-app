@@ -60,6 +60,34 @@ export interface DatePickerModalRef {
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
 
+// Animation variants for staggered section entrance
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const sectionVariants = {
+  hidden: {
+    opacity: 0,
+    filter: 'blur(8px)',
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.34, 1.56, 0.64, 1],
+    },
+  },
+};
+
 export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
   isOpen,
   onClose,
@@ -677,9 +705,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
       <IonContent ref={contentRef} className="ion-padding">
         {/* Form content */}
-          <div className="space-y-6">
+          <motion.div 
+            className="space-y-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate={isOpen ? "visible" : "hidden"}
+          >
             {/* Title input */}
-            <div className="space-y-2">
+            <motion.div className="space-y-2" variants={sectionVariants}>
               <Label htmlFor="title" className="text-sm font-medium text-muted-foreground pl-4">
                 {t('modal.titleLabel')}
               </Label>
@@ -720,10 +753,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   <span>{t('modal.importedFrom', { calendar: initialImportedFrom })}</span>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Emoji picker - selected emoji shows the chosen color */}
-            <div className="space-y-2">
+            <motion.div className="space-y-2" variants={sectionVariants}>
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.emojiLabel')}</Label>
               <div 
                 key={suggestedEmojis.join(',')}
@@ -836,10 +869,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   </button>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Color picker wheel */}
-            <div className="space-y-2">
+            <motion.div className="space-y-2" variants={sectionVariants}>
               <Label className="text-sm font-medium text-muted-foreground pl-4" style={{ position: 'relative', top: '-8px' }}>{t('modal.colorLabel')}</Label>
               <ColorWheelPicker 
                 key={colorPickerKey}
@@ -850,11 +883,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   colorManuallyChangedRef.current = true;
                 }}
               />
-            </div>
+            </motion.div>
 
             {/* Recurring toggle with expandable suggestion */}
-            <div 
+            <motion.div 
               className="bg-secondary/40 rounded-2xl overflow-hidden"
+              variants={sectionVariants}
             >
               {/* Main recurring toggle row */}
               <div className="p-4 flex items-center justify-between">
@@ -922,10 +956,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
             
             {/* Date picker */}
-            <div className="space-y-2">
+            <motion.div className="space-y-2" variants={sectionVariants}>
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.dateLabel')}</Label>
               <div className="bg-secondary/40 rounded-2xl overflow-hidden">
                 {/* Native Ionic Calendar */}
@@ -977,7 +1011,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Advanced section - only show when editing */}
             {isEditing && onDelete && (
@@ -998,7 +1032,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
       </IonContent>
     </IonModal>
   );
