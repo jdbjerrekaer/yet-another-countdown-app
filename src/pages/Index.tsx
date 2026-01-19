@@ -1290,13 +1290,13 @@ export default function Index() {
                         {events.map((event, index) => (
                           <motion.div
                             key={event.id}
-                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            initial={{ opacity: 0, y: 5, scale: 0.85 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                             transition={{ 
                               type: 'spring', 
-                              stiffness: 300, 
-                              damping: 30,
+                              stiffness: 350, 
+                              damping: 25,
                               delay: activeDragId ? 0 : index * 0.05 // Stagger only on initial load/new items
                             }}
                             layout

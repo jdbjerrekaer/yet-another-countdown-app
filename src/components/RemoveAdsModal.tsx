@@ -173,26 +173,26 @@ export const RemoveAdsModal = ({
         <div className="max-w-md mx-auto space-y-8 pb-8">
           <div className="flex flex-col gap-2 text-center pt-4">
             <motion.div 
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+              initial={{ opacity: 0, y: 5, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
               className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-1"
             >
               <Sparkles className="w-6 h-6 text-primary" />
             </motion.div>
             <div className="flex flex-col gap-2">
               <motion.h2 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                initial={{ opacity: 0, y: 5, scale: 0.85 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.1 }}
                 className="text-2xl font-bold tracking-tight text-foreground"
               >
                 {t("iap.headline")}
               </motion.h2>
               <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                initial={{ opacity: 0, y: 5, scale: 0.85 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.2 }}
                 className="text-muted-foreground text-sm px-4 leading-normal"
               >
                 {t("iap.subheadline")}
@@ -201,9 +201,14 @@ export const RemoveAdsModal = ({
           </div>
 
           {!isNative && (
-            <div className="bg-secondary/40 rounded-2xl p-4 text-center text-sm text-muted-foreground border border-border/40">
+            <motion.div 
+              initial={{ opacity: 0, y: 5, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.15 }}
+              className="bg-secondary/40 rounded-2xl p-4 text-center text-sm text-muted-foreground border border-border/40"
+            >
               {t("iap.webUnavailable")}
-            </div>
+            </motion.div>
           )}
 
           {loading && (
@@ -216,11 +221,16 @@ export const RemoveAdsModal = ({
           )}
 
           {error && (
-            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 5, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center"
+            >
               <IonText color="danger" className="text-sm font-medium">
                 {error}
               </IonText>
-            </div>
+            </motion.div>
           )}
 
           <div className="space-y-3">
@@ -238,13 +248,13 @@ export const RemoveAdsModal = ({
                 return (
                   <motion.div
                     key={productId}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 5, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ 
                       type: 'spring', 
-                      stiffness: 500, 
-                      damping: 35,
+                      stiffness: 350, 
+                      damping: 25,
                       delay: 0.1 + index * 0.05 
                     }}
                     className={`relative overflow-hidden rounded-2xl border ${
@@ -307,12 +317,12 @@ export const RemoveAdsModal = ({
 
           <motion.div 
             key={`disclaimer-${isOpen}`}
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 5, scale: 0.85 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ 
               type: 'spring', 
-              stiffness: 500, 
-              damping: 35,
+              stiffness: 350, 
+              damping: 25,
               delay: 0.1 + orderedProductIds.length * 0.05 
             }}
             className="flex flex-col gap-2 pt-2 pb-8"
