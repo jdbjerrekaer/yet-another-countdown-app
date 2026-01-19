@@ -130,12 +130,14 @@ export function CountdownCard({
   const borderRadius = 16;
 
   return (
-    <div 
+    <motion.div 
       className={`countdown-card-wrapper overflow-hidden ${
         !isNative && isSelected ? 'countdown-card-selected' : ''
       } ${isDragging ? 'countdown-card-dragging' : ''} ${
         isSliding ? 'countdown-card-swiping' : ''
       }`}
+      whileTap={isReordering || isDragging ? undefined : { scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       style={{
         borderRadius: `${borderRadius}px`,
         // Safari-specific prefix to prevent black border-radius rendering bug
@@ -169,22 +171,18 @@ export function CountdownCard({
           overflow: 'hidden',
         }}
       >
-        {/* Delete option on the right side */}
-        <IonItemOptions side="end" onIonSwipe={handleSwipe}>
-          <IonItemOption 
-            color="danger" 
-            expandable
-            onClick={handleDelete}
-          >
-            {t('events.delete')}
-          </IonItemOption>
-        </IonItemOptions>
-        
-        {/* Main card content */}
-        <motion.div
-          whileTap={isReordering ? undefined : { scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-        >
+          {/* Delete option on the right side */}
+          <IonItemOptions side="end" onIonSwipe={handleSwipe}>
+            <IonItemOption 
+              color="danger" 
+              expandable
+              onClick={handleDelete}
+            >
+              {t('events.delete')}
+            </IonItemOption>
+          </IonItemOptions>
+          
+          {/* Main card content */}
           <IonItem 
             button
             detail={false}
@@ -192,61 +190,60 @@ export function CountdownCard({
             lines="none"
             className="countdown-card-item"
           >
-          <div className="w-full p-4 flex items-center gap-4">
-            <div 
-              className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${!event.emojiColor ? 'gradient-accent' : ''}`}
-              style={event.emojiColor ? { 
-                backgroundColor: event.emojiColor
-              } : undefined}
-            >
-              <span className="text-2xl">{event.emoji}</span>
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
-                {(event.isRecurring || countdown.isPast) && (
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    {event.isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
-                    {event.isRecurring && occurrenceNumber > 0 && (
-                      <span className="text-xs text-primary font-medium">
-                        #{occurrenceNumber}
-                      </span>
-                    )}
-                  </div>
-                )}
+            <div className="w-full p-4 flex items-center gap-4">
+              <div 
+                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${!event.emojiColor ? 'gradient-accent' : ''}`}
+                style={event.emojiColor ? { 
+                  backgroundColor: event.emojiColor
+                } : undefined}
+              >
+                <span className="text-2xl">{event.emoji}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground">
-                  {countdown.isPast
-                    ? countdown.daysSince === 1 
-                      ? t('countdown.daysAgo', { count: 1 })
-                      : t('countdown.daysAgo_plural', { count: countdown.daysSince })
-                    : countdown.isComplete
-                      ? t('countdown.today')
-                      : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
-                  }
-                </p>
-                {event.isImported && event.importedFrom && (
-                  <span className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                    <CalendarIcon className="w-3 h-3" />
-                    {event.importedFrom}
-                  </span>
-                )}
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
+                  {(event.isRecurring || countdown.isPast) && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {event.isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                      {event.isRecurring && occurrenceNumber > 0 && (
+                        <span className="text-xs text-primary font-medium">
+                          #{occurrenceNumber}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    {countdown.isPast
+                      ? countdown.daysSince === 1 
+                        ? t('countdown.daysAgo', { count: 1 })
+                        : t('countdown.daysAgo_plural', { count: countdown.daysSince })
+                      : countdown.isComplete
+                        ? t('countdown.today')
+                        : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
+                    }
+                  </p>
+                  {event.isImported && event.importedFrom && (
+                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1">
+                      <CalendarIcon className="w-3 h-3" />
+                      {event.importedFrom}
+                    </span>
+                  )}
+                </div>
               </div>
+              
+              <button
+                className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
+                onClick={handleEdit}
+                aria-label={t('aria.editEvent')}
+              >
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
-            
-            <button
-              className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
-              onClick={handleEdit}
-              aria-label={t('aria.editEvent')}
-            >
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
-        </IonItem>
-      </motion.div>
-    </IonItemSliding>
-    </div>
+          </IonItem>
+        </IonItemSliding>
+    </motion.div>
   );
 }

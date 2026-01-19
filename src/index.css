@@ -402,6 +402,8 @@
   /* Only apply selection outline on web (not native) - class is conditionally applied */
   .countdown-card-wrapper.countdown-card-selected {
     box-shadow: 0 0 0 2px hsl(var(--primary)) !important;
+    /* Ensure border-radius remains consistent when selected */
+    border-radius: 1rem !important;
   }
 
   /* Countdown card styling for Ionic components */
@@ -417,10 +419,14 @@
     --border-color: transparent;
     --min-height: auto;
     --ripple-color: transparent;
+    /* Ensure IonItem inherits border-radius from parent */
+    --border-radius: 1rem;
   }
 
   .countdown-card-item::part(native) {
     overflow: hidden;
+    /* Ensure native part also has consistent border-radius */
+    border-radius: inherit;
   }
 
   /* Remove focus outline and active state styling for IonItem */
@@ -436,6 +442,13 @@
   .countdown-card-item::part(native):active {
     outline: none !important;
     box-shadow: none !important;
+    /* Maintain border-radius in all states */
+    border-radius: inherit;
+  }
+
+  /* Ensure IonItem maintains border-radius when parent is selected */
+  .countdown-card-wrapper.countdown-card-selected .countdown-card-item::part(native) {
+    border-radius: 1rem !important;
   }
 
   /* IonItemSliding container styling */
@@ -443,6 +456,11 @@
     --background: hsl(var(--card));
     border-radius: inherit;
     overflow: hidden;
+  }
+
+  /* Ensure IonItemSliding maintains border-radius when parent is selected */
+  .countdown-card-wrapper.countdown-card-selected ion-item-sliding {
+    border-radius: 1rem !important;
   }
 
   /* Ensure IonItemOptions matches the parent container's border radius */
