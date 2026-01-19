@@ -750,6 +750,68 @@ export default function Index() {
     };
   }, [events, trigger]);
 
+  // Close swiped cards when clicking/tapping outside
+  useEffect(() => {
+    const handleClickOutside = async (event: MouseEvent) => {
+      // Don't close if modals are open
+      if (isModalOpen || isCalendarImportOpen || isRemoveAdsOpen) {
+        return;
+      }
+
+      // Don't close if we're currently dragging/reordering
+      if (activeDragId !== null) {
+        return;
+      }
+
+      const target = event.target as Node;
+      
+      // Query all ion-item-sliding elements
+      const slidingItems = document.querySelectorAll('ion-item-sliding');
+      
+      if (slidingItems.length === 0) {
+        return;
+      }
+
+      // Check each sliding item to see if it's open
+      for (const slidingItem of slidingItems) {
+        const element = slidingItem as HTMLIonItemSlidingElement;
+        
+        try {
+          const openAmount = await element.getOpenAmount();
+          
+          // If the item is open (openAmount !== 0)
+          if (Math.abs(openAmount) > 2) {
+            // Check if click is on ion-item-options (the delete button area)
+            // We only want to prevent closing if clicking directly on the delete button
+            const itemOptions = slidingItem.querySelector('ion-item-options');
+            const isClickOnDeleteButton = itemOptions?.contains(target) ?? false;
+            
+            // Check if click is on the sliding item itself (the swiped card)
+            // Don't close if user is interacting with the open card
+            const isClickOnSlidingItem = slidingItem.contains(target);
+            
+            // Close if click is outside the sliding item entirely
+            // This allows the swipe to stay open when clicking the card or delete button
+            if (!isClickOnSlidingItem) {
+              await element.close();
+            }
+          }
+        } catch (error) {
+          // Ignore errors (element might be unmounted)
+          console.debug('[Index] Error checking sliding item:', error);
+        }
+      }
+    };
+
+    // Only use click event (fires after gesture completes)
+    // touchstart would interfere with the swipe gesture
+    document.addEventListener('click', handleClickOutside, false);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside, false);
+    };
+  }, [isModalOpen, isCalendarImportOpen, isRemoveAdsOpen, activeDragId]);
+
   // Show confirmation dialog when date has changed during edit
   const confirmDateChange = async (eventTitle: string, oldDate: Date, newDate: Date): Promise<boolean> => {
     // Format dates for display
