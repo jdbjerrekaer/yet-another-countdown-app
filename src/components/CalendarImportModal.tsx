@@ -14,7 +14,9 @@ import {
   IonSpinner,
   IonText,
   IonSearchbar,
+  IonIcon,
 } from '@ionic/react';
+import { downloadOutline } from 'ionicons/icons';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
@@ -283,6 +285,7 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
               strong
             >
               {t('calendar.importButton')} ({selectedEventIds.size})
+              <IonIcon icon={downloadOutline} slot="end" />
             </IonButton>
           </IonButtons>
         </IonToolbar>

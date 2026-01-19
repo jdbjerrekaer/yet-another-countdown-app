@@ -1,5 +1,11 @@
 import { createRoot } from "react-dom/client";
 import { setupIonicReact } from "@ionic/react";
+import { isPlatform } from "@ionic/core";
+import {
+  iosTransitionAnimation,
+  popoverEnterAnimation,
+  popoverLeaveAnimation,
+} from "@rdlabo/ionic-theme-ios26";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
@@ -42,14 +48,21 @@ import "@ionic/react/css/palettes/dark.class.css";
 import "./index.css";
 
 /* Force iOS mode for consistent native iOS feel */
-setupIonicReact({ mode: "ios" });
+setupIonicReact({
+  mode: "ios",
+  navAnimation: isPlatform("ios") ? iosTransitionAnimation : undefined,
+  popoverEnter: isPlatform("ios") ? popoverEnterAnimation : undefined,
+  popoverLeave: isPlatform("ios") ? popoverLeaveAnimation : undefined,
+});
 
 /* Configure native plugins when running on a native platform */
 async function initNativePlugins() {
   if (Capacitor.isNativePlatform()) {
     try {
       // Configure status bar for iOS-native feel
-      await StatusBar.setStyle({ style: Style.Light });
+      // Set initial style based on system preference (will be updated by useSystemTheme hook)
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      await StatusBar.setStyle({ style: prefersDark ? Style.Dark : Style.Light });
       await StatusBar.setOverlaysWebView({ overlay: true });
     } catch (e) {
       console.warn("StatusBar plugin error:", e);

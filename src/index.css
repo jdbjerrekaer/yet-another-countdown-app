@@ -1,4 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import '@rdlabo/ionic-theme-ios26/dist/css/default-variables.css';
+@import '@rdlabo/ionic-theme-ios26/dist/css/ionic-theme-ios26.css';
+@import '@rdlabo/ionic-theme-ios26/dist/css/md-remove-ios-class-effect.css';
+@import '@rdlabo/ionic-theme-ios26/dist/css/ionic-theme-ios26-dark-class.css';
 
 /* Hide scrollbar for wheel picker */
 .scrollbar-hide {
@@ -151,6 +155,22 @@
     to { background-position: -200% 0; }
   }
 
+  /* Light mode modal styling - ensure opaque background */
+  ion-modal::part(content) {
+    --background: hsl(var(--background)) !important;
+    background: hsl(var(--background)) !important;
+  }
+
+  ion-modal ion-content {
+    --background: hsl(var(--background)) !important;
+    background: hsl(var(--background)) !important;
+  }
+
+  ion-modal ion-toolbar {
+    --background: hsl(var(--background)) !important;
+    background: hsl(var(--background)) !important;
+  }
+
   /* Custom overrides for a cleaner dark mode look */
   .dark ion-content, 
   .ion-palette-dark ion-content {
@@ -175,6 +195,13 @@
   .dark ion-modal::part(content),
   .ion-palette-dark ion-modal::part(content) {
     --background: hsl(var(--background)) !important;
+    background: hsl(var(--background)) !important;
+  }
+
+  .dark ion-modal ion-content,
+  .ion-palette-dark ion-modal ion-content {
+    --background: hsl(var(--background)) !important;
+    background: hsl(var(--background)) !important;
   }
 
   .dark ion-toolbar,
@@ -188,12 +215,19 @@
     @apply bg-card/60 backdrop-blur-2xl;
   }
 
+  /* Modal backdrop for light mode */
+  ion-modal::part(backdrop) {
+    background: rgba(255, 255, 255, 1) !important;
+  }
+
+  ion-modal {
+    --backdrop-opacity: 1 !important;
+  }
+
   /* Modal backdrop for dark mode */
   .dark ion-modal::part(backdrop),
   .ion-palette-dark ion-modal::part(backdrop) {
     background: #121212 !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
   }
 
   .dark ion-modal,
@@ -565,44 +599,60 @@
   ion-datetime.datetime-fixed-width {
     width: 100% !important;
     max-width: 350px;
-    border-radius: 1rem;
-    overflow: hidden;
-    --background: transparent;
-    background: transparent;
   }
 
   /* Ensure month/year picker maintains the same width */
   ion-datetime.datetime-fixed-width.month-year-picker-open {
     width: 100% !important;
     max-width: 350px;
-    border-radius: 1rem;
-    --wheel-highlight-background: transparent !important;
-    /* Match bg-secondary/40: secondary (95% lightness) at 40% opacity over background (98% lightness) ≈ rgb(247, 247, 247) */
-    --wheel-fade-background-rgb: 247, 247, 247;
-  }
-
-  /* Dark mode: Match bg-secondary/40: secondary (15% lightness) at 40% opacity over background (7% lightness) ≈ rgb(26, 26, 26) */
-  .dark ion-datetime.datetime-fixed-width.month-year-picker-open,
-  .ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open {
-    --wheel-fade-background-rgb: 26, 26, 26;
   }
 
   /* Target the month-year picker specifically */
   ion-datetime.datetime-fixed-width .datetime-month-year-picker {
     width: 100% !important;
     max-width: 350px;
-    border-radius: 1rem;
   }
 
-  /* Remove background colors from month/year picker columns but keep selection visible */
-  ion-datetime.datetime-fixed-width::part(wheel-item) {
-    background: transparent;
+  /* Fix wheel fade background for month-year picker in light mode */
+  ion-datetime.datetime-fixed-width.month-year-picker-open {
+    /* Use light background color for fade effect - matches --background (98% lightness) */
+    /* Convert hsl(0 0% 98%) to RGB: approximately 250, 250, 250 */
+    --wheel-fade-background-rgb: 250, 250, 250;
+    /* Also set the background color for the picker */
+    --background: hsl(var(--background));
   }
 
-  ion-datetime.datetime-fixed-width::part(wheel-item active) {
-    background: transparent !important;
-    color: var(--ion-color-primary, #3880ff);
-    font-weight: 600;
+  /* Ensure wheel columns inherit proper background in light mode */
+  ion-datetime.datetime-fixed-width.month-year-picker-open ion-picker-column {
+    --background: hsl(var(--background));
+    /* Override fade colors to match light background */
+    --wheel-fade-background-rgb: 250, 250, 250;
+  }
+
+  /* Fix wheel fade background for month-year picker in dark mode */
+  .dark ion-datetime.datetime-fixed-width.month-year-picker-open,
+  .ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open {
+    /* Use lighter dark background color for fade effect - matches --card (10% lightness) */
+    /* Convert hsl(0 0% 10%) to RGB: approximately 26, 26, 26 */
+    --wheel-fade-background-rgb: 51, 51, 51;
+    /* Also set the background color for the picker */
+    --background: hsl(var(--background));
+  }
+
+  /* Ensure wheel columns inherit proper background in dark mode */
+  .dark ion-datetime.datetime-fixed-width.month-year-picker-open ion-picker-column,
+  .ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open ion-picker-column {
+    --background: hsl(var(--background));
+    /* Override fade colors to match dark background - lighter for better visibility */
+    --wheel-fade-background-rgb: 51, 51, 51;
+  }
+
+  /* Target the fade overlay elements directly in dark mode */
+  .dark ion-datetime.datetime-fixed-width.month-year-picker-open::part(fade-top),
+  .ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open::part(fade-top),
+  .dark ion-datetime.datetime-fixed-width.month-year-picker-open::part(fade-bottom),
+  .ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open::part(fade-bottom) {
+    background: hsl(var(--background));
   }
 
   /* iOS 26 FAB Button Styling */
@@ -799,6 +849,46 @@
 
   .header-action-button ion-icon {
     font-size: 1.5rem;
+  }
+
+  /* Center buttons vertically in modal toolbars (more specific, overrides general rule) */
+  ion-modal ion-toolbar ion-buttons[slot="end"],
+  ion-modal ion-toolbar ion-buttons[slot="start"] {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    height: auto;
+    min-height: auto;
+  }
+
+  /* Shift modal end buttons to the left to align with FAB */
+  ion-modal ion-toolbar ion-buttons[slot="end"] {
+    transform: translateX(-14px) !important;
+  }
+
+  /* Align ion-buttons vertically centered in toolbar */
+  /* Only applies to main page toolbar (less specific, won't affect modals) */
+  ion-toolbar ion-buttons[slot="end"],
+  ion-toolbar ion-buttons[slot="start"] {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    height: auto;
+    min-height: auto;
+  }
+
+  /* Shift end buttons to the right to align with card edit buttons and FAB */
+  ion-toolbar ion-buttons[slot="end"] {
+    transform: translateX(8px) !important;
+    padding-right: 0 !important;
+  }
+
+  /* Ensure motion.div wrappers align items properly */
+  ion-toolbar ion-buttons[slot="end"] > *,
+  ion-toolbar ion-buttons[slot="start"] > * {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .black-button {

@@ -1132,7 +1132,7 @@ export default function Index() {
       }}
       style={{
         position: 'fixed',
-        right: 'calc(32px + env(safe-area-inset-right))',
+        right: 'calc(28px + env(safe-area-inset-right))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isModalOpen ? 100000 : 50,
         display: isRemoveAdsOpen ? 'none' : undefined,
@@ -1217,7 +1217,7 @@ export default function Index() {
                 </div>
               </div>
             </IonTitle>
-            <IonButtons slot="end" className="pr-2 pt-2">
+            <IonButtons slot="end" className="pl-2 pr-0">
               {!hasRemoveAds && (
                 <motion.div
                   whileTap={{ scale: 0.9 }}

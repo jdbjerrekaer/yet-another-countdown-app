@@ -937,18 +937,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           trigger('medium');
                           setIsRecurring(true);
                         }}
+                        size="small"
                         fill="solid"
-                        color="dark"
-                        className="flex-shrink-0"
-                        style={{
-                          '--background': '#000000',
-                          '--background-activated': '#1a1a1a',
-                          '--color': '#ffffff',
-                          height: '32px',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          margin: 0,
-                        } as React.CSSProperties}
+                        className="font-bold tracking-tight m-0 h-8 black-button min-w-[80px]"
                       >
                         {t('modal.enableYearly')}
                       </IonButton>
@@ -995,7 +986,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     showDefaultTitle={false}
                     showDefaultButtons={false}
                     style={{
-                      '--color': 'var(--ion-color-primary)',
                       width: '100%',
                       // maxWidth: '350px',
                     } as React.CSSProperties}
