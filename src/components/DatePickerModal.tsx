@@ -115,8 +115,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       // No matches: fall back to defaults
       return EMOJI_OPTIONS;
     }
-    return results.map((r) => r.unicode);
-  }, [title]);
+    let list = results.map((r) => r.unicode);
+    // If current emoji is in EMOJI_OPTIONS but not in suggestions, add it so it can be highlighted
+    // This ensures standard emojis aren't treated as custom when editing
+    if (emoji && EMOJI_OPTIONS.includes(emoji) && !list.includes(emoji)) {
+      // Ensure current emoji is always included, even if list is full
+      if (list.length >= 12) {
+        list = list.slice(0, 11); // Make room for the current emoji
+      }
+      list = [...list, emoji];
+    }
+    return list;
+  }, [title, emoji]);
 
   // Track emoji list changes to trigger animations
   useEffect(() => {
@@ -715,86 +725,61 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Emoji picker - selected emoji shows the chosen color */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.emojiLabel')}</Label>
-              <motion.div 
-                layout="size"
+              <div 
+                key={suggestedEmojis.join(',')}
                 className="flex gap-2 flex-wrap"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               >
-                <AnimatePresence mode="popLayout">
-                  {suggestedEmojis.map((e, index) => {
-                    const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji);
-                    const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
-                    
-                    return (
-                      <motion.button
-                        key={`${e}-${index}`}
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ 
-                          scale: isSelected ? 1.1 : 1, 
-                          opacity: 1 
-                        }}
-                        exit={{ scale: 0.95, opacity: 0 }}
-                        whileTap={{ scale: isSelected ? 1.05 : 0.9 }}
-                        transition={{ 
-                          type: 'spring', 
-                          stiffness: 400, 
-                          damping: 25,
-                          delay: index * 0.02 
-                        }}
-                        layout={false}
-                        style={{
-                          willChange: 'transform, opacity',
-                          backfaceVisibility: 'hidden',
-                          WebkitBackfaceVisibility: 'hidden',
-                          ...(isSelected ? { 
-                            backgroundColor: emojiColor,
-                            boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                          } : {}),
-                        }}
-                        onClick={() => handleEmojiSelect(e)}
-                        className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                          isSelected
-                            ? 'border-[3px] border-white/90 text-xl'
-                            : 'bg-secondary/50 hover:bg-secondary text-2xl'
-                        }`}
-                      >
-                        {e}
-                      </motion.button>
-                    );
-                  })}
-                </AnimatePresence>
-                {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis) and input is not showing */}
-                {emoji !== '' && !suggestedEmojis.includes(emoji) && !showCustomEmojiInput && (
-                  <motion.button
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1.1, opacity: 1 }}
-                    transition={{ 
-                      type: 'spring', 
-                      stiffness: 400, 
-                      damping: 25,
-                      delay: suggestedEmojis.length * 0.02
-                    }}
-                    layout={false}
+                {suggestedEmojis.map((e, index) => {
+                  const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji) && !EMOJI_OPTIONS.includes(emoji);
+                  const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
+                  
+                  return (
+                    <button
+                      key={`${e}-${index}`}
+                      style={{
+                        transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                        transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms ease, box-shadow 150ms ease',
+                        animationDelay: `${index * 30}ms`,
+                        ...(isSelected ? { 
+                          backgroundColor: emojiColor,
+                          boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                        } : {}),
+                      }}
+                      onClick={() => handleEmojiSelect(e)}
+                      className={`w-14 h-14 rounded-xl flex items-center justify-center active:scale-90 emoji-suggestion-enter ${
+                        isSelected
+                          ? 'border-[3px] border-white/90 text-xl'
+                          : 'bg-secondary/50 hover:bg-secondary text-2xl'
+                      }`}
+                    >
+                      {e}
+                    </button>
+                  );
+                })}
+                {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis and not in EMOJI_OPTIONS) and input is not showing */}
+                {emoji !== '' && !suggestedEmojis.includes(emoji) && !EMOJI_OPTIONS.includes(emoji) && !showCustomEmojiInput && (
+                  <button
                     style={{
-                      willChange: 'transform, opacity',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
+                      transform: 'scale(1.1)',
+                      transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                       backgroundColor: emojiColor,
                       boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                      animationDelay: `${suggestedEmojis.length * 30}ms`,
                     }}
                     onClick={() => {}}
-                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center border-[3px] border-white/90"
+                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center border-[3px] border-white/90 emoji-suggestion-enter"
                     aria-label={t('aria.selectedEmoji', { emoji })}
                   >
                     {emoji}
-                  </motion.button>
+                  </button>
                 )}
                 {/* Custom emoji input or button */}
                 {showCustomEmojiInput ? (
-                  <motion.div 
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex items-center gap-1"
+                  <div 
+                    className="flex items-center gap-1 emoji-suggestion-enter"
+                    style={{
+                      animationDelay: `${(suggestedEmojis.length + 1) * 30}ms`,
+                    }}
                   >
                     <input
                       ref={customEmojiInputRef}
@@ -836,33 +821,21 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       autoCapitalize="off"
                       spellCheck="false"
                     />
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.button
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    whileTap={{ scale: 0.9 }}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ 
-                      type: 'spring', 
-                      stiffness: 400, 
-                      damping: 25,
-                      delay: suggestedEmojis.length * 0.02
-                    }}
-                    layout={false}
+                  <button
                     style={{
-                      willChange: 'transform, opacity',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
+                      transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                      animationDelay: `${(suggestedEmojis.length + 1) * 30}ms`,
                     }}
-                    className="w-14 h-14 rounded-xl flex items-center justify-center border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50"
+                    className="w-14 h-14 rounded-xl flex items-center justify-center border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:scale-105 active:scale-90 emoji-suggestion-enter"
                     onClick={handleCustomEmojiClick}
                     aria-label={t('modal.customEmojiTitle')}
                   >
                     <Plus className="w-6 h-6 text-muted-foreground" />
-                  </motion.button>
+                  </button>
                 )}
-              </motion.div>
+              </div>
             </div>
 
             {/* Color picker wheel */}
