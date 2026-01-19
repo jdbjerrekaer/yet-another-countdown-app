@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
   IonModal,
   IonHeader,
@@ -40,9 +40,15 @@ interface CalendarImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (events: ImportableEvent[]) => void;
+  onCanImportChange?: (canImport: boolean) => void;
 }
 
-export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImportModalProps) {
+export interface CalendarImportModalRef {
+  import: () => void;
+  canImport: () => boolean;
+}
+
+export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarImportModalProps>(({ isOpen, onClose, onImport, onCanImportChange }, ref) => {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
@@ -58,6 +64,22 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
   const [icsUrl, setIcsUrl] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
   const [selectedCalendars, setSelectedCalendars] = useState<Set<string>>(new Set());
+
+  // Notify parent when canImport changes
+  const canImport = selectedEventIds.size > 0;
+  useEffect(() => {
+    onCanImportChange?.(canImport);
+  }, [canImport, onCanImportChange]);
+
+  // Expose import function via ref
+  useImperativeHandle(ref, () => ({
+    import: () => {
+      if (canImport) {
+        handleImportInternal();
+      }
+    },
+    canImport: () => canImport,
+  }));
   
   // Determine which event set to use based on filters
   // Show all events when: calendar is selected OR search query is entered
@@ -238,8 +260,8 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
     setSelectedEventIds(new Set());
   };
   
-  // Handle import button click
-  const handleImport = () => {
+  // Handle import (internal function called by ref and button)
+  const handleImportInternal = () => {
     trigger('medium');
     // Look in both event arrays to find selected events
     const allAvailableEvents = [...recurringEvents, ...allEvents];
@@ -278,16 +300,6 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
             <IonButton onClick={handleCloseClick}>{t('modal.cancel')}</IonButton>
           </IonButtons>
           <IonTitle>{t('calendar.importTitle')}</IonTitle>
-          <IonButtons slot="end">
-            <IonButton
-              onClick={handleImport}
-              disabled={selectedEventIds.size === 0}
-              strong
-            >
-              {t('calendar.importButton')} ({selectedEventIds.size})
-              <IonIcon icon={downloadOutline} slot="end" />
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
       
@@ -495,4 +507,4 @@ export function CalendarImportModal({ isOpen, onClose, onImport }: CalendarImpor
       </IonContent>
     </IonModal>
   );
-}
+});

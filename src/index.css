@@ -599,6 +599,7 @@
   ion-datetime.datetime-fixed-width {
     width: 100% !important;
     max-width: 350px;
+    border-radius: 1rem !important; /* Decreased from default to match smaller radius */
   }
 
   /* Ensure month/year picker maintains the same width */
@@ -663,9 +664,9 @@
     --color: hsl(0 0% 100%);
     --box-shadow: 0 4px 16px -4px hsl(0 0% 0% / 0.2),
                   0 2px 8px -2px hsl(0 0% 0% / 0.15);
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
     transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     /* Move button further in from edges */
     --margin-bottom: 48px;
@@ -861,10 +862,8 @@
     min-height: auto;
   }
 
-  /* Shift modal end buttons to the left to align with FAB */
-  ion-modal ion-toolbar ion-buttons[slot="end"] {
-    transform: translateX(-14px) !important;
-  }
+
+
 
   /* Align ion-buttons vertically centered in toolbar */
   /* Only applies to main page toolbar (less specific, won't affect modals) */
@@ -877,11 +876,17 @@
     min-height: auto;
   }
 
-  /* Shift end buttons to the right to align with card edit buttons and FAB */
-  ion-toolbar ion-buttons[slot="end"] {
-    transform: translateX(8px) !important;
-    padding-right: 0 !important;
+  /* Move ion-buttons to the right using CSS transform */
+  /* Only target main page header (inside ion-content), NOT modal headers */
+  ion-content ion-header ion-toolbar ion-buttons[slot="end"] {
+    transform: translateX(16px) !important;
   }
+  
+  /* Explicitly exclude modal headers from the transform */
+  ion-modal ion-header ion-toolbar ion-buttons[slot="end"] {
+    transform: none !important;
+  }
+
 
   /* Ensure motion.div wrappers align items properly */
   ion-toolbar ion-buttons[slot="end"] > *,

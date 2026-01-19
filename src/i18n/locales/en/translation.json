@@ -148,6 +148,7 @@
   "aria": {
     "saveEvent": "Save event",
     "addEvent": "Add event",
+    "importEvents": "Import selected events",
     "clearInput": "Clear input",
     "colorPicker": "Color picker",
     "shareEvent": "Share event",

@@ -37,7 +37,7 @@ import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle 
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
-import { CalendarImportModal } from '@/components/CalendarImportModal';
+import { CalendarImportModal, CalendarImportModalRef } from '@/components/CalendarImportModal';
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
@@ -187,6 +187,7 @@ export default function Index() {
   const [isCalendarImportOpen, setIsCalendarImportOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [canSaveForm, setCanSaveForm] = useState(false);
+  const [canImportCalendar, setCanImportCalendar] = useState(false);
   const [draggedCardWidth, setDraggedCardWidth] = useState<number | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
@@ -196,6 +197,7 @@ export default function Index() {
   const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
+  const calendarImportModalRef = useRef<CalendarImportModalRef>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const { trigger } = useHaptic();
@@ -872,11 +874,14 @@ export default function Index() {
 
   const handleFabClick = async () => {
     trigger('medium');
-    if (isModalOpen) {
-      // Modal is open - trigger save
+    if (isCalendarImportOpen) {
+      // Calendar import modal is open - trigger import
+      calendarImportModalRef.current?.import();
+    } else if (isModalOpen) {
+      // Date picker modal is open - trigger save
       datePickerModalRef.current?.save();
     } else {
-      // Modal is closed - open it
+      // No modal is open - open add new event modal
       await handleAddNew();
     }
   };
@@ -1116,9 +1121,19 @@ export default function Index() {
     return Date.now() - lastDragEndTs.current < 200;
   };
 
+  // Determine FAB state based on which modal is open
+  const isAnyModalOpen = isModalOpen || isCalendarImportOpen;
+  const fabDisabled = (isModalOpen && !canSaveForm) || (isCalendarImportOpen && !canImportCalendar);
+  const fabIcon = isAnyModalOpen ? checkmark : add;
+  const fabAriaLabel = isCalendarImportOpen 
+    ? t('aria.importEvents') 
+    : isModalOpen 
+      ? t('aria.saveEvent') 
+      : t('aria.addEvent');
+
   const fabPortal = (
     <motion.div 
-      className={`fab-portal${isModalOpen ? ' fab-portal--above-modal' : ''}`}
+      className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''}`}
       animate={{
         bottom: isNative && keyboardHeight > 0 
           ? `calc(16px + env(safe-area-inset-bottom) + ${keyboardHeight}px)` 
@@ -1132,9 +1147,9 @@ export default function Index() {
       }}
       style={{
         position: 'fixed',
-        right: 'calc(28px + env(safe-area-inset-right))',
+        right: 'calc(16px + env(safe-area-inset-left))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
-        zIndex: isModalOpen ? 100000 : 50,
+        zIndex: isAnyModalOpen ? 100000 : 50,
         display: isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
@@ -1145,9 +1160,9 @@ export default function Index() {
       >
         <IonFabButton 
           onClick={handleFabClick} 
-          aria-label={isModalOpen ? t('aria.saveEvent') : t('aria.addEvent')}
-          disabled={isModalOpen && !canSaveForm}
-          style={isModalOpen && !canSaveForm ? { 
+          aria-label={fabAriaLabel}
+          disabled={fabDisabled}
+          style={fabDisabled ? { 
             '--background': 'var(--ion-color-medium, #92949c)',
             '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
           } as React.CSSProperties : undefined}
@@ -1155,7 +1170,7 @@ export default function Index() {
           <div className="relative w-full h-full flex items-center justify-center">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
-                key={isModalOpen ? 'checkmark' : 'add'}
+                key={isAnyModalOpen ? 'checkmark' : 'add'}
                 initial={{ rotate: -90, opacity: 0, scale: 0.3 }}
                 animate={{ rotate: 0, opacity: 1, scale: 1 }}
                 exit={{ rotate: 90, opacity: 0, scale: 0.3 }}
@@ -1173,8 +1188,8 @@ export default function Index() {
                 className="flex items-center justify-center"
               >
                 <IonIcon 
-                  icon={isModalOpen ? checkmark : add} 
-                  style={{ fontSize: '28px' }}
+                  icon={fabIcon} 
+                  style={{ fontSize: '40px' }}
                 />
               </motion.div>
             </AnimatePresence>
@@ -1217,7 +1232,7 @@ export default function Index() {
                 </div>
               </div>
             </IonTitle>
-            <IonButtons slot="end" className="pl-2 pr-0">
+            <IonButtons slot="end" className="px-2">
               {!hasRemoveAds && (
                 <motion.div
                   whileTap={{ scale: 0.9 }}
@@ -1500,7 +1515,7 @@ export default function Index() {
         </div>
       </IonContent>
 
-      {typeof document !== 'undefined' && !isCalendarImportOpen ? createPortal(fabPortal, document.body) : null}
+      {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
 
       {/* Ad Integration Bar - Background for the ad area (only show when loading/placeholder is active) */}
       {showAdPlaceholder && (
@@ -1541,9 +1556,11 @@ export default function Index() {
       />
 
       <CalendarImportModal
+        ref={calendarImportModalRef}
         isOpen={isCalendarImportOpen}
         onClose={() => setIsCalendarImportOpen(false)}
         onImport={handleCalendarImport}
+        onCanImportChange={setCanImportCalendar}
       />
 
       <RemoveAdsModal
