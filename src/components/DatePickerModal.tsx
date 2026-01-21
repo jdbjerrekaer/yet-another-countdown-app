@@ -644,12 +644,20 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
       if (isNative) {
         // Use Capacitor Share plugin for native platforms
-        await Share.share({
-          title: `${emoji} ${title}`,
-          text: `${emoji} ${title}`,
-          url: importLink,
-          dialogTitle: t('modal.shareEvent'),
-        });
+        try {
+          await Share.share({
+            title: `${emoji} ${title}`,
+            text: `${emoji} ${title}`,
+            url: importLink,
+            dialogTitle: t('modal.shareEvent'),
+          });
+        } catch (shareError: any) {
+          const message = shareError?.message?.toLowerCase() || '';
+          if (message.includes('cancel') || message.includes('dismiss')) {
+            return;
+          }
+          throw shareError;
+        }
       } else {
         // Web fallback: Use Web Share API if available
         if (navigator.share) {
