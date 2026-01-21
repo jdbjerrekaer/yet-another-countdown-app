@@ -26,6 +26,7 @@ let isDevBuild = false;
 let hasRemoveAdsEntitlement = false;
 let readyPromise: Promise<void> | null = null;
 let readyResolve: (() => void) | null = null;
+let initPromise: Promise<void> | null = null;
 const entitlementListeners = new Set<EntitlementListener>();
 
 const setEntitlement = async (
@@ -81,66 +82,71 @@ const refreshStore = async () => {
 
 export const PurchasesManager = {
   init: async () => {
+    if (initPromise) return initPromise;
     if (isInitialized) return;
-    isInitialized = true;
+    
+    initPromise = (async () => {
+      if (isDevBuild) {
+        await Preferences.remove({ key: PREF_REMOVE_ADS });
+        await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
+      }
 
-    if (isDevBuild) {
-      await Preferences.remove({ key: PREF_REMOVE_ADS });
-      await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
-    }
+      await loadLocalEntitlement();
+      isInitialized = true;
+      entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
 
-    await loadLocalEntitlement();
-    entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
+      if (!Capacitor.isNativePlatform()) return;
+      if (isDevBuild) return;
 
-    if (!Capacitor.isNativePlatform()) return;
-    if (isDevBuild) return;
+      try {
+        InAppPurchase2.verbosity = InAppPurchase2.ERROR;
+        InAppPurchase2.register(
+          REMOVE_ADS_PRODUCTS.map((product) => ({
+            id: product.id,
+            type: InAppPurchase2.NON_CONSUMABLE,
+          })),
+        );
 
-    try {
-      InAppPurchase2.verbosity = InAppPurchase2.ERROR;
-      InAppPurchase2.register(
-        REMOVE_ADS_PRODUCTS.map((product) => ({
-          id: product.id,
-          type: InAppPurchase2.NON_CONSUMABLE,
-        })),
-      );
+        readyPromise =
+          readyPromise ||
+          new Promise<void>((resolve) => {
+            readyResolve = resolve;
+          });
 
-      readyPromise =
-        readyPromise ||
-        new Promise<void>((resolve) => {
-          readyResolve = resolve;
+        InAppPurchase2.ready(() => {
+          if (readyResolve) {
+            readyResolve();
+            readyResolve = null;
+          }
         });
 
-      InAppPurchase2.ready(() => {
-        if (readyResolve) {
-          readyResolve();
-          readyResolve = null;
-        }
-      });
+        InAppPurchase2.when("product").approved((product) => {
+          if (isRemoveAdsProduct(product.id)) {
+            void setEntitlement(true, !isDevBuild, product.id);
+            product.finish();
+          }
+        });
 
-      InAppPurchase2.when("product").approved((product) => {
-        if (isRemoveAdsProduct(product.id)) {
-          void setEntitlement(true, !isDevBuild, product.id);
-          product.finish();
-        }
-      });
+        InAppPurchase2.when("product").owned((product) => {
+          if (isRemoveAdsProduct(product.id)) {
+            void setEntitlement(true, !isDevBuild, product.id);
+          }
+        });
 
-      InAppPurchase2.when("product").owned((product) => {
-        if (isRemoveAdsProduct(product.id)) {
-          void setEntitlement(true, !isDevBuild, product.id);
-        }
-      });
+        InAppPurchase2.when("product").refunded((product) => {
+          if (isRemoveAdsProduct(product.id)) {
+            void setEntitlement(false);
+          }
+        });
 
-      InAppPurchase2.when("product").refunded((product) => {
-        if (isRemoveAdsProduct(product.id)) {
-          void setEntitlement(false);
-        }
-      });
-
-      await refreshStore();
-      await ensureReady();
-    } catch (error) {
-      console.warn("[Purchases] Initialization failed", error);
-    }
+        await refreshStore();
+        await ensureReady();
+      } catch (error) {
+        console.warn("[Purchases] Initialization failed", error);
+      }
+    })();
+    
+    return initPromise;
   },
 
   setDevBuild: (isDev: boolean) => {
