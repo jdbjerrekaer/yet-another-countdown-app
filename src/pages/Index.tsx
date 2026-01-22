@@ -1295,7 +1295,7 @@ export default function Index() {
               </div>
             </IonTitle>
             <IonButtons slot="end" className="px-2">
-              {!hasRemoveAds && (
+              {isNative && !hasRemoveAds && (
                 <motion.div
                   whileTap={{ scale: 0.9 }}
                   whileHover={{ scale: 1.1 }}
