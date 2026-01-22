@@ -2,7 +2,6 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
 import { ChevronRight, RefreshCw, CalendarIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
@@ -130,14 +129,12 @@ export function CountdownCard({
   const borderRadius = 16;
 
   return (
-    <motion.div 
+    <div 
       className={`countdown-card-wrapper overflow-hidden ${
         !isNative && isSelected ? 'countdown-card-selected' : ''
       } ${isDragging ? 'countdown-card-dragging' : ''} ${
         isSliding ? 'countdown-card-swiping' : ''
-      }`}
-      whileTap={isReordering || isDragging ? undefined : { scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      } ${isReordering || isDragging ? '' : 'active:scale-[0.98]'} transition-transform duration-150`}
       style={{
         borderRadius: `${borderRadius}px`,
         // Safari-specific prefix to prevent black border-radius rendering bug
@@ -244,6 +241,6 @@ export function CountdownCard({
             </div>
           </IonItem>
         </IonItemSliding>
-    </motion.div>
+    </div>
   );
 }

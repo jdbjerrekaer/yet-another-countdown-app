@@ -12,7 +12,6 @@ import {
 } from "@ionic/react";
 import { useTranslation } from "react-i18next";
 import confetti from "canvas-confetti";
-import { motion, AnimatePresence } from "framer-motion";
 import { IAPProduct } from "@awesome-cordova-plugins/in-app-purchase-2";
 import { PurchasesManager } from "@/lib/purchases/purchasesManager";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -172,43 +171,23 @@ export const RemoveAdsModal = ({
       <IonContent className="ion-padding" style={{ "--padding-bottom": "var(--ad-banner-height, 0px)" } as React.CSSProperties}>
         <div className="max-w-md mx-auto space-y-8 pb-8">
           <div className="flex flex-col gap-2 text-center pt-4">
-            <motion.div 
-              initial={{ opacity: 0, y: 5, scale: 0.85 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-1"
-            >
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-1">
               <Sparkles className="w-6 h-6 text-primary" />
-            </motion.div>
+            </div>
             <div className="flex flex-col gap-2">
-              <motion.h2 
-                initial={{ opacity: 0, y: 5, scale: 0.85 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.1 }}
-                className="text-2xl font-bold tracking-tight text-foreground"
-              >
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
                 {t("iap.headline")}
-              </motion.h2>
-              <motion.p 
-                initial={{ opacity: 0, y: 5, scale: 0.85 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.2 }}
-                className="text-muted-foreground text-sm px-4 leading-normal"
-              >
+              </h2>
+              <p className="text-muted-foreground text-sm px-4 leading-normal">
                 {t("iap.subheadline")}
-              </motion.p>
+              </p>
             </div>
           </div>
 
           {!isNative && (
-            <motion.div 
-              initial={{ opacity: 0, y: 5, scale: 0.85 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25, delay: 0.15 }}
-              className="bg-secondary/40 rounded-2xl p-4 text-center text-sm text-muted-foreground border border-border/40"
-            >
+            <div className="bg-secondary/40 rounded-2xl p-4 text-center text-sm text-muted-foreground border border-border/40">
               {t("iap.webUnavailable")}
-            </motion.div>
+            </div>
           )}
 
           {loading && (
@@ -221,110 +200,86 @@ export const RemoveAdsModal = ({
           )}
 
           {error && (
-            <motion.div 
-              initial={{ opacity: 0, y: 5, scale: 0.85 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center"
-            >
+            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center">
               <IonText color="danger" className="text-sm font-medium">
                 {error}
               </IonText>
-            </motion.div>
+            </div>
           )}
 
           <div className="space-y-3">
-            <AnimatePresence mode="popLayout">
-              {orderedProductIds.map((productId, index) => {
-                const product = getProductById(productId);
-                const labels = productLabels[productId];
-                const Icon = labels?.icon || ShieldCheck;
-                const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
-                const priceLabel =
-                  product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
-                const isBusy = actionLoadingId === productId;
-                const isSupporter = productId.includes("supporter");
+            {orderedProductIds.map((productId) => {
+              const product = getProductById(productId);
+              const labels = productLabels[productId];
+              const Icon = labels?.icon || ShieldCheck;
+              const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
+              const priceLabel =
+                product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
+              const isBusy = actionLoadingId === productId;
+              const isSupporter = productId.includes("supporter");
 
-                return (
-                  <motion.div
-                    key={productId}
-                    initial={{ opacity: 0, y: 5, scale: 0.85 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ 
-                      type: 'spring', 
-                      stiffness: 350, 
-                      damping: 25,
-                      delay: 0.1 + index * 0.05 
-                    }}
-                    className={`relative overflow-hidden rounded-2xl border ${
-                      isSupporter
-                        ? "border-primary/20 bg-primary/5"
-                        : "border-border/60 bg-secondary/20"
-                    } p-5`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isSupporter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                      }`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <h3 className="text-base font-bold text-foreground truncate">
-                            {labels ? t(labels.titleKey) : product?.title}
-                          </h3>
-                          {badge && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary uppercase tracking-wider">
-                              {badge}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-snug">
-                          {labels ? t(labels.descriptionKey) : product?.description}
-                        </p>
-                      </div>
-
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-sm font-bold text-foreground mb-1">
-                          {priceLabel}
-                        </div>
-                        <IonButton
-                          size="small"
-                          fill={isSupporter ? "solid" : "clear"}
-                          className={`font-bold tracking-tight m-0 h-8 ${
-                            isSupporter ? "black-button min-w-[80px]" : "text-primary min-w-[70px]"
-                          }`}
-                          disabled={(!isNative && !isDevBuild) || hasRemoveAds || isBusy}
-                          onClick={() => handlePurchase(productId)}
-                        >
-                          {isBusy ? (
-                            <IonSpinner name="crescent" className="w-4 h-4" />
-                          ) : hasRemoveAds ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            t("iap.cta")
-                          )}
-                        </IonButton>
-                      </div>
+              return (
+                <div
+                  key={productId}
+                  className={`relative overflow-hidden rounded-2xl border transition-transform active:scale-[0.98] ${
+                    isSupporter
+                      ? "border-primary/20 bg-primary/5"
+                      : "border-border/60 bg-secondary/20"
+                  } p-5`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isSupporter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    }`}>
+                      <Icon className="w-5 h-5" />
                     </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-base font-bold text-foreground truncate">
+                          {labels ? t(labels.titleKey) : product?.title}
+                        </h3>
+                        {badge && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/10 text-primary uppercase tracking-wider">
+                            {badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {labels ? t(labels.descriptionKey) : product?.description}
+                      </p>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-sm font-bold text-foreground mb-1">
+                        {priceLabel}
+                      </div>
+                      <IonButton
+                        size="small"
+                        fill={isSupporter ? "solid" : "clear"}
+                        className={`font-bold tracking-tight m-0 h-8 ${
+                          isSupporter ? "black-button min-w-[80px]" : "text-primary min-w-[70px]"
+                        }`}
+                        disabled={(!isNative && !isDevBuild) || hasRemoveAds || isBusy}
+                        onClick={() => handlePurchase(productId)}
+                      >
+                        {isBusy ? (
+                          <IonSpinner name="crescent" className="w-4 h-4" />
+                        ) : hasRemoveAds ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          t("iap.cta")
+                        )}
+                      </IonButton>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <motion.div 
+          <div 
             key={`disclaimer-${isOpen}`}
-            initial={{ opacity: 0, y: 5, scale: 0.85 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ 
-              type: 'spring', 
-              stiffness: 350, 
-              damping: 25,
-              delay: 0.1 + orderedProductIds.length * 0.05 
-            }}
             className="flex flex-col gap-2 pt-2 pb-8"
           >
             <div className="text-center px-6">
@@ -358,7 +313,7 @@ export const RemoveAdsModal = ({
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </IonContent>
     </IonModal>

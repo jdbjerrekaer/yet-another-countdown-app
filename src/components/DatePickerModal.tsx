@@ -6,7 +6,6 @@ import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { Share } from '@capacitor/share';
 import { Dialog } from '@capacitor/dialog';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
@@ -60,34 +59,6 @@ export interface DatePickerModalRef {
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
 
-// Animation variants for staggered section entrance
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const sectionVariants = {
-  hidden: {
-    opacity: 0,
-    filter: 'blur(8px)',
-    y: 20,
-  },
-  visible: {
-    opacity: 1,
-    filter: 'blur(0px)',
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.34, 1.56, 0.64, 1],
-    },
-  },
-};
-
 export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
   isOpen,
   onClose,
@@ -105,6 +76,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   onConfirmDateChange,
 }, ref) => {
   const { t } = useTranslation();
+  
   const [title, setTitle] = useState(initialTitle);
   const [date, setDate] = useState<Date | undefined>(initialDate);
   const [emoji, setEmoji] = useState(initialEmoji);
@@ -128,6 +100,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const contentRef = useRef<HTMLIonContentElement | null>(null);
   const datetimeRef = useRef<HTMLIonDatetimeElement | null>(null);
   const isInitialOpenRef = useRef(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const [modalSessionKey, setModalSessionKey] = useState(0);
   const [showYearlySuggestion, setShowYearlySuggestion] = useState(false);
   const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
 
@@ -174,6 +148,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // Only reset when transitioning from closed to open
     if (isOpen && !prevIsOpenRef.current) {
       isInitialOpenRef.current = true;
+      setHasAnimated(false);
+      setModalSessionKey(prev => prev + 1);
       
       setTitle(initialTitle || '');
       // Ensure initial date has 8am time for new events
@@ -713,14 +689,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
       <IonContent ref={contentRef} className="ion-padding">
         {/* Form content */}
-          <motion.div 
+          <div 
+            key={`modal-content-${modalSessionKey}`}
             className="space-y-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate={isOpen ? "visible" : "hidden"}
           >
             {/* Title input */}
-            <motion.div className="space-y-2" variants={sectionVariants}>
+            <div className="space-y-2">
               <Label htmlFor="title" className="text-sm font-medium text-muted-foreground pl-4">
                 {t('modal.titleLabel')}
               </Label>
@@ -761,10 +735,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   <span>{t('modal.importedFrom', { calendar: initialImportedFrom })}</span>
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Emoji picker - selected emoji shows the chosen color */}
-            <motion.div className="space-y-2" variants={sectionVariants}>
+            <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.emojiLabel')}</Label>
               <div 
                 key={suggestedEmojis.join(',')}
@@ -877,10 +851,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   </button>
                 )}
               </div>
-            </motion.div>
+            </div>
 
             {/* Color picker wheel */}
-            <motion.div className="space-y-2" variants={sectionVariants}>
+            <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4" style={{ position: 'relative', top: '-8px' }}>{t('modal.colorLabel')}</Label>
               <ColorWheelPicker 
                 key={colorPickerKey}
@@ -891,12 +865,11 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   colorManuallyChangedRef.current = true;
                 }}
               />
-            </motion.div>
+            </div>
 
             {/* Recurring toggle with expandable suggestion */}
-            <motion.div 
+            <div 
               className="bg-secondary/40 rounded-2xl overflow-hidden"
-              variants={sectionVariants}
             >
               {/* Main recurring toggle row */}
               <div className="p-4 flex items-center justify-between">
@@ -916,49 +889,37 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               </div>
               
               {/* Yearly suggestion - slides out from bottom when date is old */}
-              <AnimatePresence>
-                {showYearlySuggestion && !isYearlySuggestionExiting && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    layout={false}
-                    className="overflow-hidden"
-                    style={{
-                      willChange: 'height, opacity',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                    }}
-                  >
-                    {/* Divider */}
-                    <div className="mx-4 border-t border-border/50" />
-                    
-                    {/* Suggestion content */}
-                    <div className="p-4 pl-[68px] flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
-                        <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
-                      </div>
-                      <IonButton
-                        onClick={() => {
-                          trigger('medium');
-                          setIsRecurring(true);
-                        }}
-                        size="small"
-                        fill="solid"
-                        className="font-bold tracking-tight m-0 h-8 black-button min-w-[80px]"
-                      >
-                        {t('modal.enableYearly')}
-                      </IonButton>
+              {showYearlySuggestion && !isYearlySuggestionExiting && (
+                <div 
+                  className="overflow-hidden animate-slide-down"
+                >
+                  {/* Divider */}
+                  <div className="mx-4 border-t border-border/50" />
+                  
+                  {/* Suggestion content */}
+                  <div className="p-4 pl-[68px] flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
+                      <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                    <IonButton
+                      onClick={() => {
+                        trigger('medium');
+                        setIsRecurring(true);
+                      }}
+                      size="small"
+                      fill="solid"
+                      className="font-bold tracking-tight m-0 h-8 black-button min-w-[80px]"
+                    >
+                      {t('modal.enableYearly')}
+                    </IonButton>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Date picker */}
-            <motion.div className="space-y-2" variants={sectionVariants}>
+            <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground pl-4">{t('modal.dateLabel')}</Label>
               <div className="bg-secondary/40 rounded-2xl overflow-hidden">
                 {/* Native Ionic Calendar */}
@@ -1009,7 +970,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Advanced section - only show when editing */}
             {isEditing && onDelete && (
@@ -1030,7 +991,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
       </IonContent>
     </IonModal>
   );

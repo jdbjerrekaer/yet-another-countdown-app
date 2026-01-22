@@ -6,7 +6,6 @@ import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
 import { Keyboard } from '@capacitor/keyboard';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
   closestCenter,
@@ -1194,32 +1193,19 @@ export default function Index() {
       : t('aria.addEvent');
 
   const fabPortal = (
-    <motion.div 
-      className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''}`}
-      animate={{
-        bottom: isNative && keyboardHeight > 0 
-          ? `calc(16px + env(safe-area-inset-bottom) + ${keyboardHeight}px)` 
-          : 'calc(16px + env(safe-area-inset-bottom) + 56px)'
-      }}
-      transition={{ 
-        type: 'spring', 
-        stiffness: 400, 
-        damping: 30,
-        duration: 0.3
-      }}
+    <div 
+      className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''} transition-all duration-300`}
       style={{
         position: 'fixed',
         right: 'calc(16px + env(safe-area-inset-left))',
-        bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
+        bottom: isNative && keyboardHeight > 0 
+          ? `calc(16px + env(safe-area-inset-bottom) + ${keyboardHeight}px)` 
+          : 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isAnyModalOpen ? 100000 : 50,
         display: isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
-      <motion.div
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      >
+      <div className="active:scale-90 transition-transform duration-150">
         <IonFabButton 
           onClick={handleFabClick} 
           aria-label={fabAriaLabel}
@@ -1230,35 +1216,14 @@ export default function Index() {
           } as React.CSSProperties : undefined}
         >
           <div className="relative w-full h-full flex items-center justify-center">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div
-                key={isAnyModalOpen ? 'checkmark' : 'add'}
-                initial={{ rotate: -90, opacity: 0, scale: 0.3 }}
-                animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                exit={{ rotate: 90, opacity: 0, scale: 0.3 }}
-                transition={{ 
-                  type: 'spring', 
-                  stiffness: 600, 
-                  damping: 35 
-                }}
-                layout={false}
-                style={{
-                  willChange: 'transform, opacity',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                }}
-                className="flex items-center justify-center"
-              >
-                <IonIcon 
-                  icon={fabIcon} 
-                  style={{ fontSize: '40px' }}
-                />
-              </motion.div>
-            </AnimatePresence>
+            <IonIcon 
+              icon={fabIcon} 
+              style={{ fontSize: '40px' }}
+            />
           </div>
         </IonFabButton>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 
   return (
@@ -1296,11 +1261,7 @@ export default function Index() {
             </IonTitle>
             <IonButtons slot="end" className="px-2">
               {isNative && !hasRemoveAds && (
-                <motion.div
-                  whileTap={{ scale: 0.9 }}
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                >
+                <div className="active:scale-90 transition-transform duration-150">
                   <IonButton
                     onClick={handleOpenRemoveAds}
                     aria-label={t('aria.openRemoveAds')}
@@ -1308,13 +1269,9 @@ export default function Index() {
                   >
                     <IonIcon icon={sparklesOutline} />
                   </IonButton>
-                </motion.div>
+                </div>
               )}
-              <motion.div
-                whileTap={{ scale: 0.9 }}
-                whileHover={{ scale: 1.1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              >
+              <div className="active:scale-90 transition-transform duration-150">
                 <IonButton 
                   onClick={handleOpenCalendarImport} 
                   aria-label={t('aria.importFromCalendar')}
@@ -1322,7 +1279,7 @@ export default function Index() {
                 >
                   <IonIcon icon={calendarOutline} />
                 </IonButton>
-              </motion.div>
+              </div>
             </IonButtons>
           </IonToolbar>
         </IonHeader>
@@ -1363,40 +1320,26 @@ export default function Index() {
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-2" style={{ backgroundColor: 'hsl(var(--background))', overflow: 'visible' }}>
-                      <AnimatePresence mode="popLayout">
-                        {events.map((event, index) => (
-                          <motion.div
-                            key={event.id}
-                            initial={{ opacity: 0, y: 5, scale: 0.85 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                            transition={{ 
-                              type: 'spring', 
-                              stiffness: 350, 
-                              damping: 25,
-                              delay: activeDragId ? 0 : index * 0.05 // Stagger only on initial load/new items
+                      {events.map((event) => (
+                        <div key={event.id}>
+                          <SortableCountdownCard
+                            event={event}
+                            isSelected={event.id === selectedEventId}
+                            isReordering={activeDragId !== null}
+                            isNative={isNative}
+                            onSelect={() => {
+                              if (shouldIgnoreTap()) return;
+                              trigger('light');
+                              setSelectedEventId(event.id);
                             }}
-                            layout
-                          >
-                            <SortableCountdownCard
-                              event={event}
-                              isSelected={event.id === selectedEventId}
-                              isReordering={activeDragId !== null}
-                              isNative={isNative}
-                              onSelect={() => {
-                                if (shouldIgnoreTap()) return;
-                                trigger('light');
-                                setSelectedEventId(event.id);
-                              }}
-                              onEdit={() => {
-                                if (shouldIgnoreTap()) return;
-                                handleEdit(event);
-                              }}
-                              onDelete={() => handleDeleteRequest(event)}
-                            />
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
+                            onEdit={() => {
+                              if (shouldIgnoreTap()) return;
+                              handleEdit(event);
+                            }}
+                            onDelete={() => handleDeleteRequest(event)}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </SortableContext>
                   <DragOverlay 
@@ -1525,29 +1468,21 @@ export default function Index() {
                       {t('widget.preview')}
                     </h2>
                     <div className="flex justify-center py-4">
-                      <AnimatePresence mode="wait">
-                        <motion.div 
-                          key={`${selectedEventId}-${selectedSize}-${selectedAppearanceMode}-${selectedCountdownStyle}`}
-                          initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
-                          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                          exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
-                          transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-                        >
-                          <WidgetPreview
-                            title={selectedEvent.title}
-                            countdown={countdown}
-                            targetDate={targetDate}
-                            emoji={selectedEvent.emoji}
-                            emojiColor={selectedEvent.emojiColor}
-                            size={selectedSize}
-                            appearanceMode={selectedAppearanceMode}
-                            countdownStyle={selectedCountdownStyle}
-                            isRecurring={selectedEvent.isRecurring}
-                            createdAt={new Date(selectedEvent.createdAt)}
-                            nextOccurrenceNumber={occurrenceNumber}
-                          />
-                        </motion.div>
-                      </AnimatePresence>
+                      <div className="animate-scale-in">
+                        <WidgetPreview
+                          title={selectedEvent.title}
+                          countdown={countdown}
+                          targetDate={targetDate}
+                          emoji={selectedEvent.emoji}
+                          emojiColor={selectedEvent.emojiColor}
+                          size={selectedSize}
+                          appearanceMode={selectedAppearanceMode}
+                          countdownStyle={selectedCountdownStyle}
+                          isRecurring={selectedEvent.isRecurring}
+                          createdAt={new Date(selectedEvent.createdAt)}
+                          nextOccurrenceNumber={occurrenceNumber}
+                        />
+                      </div>
                     </div>
                   </section>
 
