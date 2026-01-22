@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,7 @@ import { DeepLinkHandler } from "./components/DeepLinkHandler";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
 import { PurchasesManager } from "@/lib/purchases/purchasesManager";
+import { useTranslation } from "react-i18next";
 
 const queryClient = new QueryClient();
 
@@ -64,10 +65,24 @@ function useSystemTheme() {
 
 const App = () => {
   useSystemTheme();
+  const { i18n } = useTranslation();
+  const [, setLanguage] = useState(i18n.language);
 
   useEffect(() => {
     void PurchasesManager.init();
   }, []);
+
+  useEffect(() => {
+    const handleLanguageChanged = (lng: string) => {
+      setLanguage(lng);
+    };
+    
+    i18n.on('languageChanged', handleLanguageChanged);
+    
+    return () => {
+      i18n.off('languageChanged', handleLanguageChanged);
+    };
+  }, [i18n]);
   
   return (
     <QueryClientProvider client={queryClient}>

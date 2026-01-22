@@ -59,7 +59,10 @@ async function checkPreferencesLanguage() {
       if (value && SUPPORTED_LANGUAGES.includes(value as SupportedLanguage)) {
         if (i18n.language !== value) {
           await i18n.changeLanguage(value);
+          localStorage.setItem('i18nextLng', value);
         }
+      } else if (!value && i18n.language) {
+        await Preferences.set({ key: 'app_language', value: i18n.language });
       }
     } catch (error) {
       console.warn('Failed to read language preference:', error);
@@ -79,6 +82,7 @@ i18n.on('languageChanged', async (lng) => {
       console.warn('Failed to save language preference:', error);
     }
   }
+  localStorage.setItem('i18nextLng', lng);
 });
 
 export default i18n;
