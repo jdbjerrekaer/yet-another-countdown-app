@@ -48,8 +48,8 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     
-    icon_light_path = os.path.join(project_root, 'Icon-Light-1024x1024.png')
-    icon_dark_path = os.path.join(project_root, 'Icon-Dark-1024x1024.png')
+    icon_light_path = os.path.join(project_root, 'Splash-Light-1024x1024.png')
+    icon_dark_path = os.path.join(project_root, 'Splash-Dark-1024x1024.png')
     splash_dir = os.path.join(project_root, 'ios/App/App/Assets.xcassets/Splash.imageset')
     
     if not os.path.exists(icon_light_path):
