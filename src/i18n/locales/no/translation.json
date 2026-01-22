@@ -152,39 +152,39 @@
     "colorPicker": "Fargevelger",
     "shareEvent": "Del hendelse",
     "importFromCalendar": "Importer fra kalender",
-    "openRemoveAds": "Open remove ads options"
+    "openRemoveAds": "Åpne alternativer for å fjerne reklame"
   },
   "ads": {
     "loading": "Ad Loading...",
     "webPlaceholder": "Advertisement"
   },
   "iap": {
-    "title": "Remove Ads",
-    "headline": "Go ad-free",
-    "subheadline": "Enjoy a clean, focused countdown experience.",
-    "cta": "Unlock",
-    "alreadyUnlocked": "You're ad-free",
-    "restore": "Restore Purchases",
-    "restoreSuccess": "Purchases restored.",
-    "restoreNone": "No previous purchases found.",
-    "restoreError": "Restore failed. Please try again.",
-    "purchaseSuccess": "You're now ad-free.",
-    "purchaseError": "Purchase failed. Please try again.",
-    "loadError": "Unable to load products right now.",
-    "loadingProducts": "Loading offers...",
+    "title": "Fjern reklame",
+    "headline": "Gå uten reklame",
+    "subheadline": "Nyt en ren og fokusert nedtelling.",
+    "cta": "Lås opp",
+    "alreadyUnlocked": "Du er reklamefri",
+    "restore": "Gjenopprett kjøp",
+    "restoreSuccess": "Kjøp gjenopprettet.",
+    "restoreNone": "Ingen tidligere kjøp funnet.",
+    "restoreError": "Gjenoppretting mislyktes. Prøv igjen.",
+    "purchaseSuccess": "Du er nå reklamefri.",
+    "purchaseError": "Kjøpet mislyktes. Prøv igjen.",
+    "loadError": "Kan ikke laste inn produkter akkurat nå.",
+    "loadingProducts": "Laster tilbud...",
     "priceFallback": "-",
-    "webUnavailable": "Purchases are available on the iOS app.",
-    "disclaimer": "One-time purchase. Restore any time after reinstalling.",
-    "adFreeBadge": "Ad-free",
+    "webUnavailable": "Kjøp er tilgjengelige i iOS-appen.",
+    "disclaimer": "Engangskjøp. Gjenopprett når som helst etter reinstallasjon.",
+    "adFreeBadge": "Reklamefri",
     "tiers": {
       "standard": {
-        "title": "Remove Ads",
-        "description": "Remove banners and interstitials."
+        "title": "Fjern reklame",
+        "description": "Nyt en ren, uavbrutt nedtellingsopplevelse."
       },
       "supporter": {
-        "title": "Remove Ads",
-        "description": "Ad-free plus a thank you for supporting the app.",
-        "badge": "Supporter"
+        "title": "Fjern reklame",
+        "description": "Reklamefri og en takk for å støtte appen.",
+        "badge": "Støttespiller"
       }
     }
   }

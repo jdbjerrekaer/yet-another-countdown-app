@@ -152,39 +152,39 @@
     "colorPicker": "Farbauswahl",
     "shareEvent": "Ereignis teilen",
     "importFromCalendar": "Aus Kalender importieren",
-    "openRemoveAds": "Open remove ads options"
+    "openRemoveAds": "Optionen zum Entfernen von Werbung öffnen"
   },
   "ads": {
     "loading": "Anzeige wird geladen...",
     "webPlaceholder": "Werbung"
   },
   "iap": {
-    "title": "Remove Ads",
-    "headline": "Go ad-free",
-    "subheadline": "Enjoy a clean, focused countdown experience.",
-    "cta": "Unlock",
-    "alreadyUnlocked": "You're ad-free",
-    "restore": "Restore Purchases",
-    "restoreSuccess": "Purchases restored.",
-    "restoreNone": "No previous purchases found.",
-    "restoreError": "Restore failed. Please try again.",
-    "purchaseSuccess": "You're now ad-free.",
-    "purchaseError": "Purchase failed. Please try again.",
-    "loadError": "Unable to load products right now.",
-    "loadingProducts": "Loading offers...",
+    "title": "Werbung entfernen",
+    "headline": "Werbefrei genießen",
+    "subheadline": "Genieße eine saubere, fokussierte Countdown-Erfahrung.",
+    "cta": "Freischalten",
+    "alreadyUnlocked": "Du bist werbefrei",
+    "restore": "Käufe wiederherstellen",
+    "restoreSuccess": "Käufe wiederhergestellt.",
+    "restoreNone": "Keine früheren Käufe gefunden.",
+    "restoreError": "Wiederherstellung fehlgeschlagen. Bitte erneut versuchen.",
+    "purchaseSuccess": "Du bist jetzt werbefrei.",
+    "purchaseError": "Kauf fehlgeschlagen. Bitte erneut versuchen.",
+    "loadError": "Produkte können derzeit nicht geladen werden.",
+    "loadingProducts": "Angebote werden geladen...",
     "priceFallback": "-",
-    "webUnavailable": "Purchases are available on the iOS app.",
-    "disclaimer": "One-time purchase. Restore any time after reinstalling.",
-    "adFreeBadge": "Ad-free",
+    "webUnavailable": "Käufe sind in der iOS-App verfügbar.",
+    "disclaimer": "Einmaliger Kauf. Nach Neuinstallation jederzeit wiederherstellen.",
+    "adFreeBadge": "Werbefrei",
     "tiers": {
       "standard": {
-        "title": "Remove Ads",
-        "description": "Remove banners and interstitials."
+        "title": "Werbung entfernen",
+        "description": "Genieße eine saubere, ununterbrochene Countdown-Erfahrung."
       },
       "supporter": {
-        "title": "Remove Ads",
-        "description": "Ad-free plus a thank you for supporting the app.",
-        "badge": "Supporter"
+        "title": "Werbung entfernen",
+        "description": "Werbefrei plus ein Dankeschön für die Unterstützung der App.",
+        "badge": "Unterstützer"
       }
     }
   }

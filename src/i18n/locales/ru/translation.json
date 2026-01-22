@@ -152,39 +152,39 @@
     "colorPicker": "Выбор цвета",
     "shareEvent": "Поделиться событием",
     "importFromCalendar": "Импортировать из календаря",
-    "openRemoveAds": "Open remove ads options"
+    "openRemoveAds": "Открыть варианты удаления рекламы"
   },
   "ads": {
     "loading": "Ad Loading...",
     "webPlaceholder": "Advertisement"
   },
   "iap": {
-    "title": "Remove Ads",
-    "headline": "Go ad-free",
-    "subheadline": "Enjoy a clean, focused countdown experience.",
-    "cta": "Unlock",
-    "alreadyUnlocked": "You're ad-free",
-    "restore": "Restore Purchases",
-    "restoreSuccess": "Purchases restored.",
-    "restoreNone": "No previous purchases found.",
-    "restoreError": "Restore failed. Please try again.",
-    "purchaseSuccess": "You're now ad-free.",
-    "purchaseError": "Purchase failed. Please try again.",
-    "loadError": "Unable to load products right now.",
-    "loadingProducts": "Loading offers...",
+    "title": "Убрать рекламу",
+    "headline": "Без рекламы",
+    "subheadline": "Наслаждайтесь чистым и сосредоточенным отсчётом.",
+    "cta": "Разблокировать",
+    "alreadyUnlocked": "Реклама отключена",
+    "restore": "Восстановить покупки",
+    "restoreSuccess": "Покупки восстановлены.",
+    "restoreNone": "Ранее покупок не найдено.",
+    "restoreError": "Не удалось восстановить. Попробуйте снова.",
+    "purchaseSuccess": "Теперь без рекламы.",
+    "purchaseError": "Покупка не удалась. Попробуйте снова.",
+    "loadError": "Сейчас не удаётся загрузить продукты.",
+    "loadingProducts": "Загрузка предложений...",
     "priceFallback": "-",
-    "webUnavailable": "Purchases are available on the iOS app.",
-    "disclaimer": "One-time purchase. Restore any time after reinstalling.",
-    "adFreeBadge": "Ad-free",
+    "webUnavailable": "Покупки доступны в приложении iOS.",
+    "disclaimer": "Разовая покупка. Можно восстановить после переустановки.",
+    "adFreeBadge": "Без рекламы",
     "tiers": {
       "standard": {
-        "title": "Remove Ads",
-        "description": "Remove banners and interstitials."
+        "title": "Убрать рекламу",
+        "description": "Чистый и непрерывный отсчёт без рекламы."
       },
       "supporter": {
-        "title": "Remove Ads",
-        "description": "Ad-free plus a thank you for supporting the app.",
-        "badge": "Supporter"
+        "title": "Убрать рекламу",
+        "description": "Без рекламы и спасибо за поддержку приложения.",
+        "badge": "Поддержка"
       }
     }
   }
