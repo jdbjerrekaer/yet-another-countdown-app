@@ -1,0 +1,51 @@
+.wrapper {
+  box-shadow: none !important;
+  isolation: isolate;
+  contain: paint;
+}
+
+.wrapperSwiping {
+  overflow: visible !important;
+  contain: none !important;
+  z-index: 10;
+  isolation: isolate;
+}
+
+.item {
+  --background: hsl(var(--card));
+  --color: hsl(var(--foreground));
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-start: 0;
+  --inner-padding-end: 0;
+  --inner-border-width: 0;
+  --border-width: 0;
+  --border-color: transparent;
+  --min-height: auto;
+  --ripple-color: transparent;
+  --border-radius: 1rem;
+}
+
+.item::part(native) {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.item:focus,
+.item:focus-visible,
+.item:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.item::part(native):focus,
+.item::part(native):focus-visible,
+.item::part(native):active {
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: inherit;
+}
+
+.wrapperSelected .item::part(native) {
+  border-radius: 1rem !important;
+}

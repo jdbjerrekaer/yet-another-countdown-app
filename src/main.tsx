@@ -45,7 +45,7 @@ import "@ionic/react/css/palettes/dark.class.css";
 /* import "@ionic/react/css/palettes/dark.system.css"; */
 
 /* Custom app styles (after Ionic so we can override) */
-import "./index.css";
+import "./styles/index.scss";
 
 /* Force iOS mode for consistent native iOS feel */
 setupIonicReact({

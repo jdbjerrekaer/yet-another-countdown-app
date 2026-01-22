@@ -1,0 +1,72 @@
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 91%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 211 100% 50%;
+    --radius: 0.75rem;
+    --gradient-sky: linear-gradient(180deg, hsl(210 40% 96%) 0%, hsl(210 30% 94%) 100%);
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 26%;
+    --sidebar-primary: 0 0% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 211 100% 50%;
+    --ad-banner-height: 0px;
+  }
+
+  .dark, .ion-palette-dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 211 100% 60%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 211 100% 60%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 211 100% 60%;
+    --gradient-sky: linear-gradient(180deg, hsl(0 0% 10%) 0%, hsl(0 0% 7%) 100%);
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 211 76% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 211 100% 60%;
+    --ion-background-color: hsl(var(--background)) !important;
+    --ion-text-color: hsl(var(--foreground)) !important;
+    --ion-border-color: hsl(var(--border)) !important;
+    --ion-item-background: hsl(var(--card)) !important;
+    --ion-toolbar-background: hsl(var(--background)) !important;
+    --ion-tab-bar-background: hsl(var(--background)) !important;
+    --ion-card-background: hsl(var(--card)) !important;
+  }
+}

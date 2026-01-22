@@ -6,6 +6,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
+import styles from './styles.module.scss';
 
 interface CountdownCardProps {
   event: CountdownEvent;
@@ -125,37 +126,34 @@ export function CountdownCard({
     }
   };
 
-  // Keep border radius constant at 1rem (16px) - the wrapper clips everything
   const borderRadius = 16;
+
+  const wrapperClasses = [
+    'countdown-card-wrapper',
+    styles.wrapper,
+    'overflow-hidden',
+    !isNative && isSelected && 'countdown-card-selected',
+    isDragging && 'countdown-card-dragging',
+    isSliding && 'countdown-card-swiping',
+    !isReordering && !isDragging && 'active:scale-[0.98]',
+    'transition-transform duration-150',
+  ].filter(Boolean).join(' ');
 
   return (
     <div 
-      className={`countdown-card-wrapper overflow-hidden ${
-        !isNative && isSelected ? 'countdown-card-selected' : ''
-      } ${isDragging ? 'countdown-card-dragging' : ''} ${
-        isSliding ? 'countdown-card-swiping' : ''
-      } ${isReordering || isDragging ? '' : 'active:scale-[0.98]'} transition-transform duration-150`}
+      className={wrapperClasses}
       style={{
         borderRadius: `${borderRadius}px`,
-        // Safari-specific prefix to prevent black border-radius rendering bug
         WebkitBorderRadius: `${borderRadius}px`,
-        // Explicit background to prevent Safari rendering artifacts
-        // Force opaque background when dragging to prevent transparency issues
         backgroundColor: 'hsl(var(--card))',
-        // Prevent rendering artifacts on Safari
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
-        // Safari-specific rendering fix - force hardware acceleration
         WebkitTransform: 'translateZ(0)',
         transform: 'translateZ(0)',
-        // Ensure proper stacking context during drag
         isolation: isDragging ? 'isolate' : 'auto',
-        // Prevent interactions on the actively dragged card
         pointerEvents: isDragging ? 'none' : 'auto',
-        // Force backdrop-filter to none when dragging to prevent transparency
         backdropFilter: isDragging ? 'none' : undefined,
         WebkitBackdropFilter: isDragging ? 'none' : undefined,
-        // Explicitly remove box-shadow on native to prevent any selection outline
         boxShadow: isNative ? 'none' : undefined,
       }}
     >
@@ -185,7 +183,7 @@ export function CountdownCard({
             detail={false}
             onClick={handleSelect}
             lines="none"
-            className="countdown-card-item"
+            className={styles.item}
           >
             <div className="w-full p-4 flex items-center gap-4">
               <div 

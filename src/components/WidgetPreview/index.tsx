@@ -1,6 +1,6 @@
-import { SmallWidget } from './widgets/SmallWidget';
-import { MediumWidget } from './widgets/MediumWidget';
-import { LargeWidget } from './widgets/LargeWidget';
+import { SmallWidget } from '../widgets/SmallWidget';
+import { MediumWidget } from '../widgets/MediumWidget';
+import { LargeWidget } from '../widgets/LargeWidget';
 import { CountdownTime } from '@/hooks/useCountdown';
 import { WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
 

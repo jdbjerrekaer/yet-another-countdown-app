@@ -1,0 +1,61 @@
+.sortableCard {
+  will-change: transform;
+  background-color: transparent;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  transition: 
+    transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.3s ease-out,
+    opacity 0.2s ease;
+}
+
+.isDragging {
+  box-shadow: 
+    0 8px 24px -4px hsl(0 0% 0% / 0.12),
+    0 4px 12px -2px hsl(0 0% 0% / 0.08);
+  opacity: 1;
+  z-index: 50;
+  border-radius: 1rem;
+  overflow: visible;
+  touch-action: none;
+  background-color: transparent;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+.isDragging.isSelected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.isDragging :global(.countdown-card-wrapper) {
+  background: hsl(var(--card)) !important;
+  background-color: hsl(var(--card)) !important;
+  backdrop-filter: none !important;
+  border-radius: 1rem;
+  overflow: hidden;
+  isolation: isolate;
+  opacity: 1;
+}
+
+.sortableCard:not(.isDragging) {
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.sortableCard:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 1rem;
+}
+
+:global(.dark) .isDragging,
+:global(.ion-palette-dark) .isDragging {
+  box-shadow: 
+    0 8px 24px -4px hsl(0 0% 0% / 0.35),
+    0 4px 12px -2px hsl(0 0% 0% / 0.25);
+}

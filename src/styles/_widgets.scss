@@ -1,0 +1,90 @@
+@layer components {
+  .widget-light {
+    --background: 0 0% 98% !important;
+    --foreground: 0 0% 9% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 0 0% 9% !important;
+    --muted: 0 0% 91% !important;
+    --muted-foreground: 0 0% 45% !important;
+    --secondary: 0 0% 95% !important;
+    --secondary-foreground: 0 0% 9% !important;
+    --accent: 211 100% 50% !important;
+    --accent-foreground: 0 0% 100% !important;
+    --destructive: 0 84% 60% !important;
+    --destructive-foreground: 0 0% 100% !important;
+    --border: 0 0% 90% !important;
+    --input: 0 0% 90% !important;
+    --ring: 211 100% 50% !important;
+
+    background: hsl(0 0% 100%) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .widget-dark {
+    --background: 0 0% 7% !important;
+    --foreground: 0 0% 98% !important;
+    --card: 0 0% 10% !important;
+    --card-foreground: 0 0% 98% !important;
+    --muted: 0 0% 15% !important;
+    --muted-foreground: 0 0% 60% !important;
+    --secondary: 0 0% 15% !important;
+    --secondary-foreground: 0 0% 98% !important;
+    --accent: 211 100% 60% !important;
+    --accent-foreground: 0 0% 0% !important;
+    --destructive: 0 63% 50% !important;
+    --destructive-foreground: 0 0% 98% !important;
+    --border: 0 0% 18% !important;
+    --input: 0 0% 18% !important;
+    --ring: 211 100% 60% !important;
+
+    background: hsl(0 0% 10%) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .widget-transparent {
+    --background: 0 0% 98% !important;
+    --foreground: 0 0% 9% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 0 0% 9% !important;
+    --muted: 0 0% 91% !important;
+    --muted-foreground: 0 0% 45% !important;
+    --secondary: 0 0% 95% !important;
+    --secondary-foreground: 0 0% 9% !important;
+    --border: 0 0% 90% !important;
+
+    background: hsl(0 0% 50% / 0.15) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .widget-tinted {}
+
+  .widget-tinted-light {
+    --background: 0 0% 98% !important;
+    --foreground: 0 0% 9% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 0 0% 9% !important;
+    --muted: 0 0% 91% !important;
+    --muted-foreground: 0 0% 45% !important;
+    --secondary: 0 0% 95% !important;
+    --secondary-foreground: 0 0% 9% !important;
+    --border: 0 0% 90% !important;
+    
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .widget-tinted-dark {
+    --background: 0 0% 7% !important;
+    --foreground: 0 0% 98% !important;
+    --card: 0 0% 10% !important;
+    --card-foreground: 0 0% 98% !important;
+    --muted: 0 0% 15% !important;
+    --muted-foreground: 0 0% 60% !important;
+    --secondary: 0 0% 15% !important;
+    --secondary-foreground: 0 0% 98% !important;
+    --border: 0 0% 18% !important;
+
+    color: hsl(var(--foreground)) !important;
+  }
+}

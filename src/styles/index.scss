@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import '@rdlabo/ionic-theme-ios26/dist/css/default-variables.css';
+@import '@rdlabo/ionic-theme-ios26/dist/css/ionic-theme-ios26.css';
+@import '@rdlabo/ionic-theme-ios26/dist/css/md-remove-ios-class-effect.css';
+@import '@rdlabo/ionic-theme-ios26/dist/css/ionic-theme-ios26-dark-class.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './variables';
+@import './base';
+@import './ionic';
+@import './components';
+@import './widgets';
+@import './ads';
+@import './animations';
