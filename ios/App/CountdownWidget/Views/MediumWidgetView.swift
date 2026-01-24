@@ -28,9 +28,17 @@ struct MediumWidgetView: View {
                             .lineLimit(1)
                         
                         if event.isRecurring {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 14))
-                                .foregroundColor(.blue)
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.blue)
+                                
+                                if let occurrenceNumber = event.getNextOccurrenceNumber() {
+                                    Text("#\(occurrenceNumber)")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.blue)
+                                }
+                            }
                         }
                     }
                     

@@ -61,6 +61,47 @@ struct CountdownEvent: Codable, Identifiable, Hashable {
         
         return target
     }
+    
+    /// Gets the number of times a yearly recurring event has occurred since the original date
+    func getRepetitionCount() -> Int {
+        guard isRecurring, let target = targetDateAsDate else {
+            return 0
+        }
+        
+        let calendar = Calendar.current
+        let now = Date()
+        let yearsDiff = calendar.dateComponents([.year], from: target, to: now).year ?? 0
+        
+        if yearsDiff < 0 {
+            return 0
+        }
+        
+        let targetComponents = calendar.dateComponents([.month, .day, .hour, .minute], from: target)
+        var thisYearComponents = calendar.dateComponents([.year], from: now)
+        thisYearComponents.month = targetComponents.month
+        thisYearComponents.day = targetComponents.day
+        thisYearComponents.hour = targetComponents.hour
+        thisYearComponents.minute = targetComponents.minute
+        
+        guard let thisYearOccurrence = calendar.date(from: thisYearComponents) else {
+            return yearsDiff
+        }
+        
+        if now >= thisYearOccurrence || calendar.isDateInToday(thisYearOccurrence) {
+            return yearsDiff + 1
+        } else {
+            return yearsDiff
+        }
+    }
+    
+    /// Gets the next occurrence number for a recurring event
+    func getNextOccurrenceNumber() -> Int? {
+        guard isRecurring else {
+            return nil
+        }
+        
+        return getRepetitionCount() + 1
+    }
 }
 
 /// Widget appearance modes

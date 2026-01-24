@@ -56,7 +56,7 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
 
 function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: { event: TripleEvent; appearanceMode: WidgetAppearanceMode; isLast: boolean; countdownStyle?: WidgetCountdownStyle }) {
   const { t } = useTranslation();
-  const { title, countdown, targetDate, emoji, emojiColor, isRecurring, createdAt } = event;
+  const { title, countdown, targetDate, emoji, emojiColor, isRecurring, createdAt, nextOccurrenceNumber } = event;
   
   const dividerColor = appearanceMode === 'dark' 
     ? 'border-white/15' 
@@ -104,7 +104,12 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             <div className="flex items-center gap-1.5">
               <p className="text-base font-semibold text-foreground truncate">{title}</p>
               {isRecurring && (
-                <RefreshCw className="w-3 h-3 text-primary flex-shrink-0" />
+                <>
+                  <RefreshCw className="w-3 h-3 text-primary flex-shrink-0" />
+                  {nextOccurrenceNumber && (
+                    <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                  )}
+                </>
               )}
             </div>
             {targetDate && (
@@ -153,7 +158,12 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
           <div className="flex items-center gap-1.5">
             <p className="text-base font-semibold text-foreground truncate">{title}</p>
             {isRecurring && (
-              <RefreshCw className="w-3 h-3 text-primary flex-shrink-0" />
+              <>
+                <RefreshCw className="w-3 h-3 text-primary flex-shrink-0" />
+                {nextOccurrenceNumber && (
+                  <span className="text-xs text-primary font-medium">#{nextOccurrenceNumber}</span>
+                )}
+              </>
             )}
           </div>
           {targetDate && (

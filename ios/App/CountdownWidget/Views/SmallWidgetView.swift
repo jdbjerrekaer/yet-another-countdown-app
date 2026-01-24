@@ -22,9 +22,17 @@ struct SmallWidgetView: View {
                 Spacer()
                 
                 if event.isRecurring {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 12))
-                        .foregroundColor(.blue)
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                        
+                        if let occurrenceNumber = event.getNextOccurrenceNumber() {
+                            Text("#\(occurrenceNumber)")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
             }
             
