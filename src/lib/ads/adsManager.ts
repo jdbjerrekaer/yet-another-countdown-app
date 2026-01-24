@@ -129,7 +129,11 @@ const PREPARE_TIMEOUT_MS = 30_000; // 30 seconds timeout
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_BASE_MS = 5_000; // 5 seconds base delay
 
+const INIT_MAX_RETRY_ATTEMPTS = 3;
+const INIT_RETRY_DELAY_BASE_MS = 2_000; // 2 seconds base delay
+
 let lastPrepareError: Error | null = null;
+let initPromise: Promise<void> | null = null;
 
 const prepareInterstitial = async (retryCount = 0): Promise<void> => {
   if (interstitialLoadPromise) return interstitialLoadPromise;
@@ -311,134 +315,179 @@ const resetConsent = async () => {
 };
 
 export const AdsManager = {
-  init: async () => {
-    if (!Capacitor.isNativePlatform() || isInitialized) return;
+  init: async (retryCount = 0): Promise<void> => {
+    if (!Capacitor.isNativePlatform()) return;
+    if (isInitialized) return;
+    if (initPromise) return initPromise;
+    
     const enabled = await isAdsEnabled();
-    if (!enabled) return;
-    debugInfo.init = "initializing";
-    debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    isInitialized = true;
-
-    try {
-      await AdMob.initialize();
-      debugInfo.init = "initialized";
+    if (!enabled) {
+      debugInfo.init = "disabled";
       debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    } catch (error) {
-      console.warn("[Ads] AdMob initialization failed", error);
-      debugInfo.init = "failed";
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+      return;
     }
-
-    let consentStatus = AdmobConsentStatus.UNKNOWN;
-    try {
-      const consentInfo = await AdMob.requestConsentInfo();
-      consentStatus = consentInfo.status;
-      debugInfo.consentStatus = consentInfo.status as ConsentStatus;
-      debugInfo.consentFormAvailable = consentInfo.isConsentFormAvailable;
+    
+    initPromise = (async () => {
+      debugInfo.init = "initializing";
       debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-      if (
-        consentInfo.isConsentFormAvailable &&
-        consentStatus === AdmobConsentStatus.REQUIRED
-      ) {
-        const { status } = await AdMob.showConsentForm();
-        consentStatus = status;
-        debugInfo.consentStatus = status as ConsentStatus;
+
+      try {
+        await AdMob.initialize();
+        isInitialized = true;
+        debugInfo.init = "initialized";
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+        console.log("[Ads] AdMob initialized successfully");
+      } catch (error) {
+        console.warn("[Ads] AdMob initialization failed", error);
+        debugInfo.init = "failed";
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+        isInitialized = false;
+        
+        if (retryCount < INIT_MAX_RETRY_ATTEMPTS) {
+          const delayMs = INIT_RETRY_DELAY_BASE_MS * Math.pow(2, retryCount);
+          console.log(`[Ads] Retrying initialization in ${delayMs}ms (attempt ${retryCount + 1}/${INIT_MAX_RETRY_ATTEMPTS})`);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          initPromise = null;
+          try {
+            return await AdsManager.init(retryCount + 1);
+          } catch (retryError) {
+            console.error("[Ads] Initialization retry failed", retryError);
+            initPromise = null;
+            throw retryError;
+          }
+        } else {
+          console.error("[Ads] AdMob initialization failed after all retry attempts");
+          initPromise = null;
+          throw error instanceof Error ? error : new Error(String(error));
+        }
+      }
+
+      if (!isInitialized) {
+        initPromise = null;
+        return;
+      }
+
+      let consentStatus = AdmobConsentStatus.UNKNOWN;
+      try {
+        const consentInfo = await AdMob.requestConsentInfo();
+        consentStatus = consentInfo.status;
+        debugInfo.consentStatus = consentInfo.status as ConsentStatus;
+        debugInfo.consentFormAvailable = consentInfo.isConsentFormAvailable;
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+        if (
+          consentInfo.isConsentFormAvailable &&
+          consentStatus === AdmobConsentStatus.REQUIRED
+        ) {
+          const { status } = await AdMob.showConsentForm();
+          consentStatus = status;
+          debugInfo.consentStatus = status as ConsentStatus;
+          debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+        }
+      } catch (error) {
+        console.warn("[Ads] Consent flow failed", error);
+        debugInfo.consentStatus = "UNKNOWN";
         debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
       }
-    } catch (error) {
-      console.warn("[Ads] Consent flow failed", error);
-      debugInfo.consentStatus = "UNKNOWN";
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    }
 
-    try {
-      const trackingInfo = await AdMob.trackingAuthorizationStatus();
-      debugInfo.trackingStatus = trackingInfo.status as TrackingStatus;
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-      if (trackingInfo.status === "notDetermined") {
-        await AdMob.requestTrackingAuthorization();
+      try {
+        const trackingInfo = await AdMob.trackingAuthorizationStatus();
+        debugInfo.trackingStatus = trackingInfo.status as TrackingStatus;
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+        if (trackingInfo.status === "notDetermined") {
+          await AdMob.requestTrackingAuthorization();
+        }
+      } catch (error) {
+        console.warn("[Ads] Tracking authorization failed", error);
+        debugInfo.trackingStatus = "unknown";
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
       }
-    } catch (error) {
-      console.warn("[Ads] Tracking authorization failed", error);
-      debugInfo.trackingStatus = "unknown";
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    }
 
-    try {
-      const trackingStatus = await AdMob.trackingAuthorizationStatus();
-      debugInfo.trackingStatus = trackingStatus.status as TrackingStatus;
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-      allowPersonalizedAds =
-        (consentStatus === AdmobConsentStatus.OBTAINED ||
-          consentStatus === AdmobConsentStatus.NOT_REQUIRED) &&
-        trackingStatus.status === "authorized";
-    } catch (error) {
-      allowPersonalizedAds = false;
-    }
-
-    AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {
-      const height = typeof size?.height === "number" ? size.height : 0;
-      setBannerHeight(height);
-    });
-
-    AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
-      bannerVisible = true;
-      notifyBannerStatus("visible");
-      debugInfo.lastBannerError = "";
-      debugInfo.lastBannerShowAt = new Date().toISOString();
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    });
-
-    AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
-      bannerVisible = false;
-      notifyBannerStatus("failed");
-      debugInfo.lastBannerError =
-        typeof (info as { error?: string })?.error === "string"
-          ? (info as { error?: string }).error ?? ""
-          : "unknown error";
-      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    });
-
-    AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
-      interstitialReady = true;
-      interstitialLoading = false;
-      lastPrepareError = null;
-      if (interstitialLoadResolve) {
-        interstitialLoadResolve();
-        interstitialLoadPromise = null;
-        interstitialLoadResolve = null;
-        interstitialLoadReject = null;
+      try {
+        const trackingStatus = await AdMob.trackingAuthorizationStatus();
+        debugInfo.trackingStatus = trackingStatus.status as TrackingStatus;
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+        allowPersonalizedAds =
+          (consentStatus === AdmobConsentStatus.OBTAINED ||
+            consentStatus === AdmobConsentStatus.NOT_REQUIRED) &&
+          trackingStatus.status === "authorized";
+        console.log("[Ads] Personalized ads allowed:", allowPersonalizedAds);
+      } catch (error) {
+        console.warn("[Ads] Failed to determine personalized ads status", error);
+        allowPersonalizedAds = false;
       }
-    });
 
-    AdMob.addListener(InterstitialAdPluginEvents.Dismissed, async () => {
-      interstitialReady = false;
-      void prepareInterstitial().catch(() => {});
-    });
+      AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {
+        const height = typeof size?.height === "number" ? size.height : 0;
+        setBannerHeight(height);
+      });
 
-    AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, async () => {
-      interstitialReady = false;
-      if (interstitialLoadReject) {
-        interstitialLoadReject(new Error("Interstitial ad failed to show"));
-        interstitialLoadPromise = null;
-        interstitialLoadResolve = null;
-        interstitialLoadReject = null;
+      AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+        bannerVisible = true;
+        notifyBannerStatus("visible");
+        debugInfo.lastBannerError = "";
+        debugInfo.lastBannerShowAt = new Date().toISOString();
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+      });
+
+      AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
+        bannerVisible = false;
+        notifyBannerStatus("failed");
+        debugInfo.lastBannerError =
+          typeof (info as { error?: string })?.error === "string"
+            ? (info as { error?: string }).error ?? ""
+            : "unknown error";
+        debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+      });
+
+      AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
+        interstitialReady = true;
+        interstitialLoading = false;
+        lastPrepareError = null;
+        if (interstitialLoadResolve) {
+          interstitialLoadResolve();
+          interstitialLoadPromise = null;
+          interstitialLoadResolve = null;
+          interstitialLoadReject = null;
+        }
+      });
+
+      AdMob.addListener(InterstitialAdPluginEvents.Dismissed, async () => {
+        interstitialReady = false;
+        void prepareInterstitial().catch(() => {});
+      });
+
+      AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, async () => {
+        interstitialReady = false;
+        if (interstitialLoadReject) {
+          interstitialLoadReject(new Error("Interstitial ad failed to show"));
+          interstitialLoadPromise = null;
+          interstitialLoadResolve = null;
+          interstitialLoadReject = null;
+        }
+        void prepareInterstitial().catch(() => {});
+      });
+
+      AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
+        interstitialReady = false;
+        interstitialLoading = false;
+        if (interstitialLoadReject) {
+          interstitialLoadReject(new Error("Interstitial ad failed to load"));
+          interstitialLoadPromise = null;
+          interstitialLoadResolve = null;
+          interstitialLoadReject = null;
+        }
+      });
+
+      try {
+        await prepareInterstitial();
+      } catch (error) {
+        console.warn("[Ads] Failed to prepare interstitial during init", error);
       }
-      void prepareInterstitial().catch(() => {});
-    });
-
-    AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
-      interstitialReady = false;
-      interstitialLoading = false;
-      if (interstitialLoadReject) {
-        interstitialLoadReject(new Error("Interstitial ad failed to load"));
-        interstitialLoadPromise = null;
-        interstitialLoadResolve = null;
-        interstitialLoadReject = null;
-      }
-    });
-
-    await prepareInterstitial();
+      
+      initPromise = null;
+    })();
+    
+    return initPromise;
   },
 
   showBanner: async () => {
@@ -453,6 +502,7 @@ export const AdsManager = {
     }
     if (!isInitialized) return;
     if (bannerVisible) return;
+    
     debugInfo.lastBannerRequestAt = new Date().toISOString();
     debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
 
@@ -469,7 +519,9 @@ export const AdsManager = {
       bannerVisible = false;
       notifyBannerStatus("failed");
       setBannerHeight(0);
-      console.warn("[Ads] Banner show failed", error);
+      console.error("[Ads] Banner show failed", error);
+      debugInfo.lastBannerError = error instanceof Error ? error.message : String(error);
+      debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
     }
   },
 
@@ -498,8 +550,8 @@ export const AdsManager = {
 
     if (!isInitialized) {
       await AdsManager.init();
-      if (!isInitialized) return;
     }
+    if (!isInitialized) return;
 
     if (kind === "create") {
       const hasCreatedOnce = await getBool(PREF_HAS_CREATED_ONCE);
@@ -583,4 +635,18 @@ export const AdsManager = {
     return () => bannerStatusListeners.delete(listener);
   },
   resetConsent,
+  resetInitialization: () => {
+    isInitialized = false;
+    initPromise = null;
+    bannerVisible = false;
+    interstitialReady = false;
+    interstitialLoading = false;
+    interstitialLoadPromise = null;
+    interstitialLoadResolve = null;
+    interstitialLoadReject = null;
+    debugInfo.init = "not-started";
+    debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
+    notifyBannerStatus("hidden");
+    setBannerHeight(0);
+  },
 };

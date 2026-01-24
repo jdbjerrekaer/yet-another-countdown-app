@@ -475,6 +475,8 @@ export default function Index() {
         setShowAdPlaceholder(false);
       } else {
         toast.message('Ad-free disabled (dev build).');
+        await AdsManager.setDevAdsEnabled(true);
+        AdsManager.resetInitialization();
         await AdsManager.showBanner();
       }
     }, 700);
