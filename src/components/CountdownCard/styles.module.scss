@@ -3,14 +3,17 @@
   isolation: isolate;
   contain: paint;
   overflow: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 .wrapperSwiping {
-  overflow: visible !important;
-  contain: none !important;
+  overflow: hidden !important;
   z-index: 10;
   isolation: isolate;
   border-radius: 1rem !important;
+  border: none !important;
+  border-bottom: none !important;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 .item {
@@ -26,11 +29,14 @@
   --min-height: auto;
   --ripple-color: transparent;
   --border-radius: 1rem;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
 }
 
 .item::part(native) {
-  overflow: hidden;
-  border-radius: inherit;
+  overflow: hidden !important;
+  border-radius: 1rem !important;
+  background: hsl(var(--card)) !important;
 }
 
 .item:focus,
@@ -56,12 +62,16 @@
   --border-radius: 1rem;
   --border-top-left-radius: 1rem;
   --border-bottom-left-radius: 1rem;
+  --border-top-right-radius: 1rem;
+  --border-bottom-right-radius: 1rem;
 }
 
 .wrapperSwiping .item::part(native) {
   border-radius: 1rem !important;
   border-top-left-radius: 1rem !important;
   border-bottom-left-radius: 1rem !important;
+  border-top-right-radius: 1rem !important;
+  border-bottom-right-radius: 1rem !important;
   overflow: hidden !important;
 }
 
@@ -73,22 +83,96 @@
   --padding-end: 0;
   --ion-color-base: transparent !important;
   --ion-color-contrast: hsl(var(--foreground)) !important;
+  --border-width: 0 !important;
+  --border-color: transparent !important;
+  --inner-border-width: 0 !important;
   background: transparent !important;
   background-color: transparent !important;
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
   pointer-events: auto;
+  border-top-right-radius: 1rem !important;
+  border-bottom-right-radius: 1rem !important;
+  overflow: hidden !important;
 }
 
 .deleteOption::part(native) {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: hsl(var(--background)) !important;
+  background-color: hsl(var(--background)) !important;
+  border-radius: 0 1rem 1rem 0 !important;
+  border-top-right-radius: 1rem !important;
+  border-bottom-right-radius: 1rem !important;
+  overflow: hidden !important;
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+.deleteOption::before,
+.deleteOption::after {
+  display: none !important;
+  border: none !important;
+}
+
+.deleteOption::part(native)::before,
+.deleteOption::part(native)::after {
+  display: none !important;
+  border: none !important;
+}
+
+// Dark mode specific styles to ensure background matches
+:global(.dark) .deleteOption,
+:global(.ion-palette-dark) .deleteOption {
+  --background: hsl(var(--background)) !important;
+  --ion-color-base: hsl(var(--background)) !important;
+  --border-width: 0 !important;
+  --border-color: transparent !important;
+  --inner-border-width: 0 !important;
+  background: hsl(var(--background)) !important;
+  background-color: hsl(var(--background)) !important;
+  border: none !important;
+  border-bottom: none !important;
+}
+
+:global(.dark) .deleteOption::part(native),
+:global(.ion-palette-dark) .deleteOption::part(native) {
+  background: hsl(var(--background)) !important;
+  background-color: hsl(var(--background)) !important;
+  border: none !important;
+  border-bottom: none !important;
 }
 
 .deleteOptions {
   pointer-events: none;
+  border: none !important;
+  border-bottom: none !important;
+  border-width: 0 !important;
 }
 
 .deleteOptions :global(ion-item-option) {
   pointer-events: auto;
+}
+
+.deleteOptions::part(native) {
+  border: none !important;
+  border-bottom: none !important;
+  border-width: 0 !important;
 }
 
 .deleteContent {

@@ -113,22 +113,54 @@ export function CountdownCard({
     return () => clearInterval(intervalId);
   }, [isSliding, checkIfClosed]);
 
+  useEffect(() => {
+    const deleteOptionEl = slidingRef.current?.querySelector('ion-item-option');
+    if (!deleteOptionEl || !isSliding) return;
+    
+    const applyBackground = () => {
+      const native = deleteOptionEl.shadowRoot?.querySelector('.item-native') || deleteOptionEl.shadowRoot?.querySelector('[part="native"]');
+      if (native) {
+        const rootComputed = window.getComputedStyle(document.documentElement);
+        const backgroundVar = rootComputed.getPropertyValue('--background');
+        const backgroundValue = `hsl(${backgroundVar})`;
+        const nativeEl = native as HTMLElement;
+        
+        nativeEl.style.setProperty('background', backgroundValue, 'important');
+        nativeEl.style.setProperty('background-color', backgroundValue, 'important');
+        nativeEl.style.setProperty('border', 'none', 'important');
+        nativeEl.style.setProperty('border-width', '0', 'important');
+        nativeEl.style.setProperty('box-shadow', 'none', 'important');
+        nativeEl.style.setProperty('border-top-right-radius', '16px', 'important');
+        nativeEl.style.setProperty('border-bottom-right-radius', '16px', 'important');
+        nativeEl.style.setProperty('border-top-left-radius', '0', 'important');
+        nativeEl.style.setProperty('border-bottom-left-radius', '0', 'important');
+        nativeEl.style.setProperty('overflow', 'hidden', 'important');
+        
+        const hostEl = deleteOptionEl as HTMLElement;
+        hostEl.style.setProperty('border', 'none', 'important');
+        hostEl.style.setProperty('border-width', '0', 'important');
+        hostEl.style.setProperty('border-top-right-radius', '16px', 'important');
+        hostEl.style.setProperty('border-bottom-right-radius', '16px', 'important');
+        hostEl.style.setProperty('overflow', 'hidden', 'important');
+      }
+    };
+    
+    applyBackground();
+    const timeoutId = setTimeout(applyBackground, 100);
+    return () => clearTimeout(timeoutId);
+  }, [isSliding]);
+
+
   const handleDrag = (e: CustomEvent) => {
-    // IonItemSliding drag event provides amount in pixels
-    const amount = (e.detail as any)?.amount || 0;
-    // Set sliding state when swiping starts
+    const amount = (e.detail as { amount?: number })?.amount || 0;
     if (Math.abs(amount) > 2) {
       setIsSliding(true);
     }
-    // Calculate progress (0 to 1) based on swipe amount
-    // Increased maxSwipe to 120px so text only appears on long swipes (85% = 102px)
     const maxSwipe = 120;
     const progress = Math.min(Math.max(Math.abs(amount) / maxSwipe, 0), 1);
     setSwipeProgress(progress);
     setSwipeAmount(Math.abs(amount));
     
-    // Trigger soft haptic when swipe reaches threshold (around 50% progress)
-    // This happens during the swipe, before the delete dialog appears
     const hapticThreshold = 0.5;
     if (progress >= hapticThreshold && !hapticTriggeredRef.current) {
       trigger('light');
@@ -154,7 +186,7 @@ export function CountdownCard({
       style={{
         borderRadius: `${borderRadius}px`,
         WebkitBorderRadius: `${borderRadius}px`,
-        backgroundColor: 'hsl(var(--card))',
+        backgroundColor: isSliding ? 'transparent' : 'hsl(var(--card))',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
         WebkitTransform: 'translateZ(0)',
@@ -164,6 +196,9 @@ export function CountdownCard({
         backdropFilter: isDragging ? 'none' : undefined,
         WebkitBackdropFilter: isDragging ? 'none' : undefined,
         boxShadow: isNative ? 'none' : undefined,
+        border: isSliding ? 'none' : undefined,
+        borderBottom: isSliding ? 'none' : undefined,
+        borderWidth: isSliding ? '0' : undefined,
       }}
     >
       <IonItemSliding 
@@ -172,10 +207,11 @@ export function CountdownCard({
         onIonDrag={handleDrag}
         style={{
           borderRadius: `${borderRadius}px`,
-          borderTopLeftRadius: `${borderRadius}px`,
-          borderBottomLeftRadius: `${borderRadius}px`,
-          overflow: isSliding ? 'visible' : 'hidden',
-        }}
+          WebkitBorderRadius: `${borderRadius}px`,
+          overflow: 'hidden',
+          background: 'transparent',
+          '--background': 'transparent',
+        } as React.CSSProperties}
       >
           {/* Delete option on the right side */}
           <IonItemOptions side="end" onIonSwipe={handleSwipe} className={styles.deleteOptions}>
@@ -183,6 +219,55 @@ export function CountdownCard({
               expandable
               onClick={handleDelete}
               className={styles.deleteOption}
+              style={{
+                '--background': 'hsl(var(--background))',
+                '--ion-color-base': 'hsl(var(--background))',
+                '--border-width': '0',
+                '--border-color': 'transparent',
+                '--inner-border-width': '0',
+                background: 'hsl(var(--background))',
+                backgroundColor: 'hsl(var(--background))',
+                border: 'none',
+                borderTop: 'none',
+                borderRight: 'none',
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderWidth: '0',
+                borderStyle: 'none',
+                borderColor: 'transparent',
+                outline: 'none',
+                boxShadow: 'none',
+              } as React.CSSProperties}
+              ref={(el) => {
+                if (!el) return;
+                const applyBackground = () => {
+                  const native = el.shadowRoot?.querySelector('.item-native') || el.shadowRoot?.querySelector('[part="native"]');
+                  if (native) {
+                    const rootComputed = window.getComputedStyle(document.documentElement);
+                    const backgroundVar = rootComputed.getPropertyValue('--background');
+                    const backgroundValue = `hsl(${backgroundVar})`;
+                    const nativeEl = native as HTMLElement;
+                    nativeEl.style.setProperty('background', backgroundValue, 'important');
+                    nativeEl.style.setProperty('background-color', backgroundValue, 'important');
+                    nativeEl.style.setProperty('border', 'none', 'important');
+                    nativeEl.style.setProperty('border-width', '0', 'important');
+                    nativeEl.style.setProperty('box-shadow', 'none', 'important');
+                    nativeEl.style.setProperty('border-top-right-radius', '16px', 'important');
+                    nativeEl.style.setProperty('border-bottom-right-radius', '16px', 'important');
+                    nativeEl.style.setProperty('border-top-left-radius', '0', 'important');
+                    nativeEl.style.setProperty('border-bottom-left-radius', '0', 'important');
+                    nativeEl.style.setProperty('overflow', 'hidden', 'important');
+                    const hostEl = el as HTMLElement;
+                    hostEl.style.setProperty('border', 'none', 'important');
+                    hostEl.style.setProperty('border-width', '0', 'important');
+                    hostEl.style.setProperty('border-top-right-radius', '16px', 'important');
+                    hostEl.style.setProperty('border-bottom-right-radius', '16px', 'important');
+                    hostEl.style.setProperty('overflow', 'hidden', 'important');
+                  }
+                };
+                applyBackground();
+                setTimeout(applyBackground, 100);
+              }}
             >
               <div className={styles.deleteContent}>
                 <div 
@@ -238,8 +323,18 @@ export function CountdownCard({
             onClick={handleSelect}
             lines="none"
             className={styles.item}
+            style={{
+              '--border-radius': `${borderRadius}px`,
+              borderRadius: `${borderRadius}px`,
+            } as React.CSSProperties}
           >
-            <div className="w-full p-4 flex items-center gap-4">
+            <div 
+              className="w-full p-4 flex items-center gap-4"
+              style={{
+                borderRadius: `${borderRadius}px`,
+                backgroundColor: 'hsl(var(--card))',
+              }}
+            >
               <div 
                 className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${!event.emojiColor ? 'gradient-accent' : ''}`}
                 style={event.emojiColor ? { 
@@ -283,13 +378,15 @@ export function CountdownCard({
                 </div>
               </div>
               
-              <button
-                className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
-                onClick={handleEdit}
-                aria-label={t('aria.editEvent')}
-              >
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </button>
+              {!event.isImported && (
+                <button
+                  className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
+                  onClick={handleEdit}
+                  aria-label={t('aria.editEvent')}
+                >
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </button>
+              )}
             </div>
           </IonItem>
         </IonItemSliding>

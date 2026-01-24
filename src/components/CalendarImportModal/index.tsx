@@ -438,14 +438,14 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
                   key={event.id}
                   button
                   onClick={() => toggleEventSelection(event.id)}
-                  className="ion-no-padding"
+                  className="ion-no-padding calendar-import-item"
                 >
                   <IonCheckbox
                     slot="start"
                     checked={selectedEventIds.has(event.id)}
                     className="ml-4"
                   />
-                  <IonLabel className="py-3">
+                  <IonLabel className="py-3 calendar-import-label">
                     <h2 className="flex items-center gap-2">
                       <span>{getEventEmoji(event)}</span>
                       <span className="font-medium">{event.title}</span>

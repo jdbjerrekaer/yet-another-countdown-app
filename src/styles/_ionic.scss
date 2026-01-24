@@ -253,9 +253,30 @@
   }
 
   ion-item-sliding {
-    --background: hsl(var(--card));
+    --background: transparent !important;
+    background: transparent !important;
     border-radius: inherit;
     overflow: hidden;
+    border: none !important;
+    border-bottom: none !important;
+    border-width: 0 !important;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+
+  ion-item-sliding::part(native) {
+    border: none !important;
+    border-bottom: none !important;
+    border-width: 0 !important;
+    border-radius: 1rem !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  ion-item-sliding::part(container),
+  ion-item-sliding::part(content) {
+    border-radius: 1rem !important;
+    overflow: hidden !important;
   }
 
   ion-item-options {
@@ -263,6 +284,9 @@
     overflow: hidden;
     --background: transparent !important;
     background: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-width: 0 !important;
   }
 
   ion-item-options[side="end"] {
@@ -271,6 +295,15 @@
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     background: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-width: 0 !important;
+  }
+
+  ion-item-options::part(native) {
+    border: none !important;
+    border-bottom: none !important;
+    border-width: 0 !important;
   }
 
   ion-item-option {
@@ -286,20 +319,65 @@
   ion-item-option::part(native) {
     background: transparent !important;
     background-color: transparent !important;
+    border-radius: inherit !important;
+    overflow: hidden !important;
   }
 
   ion-item-options[side="end"] ion-item-option:last-child {
     border-top-right-radius: 1rem;
     border-bottom-right-radius: 1rem;
+    --background: hsl(var(--background)) !important;
+    --ion-color-base: hsl(var(--background)) !important;
+    --border-width: 0 !important;
+    --border-color: transparent !important;
+    --inner-border-width: 0 !important;
     background: hsl(var(--background)) !important;
     background-color: hsl(var(--background)) !important;
+    border: none !important;
+    border-bottom: none !important;
+  }
+
+  ion-item-options[side="end"] ion-item-option:last-child::part(native) {
+    background: hsl(var(--background)) !important;
+    background-color: hsl(var(--background)) !important;
+    border-radius: 0 1rem 1rem 0 !important;
+    overflow: hidden !important;
+    border: none !important;
+    border-bottom: none !important;
   }
 
   .countdown-card-swiping ion-item-sliding {
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   .countdown-card-swiping ion-item-options {
-    overflow: visible !important;
+    overflow: hidden !important;
+  }
+
+  // Ensure the sliding card content always maintains full border radius on all sides
+  ion-item-sliding ion-item {
+    --border-radius: 1rem !important;
+    border-radius: 1rem !important;
+  }
+
+  ion-item-sliding ion-item::part(native) {
+    border-radius: 1rem !important;
+  }
+
+  .calendar-import-item {
+    --padding-start: 0;
+    --padding-end: 0;
+    --inner-padding-start: 0;
+    --inner-padding-end: 0;
+  }
+
+  .calendar-import-item::part(native) {
+    --padding-start: 0;
+    --padding-end: 0;
+  }
+
+  .calendar-import-label {
+    margin: 0;
+    padding: 0;
   }
 }

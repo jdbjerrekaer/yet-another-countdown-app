@@ -41,6 +41,7 @@
   overflow: hidden;
   isolation: isolate;
   opacity: 1;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 .sortableCard:not(.isDragging) {
