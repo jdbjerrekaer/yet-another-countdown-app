@@ -33,6 +33,26 @@ function adjustColorBrightness(hex: string, percent: number): string {
   return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
 }
 
+// Helper to safely normalize a date
+function normalizeDate(date: Date | undefined, isEditing: boolean): Date {
+  // If date is provided and valid, return it
+  if (date && !isNaN(date.getTime())) {
+    return date;
+  }
+  // Otherwise, return today at 8am
+  const today = new Date();
+  today.setHours(8, 0, 0, 0);
+  return today;
+}
+
+// Helper to format date for IonDatetime value prop
+function formatDateForDatetime(date: Date | undefined): string | undefined {
+  if (!date || isNaN(date.getTime())) {
+    return undefined;
+  }
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -106,6 +126,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const [modalSessionKey, setModalSessionKey] = useState(0);
   const [showYearlySuggestion, setShowYearlySuggestion] = useState(false);
   const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
+  const [datetimeKey, setDatetimeKey] = useState(0);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -154,17 +175,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       setModalSessionKey(prev => prev + 1);
       
       setTitle(initialTitle || '');
-      // Ensure initial date has 8am time for new events
-      let dateToSet = initialDate;
-      if (!initialDate && !isEditing) {
-        const today = new Date();
-        today.setHours(8, 0, 0, 0);
-        dateToSet = today;
+      // Normalize initial date - ensure it's always valid
+      const normalizedDate = normalizeDate(initialDate, isEditing);
+      // For new events, ensure time is 8am
+      if (!isEditing) {
+        normalizedDate.setHours(8, 0, 0, 0);
       }
-      setDate(dateToSet);
+      setDate(normalizedDate);
+      // Force IonDatetime remount by updating key
+      setDatetimeKey(prev => prev + 1);
       // Store original date for change detection when editing (create a copy to avoid reference issues)
-      if (isEditing && initialDate) {
-        originalDateRef.current = new Date(initialDate.getTime());
+      if (isEditing && normalizedDate) {
+        originalDateRef.current = new Date(normalizedDate.getTime());
       } else {
         originalDateRef.current = undefined;
       }
@@ -183,7 +205,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       // Initialize yearly suggestion state based on initial conditions
       setIsYearlySuggestionExiting(false);
       // Check if banner should be shown based on initial props
-      const initialShouldShow = dateToSet && !(initialIsRecurring ?? false) && differenceInYears(new Date(), dateToSet) >= 1;
+      const initialShouldShow = normalizedDate && !(initialIsRecurring ?? false) && differenceInYears(new Date(), normalizedDate) >= 1;
       setShowYearlySuggestion(initialShouldShow);
       
       setTimeout(() => {
@@ -944,9 +966,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   {/* Native Ionic Calendar */}
                   <div className="p-2 flex justify-center">
                     <IonDatetime
+                      key={`datetime-${datetimeKey}-${formatDateForDatetime(date) || 'none'}`}
                       ref={datetimeRef}
                       presentation="date"
-                      value={date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : undefined}
+                      value={formatDateForDatetime(date)}
                       onIonChange={(e) => {
                         trigger('medium');
                         const value = (e.detail as any).value;
@@ -954,6 +977,11 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           // Parse the date string as local date (YYYY-MM-DD format)
                           const [year, month, day] = value.split('T')[0].split('-').map(Number);
                           const newDate = new Date(year, month - 1, day);
+                          // Validate the parsed date
+                          if (isNaN(newDate.getTime())) {
+    setDate(normalizeDate(date, isEditing));
+    return;
+                          }
                           // For new events, set time to 8am; for editing, preserve existing time
                           if (!isEditing) {
                             newDate.setHours(8, 0, 0, 0);
@@ -962,6 +990,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                             newDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
                           }
                           setDate(newDate);
+                          setDatetimeKey(prev => prev + 1);
                         }
                       }}
                       min="1900-01-01"
