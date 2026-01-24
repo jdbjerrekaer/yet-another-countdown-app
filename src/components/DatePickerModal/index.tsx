@@ -966,7 +966,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   {/* Native Ionic Calendar */}
                   <div className="p-2 flex justify-center">
                     <IonDatetime
-                      key={`datetime-${datetimeKey}-${formatDateForDatetime(date) || 'none'}`}
+                      key={`datetime-${datetimeKey}`}
                       ref={datetimeRef}
                       presentation="date"
                       value={formatDateForDatetime(date)}
@@ -990,7 +990,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                             newDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
                           }
                           setDate(newDate);
-                          setDatetimeKey(prev => prev + 1);
                         }
                       }}
                       min="1900-01-01"
