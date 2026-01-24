@@ -18,7 +18,7 @@
 			<key>Title</key>
 			<string>Language</string>
 			<key>Key</key>
-			<string>app_language</string>
+			<string>CapacitorStorage.app_language</string>
 			<key>DefaultValue</key>
 			<string>en</string>
 			<key>Values</key>

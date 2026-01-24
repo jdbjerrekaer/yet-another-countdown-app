@@ -150,4 +150,15 @@ if (Capacitor.isNativePlatform()) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Initialize app: await language preference check before rendering to prevent language flash
+async function initApp() {
+  // On native platforms, ensure language preference is loaded before rendering
+  if (Capacitor.isNativePlatform()) {
+    await checkPreferencesLanguage();
+  }
+  
+  // Now render the app with the correct language
+  createRoot(document.getElementById("root")!).render(<App />);
+}
+
+initApp();
