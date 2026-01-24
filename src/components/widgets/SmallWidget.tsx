@@ -70,6 +70,24 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
   }
 }
 
+function getFontSizeForValue(value: number): { number: string; unit: string } {
+  const digitCount = Math.abs(value).toString().length;
+  
+  if (digitCount === 1) {
+    return { number: 'text-3xl', unit: 'text-lg' };
+  }
+  if (digitCount === 2) {
+    return { number: 'text-2xl', unit: 'text-base' };
+  }
+  if (digitCount === 3) {
+    return { number: 'text-xl', unit: 'text-sm' };
+  }
+  if (digitCount === 4) {
+    return { number: 'text-lg', unit: 'text-xs' };
+  }
+  return { number: 'text-base', unit: 'text-xs' };
+}
+
 export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, appearanceMode, countdownStyle, isRecurring, createdAt, nextOccurrenceNumber }: SmallWidgetProps) {
   const { t } = useTranslation();
   const timeDisplay = getTimeDisplay(countdown);
@@ -240,15 +258,25 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
           </p>
         )}
         {countdown.isPast ? (
-          <p className="text-3xl font-bold text-foreground tracking-tight">
-            {countdown.daysSince}<span className="text-lg font-medium text-muted-foreground ml-1">{countdown.daysSince === 1 ? t('widget.units.days') : t('widget.units.days_plural')} {t('widget.daysAgoText')}</span>
-          </p>
+          (() => {
+            const fontSize = getFontSizeForValue(countdown.daysSince);
+            return (
+              <p className={`${fontSize.number} font-bold text-foreground tracking-tight`}>
+                {countdown.daysSince}<span className={`${fontSize.unit} font-medium text-muted-foreground ml-1`}>{countdown.daysSince === 1 ? t('widget.units.days') : t('widget.units.days_plural')} {t('widget.daysAgoText')}</span>
+              </p>
+            );
+          })()
         ) : countdown.isComplete ? (
           <p className="text-2xl font-bold text-primary">{t('countdown.today')}</p>
         ) : (
-          <p className="text-3xl font-bold text-foreground tracking-tight">
-            {timeDisplay.value}<span className="text-lg font-medium text-muted-foreground ml-1">{getTimeUnitLabel(timeDisplay.unit, timeDisplay.value, t)}</span>
-          </p>
+          (() => {
+            const fontSize = getFontSizeForValue(timeDisplay.value);
+            return (
+              <p className={`${fontSize.number} font-bold text-foreground tracking-tight`}>
+                {timeDisplay.value}<span className={`${fontSize.unit} font-medium text-muted-foreground ml-1`}>{getTimeUnitLabel(timeDisplay.unit, timeDisplay.value, t)}</span>
+              </p>
+            );
+          })()
         )}
       </div>
     </div>
