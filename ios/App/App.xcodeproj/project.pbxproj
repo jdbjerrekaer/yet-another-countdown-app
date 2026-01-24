@@ -18,6 +18,7 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		A60AD3392F1A581900BDE34B /* BuildInfoPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */; };
+		E7F8A9B12F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */; };
 		A63D32302F0BCF250063570B /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322D2F0BCF250063570B /* SmallWidgetView.swift */; };
 		A63D32312F0BCF250063570B /* SelectCountdownIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */; };
 		A63D32322F0BCF250063570B /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322B2F0BCF250063570B /* LargeWidgetView.swift */; };
@@ -77,6 +78,7 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CountdownWidget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoPlugin.swift; sourceTree = "<group>"; };
+		E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardPlugin.swift; sourceTree = "<group>"; };
 		A63D32242F0BCF250063570B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A63D32252F0BCF250063570B /* CountdownEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEvent.swift; sourceTree = "<group>"; };
 		A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountdownIntent.swift; sourceTree = "<group>"; };
@@ -167,6 +169,7 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 				SETTINGS002FED79650016851F /* Settings.bundle */,
 				A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */,
+				E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -410,6 +413,7 @@
 				B1C2D3E4F5A6B7C8D9E0F1A2 /* CountdownIntents.swift in Sources */,
 				MYVC00001FED79650016851F /* MyViewController.swift in Sources */,
 				A60AD3392F1A581900BDE34B /* BuildInfoPlugin.swift in Sources */,
+				E7F8A9B12F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

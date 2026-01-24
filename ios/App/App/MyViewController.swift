@@ -7,5 +7,6 @@ class MyViewController: CAPBridgeViewController {
         // Register local plugins here
         bridge?.registerPluginInstance(CalendarPlugin())
         bridge?.registerPluginInstance(BuildInfoPlugin())
+        bridge?.registerPluginInstance(EmojiKeyboardPlugin())
     }
 }
