@@ -129,6 +129,8 @@
     "noEventsMessage": "Syntymäpäiviä tai vuosipäiviä ei löytynyt kalenteristasi",
     "eventsFound": "{{count}} tapahtuma löytyi",
     "eventsFound_plural": "{{count}} tapahtumaa löytyi",
+    "recurringEventsFound": "{{count}} toistuva tapahtuma löytyi",
+    "recurringEventsFound_plural": "{{count}} toistuvaa tapahtumaa löytyi",
     "searchPlaceholder": "Etsi tapahtumia...",
     "selectAll": "Valitse Kaikki",
     "deselectAll": "Poista Valinnat",

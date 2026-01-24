@@ -415,7 +415,10 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
               
               <div className="flex justify-between items-center px-2">
                 <IonText color="medium" className="text-sm">
-                  {t('calendar.eventsFound', { count: filteredEvents.length })}
+                  {shouldShowAllEvents 
+                    ? t('calendar.eventsFound', { count: filteredEvents.length })
+                    : t('calendar.recurringEventsFound', { count: filteredEvents.length })
+                  }
                 </IonText>
                 <div className="flex gap-2">
                   <IonButton fill="clear" size="small" onClick={selectAll}>

@@ -129,6 +129,8 @@
     "noEventsMessage": "No se encontraron cumpleaños ni aniversarios en tu calendario",
     "eventsFound": "{{count}} evento encontrado",
     "eventsFound_plural": "{{count}} eventos encontrados",
+    "recurringEventsFound": "{{count}} evento recurrente encontrado",
+    "recurringEventsFound_plural": "{{count}} eventos recurrentes encontrados",
     "searchPlaceholder": "Buscar eventos...",
     "selectAll": "Seleccionar Todo",
     "deselectAll": "Deseleccionar Todo",

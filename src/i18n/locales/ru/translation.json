@@ -129,6 +129,8 @@
     "noEventsMessage": "В вашем календаре не найдено дней рождения или годовщин",
     "eventsFound": "Найдено {{count}} событие",
     "eventsFound_plural": "Найдено {{count}} событий",
+    "recurringEventsFound": "Найдено {{count}} повторяющееся событие",
+    "recurringEventsFound_plural": "Найдено {{count}} повторяющихся событий",
     "searchPlaceholder": "Поиск событий...",
     "selectAll": "Выбрать все",
     "deselectAll": "Отменить выбор",

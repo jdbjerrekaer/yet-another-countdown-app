@@ -129,6 +129,8 @@
     "noEventsMessage": "Ingen bursdager eller jubileer funnet i din kalender",
     "eventsFound": "{{count}} hendelse funnet",
     "eventsFound_plural": "{{count}} hendelser funnet",
+    "recurringEventsFound": "{{count}} gjentagende hendelse funnet",
+    "recurringEventsFound_plural": "{{count}} gjentagende hendelser funnet",
     "searchPlaceholder": "Søk hendelser...",
     "selectAll": "Velg Alle",
     "deselectAll": "Fjern Valg",

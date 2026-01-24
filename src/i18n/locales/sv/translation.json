@@ -129,6 +129,8 @@
     "noEventsMessage": "Inga födelsedagar eller jubileer hittades i din kalender",
     "eventsFound": "{{count}} händelse hittad",
     "eventsFound_plural": "{{count}} händelser hittade",
+    "recurringEventsFound": "{{count}} återkommande händelse hittad",
+    "recurringEventsFound_plural": "{{count}} återkommande händelser hittade",
     "searchPlaceholder": "Sök händelser...",
     "selectAll": "Välj Alla",
     "deselectAll": "Avmarkera Alla",
