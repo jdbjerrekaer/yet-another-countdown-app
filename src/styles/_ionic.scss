@@ -261,6 +261,8 @@
   ion-item-options {
     border-radius: inherit;
     overflow: hidden;
+    --background: transparent !important;
+    background: transparent !important;
   }
 
   ion-item-options[side="end"] {
@@ -268,15 +270,29 @@
     border-bottom-right-radius: 1rem;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    background: transparent !important;
   }
 
   ion-item-option {
     --border-radius: 0;
+    --background: transparent !important;
+    --color: hsl(var(--foreground));
+    --ion-color-base: transparent !important;
+    --ion-color-contrast: hsl(var(--foreground)) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  ion-item-option::part(native) {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   ion-item-options[side="end"] ion-item-option:last-child {
     border-top-right-radius: 1rem;
     border-bottom-right-radius: 1rem;
+    background: hsl(var(--background)) !important;
+    background-color: hsl(var(--background)) !important;
   }
 
   .countdown-card-swiping ion-item-sliding {

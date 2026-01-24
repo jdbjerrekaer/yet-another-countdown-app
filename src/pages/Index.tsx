@@ -223,41 +223,24 @@ export default function Index() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
   const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
-  const lastPointerTargetRef = useRef<Element | null>(null);
-  const lastPointerPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
 
-  // Helper function to check if an element is within ion-item-option or ion-item-options
+  // Helper function to check if an element is within ion-item-option
   const isWithinDeleteOption = (element: Element | null): boolean => {
     if (!element) return false;
-
-    const optionElement = element.closest('ion-item-option');
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:isWithinDeleteOption',message:'option lookup',data:{tagName:element.tagName,hasOption:Boolean(optionElement)},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-
-    return Boolean(optionElement);
+    return Boolean(element.closest('ion-item-option'));
   };
 
   // Helper function to check if a card is swiped open and close it
   const closeSwipedCardIfOpen = async (cardElement: Element | null): Promise<boolean> => {
     if (!cardElement) return false;
     
-    // Find the ion-item-sliding element within the card
     const slidingItem = cardElement.closest('[data-sortable-id]')?.querySelector('ion-item-sliding') as HTMLIonItemSlidingElement | null;
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:closeSwipedCardIfOpen',message:'sliding item lookup',data:{hasSlidingItem:Boolean(slidingItem)},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-
     if (!slidingItem) return false;
     
     try {
       const openAmount = await slidingItem.getOpenAmount();
-      // #region agent log
-      fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:closeSwipedCardIfOpen',message:'open amount checked',data:{openAmount},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       if (Math.abs(openAmount) > 2) {
-        // Card is swiped open, close it
         await slidingItem.close();
         return true;
       }
@@ -271,19 +254,14 @@ export default function Index() {
   // Track pointer/touch events to detect if drag starts from delete option area
   useEffect(() => {
     const handlePointerDown = (e: PointerEvent) => {
-      lastPointerTargetRef.current = e.target as Element;
-      lastPointerPositionRef.current = { x: e.clientX, y: e.clientY };
-      const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
       const cardElement = (e.target as Element | null)?.closest('[data-sortable-id]') as HTMLElement | null;
-      // #region agent log
-      fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handlePointerDown',message:'pointerdown target set',data:{tagName:(e.target as Element | null)?.tagName ?? null,x:e.clientX,y:e.clientY,elementAtPointTag:elementAtPoint?.tagName ?? null},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4'})}).catch(()=>{});
-      // #endregion
-      if (cardElement) {
-        closeSwipedCardIfOpen(cardElement).then((didClose) => {
-          // #region agent log
-          fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handlePointerDown',message:'pre-close swipe on pointerdown',data:{didClose},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H7'})}).catch(()=>{});
-          // #endregion
-        });
+      
+      // Check if pointer is on delete button and disable drag if so
+      const isOnDeleteButton = isWithinDeleteOption(e.target as Element);
+      setIsDragDisabledByDeleteButton(isOnDeleteButton);
+      
+      if (cardElement && !isOnDeleteButton) {
+        closeSwipedCardIfOpen(cardElement);
       }
     };
     
@@ -291,30 +269,43 @@ export default function Index() {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        lastPointerTargetRef.current = target;
-        lastPointerPositionRef.current = { x: touch.clientX, y: touch.clientY };
         const cardElement = target?.closest('[data-sortable-id]') as HTMLElement | null;
-        // #region agent log
-        fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handleTouchStart',message:'touchstart target set',data:{tagName:target?.tagName ?? null,x:touch.clientX,y:touch.clientY},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
-        if (cardElement) {
-          closeSwipedCardIfOpen(cardElement).then((didClose) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handleTouchStart',message:'pre-close swipe on touchstart',data:{didClose},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H7'})}).catch(()=>{});
-            // #endregion
-          });
+        
+        // Check if touch is on delete button and disable drag if so
+        const isOnDeleteButton = isWithinDeleteOption(target);
+        setIsDragDisabledByDeleteButton(isOnDeleteButton);
+        
+        if (cardElement && !isOnDeleteButton) {
+          closeSwipedCardIfOpen(cardElement);
         }
       }
     };
 
+    const handlePointerUp = () => {
+      setIsDragDisabledByDeleteButton(false);
+    };
+    
+    const handleTouchEnd = () => {
+      setIsDragDisabledByDeleteButton(false);
+    };
+
     document.addEventListener('pointerdown', handlePointerDown, true);
     document.addEventListener('touchstart', handleTouchStart, true);
+    document.addEventListener('pointerup', handlePointerUp, true);
+    document.addEventListener('pointercancel', handlePointerUp, true);
+    document.addEventListener('touchend', handleTouchEnd, true);
+    document.addEventListener('touchcancel', handleTouchEnd, true);
 
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true);
       document.removeEventListener('touchstart', handleTouchStart, true);
+      document.removeEventListener('pointerup', handlePointerUp, true);
+      document.removeEventListener('pointercancel', handlePointerUp, true);
+      document.removeEventListener('touchend', handleTouchEnd, true);
+      document.removeEventListener('touchcancel', handleTouchEnd, true);
     };
   }, []);
+
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -1216,29 +1207,8 @@ export default function Index() {
     trigger('medium');
   };
 
-  const handleDragStart = async (event: DragStartEvent) => {
-    const pointerPos = lastPointerPositionRef.current;
-    const elementAtLastPoint = pointerPos ? document.elementFromPoint(pointerPos.x, pointerPos.y) : null;
-    const withinDeleteOption = isWithinDeleteOption(lastPointerTargetRef.current);
+  const handleDragStart = (event: DragStartEvent) => {
     const activeId = event.active.id as string;
-    const cardElement = document.querySelector(`[data-sortable-id="${activeId}"]`) as HTMLElement | null;
-    const optionsElement = cardElement?.querySelector('ion-item-options') as HTMLElement | null;
-    const optionRect = optionsElement?.getBoundingClientRect();
-    const cardRect = cardElement?.getBoundingClientRect();
-    const pointerInsideOptions = pointerPos && optionRect
-      ? pointerPos.x >= optionRect.left && pointerPos.x <= optionRect.right && pointerPos.y >= optionRect.top && pointerPos.y <= optionRect.bottom
-      : false;
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handleDragStart',message:'drag start',data:{activeId,tagName:lastPointerTargetRef.current?.tagName ?? null,withinDeleteOption,pointerPos,elementAtLastPointTag:elementAtLastPoint?.tagName ?? null,elementAtLastPointHasOption:Boolean(elementAtLastPoint?.closest('ion-item-option')),pointerInsideOptions,optionRect:optionRect ? {left:optionRect.left,right:optionRect.right,top:optionRect.top,bottom:optionRect.bottom} : null,cardRect:cardRect ? {left:cardRect.left,right:cardRect.right,top:cardRect.top,bottom:cardRect.bottom} : null},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
-    // Prevent drag if it started from within the delete option area
-    if (withinDeleteOption) {
-      // Reset the ref
-      lastPointerTargetRef.current = null;
-      return;
-    }
-
-    // If the card is swiped open, it should already be closing from pointerdown/touchstart.
 
     setActiveDragId(activeId);
     targetDragRotationRef.current = 0;
@@ -1513,6 +1483,7 @@ export default function Index() {
                             event={event}
                             isSelected={event.id === selectedEventId}
                             isReordering={activeDragId !== null}
+                            isDragDisabled={isDragDisabledByDeleteButton}
                             isNative={isNative}
                             onSelect={() => {
                               if (shouldIgnoreTap()) return;
@@ -1544,6 +1515,9 @@ export default function Index() {
                             width: draggedCardWidth ? `${draggedCardWidth}px` : '100%',
                             maxWidth: draggedCardWidth ? `${draggedCardWidth}px` : 'none',
                             pointerEvents: 'none',
+                            backgroundColor: 'hsl(var(--card))',
+                            borderRadius: '1rem',
+                            boxShadow: '0 8px 24px -4px hsl(0 0% 0% / 0.12), 0 4px 12px -2px hsl(0 0% 0% / 0.08)',
                             // Initial transform - will be updated directly via ref for smooth animation
                             transform: 'rotate(0deg) scale(1.02)',
                             transformOrigin: 'center center',

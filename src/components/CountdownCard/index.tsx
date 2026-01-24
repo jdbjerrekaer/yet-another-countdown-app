@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
-import { ChevronRight, RefreshCw, CalendarIcon } from 'lucide-react';
+import { ChevronRight, RefreshCw, CalendarIcon, Trash2 } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
@@ -34,6 +34,8 @@ export function CountdownCard({
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
   const hapticTriggeredRef = useRef(false);
   const [isSliding, setIsSliding] = useState(false);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [swipeAmount, setSwipeAmount] = useState(0);
   
   const targetDate = event.isRecurring 
     ? getNextRecurringDate(new Date(event.targetDate))
@@ -75,6 +77,11 @@ export function CountdownCard({
     onDelete();
   };
 
+  const handleDeletePress = () => {
+    // Trigger medium haptic on press/touch for immediate feedback
+    trigger('medium');
+  };
+
   const handleSwipe = () => {
     // Trigger haptic when fully swiped
     trigger('heavy');
@@ -88,6 +95,7 @@ export function CountdownCard({
       const openAmount = await slidingRef.current.getOpenAmount();
       if (Math.abs(openAmount) <= 2) {
         setIsSliding(false);
+        setSwipeProgress(0);
         hapticTriggeredRef.current = false;
       }
     } catch {
@@ -113,9 +121,11 @@ export function CountdownCard({
       setIsSliding(true);
     }
     // Calculate progress (0 to 1) based on swipe amount
-    // Max swipe is typically around 80-100px for the delete button
-    const maxSwipe = 80;
+    // Increased maxSwipe to 120px so text only appears on long swipes (85% = 102px)
+    const maxSwipe = 120;
     const progress = Math.min(Math.max(Math.abs(amount) / maxSwipe, 0), 1);
+    setSwipeProgress(progress);
+    setSwipeAmount(Math.abs(amount));
     
     // Trigger soft haptic when swipe reaches threshold (around 50% progress)
     // This happens during the swipe, before the delete dialog appears
@@ -131,10 +141,9 @@ export function CountdownCard({
   const wrapperClasses = [
     'countdown-card-wrapper',
     styles.wrapper,
-    'overflow-hidden',
     !isNative && isSelected && 'countdown-card-selected',
     isDragging && 'countdown-card-dragging',
-    isSliding && 'countdown-card-swiping',
+    isSliding && styles.wrapperSwiping,
     !isReordering && !isDragging && 'active:scale-[0.98]',
     'transition-transform duration-150',
   ].filter(Boolean).join(' ');
@@ -162,18 +171,63 @@ export function CountdownCard({
         disabled={isReordering}
         onIonDrag={handleDrag}
         style={{
-          borderRadius: 'inherit',
-          overflow: 'hidden',
+          borderRadius: `${borderRadius}px`,
+          borderTopLeftRadius: `${borderRadius}px`,
+          borderBottomLeftRadius: `${borderRadius}px`,
+          overflow: isSliding ? 'visible' : 'hidden',
         }}
       >
           {/* Delete option on the right side */}
-          <IonItemOptions side="end" onIonSwipe={handleSwipe}>
+          <IonItemOptions side="end" onIonSwipe={handleSwipe} className={styles.deleteOptions}>
             <IonItemOption 
-              color="danger" 
               expandable
               onClick={handleDelete}
+              className={styles.deleteOption}
             >
-              {t('events.delete')}
+              <div className={styles.deleteContent}>
+                <div 
+                  className={styles.deleteIconCircle}
+                  onPointerDown={handleDeletePress}
+                  onTouchStart={handleDeletePress}
+                  style={{
+                    // Smoothly interpolate width based on swipe progress to match opacity
+                    // Base width is 2.5rem (40px), expands based on swipe amount
+                    width: (() => {
+                      const baseWidth = 40; // 2.5rem in pixels
+                      const expandedWidth = Math.max(swipeAmount - 16, baseWidth);
+                      
+                      if (swipeProgress <= 0.90) {
+                        return '2.5rem';
+                      }
+                      
+                      // Calculate expansion progress (0 to 1) matching opacity fade-in range (0.90 to 1.0)
+                      // This ensures width expands smoothly as text fades in
+                      const expansionProgress = Math.min((swipeProgress - 0.90) / 0.10, 1);
+                      
+                      // Interpolate between base and expanded width using the same progress as opacity
+                      const currentWidth = baseWidth + (expandedWidth - baseWidth) * expansionProgress;
+                      return `${currentWidth}px`;
+                    })(),
+                    borderRadius: '9999px',
+                    // Control width transition separately, preserve transform transition from CSS for active state
+                    transition: isSliding 
+                      ? 'none' 
+                      : 'width 0.15s ease-out, transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease-out',
+                  }}
+                >
+                  <Trash2 className={styles.deleteIcon} />
+                  <span 
+                    className={styles.deleteText}
+                    style={{
+                      display: swipeProgress > 0.95 ? 'inline' : 'none',
+                      opacity: swipeProgress > 0.95 ? Math.min((swipeProgress - 0.90) / 0.10, 1) : 0,
+                      filter: swipeProgress > 0.95 ? `blur(${Math.max(0, (1 - (swipeProgress - 0.90) / 0.10) * 4)}px)` : 'blur(4px)',
+                    }}
+                  >
+                    {t('events.delete')}
+                  </span>
+                </div>
+              </div>
             </IonItemOption>
           </IonItemOptions>
           

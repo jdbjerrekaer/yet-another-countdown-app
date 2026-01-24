@@ -2,6 +2,7 @@
   box-shadow: none !important;
   isolation: isolate;
   contain: paint;
+  overflow: hidden;
 }
 
 .wrapperSwiping {
@@ -9,6 +10,7 @@
   contain: none !important;
   z-index: 10;
   isolation: isolate;
+  border-radius: 1rem !important;
 }
 
 .item {
@@ -48,4 +50,110 @@
 
 .wrapperSelected .item::part(native) {
   border-radius: 1rem !important;
+}
+
+.wrapperSwiping .item {
+  --border-radius: 1rem;
+  --border-top-left-radius: 1rem;
+  --border-bottom-left-radius: 1rem;
+}
+
+.wrapperSwiping .item::part(native) {
+  border-radius: 1rem !important;
+  border-top-left-radius: 1rem !important;
+  border-bottom-left-radius: 1rem !important;
+  overflow: hidden !important;
+}
+
+// Custom delete option styles
+.deleteOption {
+  --background: transparent !important;
+  --color: hsl(var(--foreground));
+  --padding-start: 0;
+  --padding-end: 0;
+  --ion-color-base: transparent !important;
+  --ion-color-contrast: hsl(var(--foreground)) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  pointer-events: auto;
+}
+
+.deleteOption::part(native) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.deleteOptions {
+  pointer-events: none;
+}
+
+.deleteOptions :global(ion-item-option) {
+  pointer-events: auto;
+}
+
+.deleteContent {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.deleteIconCircle {
+  height: 2.5rem;
+  min-width: 2.5rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--destructive));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  // Transform transition for active state (width transition is handled inline)
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease-out;
+  
+  // Active state for mobile touch feedback
+  &:active {
+    transform: scale(0.90);
+    background-color: hsl(var(--destructive) / 0.85);
+  }
+  
+  // Ensure smooth animation on touch devices
+  @media (hover: none) and (pointer: coarse) {
+    &:active {
+      transform: scale(0.90);
+    }
+  }
+}
+
+.deleteIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: hsl(var(--destructive-foreground));
+  flex-shrink: 0;
+}
+
+// Dark mode: white icon
+:global(.dark) .deleteIcon,
+:global(.ion-palette-dark) .deleteIcon {
+  color: white;
+}
+
+.deleteText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--destructive-foreground));
+  white-space: nowrap;
+  transition: opacity 0.15s ease-out, filter 0.15s ease-out;
+}
+
+// Dark mode: white text
+:global(.dark) .deleteText,
+:global(.ion-palette-dark) .deleteText {
+  color: white;
 }
