@@ -135,6 +135,15 @@ struct WidgetData: Codable {
     }
 }
 
+/// Extension to format integers without thousand separators
+extension Int {
+    var formattedWithoutSeparator: String {
+        let formatter = NumberFormatter()
+        formatter.usesGroupingSeparator = false
+        return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
+    }
+}
+
 /// Countdown time calculation result
 struct CountdownTime {
     let days: Int

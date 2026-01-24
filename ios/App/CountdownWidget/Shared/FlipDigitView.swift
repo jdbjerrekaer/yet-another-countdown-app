@@ -95,7 +95,7 @@ struct FlipDigitView: View {
                 )
             
             // Single centered number
-            Text("\(value)")
+            Text(value.formattedWithoutSeparator)
                 .font(.system(size: fontSize, weight: .bold))
                 .foregroundColor(theme.textColor)
             

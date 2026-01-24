@@ -73,7 +73,7 @@ struct SmallWidgetView: View {
                     // In vibrant/accented modes, use simple text instead of flip digits
                     if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
                         HStack(alignment: .lastTextBaseline, spacing: 2) {
-                            Text("\(primaryValue)")
+                            Text(primaryValue.formattedWithoutSeparator)
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(foregroundColor)
                             Text(primaryUnit)
@@ -91,7 +91,7 @@ struct SmallWidgetView: View {
                 } else {
                     // Focus mode - number display
                     HStack(alignment: .lastTextBaseline, spacing: 2) {
-                        Text("\(primaryValue)")
+                        Text(primaryValue.formattedWithoutSeparator)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(foregroundColor)
                         Text(primaryUnit)
@@ -258,7 +258,7 @@ struct SmallWidgetView: View {
                 return "Next: \(dateStr)"
             }
             let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "Next: \(dateStr) · \(countdown.days) \(daysLabel)"
+            return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
         } else {
             formatter.dateFormat = dateYear == currentYear ? "MMM d" : "MMM d, yyyy"
             return formatter.string(from: date)

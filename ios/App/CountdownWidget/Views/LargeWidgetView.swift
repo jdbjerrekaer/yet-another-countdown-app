@@ -91,7 +91,7 @@ struct LargeWidgetView: View {
                 if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
                     if countdown.isPast {
                         VStack(spacing: 8) {
-                            Text("\(countdown.daysSince)")
+                            Text(countdown.daysSince.formattedWithoutSeparator)
                                 .font(.system(size: 64, weight: .bold))
                                 .foregroundColor(foregroundColor)
                             
@@ -148,7 +148,7 @@ struct LargeWidgetView: View {
                 // Focus mode - large grid display
                 if countdown.isPast {
                     VStack(spacing: 8) {
-                        Text("\(countdown.daysSince)")
+                        Text(countdown.daysSince.formattedWithoutSeparator)
                             .font(.system(size: 64, weight: .bold))
                             .foregroundColor(foregroundColor)
                         
@@ -311,7 +311,7 @@ struct LargeWidgetView: View {
                 return "Next: \(dateStr)"
             }
             let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "Next: \(dateStr) · \(countdown.days) \(daysLabel)"
+            return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
         } else {
             formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
@@ -319,7 +319,7 @@ struct LargeWidgetView: View {
                 return dateStr
             }
             let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "\(dateStr) · \(countdown.days) \(daysLabel)"
+            return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
         }
     }
 }
@@ -334,7 +334,7 @@ struct TimeUnitCenteredView: View {
     
     var body: some View {
         VStack(spacing: 2) {
-            Text("\(value)")
+            Text(value.formattedWithoutSeparator)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(foregroundColor)
             
@@ -356,7 +356,7 @@ struct TimeCardLargeView: View {
     
     var body: some View {
         VStack(spacing: 4) {
-            Text("\(value)")
+            Text(value.formattedWithoutSeparator)
                 .font(.system(size: 36, weight: .bold))
                 .foregroundColor(foregroundColor)
             
@@ -382,7 +382,7 @@ struct TimeCardView: View {
     
     var body: some View {
         VStack(spacing: 4) {
-            Text("\(value)")
+            Text(value.formattedWithoutSeparator)
                 .font(.system(size: 36, weight: .bold))
                 .foregroundColor(foregroundColor)
             

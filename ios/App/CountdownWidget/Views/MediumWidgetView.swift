@@ -263,7 +263,7 @@ struct MediumWidgetView: View {
                 return "Next: \(dateStr)"
             }
             let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "Next: \(dateStr) · \(countdown.days) \(daysLabel)"
+            return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
         } else if countdown.isPast {
             formatter.dateFormat = dateFormat
             return formatter.string(from: date)
@@ -274,7 +274,7 @@ struct MediumWidgetView: View {
                 return dateStr
             }
             let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "\(dateStr) · \(countdown.days) \(daysLabel)"
+            return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
         }
     }
 }
@@ -290,7 +290,7 @@ struct TimeUnitView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("\(value)")
+            Text(value.formattedWithoutSeparator)
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(foregroundColor)
             
