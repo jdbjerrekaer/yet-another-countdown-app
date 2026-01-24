@@ -375,7 +375,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
         {!loading && !error && (recurringEvents.length > 0 || allEvents.length > 0) && (
           <>
             {/* Search and select all */}
-            <div className="space-y-3 mb-4">
+            <div className="space-y-3 mb-4 -ml-4 pl-0">
               <IonSearchbar
                 value={searchQuery}
                 onIonInput={(e) => setSearchQuery(e.detail.value || '')}
@@ -385,7 +385,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
               
               {/* Calendar filter chips */}
               {availableCalendars.length > 1 && (
-                <div className="flex flex-wrap gap-2 px-2">
+                <div className="flex flex-wrap gap-2 ps-3 pe-2">
                   {availableCalendars.map((calendar) => (
                     <IonChip
                       key={calendar}
@@ -413,7 +413,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
                 </div>
               )}
               
-              <div className="flex justify-between items-center px-2">
+              <div className="flex justify-between items-center ps-6 pe-2">
                 <IonText color="medium" className="text-sm">
                   {shouldShowAllEvents 
                     ? t('calendar.eventsFound', { count: filteredEvents.length })
@@ -436,7 +436,6 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
               {filteredEvents.map((event) => (
                 <IonItem
                   key={event.id}
-                  button
                   onClick={() => toggleEventSelection(event.id)}
                   className="ion-no-padding calendar-import-item"
                 >

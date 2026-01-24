@@ -402,4 +402,28 @@
     margin: 0;
     padding: 0;
   }
+
+  ion-modal ion-list.rounded-xl {
+    padding: 0;
+    margin: 0;
+  }
+
+  ion-modal ion-list.rounded-xl::part(native) {
+    padding: 0;
+    margin: 0;
+  }
+
+  ion-modal ion-searchbar {
+    --padding-start: 0;
+    --padding-end: 0;
+    padding: 0;
+  }
+
+  ion-modal ion-searchbar::part(native) {
+    padding: 0;
+  }
+
+  ion-modal ion-searchbar::part(container) {
+    padding-left: 0 !important;
+  }
 }
