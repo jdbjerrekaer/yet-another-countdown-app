@@ -866,57 +866,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 }}
               />
             </div>
-
-            {/* Recurring toggle with expandable suggestion */}
-            <div 
-              className="bg-secondary/40 rounded-2xl overflow-hidden"
-            >
-              {/* Main recurring toggle row */}
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <RefreshCw className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{t('modal.repeatYearlyLabel')}</p>
-                    <p className="text-sm text-muted-foreground">{t('modal.repeatYearlySublabel')}</p>
-                  </div>
-                </div>
-                <IonToggle 
-                  checked={isRecurring} 
-                  onIonChange={(e) => handleRecurringToggle(e.detail.checked)}
-                />
-              </div>
-              
-              {/* Yearly suggestion - slides out from bottom when date is old */}
-              {showYearlySuggestion && !isYearlySuggestionExiting && (
-                <div 
-                  className="overflow-hidden animate-slide-down"
-                >
-                  {/* Divider */}
-                  <div className="mx-4 border-t border-border/50" />
-                  
-                  {/* Suggestion content */}
-                  <div className="p-4 pl-[68px] flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
-                      <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
-                    </div>
-                    <IonButton
-                      onClick={() => {
-                        trigger('medium');
-                        setIsRecurring(true);
-                      }}
-                      size="small"
-                      fill="solid"
-                      className="font-bold tracking-tight m-0 h-8 black-button min-w-[80px]"
-                    >
-                      {t('modal.enableYearly')}
-                    </IonButton>
-                  </div>
-                </div>
-              )}
-            </div>
             
             {/* Date picker */}
             <div className="space-y-2">
@@ -968,6 +917,57 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   <CalendarIcon className="w-4 h-4" />
                   <span className="font-medium">{format(date, 'EEEE, MMMM d, yyyy')}</span>
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                </div>
+              )}
+            </div>
+
+            {/* Recurring toggle with expandable suggestion */}
+            <div 
+              className="bg-secondary/40 rounded-2xl overflow-hidden"
+            >
+              {/* Main recurring toggle row */}
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{t('modal.repeatYearlyLabel')}</p>
+                    <p className="text-sm text-muted-foreground">{t('modal.repeatYearlySublabel')}</p>
+                  </div>
+                </div>
+                <IonToggle 
+                  checked={isRecurring} 
+                  onIonChange={(e) => handleRecurringToggle(e.detail.checked)}
+                />
+              </div>
+              
+              {/* Yearly suggestion - slides out from bottom when date is old */}
+              {showYearlySuggestion && !isYearlySuggestionExiting && (
+                <div 
+                  className="overflow-hidden animate-slide-down"
+                >
+                  {/* Divider */}
+                  <div className="mx-4 border-t border-border/50" />
+                  
+                  {/* Suggestion content */}
+                  <div className="p-4 pl-[68px] flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{t('modal.yearlySuggestionHint')}</p>
+                      <p className="text-sm text-muted-foreground">{t('modal.yearlySuggestionReason')}</p>
+                    </div>
+                    <IonButton
+                      onClick={() => {
+                        trigger('medium');
+                        setIsRecurring(true);
+                      }}
+                      size="small"
+                      fill="solid"
+                      className="font-bold tracking-tight m-0 h-8 black-button min-w-[80px]"
+                    >
+                      {t('modal.enableYearly')}
+                    </IonButton>
+                  </div>
                 </div>
               )}
             </div>
