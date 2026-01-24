@@ -224,6 +224,7 @@ export default function Index() {
   const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
   const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   // Helper function to check if an element is within ion-item-option
   const isWithinDeleteOption = (element: Element | null): boolean => {
@@ -1037,8 +1038,10 @@ export default function Index() {
     }
 
     if (confirmed) {
-      // Delete button was pressed
+      setDeletingEventId(event.id);
       trigger('heavy');
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       const eventId = event.id;
       const wasSelected = selectedEventId === eventId;
       
@@ -1047,7 +1050,6 @@ export default function Index() {
       
       setEvents(prev => {
         const filtered = prev.filter(e => e.id !== eventId);
-        // Update selected event if the deleted event was selected
         if (wasSelected) {
           if (filtered.length > 0) {
             setSelectedEventId(filtered[0].id);
@@ -1058,6 +1060,7 @@ export default function Index() {
         return filtered;
       });
 
+      setDeletingEventId(null);
       void AdsManager.maybeShowInterstitialAfterSave({ kind: "delete" });
 
       return true;
@@ -1485,6 +1488,7 @@ export default function Index() {
                             isReordering={activeDragId !== null}
                             isDragDisabled={isDragDisabledByDeleteButton}
                             isNative={isNative}
+                            isDeleting={deletingEventId === event.id}
                             onSelect={() => {
                               if (shouldIgnoreTap()) return;
                               trigger('light');

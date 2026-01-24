@@ -13,10 +13,11 @@ interface CountdownCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: () => Promise<boolean> | void;
   isReordering?: boolean;
   isDragging?: boolean;
   isNative?: boolean;
+  isDeleting?: boolean;
 }
 
 export function CountdownCard({ 
@@ -28,6 +29,7 @@ export function CountdownCard({
   isReordering = false,
   isDragging = false,
   isNative = false,
+  isDeleting = false,
 }: CountdownCardProps) {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
@@ -73,8 +75,10 @@ export function CountdownCard({
 
   const handleDelete = async () => {
     trigger('heavy');
-    await slidingRef.current?.close();
-    onDelete();
+    const confirmed = await onDelete();
+    if (confirmed === false) {
+      await slidingRef.current?.close();
+    }
   };
 
   const handleDeletePress = () => {
@@ -82,10 +86,12 @@ export function CountdownCard({
     trigger('medium');
   };
 
-  const handleSwipe = () => {
-    // Trigger haptic when fully swiped
+  const handleSwipe = async () => {
     trigger('heavy');
-    onDelete();
+    const confirmed = await onDelete();
+    if (confirmed === false) {
+      await slidingRef.current?.close();
+    }
   };
 
   // Check if the sliding item has returned to closed position
@@ -176,6 +182,7 @@ export function CountdownCard({
     !isNative && isSelected && 'countdown-card-selected',
     isDragging && 'countdown-card-dragging',
     isSliding && styles.wrapperSwiping,
+    isDeleting && 'animate-collapse',
     !isReordering && !isDragging && 'active:scale-[0.98]',
     'transition-transform duration-150',
   ].filter(Boolean).join(' ');
