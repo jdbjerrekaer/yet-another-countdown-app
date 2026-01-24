@@ -6,6 +6,7 @@ import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
 import { Keyboard } from '@capacitor/keyboard';
+import { Preferences } from '@capacitor/preferences';
 import {
   DndContext,
   closestCenter,
@@ -46,6 +47,16 @@ import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { toast } from 'sonner';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -209,6 +220,101 @@ export default function Index() {
   const placeholderHeight = 60; // Increased to match adaptive banners better
   const [hasRemoveAds, setHasRemoveAds] = useState(false);
   const [isRemoveAdsOpen, setIsRemoveAdsOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
+  const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
+  const lastPointerTargetRef = useRef<Element | null>(null);
+  const lastPointerPositionRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Helper function to check if an element is within ion-item-option or ion-item-options
+  const isWithinDeleteOption = (element: Element | null): boolean => {
+    if (!element) return false;
+
+    const optionElement = element.closest('ion-item-option');
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:isWithinDeleteOption',message:'option lookup',data:{tagName:element.tagName,hasOption:Boolean(optionElement)},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
+
+    return Boolean(optionElement);
+  };
+
+  // Helper function to check if a card is swiped open and close it
+  const closeSwipedCardIfOpen = async (cardElement: Element | null): Promise<boolean> => {
+    if (!cardElement) return false;
+    
+    // Find the ion-item-sliding element within the card
+    const slidingItem = cardElement.closest('[data-sortable-id]')?.querySelector('ion-item-sliding') as HTMLIonItemSlidingElement | null;
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:closeSwipedCardIfOpen',message:'sliding item lookup',data:{hasSlidingItem:Boolean(slidingItem)},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
+
+    if (!slidingItem) return false;
+    
+    try {
+      const openAmount = await slidingItem.getOpenAmount();
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:closeSwipedCardIfOpen',message:'open amount checked',data:{openAmount},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2'})}).catch(()=>{});
+      // #endregion
+      if (Math.abs(openAmount) > 2) {
+        // Card is swiped open, close it
+        await slidingItem.close();
+        return true;
+      }
+    } catch {
+      // Ignore errors if element is unmounted
+    }
+    
+    return false;
+  };
+
+  // Track pointer/touch events to detect if drag starts from delete option area
+  useEffect(() => {
+    const handlePointerDown = (e: PointerEvent) => {
+      lastPointerTargetRef.current = e.target as Element;
+      lastPointerPositionRef.current = { x: e.clientX, y: e.clientY };
+      const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
+      const cardElement = (e.target as Element | null)?.closest('[data-sortable-id]') as HTMLElement | null;
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handlePointerDown',message:'pointerdown target set',data:{tagName:(e.target as Element | null)?.tagName ?? null,x:e.clientX,y:e.clientY,elementAtPointTag:elementAtPoint?.tagName ?? null},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
+      if (cardElement) {
+        closeSwipedCardIfOpen(cardElement).then((didClose) => {
+          // #region agent log
+          fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handlePointerDown',message:'pre-close swipe on pointerdown',data:{didClose},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H7'})}).catch(()=>{});
+          // #endregion
+        });
+      }
+    };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        lastPointerTargetRef.current = target;
+        lastPointerPositionRef.current = { x: touch.clientX, y: touch.clientY };
+        const cardElement = target?.closest('[data-sortable-id]') as HTMLElement | null;
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handleTouchStart',message:'touchstart target set',data:{tagName:target?.tagName ?? null,x:touch.clientX,y:touch.clientY},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4'})}).catch(()=>{});
+        // #endregion
+        if (cardElement) {
+          closeSwipedCardIfOpen(cardElement).then((didClose) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handleTouchStart',message:'pre-close swipe on touchstart',data:{didClose},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H7'})}).catch(()=>{});
+            // #endregion
+          });
+        }
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    document.addEventListener('touchstart', handleTouchStart, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      document.removeEventListener('touchstart', handleTouchStart, true);
+    };
+  }, []);
 
   // Configure sensors with long-press activation (300ms delay)
   const pointerSensor = useSensor(PointerSensor, {
@@ -380,6 +486,35 @@ export default function Index() {
     };
     loadBuildInfo();
   }, [isNative]);
+
+  useEffect(() => {
+    const checkAndShowRemoveAdsModal = async () => {
+      await PurchasesManager.init();
+      
+      if (PurchasesManager.hasRemoveAdsEntitlement()) return;
+      
+      const PREF_SHOULD_SHOW_MODAL = 'removeAdsModal_shouldShow';
+      
+      try {
+        const { value } = await Preferences.get({ key: PREF_SHOULD_SHOW_MODAL });
+        const shouldShow = value === null ? false : value === 'true';
+        
+        await Preferences.set({ key: PREF_SHOULD_SHOW_MODAL, value: String(!shouldShow) });
+        
+        if (shouldShow) {
+          setIsRemoveAdsOpen(true);
+        }
+      } catch (error) {
+        console.warn('[RemoveAdsModal] Failed to check app open state', error);
+      }
+    };
+    
+    const timeoutId = setTimeout(() => {
+      void checkAndShowRemoveAdsModal();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   useEffect(() => {
     // On web, always show placeholder (ads don't load on web)
@@ -886,14 +1021,29 @@ export default function Index() {
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
     let confirmed = false;
 
-    // Use Dialog for consistent wider dialog appearance
-    const { value } = await Dialog.confirm({
-      title: t('dialogs.deleteEvent.title'),
-      message: t('dialogs.deleteEvent.message', { title: event.title }),
-      okButtonTitle: t('dialogs.deleteEvent.delete'),
-      cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
-    });
-    confirmed = value;
+    if (isNative) {
+      // Use Capacitor Dialog on native platforms
+      const { value } = await Dialog.confirm({
+        title: t('dialogs.deleteEvent.title'),
+        message: t('dialogs.deleteEvent.message', { title: event.title }),
+        okButtonTitle: t('dialogs.deleteEvent.delete'),
+        cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
+      });
+      confirmed = value;
+    } else {
+      // Use AlertDialog on web
+      setEventToDelete(event);
+      setDeleteConfirmOpen(true);
+      
+      // Wait for user response
+      confirmed = await new Promise<boolean>((resolve) => {
+        deleteConfirmResolveRef.current = resolve;
+      });
+      
+      setDeleteConfirmOpen(false);
+      setEventToDelete(null);
+      deleteConfirmResolveRef.current = null;
+    }
 
     if (confirmed) {
       // Delete button was pressed
@@ -924,6 +1074,18 @@ export default function Index() {
       // Cancel button was pressed
       trigger('light');
       return false; // Deletion cancelled
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirmResolveRef.current) {
+      deleteConfirmResolveRef.current(true);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (deleteConfirmResolveRef.current) {
+      deleteConfirmResolveRef.current(false);
     }
   };
 
@@ -1054,8 +1216,31 @@ export default function Index() {
     trigger('medium');
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragId(event.active.id as string);
+  const handleDragStart = async (event: DragStartEvent) => {
+    const pointerPos = lastPointerPositionRef.current;
+    const elementAtLastPoint = pointerPos ? document.elementFromPoint(pointerPos.x, pointerPos.y) : null;
+    const withinDeleteOption = isWithinDeleteOption(lastPointerTargetRef.current);
+    const activeId = event.active.id as string;
+    const cardElement = document.querySelector(`[data-sortable-id="${activeId}"]`) as HTMLElement | null;
+    const optionsElement = cardElement?.querySelector('ion-item-options') as HTMLElement | null;
+    const optionRect = optionsElement?.getBoundingClientRect();
+    const cardRect = cardElement?.getBoundingClientRect();
+    const pointerInsideOptions = pointerPos && optionRect
+      ? pointerPos.x >= optionRect.left && pointerPos.x <= optionRect.right && pointerPos.y >= optionRect.top && pointerPos.y <= optionRect.bottom
+      : false;
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/da8e86ed-1870-4def-8922-2bc5c79d9c07',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Index.tsx:handleDragStart',message:'drag start',data:{activeId,tagName:lastPointerTargetRef.current?.tagName ?? null,withinDeleteOption,pointerPos,elementAtLastPointTag:elementAtLastPoint?.tagName ?? null,elementAtLastPointHasOption:Boolean(elementAtLastPoint?.closest('ion-item-option')),pointerInsideOptions,optionRect:optionRect ? {left:optionRect.left,right:optionRect.right,top:optionRect.top,bottom:optionRect.bottom} : null,cardRect:cardRect ? {left:cardRect.left,right:cardRect.right,top:cardRect.top,bottom:cardRect.bottom} : null},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H5'})}).catch(()=>{});
+    // #endregion
+    // Prevent drag if it started from within the delete option area
+    if (withinDeleteOption) {
+      // Reset the ref
+      lastPointerTargetRef.current = null;
+      return;
+    }
+
+    // If the card is swiped open, it should already be closing from pointerdown/touchstart.
+
+    setActiveDragId(activeId);
     targetDragRotationRef.current = 0;
     displayedDragRotationRef.current = 0;
     previousDragYRef.current = null;
@@ -1569,6 +1754,38 @@ export default function Index() {
         hasRemoveAds={hasRemoveAds}
         isDevBuild={isDevBuild}
       />
+
+      {/* Delete confirmation dialog for web */}
+      {!isNative && (
+        <AlertDialog 
+          open={deleteConfirmOpen} 
+          onOpenChange={(open) => {
+            if (!open) {
+              handleDeleteCancel();
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('dialogs.deleteEvent.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {eventToDelete && t('dialogs.deleteEvent.message', { title: eventToDelete.title })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleDeleteCancel}>
+                {t('dialogs.deleteEvent.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {t('dialogs.deleteEvent.delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
     </IonPage>
   );
