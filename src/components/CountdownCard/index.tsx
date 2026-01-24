@@ -126,13 +126,10 @@ export function CountdownCard({
     const applyBackground = () => {
       const native = deleteOptionEl.shadowRoot?.querySelector('.item-native') || deleteOptionEl.shadowRoot?.querySelector('[part="native"]');
       if (native) {
-        const rootComputed = window.getComputedStyle(document.documentElement);
-        const backgroundVar = rootComputed.getPropertyValue('--background');
-        const backgroundValue = `hsl(${backgroundVar})`;
         const nativeEl = native as HTMLElement;
         
-        nativeEl.style.setProperty('background', backgroundValue, 'important');
-        nativeEl.style.setProperty('background-color', backgroundValue, 'important');
+        nativeEl.style.setProperty('background', 'white', 'important');
+        nativeEl.style.setProperty('background-color', 'white', 'important');
         nativeEl.style.setProperty('border', 'none', 'important');
         nativeEl.style.setProperty('border-width', '0', 'important');
         nativeEl.style.setProperty('box-shadow', 'none', 'important');
@@ -227,13 +224,13 @@ export function CountdownCard({
               onClick={handleDelete}
               className={styles.deleteOption}
               style={{
-                '--background': 'hsl(var(--background))',
-                '--ion-color-base': 'hsl(var(--background))',
+                '--background': 'white',
+                '--ion-color-base': 'white',
                 '--border-width': '0',
                 '--border-color': 'transparent',
                 '--inner-border-width': '0',
-                background: 'hsl(var(--background))',
-                backgroundColor: 'hsl(var(--background))',
+                background: 'white',
+                backgroundColor: 'white',
                 border: 'none',
                 borderTop: 'none',
                 borderRight: 'none',
@@ -250,12 +247,9 @@ export function CountdownCard({
                 const applyBackground = () => {
                   const native = el.shadowRoot?.querySelector('.item-native') || el.shadowRoot?.querySelector('[part="native"]');
                   if (native) {
-                    const rootComputed = window.getComputedStyle(document.documentElement);
-                    const backgroundVar = rootComputed.getPropertyValue('--background');
-                    const backgroundValue = `hsl(${backgroundVar})`;
                     const nativeEl = native as HTMLElement;
-                    nativeEl.style.setProperty('background', backgroundValue, 'important');
-                    nativeEl.style.setProperty('background-color', backgroundValue, 'important');
+                    nativeEl.style.setProperty('background', 'white', 'important');
+                    nativeEl.style.setProperty('background-color', 'white', 'important');
                     nativeEl.style.setProperty('border', 'none', 'important');
                     nativeEl.style.setProperty('border-width', '0', 'important');
                     nativeEl.style.setProperty('box-shadow', 'none', 'important');
@@ -282,38 +276,37 @@ export function CountdownCard({
                   onPointerDown={handleDeletePress}
                   onTouchStart={handleDeletePress}
                   style={{
-                    // Smoothly interpolate width based on swipe progress to match opacity
-                    // Base width is 2.5rem (40px), expands based on swipe amount
                     width: (() => {
-                      const baseWidth = 40; // 2.5rem in pixels
+                      const baseWidth = 40;
                       const expandedWidth = Math.max(swipeAmount - 16, baseWidth);
                       
                       if (swipeProgress <= 0.90) {
                         return '2.5rem';
                       }
                       
-                      // Calculate expansion progress (0 to 1) matching opacity fade-in range (0.90 to 1.0)
-                      // This ensures width expands smoothly as text fades in
                       const expansionProgress = Math.min((swipeProgress - 0.90) / 0.10, 1);
-                      
-                      // Interpolate between base and expanded width using the same progress as opacity
                       const currentWidth = baseWidth + (expandedWidth - baseWidth) * expansionProgress;
                       return `${currentWidth}px`;
                     })(),
                     borderRadius: '9999px',
-                    // Control width transition separately, preserve transform transition from CSS for active state
+                    transform: `scale(${Math.min(swipeProgress / 0.5, 1)})`,
                     transition: isSliding 
                       ? 'none' 
                       : 'width 0.15s ease-out, transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease-out',
                   }}
                 >
-                  <Trash2 className={styles.deleteIcon} />
+                  <Trash2 
+                    className={styles.deleteIcon}
+                    style={{
+                      filter: swipeProgress > 0.95 ? `blur(${Math.max(0, (1 - (swipeProgress - 0.90) / 0.10) * 4)}px)` : 'none',
+                    }}
+                  />
                   <span 
                     className={styles.deleteText}
                     style={{
                       display: swipeProgress > 0.95 ? 'inline' : 'none',
                       opacity: swipeProgress > 0.95 ? Math.min((swipeProgress - 0.90) / 0.10, 1) : 0,
-                      filter: swipeProgress > 0.95 ? `blur(${Math.max(0, (1 - (swipeProgress - 0.90) / 0.10) * 4)}px)` : 'blur(4px)',
+                      filter: swipeProgress > 0.95 ? `blur(${Math.max(0, (1 - (swipeProgress - 0.90) / 0.10) * 4)}px)` : 'none',
                     }}
                   >
                     {t('events.delete')}
