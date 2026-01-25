@@ -1,8 +1,8 @@
 {
   "app": {
-    "title": "Endnu En Nedtællings App",
-    "noCountdowns": "Ingen Nedtællinger",
-    "createFirst": "Tryk på + knappen nedenfor for at oprette din første nedtælling"
+    "title": "Yet Another Countdown",
+    "noCountdowns": "Ingen nedtællinger",
+    "createFirst": "Tryk på + knappen for at oprette din første nedtælling"
   },
   "events": {
     "title": "Begivenheder",
@@ -10,27 +10,31 @@
     "edit": "Rediger"
   },
   "widget": {
-    "size": "Widget Størrelse",
+    "size": "Widget-størrelse",
     "style": "Stil",
     "appearance": "Udseende",
     "preview": "Forhåndsvisning",
     "next": "Næste: {{date}}",
-    "timeSince": "Tid siden begivenhed",
-    "arrived": "Begivenhed er ankommet!",
+    "timeSince": "Tid forløbet",
+    "arrived": "Det er nu!",
     "countingDown": "Tæller ned",
     "units": {
-      "days": "dag",
-      "days_plural": "dage",
-      "daysShort": "Dage",
-      "hours": "time",
-      "hours_plural": "timer",
-      "hoursShort": "Timer",
-      "minutes": "minut",
-      "minutes_plural": "minutter",
-      "minutesShort": "Min",
-      "seconds": "sekund",
-      "seconds_plural": "sekunder",
-      "secondsShort": "Sek"
+      "days_one": "dag",
+      "days_other": "dage",
+      "daysShort_one": "Dag",
+      "daysShort_other": "Dage",
+      "hours_one": "time",
+      "hours_other": "timer",
+      "hoursShort_one": "Time",
+      "hoursShort_other": "Timer",
+      "minutes_one": "minut",
+      "minutes_other": "minutter",
+      "minutesShort_one": "Min",
+      "minutesShort_other": "Min",
+      "seconds_one": "sekund",
+      "seconds_other": "sekunder",
+      "secondsShort_one": "Sek",
+      "secondsShort_other": "Sek"
     },
     "daysAgoText": "siden",
     "daysAgoTextUpper": "Dage siden",
@@ -48,144 +52,146 @@
       "light": "Lys",
       "dark": "Mørk",
       "transparent": "Glas",
-      "tinted": "Toneret"
+      "tinted": "Tonet"
     }
   },
   "modal": {
-    "editEvent": "Rediger Begivenhed",
-    "newEvent": "Ny Begivenhed",
+    "editEvent": "Rediger begivenhed",
+    "newEvent": "Ny begivenhed",
     "titleLabel": "Titel",
-    "eventNamePlaceholder": "Indtast begivenhedsnavn",
+    "eventNamePlaceholder": "Indtast navn på begivenhed",
     "dateLabel": "Dato",
     "emojiLabel": "Emoji",
     "colorLabel": "Farve",
-    "recurringLabel": "Årligt",
+    "recurringLabel": "Årlig",
     "save": "Gem",
     "cancel": "Annuller",
     "close": "Luk",
-    "delete": "Slet Begivenhed",
+    "delete": "Slet begivenhed",
     "advancedLabel": "Avanceret",
-    "repeatYearlyLabel": "Gentag Årligt",
-    "repeatYearlySublabel": "Til fødselsdage, jubilæer",
-    "customEmojiTitle": "Tilpasset emoji",
+    "repeatYearlyLabel": "Gentag årligt",
+    "repeatYearlySublabel": "Til fødselsdage, jubilæer osv.",
+    "customEmojiTitle": "Egen emoji",
     "customEmojiPlaceholder": "🎨",
-    "shareEvent": "Del Begivenhed",
-    "shareLinkCopied": "Import-link kopieret til udklipsholder",
+    "shareEvent": "Del begivenhed",
+    "shareLinkCopied": "Link kopieret til udklipsholder",
     "shareError": "Kunne ikke dele begivenhed",
     "importedFrom": "Importeret fra {{calendar}}",
-    "yearlySuggestion": "Denne dato er over et år siden. Gør den årlig?",
-    "yearlySuggestionHint": "Gør dette tilbagevendende årligt?",
+    "yearlySuggestion": "Datoen er over et år gammel. Gør den årlig?",
+    "yearlySuggestionHint": "Skal denne gentages hvert år?",
     "yearlySuggestionReason": "Denne dato fandt sted for over et år siden",
-    "enableYearly": "Aktivér"
+    "enableYearly": "Aktiver"
   },
   "dialogs": {
     "dateChanged": {
-      "title": "Dato Ændret",
-      "message": "Du har ændret datoen for \"{{title}}\" fra {{oldDate}} til {{newDate}}. Er du sikker på, at du vil gemme disse ændringer?",
-      "save": "Gem Ændringer",
+      "title": "Dato ændret",
+      "message": "Du har ændret datoen for \"{{title}}\" fra {{oldDate}} til {{newDate}}. Vil du gemme ændringerne?",
+      "save": "Gem ændringer",
       "cancel": "Annuller"
     },
     "deleteEvent": {
-      "title": "Slet Begivenhed",
-      "message": "Er du sikker på, at du vil slette \"{{title}}\"? Denne handling kan ikke fortrydes.",
+      "title": "Slet begivenhed",
+      "message": "Er du sikker på, at du vil slette \"{{title}}\"? Dette kan ikke fortrydes.",
       "delete": "Slet",
       "cancel": "Annuller"
     },
     "importEvent": {
-      "title": "Importer Begivenhed",
-      "message": "Vil du importere \"{{emoji}} {{title}}\" planlagt til {{date}}?",
+      "title": "Importer begivenhed",
+      "message": "Vil du importere \"{{emoji}} {{title}}\" d. {{date}}?",
       "import": "Importer",
       "cancel": "Annuller"
     },
     "yearlyMigration": {
-      "title": "Gør Begivenheder Årlige?",
-      "message": "Du har {{count}} begivenhed(er) fra over et år siden. Gør dem årligt tilbagevendende?",
-      "convert": "Konverter til Årligt",
-      "skip": "Spring Over"
+      "title": "Gør begivenheder årlige?",
+      "message_one": "Du har {{count}} begivenhed fra over et år siden. Skal den gentages årligt?",
+      "message_other": "Du har {{count}} begivenheder fra over et år siden. Skal de gentages årligt?",
+      "convert": "Gør årlige",
+      "skip": "Spring over"
     },
     "suggestYearly": {
-      "title": "Gør Denne Begivenhed Årlig?",
-      "message": "Denne dato fandt sted for over et år siden. Gør den årligt tilbagevendende, så den tæller ned igen næste år?",
-      "enable": "Gør Årlig",
-      "keepOneTime": "Behold Engangs"
+      "title": "Gør begivenheden årlig?",
+      "message": "Denne dato fandt sted for over et år siden. Skal den gentages årligt, så den tæller ned igen næste år?",
+      "enable": "Gør årlig",
+      "keepOneTime": "Behold som engangs"
     }
   },
   "countdown": {
     "today": "I dag! 🎉",
-    "daysAgo": "{{count}} dag siden",
-    "daysAgo_plural": "{{count}} dage siden",
+    "daysAgo_one": "{{count}} dag siden",
+    "daysAgo_other": "{{count}} dage siden",
     "format": "{{days}}d {{hours}}t {{minutes}}m"
   },
   "notifications": {
-    "reachedZero": "Din nedtælling har nået nul!"
+    "reachedZero": "Din nedtælling er slut!"
   },
   "calendar": {
-    "importTitle": "Importer fra Kalender",
+    "importTitle": "Importer fra kalender",
     "importButton": "Importer",
-    "fetchEvents": "Hent Begivenheder",
-    "loading": "Indlæser kalenderbegivenheder...",
-    "fetchError": "Kunne ikke hente kalenderbegivenheder",
-    "noEventsTitle": "Ingen Tilbagevendende Begivenheder",
-    "noEventsMessage": "Ingen fødselsdage eller jubilæer fundet i din kalender",
-    "eventsFound": "{{count}} begivenhed fundet",
-    "eventsFound_plural": "{{count}} begivenheder fundet",
-    "recurringEventsFound": "{{count}} tilbagevendende begivenhed fundet",
-    "recurringEventsFound_plural": "{{count}} tilbagevendende begivenheder fundet",
-    "searchPlaceholder": "Søg begivenheder...",
-    "selectAll": "Vælg Alle",
-    "deselectAll": "Fravælg Alle",
-    "yearly": "Årligt",
-    "tryAgain": "Prøv Igen",
+    "fetchEvents": "Hent begivenheder",
+    "loading": "Indlæser begivenheder...",
+    "fetchError": "Kunne ikke hente begivenheder",
+    "noEventsTitle": "Ingen begivenheder fundet",
+    "noEventsMessage": "Fandt ingen fødselsdage eller jubilæer i din kalender",
+    "eventsFound_one": "{{count}} begivenhed fundet",
+    "eventsFound_other": "{{count}} begivenheder fundet",
+    "recurringEventsFound_one": "{{count}} årlig begivenhed fundet",
+    "recurringEventsFound_other": "{{count}} årlige begivenheder fundet",
+    "searchPlaceholder": "Søg efter begivenheder...",
+    "selectAll": "Vælg alle",
+    "deselectAll": "Fravælg alle",
+    "yearly": "Årlig",
+    "tryAgain": "Prøv igen",
     "refresh": "Opdater",
-    "icsUrlLabel": "Kalender URL (.ics)",
-    "icsUrlPlaceholder": "Indsæt din kalender URL her",
-    "icsUrlHint": "Indsæt en offentlig .ics kalender URL (f.eks. fra Google Calendar)",
-    "urlRequired": "Indtast venligst en kalender URL",
-    "invalidUrl": "Indtast venligst en gyldig .ics kalender URL",
-    "permissionDeniedTitle": "Kalendertilgang Nægtet",
-    "permissionDeniedMessage": "Tillad venligst kalendertilgang i Indstillinger for at importere begivenheder fra din kalender.",
+    "icsUrlLabel": "Kalender-URL (.ics)",
+    "icsUrlPlaceholder": "Indsæt kalender-URL",
+    "icsUrlHint": "Indsæt en offentlig .ics kalender-URL (f.eks. fra Google Calendar)",
+    "urlRequired": "Indtast venligst en kalender-URL",
+    "invalidUrl": "Indtast venligst en gyldig .ics-URL",
+    "permissionDeniedTitle": "Ingen adgang til kalender",
+    "permissionDeniedMessage": "Giv venligst adgang til din kalender i Indstillinger for at importere begivenheder.",
     "openSettings": "Åbn Indstillinger",
     "clearFilter": "Alle"
   },
   "aria": {
     "saveEvent": "Gem begivenhed",
     "addEvent": "Tilføj begivenhed",
-    "clearInput": "Ryd input",
+    "importEvents": "Importer valgte begivenheder",
+    "clearInput": "Ryd felt",
     "colorPicker": "Farvevælger",
     "shareEvent": "Del begivenhed",
     "importFromCalendar": "Importer fra kalender",
-    "openRemoveAds": "Åbn muligheder for at fjerne reklamer"
+    "openRemoveAds": "Fjern reklamer"
   },
   "ads": {
-    "loading": "Annonce indlæses...",
-    "webPlaceholder": "Reklame"
+    "loading": "Henter annonce...",
+    "webPlaceholder": "Annonce"
   },
   "iap": {
     "title": "Fjern reklamer",
-    "headline": "Gå uden reklamer",
-    "subheadline": "Nyd en ren, fokuseret nedtællingsoplevelse.",
-    "cta": "Lås op",
+    "headline": "Slip for reklamer",
+    "subheadline": "Nyd en ren og fokuseret oplevelse uden reklamer.",
+    "cta": "Fjern reklamer",
     "alreadyUnlocked": "Du er reklamefri",
     "restore": "Gendan køb",
-    "restoreSuccess": "Køb gendannet.",
+    "restoreSuccess": "Køb blev gendannet.",
     "restoreNone": "Ingen tidligere køb fundet.",
     "restoreError": "Gendannelse mislykkedes. Prøv igen.",
-    "purchaseSuccess": "Du er nu reklamefri.",
-    "purchaseError": "Købet mislykkedes. Prøv igen.",
-    "loadError": "Kan ikke indlæse produkter lige nu.",
-    "loadingProducts": "Indlæser tilbud...",
+    "purchaseSuccess": "Reklamerne er nu fjernet.",
+    "purchaseError": "Køb mislykkedes. Prøv igen.",
+    "loadError": "Kunne ikke hente produkter lige nu.",
+    "loadingProducts": "Henter priser...",
     "priceFallback": "-",
     "webUnavailable": "Køb er tilgængelige i iOS-appen.",
-    "disclaimer": "Engangskøb. Gendan når som helst efter geninstallation.",
+    "disclaimer": "Engangskøb. Kan altid gendannes.",
     "adFreeBadge": "Reklamefri",
     "tiers": {
       "standard": {
         "title": "Fjern reklamer",
-        "description": "Nyd en ren, uafbrudt nedtællingsoplevelse."
+        "description": "Nyd en ren oplevelse uden afbrydelser."
       },
       "supporter": {
-        "title": "Fjern reklamer",
-        "description": "Reklamefri plus en tak for at støtte appen.",
+        "title": "Støt appen",
+        "description": "Fjern reklamer og giv et lille bidrag til videreudvikling.",
         "badge": "Supporter"
       }
     }

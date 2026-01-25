@@ -78,9 +78,9 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
     if (countdown.isComplete && !countdown.isPast) {
       return ` · ${t('countdown.today')}`;
     } else if (countdown.isPast) {
-      return ` · ${countdown.daysSince} ${countdown.daysSince === 1 ? t('widget.units.days') : t('widget.units.days_plural')} ${t('widget.daysAgoText')}`;
+      return ` · ${t('countdown.daysAgo', { count: countdown.daysSince })}`;
     } else {
-      return ` · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`;
+      return ` · ${t('widget.units.days', { count: countdown.days })}`;
     }
   };
 
@@ -114,7 +114,7 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             </div>
             {targetDate && (
               <p className="text-xs text-muted-foreground">
-                {isRecurring ? `Next: ${formatDateSmart(targetDate)}` : formatDateSmart(targetDate)}
+                {isRecurring ? t('widget.next', { date: formatDateSmart(targetDate) }) : formatDateSmart(targetDate)}
                 {getDaysText()}
               </p>
             )}
@@ -183,14 +183,14 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             <div>
               <p className="text-2xl font-bold text-foreground">{countdown.daysSince}</p>
               <p className="text-xs text-muted-foreground">
-                {countdown.daysSince === 1 ? t('widget.units.days') + ' ' + t('widget.daysAgoText') : t('widget.units.days_plural') + ' ' + t('widget.daysAgoText')}
+                {t('countdown.daysAgo', { count: countdown.daysSince })}
               </p>
             </div>
           ) : (
             <div>
               <p className="text-2xl font-bold text-foreground">{countdown.days}</p>
               <p className="text-xs text-muted-foreground">
-                {countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}
+                {t('widget.units.days', { count: countdown.days })}
               </p>
             </div>
           )}

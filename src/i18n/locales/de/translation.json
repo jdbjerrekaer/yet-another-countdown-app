@@ -1,8 +1,8 @@
 {
   "app": {
-    "title": "Noch eine Countdown-App",
+    "title": "Yet Another Countdown",
     "noCountdowns": "Keine Countdowns",
-    "createFirst": "Tippe auf das +-Symbol unten, um deinen ersten Countdown zu erstellen"
+    "createFirst": "Tippe auf das + Symbol, um deinen ersten Countdown zu erstellen"
   },
   "events": {
     "title": "Ereignisse",
@@ -15,22 +15,26 @@
     "appearance": "Aussehen",
     "preview": "Vorschau",
     "next": "Nächstes: {{date}}",
-    "timeSince": "Zeit seit dem Ereignis",
-    "arrived": "Ereignis ist eingetreten!",
-    "countingDown": "Countdown läuft...",
+    "timeSince": "Vergangene Zeit",
+    "arrived": "Es ist soweit!",
+    "countingDown": "Countdown läuft",
     "units": {
-      "days": "Tag",
-      "days_plural": "Tage",
-      "daysShort": "Tage",
-      "hours": "Stunde",
-      "hours_plural": "Stunden",
-      "hoursShort": "Stunden",
-      "minutes": "Minute",
-      "minutes_plural": "Minuten",
-      "minutesShort": "Min",
-      "seconds": "Sekunde",
-      "seconds_plural": "Sekunden",
-      "secondsShort": "Sek"
+      "days_one": "Tag",
+      "days_other": "Tage",
+      "daysShort_one": "Tag",
+      "daysShort_other": "Tage",
+      "hours_one": "Stunde",
+      "hours_other": "Stunden",
+      "hoursShort_one": "Std",
+      "hoursShort_other": "Std",
+      "minutes_one": "Minute",
+      "minutes_other": "Minuten",
+      "minutesShort_one": "Min",
+      "minutesShort_other": "Min",
+      "seconds_one": "Sekunde",
+      "seconds_other": "Sekunden",
+      "secondsShort_one": "Sek",
+      "secondsShort_other": "Sek"
     },
     "daysAgoText": "vor",
     "daysAgoTextUpper": "Vor Tagen",
@@ -55,9 +59,9 @@
     "editEvent": "Ereignis bearbeiten",
     "newEvent": "Neues Ereignis",
     "titleLabel": "Titel",
-    "eventNamePlaceholder": "Ereignisname eingeben",
+    "eventNamePlaceholder": "Name des Ereignisses",
     "dateLabel": "Datum",
-    "emojiLabel": "Symbol",
+    "emojiLabel": "Icon",
     "colorLabel": "Farbe",
     "recurringLabel": "Jährlich",
     "save": "Speichern",
@@ -66,55 +70,56 @@
     "delete": "Ereignis löschen",
     "advancedLabel": "Erweitert",
     "repeatYearlyLabel": "Jährlich wiederholen",
-    "repeatYearlySublabel": "Für Geburtstage, Jubiläen",
+    "repeatYearlySublabel": "Für Geburtstage, Jubiläen, etc.",
     "customEmojiTitle": "Benutzerdefiniertes Emoji",
     "customEmojiPlaceholder": "🎨",
     "shareEvent": "Ereignis teilen",
-    "shareLinkCopied": "Import-Link in Zwischenablage kopiert",
-    "shareError": "Fehler beim Teilen des Ereignisses",
+    "shareLinkCopied": "Link in Zwischenablage kopiert",
+    "shareError": "Fehler beim Teilen",
     "importedFrom": "Importiert von {{calendar}}",
-    "yearlySuggestion": "Dieses Datum liegt über ein Jahr zurück. Jährlich wiederholen?",
-    "yearlySuggestionHint": "Jährlich wiederholen?",
+    "yearlySuggestion": "Dieses Datum liegt über ein Jahr zurück. Jährlich machen?",
+    "yearlySuggestionHint": "Soll dies jährlich wiederholt werden?",
     "yearlySuggestionReason": "Dieses Datum liegt über ein Jahr zurück",
     "enableYearly": "Aktivieren"
   },
   "dialogs": {
     "dateChanged": {
       "title": "Datum geändert",
-      "message": "Du hast das Datum für \"{{title}}\" von {{oldDate}} auf {{newDate}} geändert. Möchtest du diese Änderungen wirklich speichern?",
+      "message": "Du hast das Datum für \"{{title}}\" von {{oldDate}} auf {{newDate}} geändert. Möchtest du die Änderungen speichern?",
       "save": "Änderungen speichern",
       "cancel": "Abbrechen"
     },
     "deleteEvent": {
       "title": "Ereignis löschen",
-      "message": "Bist du sicher, dass du \"{{title}}\" löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "message": "Bist du sicher, dass du \"{{title}}\" löschen möchtest? Dies kann nicht rückgängig gemacht werden.",
       "delete": "Löschen",
       "cancel": "Abbrechen"
     },
     "importEvent": {
       "title": "Ereignis importieren",
-      "message": "Möchtest du \"{{emoji}} {{title}}\" für {{date}} importieren?",
+      "message": "Möchtest du \"{{emoji}} {{title}}\" am {{date}} importieren?",
       "import": "Importieren",
       "cancel": "Abbrechen"
     },
     "yearlyMigration": {
-      "title": "Ereignisse jährlich machen?",
-      "message": "Du hast {{count}} Ereignis(se) von vor über einem Jahr. Sollen sie jährlich wiederholt werden?",
-      "convert": "Zu jährlich konvertieren",
+      "title": "Jährlich wiederholen?",
+      "message_one": "Du hast {{count}} Ereignis von vor über einem Jahr. Soll es jährlich wiederholt werden?",
+      "message_other": "Du hast {{count}} Ereignisse von vor über einem Jahr. Sollen sie jährlich wiederholt werden?",
+      "convert": "Jährlich machen",
       "skip": "Überspringen"
     },
     "suggestYearly": {
-      "title": "Dieses Ereignis jährlich machen?",
-      "message": "Dieses Datum liegt über ein Jahr zurück. Jährlich wiederholen, damit es nächstes Jahr wieder herunterzählt?",
+      "title": "Jährlich machen?",
+      "message": "Dieses Datum liegt über ein Jahr zurück. Soll es jährlich wiederholt werden, damit es nächstes Jahr wieder zählt?",
       "enable": "Jährlich machen",
-      "keepOneTime": "Einmalig belassen"
+      "keepOneTime": "Einmalig lassen"
     }
   },
   "countdown": {
     "today": "Heute! 🎉",
-    "daysAgo": "vor {{count}} Tag",
-    "daysAgo_plural": "vor {{count}} Tagen",
-    "format": "{{days}}T {{hours}}St {{minutes}}M"
+    "daysAgo_one": "vor {{count}} Tag",
+    "daysAgo_other": "vor {{count}} Tagen",
+    "format": "{{days}}T {{hours}}Std {{minutes}}Min"
   },
   "notifications": {
     "reachedZero": "Dein Countdown ist abgelaufen!"
@@ -123,14 +128,14 @@
     "importTitle": "Aus Kalender importieren",
     "importButton": "Importieren",
     "fetchEvents": "Ereignisse abrufen",
-    "loading": "Lade Kalenderereignisse...",
-    "fetchError": "Fehler beim Abrufen der Kalenderereignisse",
-    "noEventsTitle": "Keine wiederkehrenden Ereignisse",
-    "noEventsMessage": "Keine Geburtstage oder Jubiläen in deinem Kalender gefunden",
-    "eventsFound": "{{count}} Ereignis gefunden",
-    "eventsFound_plural": "{{count}} Ereignisse gefunden",
-    "recurringEventsFound": "{{count}} wiederkehrendes Ereignis gefunden",
-    "recurringEventsFound_plural": "{{count}} wiederkehrende Ereignisse gefunden",
+    "loading": "Ereignisse werden geladen...",
+    "fetchError": "Fehler beim Abrufen der Ereignisse",
+    "noEventsTitle": "Keine Ereignisse",
+    "noEventsMessage": "Keine Geburtstage oder Jubiläen im Kalender gefunden",
+    "eventsFound_one": "{{count}} Ereignis gefunden",
+    "eventsFound_other": "{{count}} Ereignisse gefunden",
+    "recurringEventsFound_one": "{{count}} jährliches Ereignis gefunden",
+    "recurringEventsFound_other": "{{count}} jährliche Ereignisse gefunden",
     "searchPlaceholder": "Ereignisse suchen...",
     "selectAll": "Alle auswählen",
     "deselectAll": "Alle abwählen",
@@ -138,54 +143,55 @@
     "tryAgain": "Erneut versuchen",
     "refresh": "Aktualisieren",
     "icsUrlLabel": "Kalender-URL (.ics)",
-    "icsUrlPlaceholder": "Füge deine Kalender-URL hier ein",
-    "icsUrlHint": "Füge eine öffentliche .ics Kalender-URL ein (z.B. von Google Calendar)",
+    "icsUrlPlaceholder": "URL hier einfügen",
+    "icsUrlHint": "Öffentliche .ics Kalender-URL (z. B. von Google Calendar)",
     "urlRequired": "Bitte gib eine Kalender-URL ein",
-    "invalidUrl": "Bitte gib eine gültige .ics Kalender-URL ein",
-    "permissionDeniedTitle": "Kalenderzugriff verweigert",
-    "permissionDeniedMessage": "Bitte erlaube den Kalenderzugriff in den Einstellungen, um Ereignisse aus deinem Kalender zu importieren.",
+    "invalidUrl": "Bitte gib eine gültige .ics-URL ein",
+    "permissionDeniedTitle": "Kein Zugriff auf Kalender",
+    "permissionDeniedMessage": "Bitte erlaube den Kalenderzugriff in den Einstellungen, um Ereignisse zu importieren.",
     "openSettings": "Einstellungen öffnen",
     "clearFilter": "Alle"
   },
   "aria": {
     "saveEvent": "Ereignis speichern",
     "addEvent": "Ereignis hinzufügen",
+    "importEvents": "Ausgewählte Ereignisse importieren",
     "clearInput": "Eingabe löschen",
     "colorPicker": "Farbauswahl",
     "shareEvent": "Ereignis teilen",
     "importFromCalendar": "Aus Kalender importieren",
-    "openRemoveAds": "Optionen zum Entfernen von Werbung öffnen"
+    "openRemoveAds": "Werbung entfernen"
   },
   "ads": {
-    "loading": "Anzeige wird geladen...",
-    "webPlaceholder": "Werbung"
+    "loading": "Werbung wird geladen...",
+    "webPlaceholder": "Anzeige"
   },
   "iap": {
     "title": "Werbung entfernen",
-    "headline": "Werbefrei genießen",
-    "subheadline": "Genieße eine saubere, fokussierte Countdown-Erfahrung.",
-    "cta": "Freischalten",
-    "alreadyUnlocked": "Du bist werbefrei",
+    "headline": "Werbung entfernen",
+    "subheadline": "Genieße die App werbefrei und ohne Ablenkungen.",
+    "cta": "Werbung entfernen",
+    "alreadyUnlocked": "Du bist bereits werbefrei",
     "restore": "Käufe wiederherstellen",
-    "restoreSuccess": "Käufe wiederhergestellt.",
+    "restoreSuccess": "Käufe erfolgreich wiederhergestellt.",
     "restoreNone": "Keine früheren Käufe gefunden.",
     "restoreError": "Wiederherstellung fehlgeschlagen. Bitte erneut versuchen.",
-    "purchaseSuccess": "Du bist jetzt werbefrei.",
+    "purchaseSuccess": "Werbung wurde erfolgreich entfernt.",
     "purchaseError": "Kauf fehlgeschlagen. Bitte erneut versuchen.",
     "loadError": "Produkte können derzeit nicht geladen werden.",
-    "loadingProducts": "Angebote werden geladen...",
+    "loadingProducts": "Wird geladen...",
     "priceFallback": "-",
     "webUnavailable": "Käufe sind in der iOS-App verfügbar.",
-    "disclaimer": "Einmaliger Kauf. Nach Neuinstallation jederzeit wiederherstellen.",
+    "disclaimer": "Einmaliger Kauf. Kann jederzeit wiederhergestellt werden.",
     "adFreeBadge": "Werbefrei",
     "tiers": {
       "standard": {
         "title": "Werbung entfernen",
-        "description": "Genieße eine saubere, ununterbrochene Countdown-Erfahrung."
+        "description": "Genieße die App ohne Werbeunterbrechungen."
       },
       "supporter": {
-        "title": "Werbung entfernen",
-        "description": "Werbefrei plus ein Dankeschön für die Unterstützung der App.",
+        "title": "App unterstützen",
+        "description": "Werbung entfernen und die Weiterentwicklung unterstützen.",
         "badge": "Unterstützer"
       }
     }

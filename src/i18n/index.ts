@@ -41,6 +41,7 @@ i18n
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
+    compatibilityJSON: 'v4',
     interpolation: {
       escapeValue: false, // React already escapes
     },

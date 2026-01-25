@@ -1,8 +1,8 @@
 {
   "app": {
-    "title": "Ännu En Nedräknings App",
-    "noCountdowns": "Inga Nedräkningar",
-    "createFirst": "Tryck på + knappen nedan för att skapa din första nedräkning"
+    "title": "Yet Another Countdown",
+    "noCountdowns": "Inga nedräkningar",
+    "createFirst": "Tryck på + knappen för att skapa din första nedräkning"
   },
   "events": {
     "title": "Händelser",
@@ -10,27 +10,31 @@
     "edit": "Redigera"
   },
   "widget": {
-    "size": "Widget Storlek",
+    "size": "Widget-storlek",
     "style": "Stil",
     "appearance": "Utseende",
     "preview": "Förhandsvisning",
     "next": "Nästa: {{date}}",
-    "timeSince": "Tid sedan händelse",
-    "arrived": "Händelse har anlänt!",
-    "countingDown": "Räknar ner",
+    "timeSince": "Tid förfluten",
+    "arrived": "Det är nu!",
+    "countingDown": "Nedräkning pågår",
     "units": {
-      "days": "dag",
-      "days_plural": "dagar",
-      "daysShort": "Dagar",
-      "hours": "timme",
-      "hours_plural": "timmar",
-      "hoursShort": "Timmar",
-      "minutes": "minut",
-      "minutes_plural": "minuter",
-      "minutesShort": "Min",
-      "seconds": "sekund",
-      "seconds_plural": "sekunder",
-      "secondsShort": "Sek"
+      "days_one": "dag",
+      "days_other": "dagar",
+      "daysShort_one": "Dag",
+      "daysShort_other": "Dagar",
+      "hours_one": "timme",
+      "hours_other": "timmar",
+      "hoursShort_one": "Tim",
+      "hoursShort_other": "Tim",
+      "minutes_one": "minut",
+      "minutes_other": "minuter",
+      "minutesShort_one": "Min",
+      "minutesShort_other": "Min",
+      "seconds_one": "sekund",
+      "seconds_other": "sekunder",
+      "secondsShort_one": "Sek",
+      "secondsShort_other": "Sek"
     },
     "daysAgoText": "sedan",
     "daysAgoTextUpper": "Dagar sedan",
@@ -48,145 +52,147 @@
       "light": "Ljus",
       "dark": "Mörk",
       "transparent": "Glas",
-      "tinted": "Tonerad"
+      "tinted": "Tonad"
     }
   },
   "modal": {
-    "editEvent": "Redigera Händelse",
-    "newEvent": "Ny Händelse",
+    "editEvent": "Redigera händelse",
+    "newEvent": "Ny händelse",
     "titleLabel": "Titel",
-    "eventNamePlaceholder": "Ange händelsens namn",
+    "eventNamePlaceholder": "Händelsens namn",
     "dateLabel": "Datum",
-    "emojiLabel": "Emoji",
+    "emojiLabel": "Ikon",
     "colorLabel": "Färg",
     "recurringLabel": "Årlig",
     "save": "Spara",
     "cancel": "Avbryt",
     "close": "Stäng",
-    "delete": "Radera Händelse",
+    "delete": "Radera händelse",
     "advancedLabel": "Avancerat",
-    "repeatYearlyLabel": "Upprepa Årligt",
-    "repeatYearlySublabel": "För födelsedagar, jubileer",
-    "customEmojiTitle": "Anpassad emoji",
+    "repeatYearlyLabel": "Upprepa årligen",
+    "repeatYearlySublabel": "För födelsedagar, jubileer, etc.",
+    "customEmojiTitle": "Egen emoji",
     "customEmojiPlaceholder": "🎨",
-    "shareEvent": "Dela Händelse",
-    "shareLinkCopied": "Importlänk kopierad till urklipp",
+    "shareEvent": "Dela händelse",
+    "shareLinkCopied": "Länk kopierad till urklipp",
     "shareError": "Kunde inte dela händelse",
     "importedFrom": "Importerad från {{calendar}}",
-    "yearlySuggestion": "Detta datum är över ett år sedan. Gör det årligt?",
-    "yearlySuggestionHint": "Gör detta återkommande årligen?",
+    "yearlySuggestion": "Detta datum var för över ett år sedan. Gör det årligt?",
+    "yearlySuggestionHint": "Ska denna upprepas varje år?",
     "yearlySuggestionReason": "Detta datum inträffade för över ett år sedan",
     "enableYearly": "Aktivera"
   },
   "dialogs": {
     "dateChanged": {
-      "title": "Datum Ändrat",
-      "message": "Du har ändrat datumet för \"{{title}}\" från {{oldDate}} till {{newDate}}. Är du säker på att du vill spara dessa ändringar?",
-      "save": "Spara Ändringar",
+      "title": "Datum ändrat",
+      "message": "Du har ändrat datumet för \"{{title}}\" från {{oldDate}} till {{newDate}}. Vill du spara ändringarna?",
+      "save": "Spara ändringar",
       "cancel": "Avbryt"
     },
     "deleteEvent": {
-      "title": "Radera Händelse",
-      "message": "Är du säker på att du vill radera \"{{title}}\"? Denna åtgärd kan inte ångras.",
+      "title": "Radera händelse",
+      "message": "Är du säker på att du vill radera \"{{title}}\"? Detta kan inte ångras.",
       "delete": "Radera",
       "cancel": "Avbryt"
     },
     "importEvent": {
-      "title": "Importera Händelse",
-      "message": "Vill du importera \"{{emoji}} {{title}}\" planerad för {{date}}?",
+      "title": "Importera händelse",
+      "message": "Vill du importera \"{{emoji}} {{title}}\" den {{date}}?",
       "import": "Importera",
       "cancel": "Avbryt"
     },
     "yearlyMigration": {
-      "title": "Gör Händelser Årliga?",
-      "message": "Du har {{count}} händelse(r) från över ett år sedan. Gör dem årligt återkommande?",
-      "convert": "Konvertera till Årligt",
-      "skip": "Hoppa Över"
+      "title": "Gör händelser årliga?",
+      "message_one": "Du har {{count}} händelse från över ett år sedan. Ska den upprepas årligen?",
+      "message_other": "Du har {{count}} händelser från över ett år sedan. Ska de upprepas årligen?",
+      "convert": "Gör årliga",
+      "skip": "Hoppa över"
     },
     "suggestYearly": {
-      "title": "Gör Denna Händelse Årlig?",
-      "message": "Detta datum inträffade för över ett år sedan. Gör den årligt återkommande så den räknar ner igen nästa år?",
-      "enable": "Gör Årlig",
-      "keepOneTime": "Behåll Engångs"
+      "title": "Gör händelsen årlig?",
+      "message": "Detta datum var för över ett år sedan. Vill du göra händelsen årlig så att den räknar ner igen nästa år?",
+      "enable": "Gör årlig",
+      "keepOneTime": "Behåll som engångs"
     }
   },
   "countdown": {
     "today": "Idag! 🎉",
-    "daysAgo": "{{count}} dag sedan",
-    "daysAgo_plural": "{{count}} dagar sedan",
+    "daysAgo_one": "{{count}} dag sedan",
+    "daysAgo_other": "{{count}} dagar sedan",
     "format": "{{days}}d {{hours}}t {{minutes}}m"
   },
   "notifications": {
-    "reachedZero": "Din nedräkning har nått noll!"
+    "reachedZero": "Din nedräkning är slut!"
   },
   "calendar": {
-    "importTitle": "Importera från Kalender",
+    "importTitle": "Importera från kalender",
     "importButton": "Importera",
-    "fetchEvents": "Hämta Händelser",
-    "loading": "Laddar kalenderhändelser...",
-    "fetchError": "Kunde inte hämta kalenderhändelser",
-    "noEventsTitle": "Inga Återkommande Händelser",
+    "fetchEvents": "Hämta händelser",
+    "loading": "Laddar händelser...",
+    "fetchError": "Kunde inte hämta händelser",
+    "noEventsTitle": "Inga händelser funna",
     "noEventsMessage": "Inga födelsedagar eller jubileer hittades i din kalender",
-    "eventsFound": "{{count}} händelse hittad",
-    "eventsFound_plural": "{{count}} händelser hittade",
-    "recurringEventsFound": "{{count}} återkommande händelse hittad",
-    "recurringEventsFound_plural": "{{count}} återkommande händelser hittade",
+    "eventsFound_one": "{{count}} händelse hittad",
+    "eventsFound_other": "{{count}} händelser hittade",
+    "recurringEventsFound_one": "{{count}} årlig händelse hittad",
+    "recurringEventsFound_other": "{{count}} årliga händelser hittade",
     "searchPlaceholder": "Sök händelser...",
-    "selectAll": "Välj Alla",
-    "deselectAll": "Avmarkera Alla",
+    "selectAll": "Välj alla",
+    "deselectAll": "Avmarkera alla",
     "yearly": "Årlig",
-    "tryAgain": "Försök Igen",
+    "tryAgain": "Försök igen",
     "refresh": "Uppdatera",
-    "icsUrlLabel": "Kalender URL (.ics)",
-    "icsUrlPlaceholder": "Klistra in din kalender URL här",
-    "icsUrlHint": "Klistra in en offentlig .ics kalender URL (t.ex. från Google Calendar)",
-    "urlRequired": "Vänligen ange en kalender URL",
-    "invalidUrl": "Vänligen ange en giltig .ics kalender URL",
-    "permissionDeniedTitle": "Kalendertillgång Nekad",
-    "permissionDeniedMessage": "Tillåt kalendertillgång i Inställningar för att importera händelser från din kalender.",
+    "icsUrlLabel": "Kalender-URL (.ics)",
+    "icsUrlPlaceholder": "Klistra in URL här",
+    "icsUrlHint": "Offentlig .ics kalender-URL (t.ex. från Google Calendar)",
+    "urlRequired": "Ange en kalender-URL",
+    "invalidUrl": "Ange en giltig .ics-URL",
+    "permissionDeniedTitle": "Ingen tillgång till kalender",
+    "permissionDeniedMessage": "Vänligen tillåt kalendertillgång i Inställningar för att importera händelser.",
     "openSettings": "Öppna Inställningar",
     "clearFilter": "Alla"
   },
   "aria": {
     "saveEvent": "Spara händelse",
     "addEvent": "Lägg till händelse",
-    "clearInput": "Rensa inmatning",
+    "importEvents": "Importera valda händelser",
+    "clearInput": "Rensa fält",
     "colorPicker": "Färgväljare",
     "shareEvent": "Dela händelse",
     "importFromCalendar": "Importera från kalender",
-    "openRemoveAds": "Öppna alternativ för att ta bort annonser"
+    "openRemoveAds": "Ta bort annonser"
   },
   "ads": {
-    "loading": "Ad Loading...",
-    "webPlaceholder": "Advertisement"
+    "loading": "Laddar annons...",
+    "webPlaceholder": "Annons"
   },
   "iap": {
     "title": "Ta bort annonser",
-    "headline": "Utan annonser",
-    "subheadline": "Njut av en ren och fokuserad nedräkningsupplevelse.",
-    "cta": "Lås upp",
+    "headline": "Ta bort annonser",
+    "subheadline": "Njut av en ren och fokuserad upplevelse utan annonser.",
+    "cta": "Ta bort annonser",
     "alreadyUnlocked": "Du är annonsfri",
     "restore": "Återställ köp",
-    "restoreSuccess": "Köp återställda.",
+    "restoreSuccess": "Köp har återställts.",
     "restoreNone": "Inga tidigare köp hittades.",
     "restoreError": "Återställning misslyckades. Försök igen.",
-    "purchaseSuccess": "Du är nu annonsfri.",
-    "purchaseError": "Köpet misslyckades. Försök igen.",
-    "loadError": "Det gick inte att läsa in produkter just nu.",
-    "loadingProducts": "Laddar erbjudanden...",
+    "purchaseSuccess": "Annonserna har tagits bort.",
+    "purchaseError": "Köp misslyckades. Försök igen.",
+    "loadError": "Kunde inte ladda produkter just nu.",
+    "loadingProducts": "Hämtar priser...",
     "priceFallback": "-",
-    "webUnavailable": "Köp finns i iOS-appen.",
-    "disclaimer": "Engångsköp. Återställ när som helst efter ominstallation.",
+    "webUnavailable": "Köp är tillgängliga i iOS-appen.",
+    "disclaimer": "Engångsköp. Kan alltid återställas.",
     "adFreeBadge": "Annonsfri",
     "tiers": {
       "standard": {
         "title": "Ta bort annonser",
-        "description": "Njut av en ren, oavbruten nedräkningsupplevelse."
+        "description": "Njut av appen utan annonsavbrott."
       },
       "supporter": {
-        "title": "Ta bort annonser",
-        "description": "Annonsfri och ett tack för att du stödjer appen.",
-        "badge": "Stödjare"
+        "title": "Stöd appen",
+        "description": "Ta bort annonser och bidra till vidareutveckling.",
+        "badge": "Supporter"
       }
     }
   }

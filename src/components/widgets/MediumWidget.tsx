@@ -109,12 +109,10 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
             {targetDate ? (
               <p className="text-xs text-muted-foreground">
                 {isRecurring 
-                  ? `${t('widget.next', { date: formatDateSmart(targetDate) })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
+                  ? `${t('widget.next', { date: formatDateSmart(targetDate) })} · ${t('widget.units.daysWithCount', { count: countdown.days })}`
                   : countdown.isPast
-                    ? `${formatDateSmart(targetDate)} · ${countdown.daysSince === 1 
-                      ? t('countdown.daysAgo', { count: 1 })
-                      : t('countdown.daysAgo_plural', { count: countdown.daysSince })}`
-                    : `${formatDateSmart(targetDate)} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
+                    ? `${formatDateSmart(targetDate)} · ${t('countdown.daysAgo', { count: countdown.daysSince })}`
+                    : `${formatDateSmart(targetDate)} · ${t('widget.units.daysWithCount', { count: countdown.days })}`}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
@@ -252,7 +250,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
           <div className="flex gap-6">
             <div>
               <p className="text-3xl font-bold text-foreground">{countdown.daysSince}</p>
-              <p className="text-xs text-muted-foreground">{countdown.daysSince === 1 ? 'Day' : t('widget.units.daysShort')} {t('widget.daysAgoText')}</p>
+              <p className="text-xs text-muted-foreground">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
             </div>
           </div>
         ) : countdown.isComplete ? (
