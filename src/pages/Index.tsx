@@ -1389,7 +1389,10 @@ export default function Index() {
   return (
     <IonPage>
 
-      <IonContent fullscreen className="ion-padding">
+      <IonContent 
+        fullscreen 
+        className="ion-padding"
+      >
         {/* iOS large title header */}
         <IonHeader className="ion-no-border">
           <IonToolbar className="px-2 pt-4">

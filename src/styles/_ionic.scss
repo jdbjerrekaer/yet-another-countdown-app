@@ -54,6 +54,12 @@
     @apply bg-card/60 backdrop-blur-2xl;
   }
 
+  // Override iOS26 floating safe area bottom to account for ad banner height
+  // This adjusts the bottom overflow shadow and content padding
+  .ios:not(.ios26-disabled) ion-content {
+    --ios26-floating-safe-area-bottom: calc(max(10px, calc(var(--ion-safe-area-bottom, 0px) - 12px)) + var(--ad-banner-height, 0px));
+  }
+
   ion-modal::part(backdrop) {
     background: rgba(255, 255, 255, 1) !important;
   }
