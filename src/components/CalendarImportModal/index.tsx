@@ -385,7 +385,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
               
               {/* Calendar filter chips */}
               {availableCalendars.length > 1 && (
-                <div className="flex flex-wrap gap-2 ps-3 pe-2">
+                <div className="flex flex-wrap gap-2 ps-3 pe-2 calendar-filter-chips">
                   {availableCalendars.map((calendar) => (
                     <IonChip
                       key={calendar}

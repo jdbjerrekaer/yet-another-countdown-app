@@ -436,4 +436,8 @@
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 0.5rem !important;
   }
+
+  .ios ion-modal .calendar-filter-chips {
+    gap: 0.5rem 0.25rem;
+  }
 }
