@@ -426,4 +426,14 @@
   ion-modal ion-searchbar::part(container) {
     padding-left: 0 !important;
   }
+
+  ion-button.button-clear.text-primary {
+    --border-width: 0;
+    --border-color: transparent;
+  }
+
+  ion-button.button-clear.text-primary::part(native) {
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 0.5rem !important;
+  }
 }
