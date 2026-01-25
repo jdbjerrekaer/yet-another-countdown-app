@@ -342,7 +342,7 @@ export function CountdownCard({
             } as React.CSSProperties}
           >
             <div 
-              className="w-full p-4 flex items-center gap-4"
+              className="w-full p-4 flex items-center gap-4 overflow-hidden"
               style={{
                 borderRadius: `${borderRadius}px`,
                 backgroundColor: 'hsl(var(--card))',
@@ -357,9 +357,9 @@ export function CountdownCard({
                 <span className="text-2xl">{event.emoji}</span>
               </div>
               
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h3 className="font-semibold text-foreground truncate min-w-0 flex-1">{event.title}</h3>
                   {(event.isRecurring || countdown.isPast) && (
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {event.isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
@@ -371,8 +371,8 @@ export function CountdownCard({
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-sm text-muted-foreground flex-shrink-0">
                     {countdown.isPast
                       ? t('countdown.daysAgo', { count: countdown.daysSince })
                       : countdown.isComplete
@@ -381,23 +381,21 @@ export function CountdownCard({
                     }
                   </p>
                   {event.isImported && event.importedFrom && (
-                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1">
-                      <CalendarIcon className="w-3 h-3" />
-                      {event.importedFrom}
+                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1 min-w-0 truncate">
+                      <CalendarIcon className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{event.importedFrom}</span>
                     </span>
                   )}
                 </div>
               </div>
               
-              {!event.isImported && (
-                <button
-                  className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
-                  onClick={handleEdit}
-                  aria-label={t('aria.editEvent')}
-                >
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </button>
-              )}
+              <button
+                className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
+                onClick={handleEdit}
+                aria-label={t('aria.editEvent')}
+              >
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
           </IonItem>
         </IonItemSliding>
