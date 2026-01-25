@@ -1091,6 +1091,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 </div>
               </div>
             )}
+            
+            <div className="h-24" aria-hidden="true" />
           </div>
       </IonContent>
     </IonModal>
