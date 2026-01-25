@@ -61,35 +61,21 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
   const halfHeight = config.height / 2;
 
   const getFontSizeForValue = (val: number): string => {
-    const digitCount = Math.abs(val).toString().length;
+    if (size !== 'small') {
+      return config.fontSize;
+    }
     
+    const digitCount = Math.abs(val).toString().length;
     const fontSizeMap = {
-      small: {
-        1: 'text-2xl',
-        2: 'text-xl',
-        3: 'text-lg',
-        4: 'text-base',
-        5: 'text-sm',
-      },
-      medium: {
-        1: 'text-xl',
-        2: 'text-lg',
-        3: 'text-base',
-        4: 'text-sm',
-        5: 'text-xs',
-      },
-      large: {
-        1: 'text-4xl',
-        2: 'text-3xl',
-        3: 'text-2xl',
-        4: 'text-xl',
-        5: 'text-lg',
-      },
+      1: 'text-2xl',
+      2: 'text-xl',
+      3: 'text-lg',
+      4: 'text-base',
+      5: 'text-sm',
     };
     
-    const map = fontSizeMap[size];
-    const key = Math.min(digitCount, 5) as keyof typeof map;
-    return map[key] || map[5];
+    const key = Math.min(digitCount, 5) as keyof typeof fontSizeMap;
+    return fontSizeMap[key];
   };
 
   useEffect(() => {

@@ -224,10 +224,8 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
           {targetDate ? (
             <p className="text-xs text-muted-foreground">
               {isRecurring 
-                ? `${t('widget.next', { date: formatDateSmart(targetDate) })} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`
-                : countdown.isPast
-                  ? formatDateSmart(targetDate)
-                  : `${formatDateSmart(targetDate)} · ${countdown.days} ${countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}`}
+                ? t('widget.next', { date: formatDateSmart(targetDate) })
+                : formatDateSmart(targetDate)}
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">

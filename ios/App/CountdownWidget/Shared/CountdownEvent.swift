@@ -135,12 +135,35 @@ struct WidgetData: Codable {
     }
 }
 
-/// Extension to format integers without thousand separators
 extension Int {
     var formattedWithoutSeparator: String {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = false
         return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
+    }
+    
+    var digitCount: Int {
+        return String(abs(self)).count
+    }
+    
+    func scaledFontSize(baseSize: CGFloat) -> CGFloat {
+        switch digitCount {
+        case 1: return baseSize
+        case 2: return baseSize * 0.85
+        case 3: return baseSize * 0.7
+        case 4: return baseSize * 0.6
+        default: return baseSize * 0.5
+        }
+    }
+    
+    func scaledUnitFontSize(baseSize: CGFloat) -> CGFloat {
+        switch digitCount {
+        case 1: return baseSize
+        case 2: return baseSize * 0.9
+        case 3: return baseSize * 0.8
+        case 4: return baseSize * 0.7
+        default: return baseSize * 0.65
+        }
     }
 }
 

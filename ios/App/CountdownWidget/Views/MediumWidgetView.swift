@@ -259,22 +259,22 @@ struct MediumWidgetView: View {
         if event.isRecurring {
             formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
-            if countdownStyle == .classic {
-                return "Next: \(dateStr)"
+            if countdownStyle == .visual {
+                let daysLabel = countdown.days == 1 ? "day" : "days"
+                return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
             }
-            let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
+            return "Next: \(dateStr)"
         } else if countdown.isPast {
             formatter.dateFormat = dateFormat
             return formatter.string(from: date)
         } else {
             formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
-            if countdownStyle == .classic {
-                return dateStr
+            if countdownStyle == .visual {
+                let daysLabel = countdown.days == 1 ? "day" : "days"
+                return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
             }
-            let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
+            return dateStr
         }
     }
 }

@@ -127,9 +127,11 @@ export function CountdownCard({
       const native = deleteOptionEl.shadowRoot?.querySelector('.item-native') || deleteOptionEl.shadowRoot?.querySelector('[part="native"]');
       if (native) {
         const nativeEl = native as HTMLElement;
+        const bgColorValue = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+        const bgColor = bgColorValue ? `hsl(${bgColorValue})` : 'hsl(var(--background))';
         
-        nativeEl.style.setProperty('background', 'white', 'important');
-        nativeEl.style.setProperty('background-color', 'white', 'important');
+        nativeEl.style.setProperty('background', bgColor, 'important');
+        nativeEl.style.setProperty('background-color', bgColor, 'important');
         nativeEl.style.setProperty('border', 'none', 'important');
         nativeEl.style.setProperty('border-width', '0', 'important');
         nativeEl.style.setProperty('box-shadow', 'none', 'important');
@@ -224,13 +226,13 @@ export function CountdownCard({
               onClick={handleDelete}
               className={styles.deleteOption}
               style={{
-                '--background': 'white',
-                '--ion-color-base': 'white',
+                '--background': 'hsl(var(--background))',
+                '--ion-color-base': 'hsl(var(--background))',
                 '--border-width': '0',
                 '--border-color': 'transparent',
                 '--inner-border-width': '0',
-                background: 'white',
-                backgroundColor: 'white',
+                background: 'hsl(var(--background))',
+                backgroundColor: 'hsl(var(--background))',
                 border: 'none',
                 borderTop: 'none',
                 borderRight: 'none',
@@ -248,8 +250,10 @@ export function CountdownCard({
                   const native = el.shadowRoot?.querySelector('.item-native') || el.shadowRoot?.querySelector('[part="native"]');
                   if (native) {
                     const nativeEl = native as HTMLElement;
-                    nativeEl.style.setProperty('background', 'white', 'important');
-                    nativeEl.style.setProperty('background-color', 'white', 'important');
+                    const bgColorValue = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+                    const bgColor = bgColorValue ? `hsl(${bgColorValue})` : 'hsl(var(--background))';
+                    nativeEl.style.setProperty('background', bgColor, 'important');
+                    nativeEl.style.setProperty('background-color', bgColor, 'important');
                     nativeEl.style.setProperty('border', 'none', 'important');
                     nativeEl.style.setProperty('border-width', '0', 'important');
                     nativeEl.style.setProperty('box-shadow', 'none', 'important');
@@ -290,9 +294,18 @@ export function CountdownCard({
                     })(),
                     borderRadius: '9999px',
                     transform: `scale(${Math.min(swipeProgress / 0.5, 1)})`,
+                    opacity: (() => {
+                      const scaleProgress = Math.min(swipeProgress / 0.5, 1);
+                      return 0.3 + (scaleProgress * 0.7);
+                    })(),
+                    filter: (() => {
+                      const scaleProgress = Math.min(swipeProgress / 0.5, 1);
+                      const blurAmount = 2 * (1 - scaleProgress);
+                      return blurAmount > 0 ? `blur(${blurAmount}px)` : 'none';
+                    })(),
                     transition: isSliding 
-                      ? 'none' 
-                      : 'width 0.15s ease-out, transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease-out',
+                      ? 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)' 
+                      : 'width 0.15s ease-out, transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease-out, opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
                   <Trash2 

@@ -60,23 +60,15 @@ struct FlipDigitView: View {
         }
     }
     
-    // Calculate dimensions based on font size
     private var halfHeight: CGFloat {
-        switch fontSize {
-        case 28: return 30
-        case 36: return 40
-        case 48: return 50
-        default: return 30
-        }
+        return fontSize * 1.1
     }
     
     private var cardWidth: CGFloat {
-        switch fontSize {
-        case 28: return 50
-        case 36: return 70
-        case 48: return 90
-        default: return 50
-        }
+        let digitCount = String(abs(value)).count
+        let baseWidth = fontSize * 1.8
+        let extraWidthPerDigit = fontSize * 0.6
+        return baseWidth + CGFloat(max(0, digitCount - 1)) * extraWidthPerDigit
     }
     
     private var cardHeight: CGFloat {

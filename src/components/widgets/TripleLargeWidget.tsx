@@ -54,16 +54,6 @@ function getWidgetClasses(appearanceMode: WidgetAppearanceMode): string {
   }
 }
 
-function getFontSizeForValue(value: number): string {
-  const digitCount = Math.abs(value).toString().length;
-  
-  if (digitCount === 1) return 'text-2xl';
-  if (digitCount === 2) return 'text-xl';
-  if (digitCount === 3) return 'text-lg';
-  if (digitCount === 4) return 'text-base';
-  return 'text-sm';
-}
-
 function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: { event: TripleEvent; appearanceMode: WidgetAppearanceMode; isLast: boolean; countdownStyle?: WidgetCountdownStyle }) {
   const { t } = useTranslation();
   const { title, countdown, targetDate, emoji, emojiColor, isRecurring, createdAt, nextOccurrenceNumber } = event;
@@ -191,14 +181,14 @@ function EventRow({ event, appearanceMode, isLast, countdownStyle = 'focus' }: {
             </div>
           ) : countdown.isPast ? (
             <div>
-              <p className={`${getFontSizeForValue(countdown.daysSince)} font-bold text-foreground`}>{countdown.daysSince}</p>
+              <p className="text-2xl font-bold text-foreground">{countdown.daysSince}</p>
               <p className="text-xs text-muted-foreground">
                 {countdown.daysSince === 1 ? t('widget.units.days') + ' ' + t('widget.daysAgoText') : t('widget.units.days_plural') + ' ' + t('widget.daysAgoText')}
               </p>
             </div>
           ) : (
             <div>
-              <p className={`${getFontSizeForValue(countdown.days)} font-bold text-foreground`}>{countdown.days}</p>
+              <p className="text-2xl font-bold text-foreground">{countdown.days}</p>
               <p className="text-xs text-muted-foreground">
                 {countdown.days === 1 ? t('widget.units.days') : t('widget.units.days_plural')}
               </p>

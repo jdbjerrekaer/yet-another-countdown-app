@@ -74,17 +74,17 @@ struct SmallWidgetView: View {
                     if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
                         HStack(alignment: .lastTextBaseline, spacing: 2) {
                             Text(primaryValue.formattedWithoutSeparator)
-                                .font(.system(size: 28, weight: .bold))
+                                .font(.system(size: primaryValue.scaledFontSize(baseSize: 28), weight: .bold))
                                 .foregroundColor(foregroundColor)
                             Text(primaryUnit)
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.system(size: primaryValue.scaledUnitFontSize(baseSize: 14), weight: .medium))
                                 .foregroundColor(mutedColor)
                         }
                     } else {
                         HStack(alignment: .lastTextBaseline, spacing: 8) {
-                            FlipDigitView(value: primaryValue, fontSize: 28, theme: flipDigitTheme)
+                            FlipDigitView(value: primaryValue, fontSize: primaryValue.scaledFontSize(baseSize: 28), theme: flipDigitTheme)
                             Text(primaryUnit)
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.system(size: primaryValue.scaledUnitFontSize(baseSize: 14), weight: .medium))
                                 .foregroundColor(mutedColor)
                         }
                     }
@@ -92,10 +92,10 @@ struct SmallWidgetView: View {
                     // Focus mode - number display
                     HStack(alignment: .lastTextBaseline, spacing: 2) {
                         Text(primaryValue.formattedWithoutSeparator)
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.system(size: primaryValue.scaledFontSize(baseSize: 28), weight: .bold))
                             .foregroundColor(foregroundColor)
                         Text(primaryUnit)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: primaryValue.scaledUnitFontSize(baseSize: 14), weight: .medium))
                             .foregroundColor(mutedColor)
                     }
                 }
