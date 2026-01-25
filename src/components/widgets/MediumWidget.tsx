@@ -68,8 +68,18 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
     createdAt
   );
 
-  // Use emojiColor for bars, fallback to primary blue
   const barColor = emojiColor || 'hsl(211, 100%, 50%)';
+
+  let elapsedDays = 0;
+  let elapsedHours = 0;
+  let elapsedMinutes = 0;
+  if (countdown.isPast && targetDate) {
+    const now = new Date();
+    const elapsed = now.getTime() - targetDate.getTime();
+    elapsedDays = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+    elapsedHours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    elapsedMinutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+  }
 
   // Visual mode layout - same structure as Focus mode, but replace time breakdown with ring
   if (countdownStyle === 'visual') {
@@ -181,7 +191,9 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
         <div className="flex-1 flex items-end">
           {countdown.isPast ? (
             <div className="flex gap-6">
-              <FlipDigit value={countdown.daysSince} label={(countdown.daysSince === 1 ? 'Day' : t('widget.units.daysShort')) + ' ' + t('widget.daysAgoText')} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={elapsedDays} label={t('widget.units.daysShort')} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={elapsedHours} label={t('widget.units.hoursShort')} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={elapsedMinutes} label={t('widget.units.minutesShort')} size="medium" theme={flipTheme} layout="column" />
             </div>
           ) : countdown.isComplete ? (
             <p className="text-3xl font-bold text-primary">{t('countdown.today')}</p>

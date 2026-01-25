@@ -318,8 +318,12 @@ struct LargeWidgetView: View {
             if countdownStyle == .classic {
                 return dateStr
             }
-            let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
+            if countdown.isPast {
+                return dateStr
+            } else {
+                let daysLabel = countdown.days == 1 ? "day" : "days"
+                return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
+            }
         }
     }
 }

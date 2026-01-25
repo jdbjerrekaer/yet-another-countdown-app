@@ -17,9 +17,9 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
 
   // Font sizes and dimensions
   const sizeConfig = {
-    small: { fontSize: 'text-2xl', height: 36, width: 52 },
-    medium: { fontSize: 'text-xl', height: 36, width: 56 },
-    large: { fontSize: 'text-4xl', height: 56, width: 90 },
+    small: { fontSize: 'text-2xl', height: 36, baseWidth: 52 },
+    medium: { fontSize: 'text-xl', height: 36, baseWidth: 56 },
+    large: { fontSize: 'text-4xl', height: 56, baseWidth: 90 },
   };
 
   // Theme colors with proper shadows
@@ -78,6 +78,25 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
     return fontSizeMap[key];
   };
 
+  const getWidthForValue = (val: number): number => {
+    const digitCount = Math.abs(val).toString().length;
+    
+    if (size === 'small') {
+      // For small, use base width but allow some expansion
+      return Math.max(config.baseWidth, config.baseWidth + (digitCount - 2) * 8);
+    } else if (size === 'medium') {
+      // For medium, expand width based on digit count
+      // Base: 56px for 1-2 digits, add ~14px per additional digit
+      return Math.max(config.baseWidth, config.baseWidth + (digitCount - 2) * 14);
+    } else {
+      // For large, expand width based on digit count
+      // Base: 90px for 1-2 digits, add ~20px per additional digit
+      return Math.max(config.baseWidth, config.baseWidth + (digitCount - 2) * 20);
+    }
+  };
+
+  const dynamicWidth = getWidthForValue(value);
+
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -112,9 +131,10 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
       <div 
         style={{
           position: 'relative',
-          width: config.width,
+          width: dynamicWidth,
           height: config.height,
           perspective: '300px',
+          minWidth: config.baseWidth,
         }}
       >
         {/* STATIC TOP HALF - Shows NEW value (revealed when top flap flips away) */}

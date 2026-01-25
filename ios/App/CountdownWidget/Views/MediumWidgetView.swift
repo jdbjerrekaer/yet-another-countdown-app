@@ -88,7 +88,7 @@ struct MediumWidgetView: View {
                 } else {
                     if countdown.isPast {
                         HStack(spacing: 24) {
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .center, spacing: 2) {
                                 FlipDigitView(value: countdown.daysSince, fontSize: 28, theme: flipDigitTheme)
                                 Text(countdown.daysSince == 1 ? "Day ago" : "Days ago")
                                     .font(.system(size: 11))
@@ -97,19 +97,19 @@ struct MediumWidgetView: View {
                         }
                     } else {
                         HStack(spacing: 24) {
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .center, spacing: 2) {
                                 FlipDigitView(value: countdown.days, fontSize: 28, theme: flipDigitTheme)
                                 Text("Days")
                                     .font(.system(size: 11))
                                     .foregroundColor(mutedColor)
                             }
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .center, spacing: 2) {
                                 FlipDigitView(value: countdown.hours, fontSize: 28, theme: flipDigitTheme)
                                 Text("Hours")
                                     .font(.system(size: 11))
                                     .foregroundColor(mutedColor)
                             }
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .center, spacing: 2) {
                                 FlipDigitView(value: countdown.minutes, fontSize: 28, theme: flipDigitTheme)
                                 Text("Min")
                                     .font(.system(size: 11))

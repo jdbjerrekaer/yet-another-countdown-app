@@ -115,11 +115,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
               <p className="text-sm text-muted-foreground">
                 {isRecurring 
                   ? t('widget.next', { date: formatDateSmart(targetDate) }) 
-                  : countdown.isPast
-                    ? `${formatDateSmart(targetDate)} · ${countdown.daysSince === 1 
-                      ? t('countdown.daysAgo', { count: 1 })
-                      : t('countdown.daysAgo_plural', { count: countdown.daysSince })}`
-                    : formatDateSmart(targetDate)}
+                  : formatDateSmart(targetDate)}
               </p>
             )}
           </div>
@@ -286,8 +282,8 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
           <div className="flex flex-col items-center justify-center">
             <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
             <p className="text-lg text-muted-foreground mt-2">{countdown.daysSince === 1 
-              ? t('countdown.daysAgo', { count: 1 })
-              : t('countdown.daysAgo_plural', { count: countdown.daysSince })}</p>
+              ? t('widget.units.days') + ' ' + t('widget.daysAgoText')
+              : t('widget.units.days_plural') + ' ' + t('widget.daysAgoText')}</p>
           </div>
         ) : countdown.isComplete ? (
           <div className="text-center py-8">
