@@ -76,7 +76,7 @@ struct LargeWidgetView: View {
                     // Time breakdown
                     HStack(spacing: 24) {
                         if countdown.isPast {
-                            TimeUnitCenteredView(value: countdown.daysSince, unit: countdown.daysSince == 1 ? "Day ago" : "Days ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
+                            TimeUnitCenteredView(value: countdown.daysSince, unit: "days ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
                         } else {
                             TimeUnitCenteredView(value: countdown.days, unit: "Days", foregroundColor: foregroundColor, mutedColor: mutedColor)
                             TimeUnitCenteredView(value: countdown.hours, unit: "Hours", foregroundColor: foregroundColor, mutedColor: mutedColor)
@@ -95,7 +95,7 @@ struct LargeWidgetView: View {
                                 .font(.system(size: 64, weight: .bold))
                                 .foregroundColor(foregroundColor)
                             
-                            Text(countdown.daysSince == 1 ? "day ago" : "days ago")
+                            Text("days ago")
                                 .font(.system(size: 18))
                                 .foregroundColor(mutedColor)
                         }
@@ -111,7 +111,7 @@ struct LargeWidgetView: View {
                     if countdown.isPast {
                         VStack(spacing: 8) {
                             FlipDigitView(value: countdown.daysSince, fontSize: 36, theme: flipDigitTheme)
-                            Text(countdown.daysSince == 1 ? "day ago" : "days ago")
+                            Text("days ago")
                                 .font(.system(size: 18))
                                 .foregroundColor(mutedColor)
                         }
@@ -152,7 +152,7 @@ struct LargeWidgetView: View {
                             .font(.system(size: 64, weight: .bold))
                             .foregroundColor(foregroundColor)
                         
-                        Text(countdown.daysSince == 1 ? "day ago" : "days ago")
+                        Text("days ago")
                             .font(.system(size: 18))
                             .foregroundColor(mutedColor)
                     }
@@ -307,23 +307,21 @@ struct LargeWidgetView: View {
         if event.isRecurring {
             formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
-            if countdownStyle == .classic {
-                return "Next: \(dateStr)"
+            // Only show days count in Visual mode to match React
+            if countdownStyle == .visual {
+                let daysLabel = countdown.days == 1 ? "day" : "days"
+                return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
             }
-            let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
+            return "Next: \(dateStr)"
         } else {
             formatter.dateFormat = dateFormat
             let dateStr = formatter.string(from: date)
-            if countdownStyle == .classic {
-                return dateStr
-            }
-            if countdown.isPast {
-                return dateStr
-            } else {
+            // Only show days count in Visual mode to match React
+            if countdownStyle == .visual && !countdown.isPast {
                 let daysLabel = countdown.days == 1 ? "day" : "days"
                 return "\(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
             }
+            return dateStr
         }
     }
 }

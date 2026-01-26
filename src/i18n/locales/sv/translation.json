@@ -37,7 +37,8 @@
       "secondsShort_other": "Sek"
     },
     "daysAgoText": "sedan",
-    "daysAgoTextUpper": "Dagar sedan",
+    "daysAgoTextUpper_one": "dag sedan",
+    "daysAgoTextUpper_other": "dagar sedan",
     "sizes": {
       "small": "Liten",
       "medium": "Medium",

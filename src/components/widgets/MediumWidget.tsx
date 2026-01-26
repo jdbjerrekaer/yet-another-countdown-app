@@ -189,9 +189,9 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
         <div className="flex-1 flex items-end">
           {countdown.isPast ? (
             <div className="flex gap-6">
-              <FlipDigit value={elapsedDays} label={t('widget.units.daysShort')} size="medium" theme={flipTheme} layout="column" />
-              <FlipDigit value={elapsedHours} label={t('widget.units.hoursShort')} size="medium" theme={flipTheme} layout="column" />
-              <FlipDigit value={elapsedMinutes} label={t('widget.units.minutesShort')} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={elapsedDays} label={t('widget.units.daysShort', { count: elapsedDays })} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={elapsedHours} label={t('widget.units.hoursShort', { count: elapsedHours })} size="medium" theme={flipTheme} layout="column" />
+              <FlipDigit value={elapsedMinutes} label={t('widget.units.minutesShort', { count: elapsedMinutes })} size="medium" theme={flipTheme} layout="column" />
             </div>
           ) : countdown.isComplete ? (
             <p className="text-3xl font-bold text-primary">{t('countdown.today')}</p>
@@ -250,7 +250,7 @@ export function MediumWidget({ title, countdown, targetDate, emoji, emojiColor, 
           <div className="flex gap-6">
             <div>
               <p className="text-3xl font-bold text-foreground">{countdown.daysSince}</p>
-              <p className="text-xs text-muted-foreground">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+              <p className="text-xs text-muted-foreground">{t('widget.daysAgoTextUpper', { count: countdown.daysSince })}</p>
             </div>
           </div>
         ) : countdown.isComplete ? (

@@ -37,7 +37,8 @@
       "secondsShort_other": "Seg"
     },
     "daysAgoText": "antes",
-    "daysAgoTextUpper": "Días antes",
+    "daysAgoTextUpper_one": "día antes",
+    "daysAgoTextUpper_other": "días antes",
     "sizes": {
       "small": "Pequeño",
       "medium": "Mediano",

@@ -37,7 +37,8 @@
       "secondsShort_other": "Sek"
     },
     "daysAgoText": "sitten",
-    "daysAgoTextUpper": "Päivää sitten",
+    "daysAgoTextUpper_one": "päivä sitten",
+    "daysAgoTextUpper_other": "päivää sitten",
     "sizes": {
       "small": "Pieni",
       "medium": "Keskikokoinen",

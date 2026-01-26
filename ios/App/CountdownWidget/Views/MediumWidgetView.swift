@@ -76,7 +76,7 @@ struct MediumWidgetView: View {
                 if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
                     if countdown.isPast {
                         HStack(spacing: 24) {
-                            TimeUnitView(value: countdown.daysSince, unit: "Days", subtext: "ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
+                            TimeUnitView(value: countdown.daysSince, unit: "days", subtext: "ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
                         }
                     } else {
                         HStack(spacing: 24) {
@@ -90,7 +90,7 @@ struct MediumWidgetView: View {
                         HStack(spacing: 24) {
                             VStack(alignment: .center, spacing: 2) {
                                 FlipDigitView(value: countdown.daysSince, fontSize: 28, theme: flipDigitTheme)
-                                Text(countdown.daysSince == 1 ? "Day ago" : "Days ago")
+                                Text("days ago")
                                     .font(.system(size: 11))
                                     .foregroundColor(mutedColor)
                             }
@@ -122,7 +122,7 @@ struct MediumWidgetView: View {
                 // Focus mode - time breakdown
                 if countdown.isPast {
                     HStack(spacing: 24) {
-                        TimeUnitView(value: countdown.daysSince, unit: "Days", subtext: "ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
+                        TimeUnitView(value: countdown.daysSince, unit: "days", subtext: "ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
                     }
                 } else {
                     HStack(spacing: 24) {

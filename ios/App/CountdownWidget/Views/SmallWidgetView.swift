@@ -122,15 +122,15 @@ struct SmallWidgetView: View {
     
     private var primaryUnit: String {
         if countdown.isPast {
-            return countdown.daysSince == 1 ? "day ago" : "days ago"
+            return "days ago"
         } else if countdown.days > 0 {
-            return countdown.days == 1 ? "day" : "days"
+            return countdown.days == 1 ? "Day" : "Days"
         } else if countdown.hours > 0 {
-            return countdown.hours == 1 ? "hour" : "hours"
+            return countdown.hours == 1 ? "Hour" : "Hours"
         } else if countdown.minutes > 0 {
-            return countdown.minutes == 1 ? "min" : "min"
+            return "Min"
         } else {
-            return countdown.seconds == 1 ? "sec" : "sec"
+            return "Sec"
         }
     }
     
@@ -254,11 +254,11 @@ struct SmallWidgetView: View {
         if event.isRecurring {
             formatter.dateFormat = "MMM d"
             let dateStr = formatter.string(from: date)
-            if countdownStyle == .classic {
-                return "Next: \(dateStr)"
+            if countdownStyle == .visual {
+                let daysLabel = countdown.days == 1 ? "day" : "days"
+                return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
             }
-            let daysLabel = countdown.days == 1 ? "day" : "days"
-            return "Next: \(dateStr) · \(countdown.days.formattedWithoutSeparator) \(daysLabel)"
+            return "Next: \(dateStr)"
         } else {
             formatter.dateFormat = dateYear == currentYear ? "MMM d" : "MMM d, yyyy"
             return formatter.string(from: date)

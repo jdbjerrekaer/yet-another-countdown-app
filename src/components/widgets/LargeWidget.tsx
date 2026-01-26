@@ -148,7 +148,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
               <>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{elapsedDays}</p>
-                  <p className="text-xs text-muted-foreground">{t('widget.daysAgoTextUpper')}</p>
+                  <p className="text-xs text-muted-foreground">{t('widget.daysAgoTextUpper', { count: elapsedDays })}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{elapsedHours}</p>
@@ -281,7 +281,7 @@ export function LargeWidget({ title, countdown, targetDate, emoji, emojiColor, a
         {countdown.isPast ? (
           <div className="flex flex-col items-center justify-center">
             <p className="text-6xl font-bold text-foreground">{countdown.daysSince}</p>
-            <p className="text-lg text-muted-foreground mt-2">{t('countdown.daysAgo', { count: countdown.daysSince })}</p>
+            <p className="text-lg text-muted-foreground mt-2 lowercase">{t('widget.daysAgoTextUpper', { count: countdown.daysSince })}</p>
           </div>
         ) : countdown.isComplete ? (
           <div className="text-center py-8">

@@ -37,7 +37,8 @@
       "secondsShort_other": "Sek"
     },
     "daysAgoText": "siden",
-    "daysAgoTextUpper": "Dage siden",
+    "daysAgoTextUpper_one": "dag siden",
+    "daysAgoTextUpper_other": "dage siden",
     "sizes": {
       "small": "Lille",
       "medium": "Medium",

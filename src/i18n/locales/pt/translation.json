@@ -37,7 +37,8 @@
       "secondsShort_other": "Seg"
     },
     "daysAgoText": "atrás",
-    "daysAgoTextUpper": "Dias atrás",
+    "daysAgoTextUpper_one": "dia atrás",
+    "daysAgoTextUpper_other": "dias atrás",
     "sizes": {
       "small": "Pequeno",
       "medium": "Médio",

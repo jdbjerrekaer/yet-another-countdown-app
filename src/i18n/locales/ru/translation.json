@@ -53,7 +53,8 @@
       "secondsShort_other": "Сек"
     },
     "daysAgoText": "назад",
-    "daysAgoTextUpper": "Дней назад",
+    "daysAgoTextUpper_one": "день назад",
+    "daysAgoTextUpper_other": "дней назад",
     "sizes": {
       "small": "Маленький",
       "medium": "Средний",

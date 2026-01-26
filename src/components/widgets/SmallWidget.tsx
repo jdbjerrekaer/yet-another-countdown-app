@@ -257,7 +257,7 @@ export function SmallWidget({ title, countdown, targetDate, emoji, emojiColor, a
             const fontSize = getFontSizeForValue(countdown.daysSince);
             return (
               <p className={`${fontSize.number} font-bold text-foreground tracking-tight`}>
-                {countdown.daysSince}<span className={`${fontSize.unit} font-medium text-muted-foreground ml-1`}>{t('countdown.daysAgo', { count: countdown.daysSince })}</span>
+                {countdown.daysSince}<span className={`${fontSize.unit} font-medium text-muted-foreground ml-1 lowercase`}>{t('widget.daysAgoTextUpper', { count: countdown.daysSince })}</span>
               </p>
             );
           })()

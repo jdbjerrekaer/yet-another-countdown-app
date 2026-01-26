@@ -37,7 +37,8 @@
       "secondsShort_other": "Sec"
     },
     "daysAgoText": "fa",
-    "daysAgoTextUpper": "Giorni fa",
+    "daysAgoTextUpper_one": "giorno fa",
+    "daysAgoTextUpper_other": "giorni fa",
     "sizes": {
       "small": "Piccolo",
       "medium": "Medio",

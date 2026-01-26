@@ -37,7 +37,8 @@
       "secondsShort_other": "Sec"
     },
     "daysAgoText": "ago",
-    "daysAgoTextUpper": "Days ago",
+    "daysAgoTextUpper_one": "day ago",
+    "daysAgoTextUpper_other": "days ago",
     "sizes": {
       "small": "Small",
       "medium": "Medium",

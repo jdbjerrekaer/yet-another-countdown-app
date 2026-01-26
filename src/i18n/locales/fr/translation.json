@@ -37,7 +37,8 @@
       "secondsShort_other": "Sec"
     },
     "daysAgoText": "il y a",
-    "daysAgoTextUpper": "Il y a",
+    "daysAgoTextUpper_one": "jour",
+    "daysAgoTextUpper_other": "jours",
     "sizes": {
       "small": "Petit",
       "medium": "Moyen",
