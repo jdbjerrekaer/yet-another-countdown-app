@@ -9,6 +9,8 @@ import { IonReactRouter } from "@ionic/react-router";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Import from "./pages/Import";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Support from "./pages/Support";
 import { DeepLinkHandler } from "./components/DeepLinkHandler";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
@@ -95,6 +97,8 @@ const App = () => {
             <IonRouterOutlet>
               <Route exact path="/" component={Index} />
               <Route path="/import" component={Import} />
+              <Route path="/privacy" component={PrivacyPolicy} />
+              <Route path="/support" component={Support} />
               <Route path="/404" component={NotFound} />
               {/* Catch-all redirects to 404 page */}
               <Redirect to="/404" />
