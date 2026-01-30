@@ -58,9 +58,11 @@ export const RemoveAdsModal = ({
   const [error, setError] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const [storeReady, setStoreReady] = useState(false);
 
   const handleCloseClick = () => {
-    trigger('light');
+    trigger("light");
     onClose();
   };
 
@@ -74,36 +76,67 @@ export const RemoveAdsModal = ({
     setError(null);
     setRestoreError(null);
     setRestoreMessage(null);
+    setPurchaseError(null);
     if (!isNative) {
       setProducts([]);
+      setStoreReady(false);
       return;
     }
     setLoading(true);
-    PurchasesManager.getProducts()
-      .then((loaded) => {
+    setStoreReady(false);
+
+    const loadProducts = async () => {
+      try {
+        const ready = await PurchasesManager.isStoreReady();
+        setStoreReady(ready);
+
+        if (!ready && !isDevBuild) {
+          setError(t("iap.loadError"));
+          setLoading(false);
+          return;
+        }
+
+        const loaded = await PurchasesManager.getProducts();
         setProducts(loaded);
-      })
-      .catch((err) => {
+        if (loaded.length === 0 && !isDevBuild) {
+          setError(t("iap.loadError"));
+        }
+      } catch (err) {
         console.warn("[Purchases] Failed to load products", err);
+        setStoreReady(false);
         if (!isDevBuild) {
           setError(t("iap.loadError"));
         }
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadProducts();
   }, [isOpen, isNative, t, isDevBuild]);
 
   const getProductById = (id: string) => products.find((p) => p.id === id);
 
   const handlePurchase = async (productId: string) => {
     setActionLoadingId(productId);
+    setPurchaseError(null);
+
+    if (!storeReady && !isDevBuild) {
+      setPurchaseError(t("iap.loadError"));
+      setActionLoadingId(null);
+      return;
+    }
+
     try {
-      if (isDevBuild) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        await PurchasesManager.setDebugEntitlement(true, productId);
-      } else {
-        await PurchasesManager.purchaseRemoveAds(productId);
-      }
-      
+      const purchasePromise = isDevBuild
+        ? (async () => {
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            await PurchasesManager.setDebugEntitlement(true, productId);
+          })()
+        : PurchasesManager.purchaseRemoveAds(productId);
+
+      await purchasePromise;
+
       confetti({
         particleCount: 150,
         spread: 70,
@@ -111,14 +144,17 @@ export const RemoveAdsModal = ({
         colors: ["#007AFF", "#5856D6", "#FF2D55"],
         zIndex: 20000,
       });
-
-      if (isDevBuild) {
-        // Removed toast success message per user request
-      }
+      setPurchaseError(null);
     } catch (err) {
       console.warn("[Purchases] Purchase failed", err);
-      if (isDevBuild) {
-        // Removed toast error message per user request
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (
+        errorMessage.includes("cancelled") ||
+        errorMessage.includes("canceled")
+      ) {
+        setPurchaseError(null);
+      } else {
+        setPurchaseError(t("iap.purchaseError"));
       }
     } finally {
       setActionLoadingId(null);
@@ -139,9 +175,6 @@ export const RemoveAdsModal = ({
           colors: ["#007AFF", "#5856D6", "#FF2D55"],
           zIndex: 20000,
         });
-        if (isDevBuild) {
-          // Removed toast success message per user request
-        }
       } else {
         setRestoreError(null);
         setRestoreMessage(t("iap.restoreNone"));
@@ -150,9 +183,6 @@ export const RemoveAdsModal = ({
       console.warn("[Purchases] Restore failed", err);
       setRestoreError(t("iap.restoreError"));
       setRestoreMessage(null);
-      if (isDevBuild) {
-        // Removed toast error message per user request
-      }
     } finally {
       setRestoreLoading(false);
     }
@@ -203,6 +233,14 @@ export const RemoveAdsModal = ({
             <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center">
               <IonText color="danger" className="text-sm font-medium">
                 {error}
+              </IonText>
+            </div>
+          )}
+
+          {purchaseError && (
+            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center animate-fade-in">
+              <IonText color="danger" className="text-sm font-medium">
+                {purchaseError}
               </IonText>
             </div>
           )}
@@ -260,7 +298,14 @@ export const RemoveAdsModal = ({
                         className={`font-bold tracking-tight m-0 h-8 ${
                           isSupporter ? "black-button min-w-[80px]" : "text-primary min-w-[70px]"
                         }`}
-                        disabled={(!isNative && !isDevBuild) || hasRemoveAds || isBusy}
+                        disabled={
+                          (!isNative && !isDevBuild) ||
+                          hasRemoveAds ||
+                          isBusy ||
+                          loading ||
+                          (!storeReady && !isDevBuild) ||
+                          !product
+                        }
                         onClick={() => handlePurchase(productId)}
                       >
                         {isBusy ? (

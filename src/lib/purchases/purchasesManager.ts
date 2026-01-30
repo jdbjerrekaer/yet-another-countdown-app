@@ -84,7 +84,7 @@ export const PurchasesManager = {
   init: async () => {
     if (initPromise) return initPromise;
     if (isInitialized) return;
-    
+
     initPromise = (async () => {
       if (isDevBuild) {
         await Preferences.remove({ key: PREF_REMOVE_ADS });
@@ -145,7 +145,7 @@ export const PurchasesManager = {
         console.warn("[Purchases] Initialization failed", error);
       }
     })();
-    
+
     return initPromise;
   },
 
@@ -156,7 +156,7 @@ export const PurchasesManager = {
   getProducts: async (): Promise<IAPProduct[]> => {
     await PurchasesManager.init();
     if (!Capacitor.isNativePlatform()) return [];
-    
+
     if (isDevBuild) {
       return REMOVE_ADS_PRODUCTS.map((item) => {
         const mockProduct = {
@@ -179,7 +179,7 @@ export const PurchasesManager = {
         return mockProduct;
       });
     }
-    
+
     await ensureReady();
     return REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
       Boolean,
@@ -215,6 +215,21 @@ export const PurchasesManager = {
 
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
   getRemoveAdsProducts: () => [...REMOVE_ADS_PRODUCTS],
+  isStoreReady: async () => {
+    if (!Capacitor.isNativePlatform()) return false;
+    if (isDevBuild) return true;
+    await PurchasesManager.init();
+    if (!readyPromise) return false;
+    try {
+      await Promise.race([
+        readyPromise,
+        new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
+      ]);
+      return true;
+    } catch {
+      return false;
+    }
+  },
   onEntitlementChange: (listener: EntitlementListener) => {
     entitlementListeners.add(listener);
     listener(hasRemoveAdsEntitlement);

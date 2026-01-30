@@ -18,7 +18,6 @@ const IS_DEV_BUILD_FALLBACK = import.meta.env.MODE !== "production";
 let isDevBuildRuntime = IS_DEV_BUILD_FALLBACK;
 let allowPersonalizedAds = false;
 
-
 const PREF_HAS_CREATED_ONCE = "ads_hasCreatedOnce";
 const PREF_HAS_EDITED_ONCE = "ads_hasEditedOnce";
 const PREF_HAS_DELETED_ONCE = "ads_hasDeletedOnce";
@@ -59,9 +58,6 @@ const debugInfoListeners = new Set<(info: typeof debugInfo) => void>();
 const setBannerHeight = (height: number) => {
   if (typeof document === "undefined") return;
   const safeHeight = Number.isFinite(height) ? height : 0;
-  
-  // Always update the property if it's non-zero
-  // or if we are hidden (to reset it)
   document.documentElement.style.setProperty(
     "--ad-banner-height",
     `${Math.max(0, Math.round(safeHeight))}px`,
@@ -225,23 +221,19 @@ const resetSaveCount = async () => {};
 
 const resetConsent = async () => {
   if (!Capacitor.isNativePlatform()) return;
-  
+
   console.log("[Ads] Resetting UMP consent as requested from Settings");
-  
+
   try {
-    // Reset UMP consent state
     await AdMob.resetConsentInfo();
     console.log("[Ads] UMP consent info reset successfully");
-    
-    // Reset personalized ads flag (will be recomputed after consent flow)
+
     allowPersonalizedAds = false;
-    
-    // Update debug info
+
     debugInfo.consentStatus = "UNKNOWN";
     debugInfo.consentFormAvailable = false;
     debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-    
-    // Request consent info again to re-trigger UMP flow
+
     let consentStatus = AdmobConsentStatus.UNKNOWN;
     try {
       const consentInfo = await AdMob.requestConsentInfo();
@@ -249,8 +241,6 @@ const resetConsent = async () => {
       debugInfo.consentStatus = consentInfo.status as ConsentStatus;
       debugInfo.consentFormAvailable = consentInfo.isConsentFormAvailable;
       debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-      
-      // Show consent form if required (for EEA/UK users)
       if (
         consentInfo.isConsentFormAvailable &&
         consentStatus === AdmobConsentStatus.REQUIRED
@@ -266,24 +256,17 @@ const resetConsent = async () => {
       debugInfo.consentStatus = "UNKNOWN";
       debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
     }
-    
-    // Read current ATT status (do NOT attempt to reset ATT - it cannot be reset programmatically)
+
     try {
       const trackingInfo = await AdMob.trackingAuthorizationStatus();
       debugInfo.trackingStatus = trackingInfo.status as TrackingStatus;
       debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-      
-      // Note: We do NOT request ATT authorization here - it can only be reset by user in iOS Settings
-      // or by reinstalling the app. The current status is read-only.
     } catch (error) {
       console.warn("[Ads] Failed to read ATT tracking status", error);
       debugInfo.trackingStatus = "unknown";
       debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
     }
-    
-    // Recompute personalized ads flag based on:
-    // - UMP consent status (OBTAINED or NOT_REQUIRED)
-    // - Current ATT status (read-only, not reset)
+
     try {
       const trackingStatus = await AdMob.trackingAuthorizationStatus();
       allowPersonalizedAds =
@@ -298,15 +281,14 @@ const resetConsent = async () => {
       allowPersonalizedAds = false;
       console.warn("[Ads] Failed to determine personalized ads status", error);
     }
-    
-    // Reload interstitial ad with new consent settings if ads are initialized
+
     if (isInitialized && interstitialReady) {
       interstitialReady = false;
       void prepareInterstitial().catch((error) => {
         console.warn("[Ads] Failed to prepare interstitial after consent reset", error);
       });
     }
-    
+
     console.log("[Ads] UMP consent reset completed successfully");
   } catch (error) {
     console.error("[Ads] Failed to reset UMP consent", error);
@@ -319,7 +301,7 @@ export const AdsManager = {
     if (!Capacitor.isNativePlatform()) return;
     if (isInitialized) return;
     if (initPromise) return initPromise;
-    
+
     const enabled = await isAdsEnabled();
     if (!enabled) {
       debugInfo.init = "disabled";
@@ -342,7 +324,7 @@ export const AdsManager = {
         debugInfo.init = "failed";
         debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
         isInitialized = false;
-        
+
         if (retryCount < INIT_MAX_RETRY_ATTEMPTS) {
           const delayMs = INIT_RETRY_DELAY_BASE_MS * Math.pow(2, retryCount);
           console.log(`[Ads] Retrying initialization in ${delayMs}ms (attempt ${retryCount + 1}/${INIT_MAX_RETRY_ATTEMPTS})`);
@@ -393,8 +375,16 @@ export const AdsManager = {
         const trackingInfo = await AdMob.trackingAuthorizationStatus();
         debugInfo.trackingStatus = trackingInfo.status as TrackingStatus;
         debugInfoListeners.forEach((listener) => listener({ ...debugInfo }));
-        if (trackingInfo.status === "notDetermined") {
+
+        const canRequestTracking =
+          (consentStatus === AdmobConsentStatus.OBTAINED ||
+           consentStatus === AdmobConsentStatus.NOT_REQUIRED) &&
+          trackingInfo.status === "notDetermined";
+
+        if (canRequestTracking) {
           await AdMob.requestTrackingAuthorization();
+        } else if (consentStatus === AdmobConsentStatus.REQUIRED && trackingInfo.status === "notDetermined") {
+          console.log("[Ads] Skipping ATT request - user did not consent to tracking in GDPR/UMP flow");
         }
       } catch (error) {
         console.warn("[Ads] Tracking authorization failed", error);
@@ -617,7 +607,6 @@ export const AdsManager = {
     return next;
   },
   setDevBuild: (isDev: boolean) => {
-    const prev = isDevBuildRuntime;
     isDevBuildRuntime = isDev;
   },
   getBannerStatus: () => bannerStatus,
