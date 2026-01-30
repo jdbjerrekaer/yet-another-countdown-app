@@ -12,16 +12,12 @@
 		40897DB8D698C96CB8C49D92 /* Pods_CountdownWidget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
-		F1F2F3F4F5F6789012345678 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
-		B2C3D4E5F678901234567890A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
-		C3D4E5F678901234567890AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		A60AD3392F1A581900BDE34B /* BuildInfoPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */; };
-		E7F8A9B12F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */; };
 		A63D32302F0BCF250063570B /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322D2F0BCF250063570B /* SmallWidgetView.swift */; };
 		A63D32312F0BCF250063570B /* SelectCountdownIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */; };
 		A63D32322F0BCF250063570B /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322B2F0BCF250063570B /* LargeWidgetView.swift */; };
@@ -32,8 +28,12 @@
 		A63D32372F0BCF250063570B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A63D32242F0BCF250063570B /* Assets.xcassets */; };
 		A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */; };
 		B1C2D3E4F5A6B7C8D9E0F1A2 /* CountdownIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */; };
+		B2C3D4E5F678901234567890A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
 		B6174CD4190B08F557A8B211 /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23DE9C22ECC85FF6C0538F38 /* CountdownWidget.swift */; };
+		C3D4E5F678901234567890AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
 		E5DB9B45E898B0A532022637 /* CountdownWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 0D1F3BFBDCF22C9A502EB8FD /* CountdownWidget.appex */; };
+		E7F8A9B12F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */; };
+		F1F2F3F4F5F6789012345678 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */; };
 		FLIPDIG022F0BCF250063570B /* FlipDigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */; };
 		MYVC00001FED79650016851F /* MyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = MYVC00002FED79650016851F /* MyViewController.swift */; };
 		SETTINGS001FED79650016851F /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = SETTINGS002FED79650016851F /* Settings.bundle */; };
@@ -72,18 +72,16 @@
 		4CCD2CE16498043E24F048D0 /* Pods-CountdownWidget.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CountdownWidget.release.xcconfig"; path = "Pods/Target Support Files/Pods-CountdownWidget/Pods-CountdownWidget.release.xcconfig"; sourceTree = "<group>"; };
 		4D23AAB07AF3F35C72DCC581 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
-		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		504EC3041FED79650016851F /* Yet Another Countdown.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Yet Another Countdown.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CountdownWidget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoPlugin.swift; sourceTree = "<group>"; };
-		E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardPlugin.swift; sourceTree = "<group>"; };
 		A63D32242F0BCF250063570B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A63D32252F0BCF250063570B /* CountdownEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEvent.swift; sourceTree = "<group>"; };
 		A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountdownIntent.swift; sourceTree = "<group>"; };
@@ -96,9 +94,11 @@
 		A63D32392F0BD9030063570B /* CountdownWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CountdownWidget.entitlements; sourceTree = "<group>"; };
 		A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarPlugin.swift; sourceTree = "<group>"; };
 		A6D2DE2B2F0BE0B2001A82F2 /* CalendarPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarPlugin.m; sourceTree = "<group>"; };
-		B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownIntents.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
+		B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownIntents.swift; sourceTree = "<group>"; };
+		E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardPlugin.swift; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 		FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipDigitView.swift; sourceTree = "<group>"; };
 		MYVC00002FED79650016851F /* MyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyViewController.swift; sourceTree = "<group>"; };
@@ -150,7 +150,7 @@
 		504EC3051FED79650016851F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				504EC3041FED79650016851F /* App.app */,
+				504EC3041FED79650016851F /* Yet Another Countdown.app */,
 				0D1F3BFBDCF22C9A502EB8FD /* CountdownWidget.appex */,
 			);
 			name = Products;
@@ -257,7 +257,7 @@
 			);
 			name = App;
 			productName = App;
-			productReference = 504EC3041FED79650016851F /* App.app */;
+			productReference = 504EC3041FED79650016851F /* Yet Another Countdown.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C7EF8B9795B3C45B9C98B19F /* CountdownWidget */ = {
@@ -290,6 +290,9 @@
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+					};
+					C7EF8B9795B3C45B9C98B19F = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -481,6 +484,8 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = CountdownWidget/CountdownWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5N8M677RB6;
 				INFOPLIST_FILE = CountdownWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -488,6 +493,7 @@
 				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown.CountdownWidget;
 				PRODUCT_NAME = CountdownWidget;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -524,7 +530,6 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -581,7 +586,6 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -608,6 +612,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5N8M677RB6;
@@ -619,6 +624,7 @@
 				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown;
 				PRODUCT_NAME = "Yet Another Countdown";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -631,9 +637,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5N8M677RB6;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 5N8M677RB6;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -641,6 +649,8 @@
 				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown;
 				PRODUCT_NAME = "Yet Another Countdown";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "AppStore Countdown";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -652,7 +662,9 @@
 			baseConfigurationReference = 4CCD2CE16498043E24F048D0 /* Pods-CountdownWidget.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = CountdownWidget/CountdownWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 5N8M677RB6;
 				INFOPLIST_FILE = CountdownWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -660,6 +672,7 @@
 				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown.CountdownWidget;
 				PRODUCT_NAME = CountdownWidget;
+				PROVISIONING_PROFILE_SPECIFIER = "AppStore CountdownWidget";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
