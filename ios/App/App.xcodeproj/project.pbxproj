@@ -243,6 +243,7 @@
 			buildConfigurationList = 504EC3161FED79650016851F /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
 				6634F4EFEBD30273BCE97C65 /* [CP] Check Pods Manifest.lock */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* Copy Emoji Locale Data */,
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
@@ -357,6 +358,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-App/Pods-App-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* Copy Emoji Locale Data */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Emoji Locale Data";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n\nSOURCE_DIR=\"${PODS_PODFILE_DIR_PATH}/../../node_modules/emojibase-data\"\nDEST_DIR=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n\nif [ ! -d \"${SOURCE_DIR}\" ]; then\n  echo \"warning: emojibase-data not found at ${SOURCE_DIR}\"\n  exit 0\nfi\n\nLOCALES=(en es it pt de ru fr da sv fi nb)\n\nfor locale in \"${LOCALES[@]}\"; do\n  src=\"${SOURCE_DIR}/${locale}/compact.json\"\n  if [ -f \"${src}\" ]; then\n    destLocale=\"${locale}\"\n    if [ \"${locale}\" = \"nb\" ]; then\n      destLocale=\"no\"\n    fi\n    cp \"${src}\" \"${DEST_DIR}/emoji-compact-${destLocale}.json\"\n  else\n    echo \"warning: missing emoji locale ${locale} at ${src}\"\n  fi\ndone\n";
 			showEnvVarsInLog = 0;
 		};
 		2728F8098782F02051711A80 /* [CP] Check Pods Manifest.lock */ = {
