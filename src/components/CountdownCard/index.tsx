@@ -127,8 +127,7 @@ export function CountdownCard({
       const native = deleteOptionEl.shadowRoot?.querySelector('.item-native') || deleteOptionEl.shadowRoot?.querySelector('[part="native"]');
       if (native) {
         const nativeEl = native as HTMLElement;
-        const bgColorValue = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
-        const bgColor = bgColorValue ? `hsl(${bgColorValue})` : 'hsl(var(--background))';
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--ion-background-color').trim() || 'var(--ion-background-color)';
         
         nativeEl.style.setProperty('background', bgColor, 'important');
         nativeEl.style.setProperty('background-color', bgColor, 'important');
@@ -226,13 +225,13 @@ export function CountdownCard({
               onClick={handleDelete}
               className={styles.deleteOption}
               style={{
-                '--background': 'hsl(var(--background))',
-                '--ion-color-base': 'hsl(var(--background))',
+                '--background': 'var(--ion-background-color)',
+                '--ion-color-base': 'var(--ion-background-color)',
                 '--border-width': '0',
                 '--border-color': 'transparent',
                 '--inner-border-width': '0',
-                background: 'hsl(var(--background))',
-                backgroundColor: 'hsl(var(--background))',
+                background: 'var(--ion-background-color)',
+                backgroundColor: 'var(--ion-background-color)',
                 border: 'none',
                 borderTop: 'none',
                 borderRight: 'none',
@@ -250,8 +249,7 @@ export function CountdownCard({
                   const native = el.shadowRoot?.querySelector('.item-native') || el.shadowRoot?.querySelector('[part="native"]');
                   if (native) {
                     const nativeEl = native as HTMLElement;
-                    const bgColorValue = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
-                    const bgColor = bgColorValue ? `hsl(${bgColorValue})` : 'hsl(var(--background))';
+                    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--ion-background-color').trim() || 'var(--ion-background-color)';
                     nativeEl.style.setProperty('background', bgColor, 'important');
                     nativeEl.style.setProperty('background-color', bgColor, 'important');
                     nativeEl.style.setProperty('border', 'none', 'important');

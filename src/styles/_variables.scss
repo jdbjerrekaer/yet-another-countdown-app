@@ -30,6 +30,13 @@
     --sidebar-border: 0 0% 91%;
     --sidebar-ring: 211 100% 50%;
     --ad-banner-height: 0px;
+    --ion-background-color: hsl(var(--background)) !important;
+    --ion-text-color: hsl(var(--foreground)) !important;
+    --ion-border-color: hsl(var(--border)) !important;
+    --ion-item-background: hsl(var(--card)) !important;
+    --ion-toolbar-background: hsl(var(--background)) !important;
+    --ion-tab-bar-background: hsl(var(--background)) !important;
+    --ion-card-background: hsl(var(--card)) !important;
   }
 
   .dark, .ion-palette-dark {

@@ -13,6 +13,7 @@ interface SortableCountdownCardProps {
   isReordering: boolean;
   isDragDisabled?: boolean;
   isNative?: boolean;
+  isMobile?: boolean;
   isDeleting?: boolean;
 }
 
@@ -25,6 +26,7 @@ export function SortableCountdownCard({
   isReordering,
   isDragDisabled = false,
   isNative = false,
+  isMobile = false,
   isDeleting = false,
 }: SortableCountdownCardProps) {
   const {
@@ -35,7 +37,7 @@ export function SortableCountdownCard({
     isDragging,
   } = useSortable({ 
     id: event.id,
-    disabled: isDragDisabled,
+    disabled: isDragDisabled || isMobile,
   });
 
   const initialTransformRef = useRef<{ x: number; y: number } | null>(null);
@@ -59,7 +61,7 @@ export function SortableCountdownCard({
       : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease-out',
     zIndex: isDragging ? 50 : 'auto',
     position: 'relative',
-    touchAction: 'none',
+    touchAction: isDragging ? 'none' : 'pan-y',
     cursor: isDragging ? 'grabbing' : 'grab',
     willChange: isDragging ? 'transform' : 'auto',
     transformOrigin: 'center center',

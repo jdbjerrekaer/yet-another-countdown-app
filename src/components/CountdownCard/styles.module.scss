@@ -77,17 +77,17 @@
 
 // Custom delete option styles
 .deleteOption {
-  --background: transparent !important;
+  --background: var(--ion-background-color) !important;
   --color: hsl(var(--foreground));
   --padding-start: 0;
   --padding-end: 0;
-  --ion-color-base: transparent !important;
+  --ion-color-base: var(--ion-background-color) !important;
   --ion-color-contrast: hsl(var(--foreground)) !important;
   --border-width: 0 !important;
   --border-color: transparent !important;
   --inner-border-width: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: var(--ion-background-color) !important;
+  background-color: var(--ion-background-color) !important;
   border: none !important;
   border-top: none !important;
   border-right: none !important;
@@ -105,8 +105,8 @@
 }
 
 .deleteOption::part(native) {
-  background: hsl(var(--background)) !important;
-  background-color: hsl(var(--background)) !important;
+  background: var(--ion-background-color) !important;
+  background-color: var(--ion-background-color) !important;
   border-radius: 0 1rem 1rem 0 !important;
   border-top-right-radius: 1rem !important;
   border-bottom-right-radius: 1rem !important;
@@ -139,21 +139,21 @@
 // Dark mode specific styles to ensure background matches
 :global(.dark) .deleteOption,
 :global(.ion-palette-dark) .deleteOption {
-  --background: hsl(var(--background)) !important;
-  --ion-color-base: hsl(var(--background)) !important;
+  --background: var(--ion-background-color) !important;
+  --ion-color-base: var(--ion-background-color) !important;
   --border-width: 0 !important;
   --border-color: transparent !important;
   --inner-border-width: 0 !important;
-  background: hsl(var(--background)) !important;
-  background-color: hsl(var(--background)) !important;
+  background: var(--ion-background-color) !important;
+  background-color: var(--ion-background-color) !important;
   border: none !important;
   border-bottom: none !important;
 }
 
 :global(.dark) .deleteOption::part(native),
 :global(.ion-palette-dark) .deleteOption::part(native) {
-  background: hsl(var(--background)) !important;
-  background-color: hsl(var(--background)) !important;
+  background: var(--ion-background-color) !important;
+  background-color: var(--ion-background-color) !important;
   border: none !important;
   border-bottom: none !important;
 }
@@ -163,6 +163,9 @@
   border: none !important;
   border-bottom: none !important;
   border-width: 0 !important;
+  --background: var(--ion-background-color);
+  background: var(--ion-background-color) !important;
+  background-color: var(--ion-background-color) !important;
 }
 
 .deleteOptions :global(ion-item-option) {
@@ -173,6 +176,8 @@
   border: none !important;
   border-bottom: none !important;
   border-width: 0 !important;
+  background: var(--ion-background-color) !important;
+  background-color: var(--ion-background-color) !important;
 }
 
 .deleteContent {

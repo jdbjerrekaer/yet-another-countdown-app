@@ -321,7 +321,8 @@ export default function Index() {
       tolerance: 5,
     },
   });
-  const sensors = useSensors(pointerSensor, touchSensor);
+  // On touch devices, avoid PointerSensor to preserve native scroll.
+  const sensors = useSensors(...(isMobile ? [touchSensor] : [pointerSensor, touchSensor]));
   
   const [events, setEvents] = useState<CountdownEvent[]>(() => {
     const saved = localStorage.getItem('countdowns');
@@ -1491,6 +1492,7 @@ export default function Index() {
                             isReordering={activeDragId !== null}
                             isDragDisabled={isDragDisabledByDeleteButton}
                             isNative={isNative}
+                            isMobile={isMobile}
                             isDeleting={deletingEventId === event.id}
                             onSelect={() => {
                               if (shouldIgnoreTap()) return;

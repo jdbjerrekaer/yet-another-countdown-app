@@ -354,20 +354,20 @@
   ion-item-options[side="end"] ion-item-option:last-child {
     border-top-right-radius: 1rem;
     border-bottom-right-radius: 1rem;
-    --background: hsl(var(--background)) !important;
-    --ion-color-base: hsl(var(--background)) !important;
+    --background: var(--ion-background-color) !important;
+    --ion-color-base: var(--ion-background-color) !important;
     --border-width: 0 !important;
     --border-color: transparent !important;
     --inner-border-width: 0 !important;
-    background: hsl(var(--background)) !important;
-    background-color: hsl(var(--background)) !important;
+    background: var(--ion-background-color) !important;
+    background-color: var(--ion-background-color) !important;
     border: none !important;
     border-bottom: none !important;
   }
 
   ion-item-options[side="end"] ion-item-option:last-child::part(native) {
-    background: hsl(var(--background)) !important;
-    background-color: hsl(var(--background)) !important;
+    background: var(--ion-background-color) !important;
+    background-color: var(--ion-background-color) !important;
     border-radius: 0 1rem 1rem 0 !important;
     overflow: hidden !important;
     border: none !important;
