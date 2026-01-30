@@ -38,4 +38,30 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+  
+  # Fix CordovaPlugins header search paths for CapacitorCordova framework
+  installer.pods_project.targets.each do |target|
+    if target.name == 'CordovaPlugins'
+      target.build_configurations.each do |config|
+        # Add header search paths for CapacitorCordova
+        # Note: Framework file is CapacitorCordova.framework, but module_name is "Cordova"
+        header_search_paths = config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
+        
+        # Add framework headers path (for when framework is built)
+        unless header_search_paths.include?('CapacitorCordova.framework/Headers')
+          config.build_settings['HEADER_SEARCH_PATHS'] = "#{header_search_paths} \"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorCordova/CapacitorCordova.framework/Headers\""
+        end
+        
+        # Add source headers path (for before framework is built)
+        # This allows headers to be found during compilation even if framework isn't built yet
+        # Use the actual path to node_modules where CapacitorCordova source is located
+        capacitor_ios_path = File.expand_path('../../node_modules/@capacitor/ios', __dir__)
+        source_header_path = "#{capacitor_ios_path}/CapacitorCordova/CapacitorCordova/Classes/Public"
+        unless header_search_paths.include?(source_header_path)
+          current_paths = config.build_settings['HEADER_SEARCH_PATHS']
+          config.build_settings['HEADER_SEARCH_PATHS'] = "#{current_paths} \"#{source_header_path}\""
+        end
+      end
+    end
+  end
 end
