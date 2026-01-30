@@ -1,7 +1,7 @@
 import Foundation
 
 /// Compact emoji data structure matching emojibase-data format
-private struct CompactEmoji {
+private struct CompactEmoji: Hashable {
     let unicode: String
     let label: String
     let tags: [String]
@@ -100,7 +100,7 @@ final class EmojiSuggestionEngine {
             // Exact match (highest score)
             if let exactList = tokens[qWord] {
                 for emoji in exactList {
-                    addScore(emoji, 100)
+                    addScore(emoji, score: 100)
                 }
             }
             
@@ -109,11 +109,11 @@ final class EmojiSuggestionEngine {
                 if token == qWord { continue } // already handled exact
                 if token.hasPrefix(qWord) {
                     for emoji in emojis {
-                        addScore(emoji, 50)
+                        addScore(emoji, score: 50)
                     }
                 } else if token.contains(qWord) {
                     for emoji in emojis {
-                        addScore(emoji, 10)
+                        addScore(emoji, score: 10)
                     }
                 }
             }

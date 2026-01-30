@@ -29,6 +29,11 @@ private struct SiriLocalization {
     static func text(_ key: String, fallback: String) -> String {
         return value(key, localeKey, fallback)
     }
+
+    @available(iOS 16.0, *)
+    static func resource(_ key: String, fallback: String) -> LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: text(key, fallback: fallback))
+    }
     
     static func format(_ key: String, fallback: String, _ args: CVarArg...) -> String {
         let template = value(key, localeKey, fallback)
@@ -36,9 +41,20 @@ private struct SiriLocalization {
     }
     
     static func phrase(_ key: String, fallback: String) -> String {
-        let appNameToken = "\(.applicationName)"
+        let appNameToken = applicationName
         let template = value(key, localeKey, fallback)
         return String(format: template, appNameToken)
+    }
+
+    @available(iOS 16.0, *)
+    static func phraseResource(_ key: String, fallback: String) -> LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: phrase(key, fallback: fallback))
+    }
+
+    private static var applicationName: String {
+        (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? "Countdown"
     }
     
     static func listCountDialog(count: Int) -> String {
@@ -702,42 +718,37 @@ enum CountdownIntentError: Error, LocalizedError {
 @available(iOS 16.0, *)
 struct CreateCountdownIntent: AppIntent {
     static var title: LocalizedStringResource = LocalizedStringResource(
-        stringLiteral: SiriLocalization.text("intent.create.title", fallback: "Create Countdown")
+        "intent.create.title",
+        table: "AppIntents"
     )
     static var description = IntentDescription(
-        SiriLocalization.text("intent.create.desc", fallback: "Create a new countdown.")
+        LocalizedStringResource("intent.create.desc", table: "AppIntents")
     )
 
-    @Parameter(title: SiriLocalization.text("param.title", fallback: "Title"))
+    @Parameter(title: LocalizedStringResource("param.title", table: "AppIntents"))
     var title: String
 
-    @Parameter(title: SiriLocalization.text("param.targetDate", fallback: "Target Date"))
+    @Parameter(title: LocalizedStringResource("param.targetDate", table: "AppIntents"))
     var targetDate: Date
 
-    @Parameter(title: SiriLocalization.text("param.emoji", fallback: "Emoji"))
+    @Parameter(title: LocalizedStringResource("param.emoji", table: "AppIntents"))
     var emoji: String?
 
-    @Parameter(title: SiriLocalization.text("param.emojiColor", fallback: "Emoji Color (Hex)"))
+    @Parameter(title: LocalizedStringResource("param.emojiColor", table: "AppIntents"))
     var emojiColor: String?
 
-    @Parameter(title: SiriLocalization.text("param.recurringOverride", fallback: "Recurring (Override)"))
+    @Parameter(title: LocalizedStringResource("param.recurringOverride", table: "AppIntents"))
     var isRecurringOverride: Bool?
-
-    static var parameterSummary: some ParameterSummary {
-        Summary("Create \(\.$title) on \(\.$targetDate)")
-    }
 
     func perform() async throws -> some IntentResult & ReturnsValue<CountdownEventEntity> & ProvidesDialog {
         let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? Date.distantPast
         let autoRecurring = targetDate < oneYearAgo
         let resolvedRecurring = isRecurringOverride ?? autoRecurring
 
-        // Use provided emoji, or suggest based on title (first suggestion from title-based search)
         let finalEmoji: String
         if let providedEmoji = emoji, !providedEmoji.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             finalEmoji = providedEmoji
         } else {
-            // Get first suggestion based on title
             finalEmoji = EmojiSuggestionEngine.shared.suggestEmoji(for: title)
         }
 
@@ -764,10 +775,11 @@ struct CreateCountdownIntent: AppIntent {
 @available(iOS 16.0, *)
 struct ListCountdownsIntent: AppIntent {
     static var title: LocalizedStringResource = LocalizedStringResource(
-        stringLiteral: SiriLocalization.text("intent.list.title", fallback: "List Countdowns")
+        "intent.list.title",
+        table: "AppIntents"
     )
     static var description = IntentDescription(
-        SiriLocalization.text("intent.list.desc", fallback: "List all countdowns.")
+        LocalizedStringResource("intent.list.desc", table: "AppIntents")
     )
 
     func perform() async throws -> some IntentResult & ReturnsValue<[CountdownEventEntity]> & ProvidesDialog {
@@ -781,13 +793,14 @@ struct ListCountdownsIntent: AppIntent {
 @available(iOS 16.0, *)
 struct GetCountdownIntent: AppIntent {
     static var title: LocalizedStringResource = LocalizedStringResource(
-        stringLiteral: SiriLocalization.text("intent.get.title", fallback: "Get Countdown Details")
+        "intent.get.title",
+        table: "AppIntents"
     )
     static var description = IntentDescription(
-        SiriLocalization.text("intent.get.desc", fallback: "Get details for a countdown.")
+        LocalizedStringResource("intent.get.desc", table: "AppIntents")
     )
 
-    @Parameter(title: SiriLocalization.text("param.countdown", fallback: "Countdown"))
+    @Parameter(title: LocalizedStringResource("param.countdown", table: "AppIntents"))
     var countdown: CountdownEventEntity
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
@@ -812,13 +825,14 @@ struct GetCountdownIntent: AppIntent {
 @available(iOS 16.0, *)
 struct GetCountdownRelativeTimeIntent: AppIntent {
     static var title: LocalizedStringResource = LocalizedStringResource(
-        stringLiteral: SiriLocalization.text("intent.relative.title", fallback: "Get Countdown Relative Time")
+        "intent.relative.title",
+        table: "AppIntents"
     )
     static var description = IntentDescription(
-        SiriLocalization.text("intent.relative.desc", fallback: "Get relative time until a countdown.")
+        LocalizedStringResource("intent.relative.desc", table: "AppIntents")
     )
 
-    @Parameter(title: SiriLocalization.text("param.countdown", fallback: "Countdown"))
+    @Parameter(title: LocalizedStringResource("param.countdown", table: "AppIntents"))
     var countdown: CountdownEventEntity
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
@@ -858,45 +872,45 @@ struct CountdownShortcutsProvider: AppShortcutsProvider {
         AppShortcut(
             intent: CreateCountdownIntent(),
             phrases: [
-                SiriLocalization.phrase("phrase.create1", fallback: "Create a countdown in %@"),
-                SiriLocalization.phrase("phrase.create2", fallback: "Add a countdown in %@")
+                AppShortcutPhrase(String(localized: "phrase.create1", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.create2", table: "AppIntents"))
             ],
-            shortTitle: SiriLocalization.text("intent.create.title", fallback: "Create Countdown"),
+            shortTitle: LocalizedStringResource("intent.create.title", table: "AppIntents"),
             systemImageName: "calendar.badge.plus"
         )
         AppShortcut(
             intent: ListCountdownsIntent(),
             phrases: [
-                SiriLocalization.phrase("phrase.list1", fallback: "List my countdowns in %@"),
-                SiriLocalization.phrase("phrase.list2", fallback: "Show my countdowns in %@")
+                AppShortcutPhrase(String(localized: "phrase.list1", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.list2", table: "AppIntents"))
             ],
-            shortTitle: SiriLocalization.text("intent.list.title", fallback: "List Countdowns"),
+            shortTitle: LocalizedStringResource("intent.list.title", table: "AppIntents"),
             systemImageName: "list.bullet"
         )
         AppShortcut(
             intent: GetCountdownIntent(),
             phrases: [
-                SiriLocalization.phrase("phrase.get1", fallback: "Get countdown details in %@"),
-                SiriLocalization.phrase("phrase.get2", fallback: "Show countdown details in %@"),
-                SiriLocalization.phrase("phrase.get3", fallback: "What date is my countdown in %@"),
-                SiriLocalization.phrase("phrase.get4", fallback: "What date is my %@ countdown"),
-                SiriLocalization.phrase("phrase.get5", fallback: "When is my countdown in %@"),
-                SiriLocalization.phrase("phrase.get6", fallback: "When is my %@ countdown")
+                AppShortcutPhrase(String(localized: "phrase.get1", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.get2", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.get3", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.get4", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.get5", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.get6", table: "AppIntents"))
             ],
-            shortTitle: SiriLocalization.text("intent.get.title", fallback: "Get Countdown"),
+            shortTitle: LocalizedStringResource("intent.get.title", table: "AppIntents"),
             systemImageName: "info.circle"
         )
         AppShortcut(
             intent: GetCountdownRelativeTimeIntent(),
             phrases: [
-                SiriLocalization.phrase("phrase.rel1", fallback: "How long until my countdown in %@"),
-                SiriLocalization.phrase("phrase.rel2", fallback: "How long until my %@ countdown"),
-                SiriLocalization.phrase("phrase.rel3", fallback: "How many days until my countdown in %@"),
-                SiriLocalization.phrase("phrase.rel4", fallback: "How many days until my %@ countdown"),
-                SiriLocalization.phrase("phrase.rel5", fallback: "Days until my countdown in %@"),
-                SiriLocalization.phrase("phrase.rel6", fallback: "Days until my %@ countdown")
+                AppShortcutPhrase(String(localized: "phrase.rel1", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.rel2", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.rel3", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.rel4", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.rel5", table: "AppIntents")),
+                AppShortcutPhrase(String(localized: "phrase.rel6", table: "AppIntents"))
             ],
-            shortTitle: SiriLocalization.text("intent.relative.title", fallback: "Countdown Relative Time"),
+            shortTitle: LocalizedStringResource("intent.relative.title", table: "AppIntents"),
             systemImageName: "clock"
         )
     }
