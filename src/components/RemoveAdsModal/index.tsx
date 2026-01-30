@@ -73,6 +73,7 @@ export const RemoveAdsModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    PurchasesManager.setDevBuild(!!isDevBuild);
     setError(null);
     setRestoreError(null);
     setRestoreMessage(null);

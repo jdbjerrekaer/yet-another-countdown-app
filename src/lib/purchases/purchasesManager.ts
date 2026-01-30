@@ -63,21 +63,41 @@ const isRemoveAdsProduct = (productId?: string) =>
   Boolean(productId && REMOVE_ADS_PRODUCTS.some((item) => item.id === productId));
 
 const ensureReady = async () => {
-  if (!readyPromise) return;
+  if (!readyPromise) {
+    return;
+  }
+  const startTime = Date.now();
   await Promise.race([
     readyPromise,
     new Promise<void>((resolve) => setTimeout(resolve, 5000)),
   ]);
+  const elapsed = Date.now() - startTime;
+  if (elapsed >= 5000) {
+    return;
+  }
 };
 
 const refreshStore = async () => {
   const refreshResult = InAppPurchase2.refresh();
-  await new Promise<void>((resolve, reject) => {
-    refreshResult.completed(() => resolve());
-    refreshResult.finished(() => resolve());
-    refreshResult.cancelled(() => resolve());
-    refreshResult.failed(() => reject(new Error("Store refresh failed")));
-  });
+  const startTime = Date.now();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      refreshResult.completed(() => {
+        resolve();
+      });
+      refreshResult.finished(() => {
+        resolve();
+      });
+      refreshResult.cancelled(() => {
+        resolve();
+      });
+      refreshResult.failed(() => {
+        reject(new Error("Store refresh failed"));
+      });
+    });
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const PurchasesManager = {
@@ -95,8 +115,12 @@ export const PurchasesManager = {
       isInitialized = true;
       entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
 
-      if (!Capacitor.isNativePlatform()) return;
-      if (isDevBuild) return;
+      if (!Capacitor.isNativePlatform()) {
+        return;
+      }
+      if (isDevBuild) {
+        return;
+      }
 
       try {
         InAppPurchase2.verbosity = InAppPurchase2.ERROR;
@@ -120,26 +144,35 @@ export const PurchasesManager = {
           }
         });
 
-        InAppPurchase2.when("product").approved((product) => {
+        (InAppPurchase2 as unknown as { when: () => { approved: (cb: (p: IAPProduct) => void) => void } })
+          .when()
+          .approved((product) => {
           if (isRemoveAdsProduct(product.id)) {
             void setEntitlement(true, !isDevBuild, product.id);
             product.finish();
           }
         });
 
-        InAppPurchase2.when("product").owned((product) => {
+        (InAppPurchase2 as unknown as { when: () => { owned: (cb: (p: IAPProduct) => void) => void } })
+          .when()
+          .owned((product) => {
           if (isRemoveAdsProduct(product.id)) {
             void setEntitlement(true, !isDevBuild, product.id);
           }
         });
 
-        InAppPurchase2.when("product").refunded((product) => {
+        (InAppPurchase2 as unknown as { when: () => { refunded: (cb: (p: IAPProduct) => void) => void } })
+          .when()
+          .refunded((product) => {
           if (isRemoveAdsProduct(product.id)) {
             void setEntitlement(false);
           }
         });
 
-        await refreshStore();
+        void refreshStore().then(() => {
+        }).catch((error) => {
+          void error;
+        });
         await ensureReady();
       } catch (error) {
         console.warn("[Purchases] Initialization failed", error);
@@ -155,7 +188,9 @@ export const PurchasesManager = {
 
   getProducts: async (): Promise<IAPProduct[]> => {
     await PurchasesManager.init();
-    if (!Capacitor.isNativePlatform()) return [];
+    if (!Capacitor.isNativePlatform()) {
+      return [];
+    }
 
     if (isDevBuild) {
       return REMOVE_ADS_PRODUCTS.map((item) => {
@@ -181,9 +216,11 @@ export const PurchasesManager = {
     }
 
     await ensureReady();
-    return REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
-      Boolean,
-    ) as IAPProduct[];
+    const products = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
+      (product): product is IAPProduct =>
+        !!product && product.loaded && product.valid && Boolean(product.price),
+    );
+    return products;
   },
 
   purchaseRemoveAds: async (productId: string) => {
@@ -216,17 +253,25 @@ export const PurchasesManager = {
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
   getRemoveAdsProducts: () => [...REMOVE_ADS_PRODUCTS],
   isStoreReady: async () => {
-    if (!Capacitor.isNativePlatform()) return false;
-    if (isDevBuild) return true;
+    if (!Capacitor.isNativePlatform()) {
+      return false;
+    }
+    if (isDevBuild) {
+      return true;
+    }
     await PurchasesManager.init();
-    if (!readyPromise) return false;
+    if (!readyPromise) {
+      return false;
+    }
     try {
+      const startTime = Date.now();
       await Promise.race([
         readyPromise,
         new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
       ]);
+      const elapsed = Date.now() - startTime;
       return true;
-    } catch {
+    } catch (error) {
       return false;
     }
   },
