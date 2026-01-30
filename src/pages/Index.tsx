@@ -592,7 +592,7 @@ export default function Index() {
     if (!isDevBuild || titlePressTimeoutRef.current !== null) return;
     titlePressTimeoutRef.current = window.setTimeout(async () => {
       const nextValue = !hasRemoveAds;
-      await PurchasesManager.setDebugEntitlement(
+      await PurchasesManager.setDevEntitlement(
         nextValue,
         "com.countdown.app.remove_ads_supporter",
       );

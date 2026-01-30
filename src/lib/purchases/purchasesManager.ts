@@ -79,25 +79,20 @@ const ensureReady = async () => {
 
 const refreshStore = async () => {
   const refreshResult = InAppPurchase2.refresh();
-  const startTime = Date.now();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      refreshResult.completed(() => {
-        resolve();
-      });
-      refreshResult.finished(() => {
-        resolve();
-      });
-      refreshResult.cancelled(() => {
-        resolve();
-      });
-      refreshResult.failed(() => {
-        reject(new Error("Store refresh failed"));
-      });
+  await new Promise<void>((resolve, reject) => {
+    refreshResult.completed(() => {
+      resolve();
     });
-  } catch (error) {
-    throw error;
-  }
+    refreshResult.finished(() => {
+      resolve();
+    });
+    refreshResult.cancelled(() => {
+      resolve();
+    });
+    refreshResult.failed(() => {
+      reject(new Error("Store refresh failed"));
+    });
+  });
 };
 
 export const PurchasesManager = {
@@ -169,8 +164,7 @@ export const PurchasesManager = {
           }
         });
 
-        void refreshStore().then(() => {
-        }).catch((error) => {
+        void refreshStore().catch((error) => {
           void error;
         });
         await ensureReady();
@@ -216,7 +210,24 @@ export const PurchasesManager = {
     }
 
     await ensureReady();
-    const products = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
+    
+    const rawProductsBeforeRefresh = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
+    const validProductsBeforeRefresh = rawProductsBeforeRefresh.filter(
+      (product): product is IAPProduct =>
+        !!product && product.loaded && product.valid && Boolean(product.price),
+    );
+    
+    if (validProductsBeforeRefresh.length < REMOVE_ADS_PRODUCTS.length) {
+      try {
+        await refreshStore();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      } catch {
+        // Continue anyway if refresh fails
+      }
+    }
+    
+    const rawProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
+    const products = rawProducts.filter(
       (product): product is IAPProduct =>
         !!product && product.loaded && product.valid && Boolean(product.price),
     );
@@ -229,14 +240,61 @@ export const PurchasesManager = {
       throw new Error("Purchases are not available on web.");
     }
     await ensureReady();
-    const orderResult = InAppPurchase2.order(productId);
-    await new Promise<void>((resolve, reject) => {
-      orderResult.then(() => resolve());
-      orderResult.error((err: unknown) => reject(err));
+    
+    let entitlementResolve: (() => void) | null = null;
+    let entitlementReject: ((err: Error) => void) | null = null;
+    const entitlementPromise = new Promise<void>((resolve, reject) => {
+      entitlementResolve = resolve;
+      entitlementReject = reject;
     });
-    const product = InAppPurchase2.get(productId);
-    if (product?.owned) {
-      await setEntitlement(true, true, productId);
+    
+    const checkEntitlement = () => {
+      if (hasRemoveAdsEntitlement) {
+        if (entitlementResolve) {
+          entitlementResolve();
+          entitlementResolve = null;
+          entitlementReject = null;
+        }
+      }
+    };
+    const removeListener = PurchasesManager.onEntitlementChange(() => {
+      checkEntitlement();
+    });
+    
+    checkEntitlement();
+    
+    const orderResult = InAppPurchase2.order(productId);
+    
+    try {
+      await new Promise<void>((resolve, reject) => {
+        orderResult.then(() => {
+          resolve();
+        });
+        orderResult.error((err: unknown) => {
+          reject(err);
+        });
+      });
+      
+      const product = InAppPurchase2.get(productId);
+      
+      if (product?.owned || hasRemoveAdsEntitlement) {
+        removeListener();
+        if (entitlementResolve) {
+          entitlementResolve();
+        }
+        return;
+      }
+      
+      await Promise.race([
+        entitlementPromise,
+        new Promise<void>((_, reject) => 
+          setTimeout(() => reject(new Error("Purchase confirmation timeout")), 10000)
+        ),
+      ]);
+      removeListener();
+    } catch (error) {
+      removeListener();
+      throw error;
     }
   },
 
@@ -246,7 +304,7 @@ export const PurchasesManager = {
     await refreshStore();
     await ensureReady();
   },
-  setDebugEntitlement: async (value: boolean, productId?: string) => {
+  setDevEntitlement: async (value: boolean, productId?: string) => {
     await setEntitlement(value, true, productId);
   },
 
@@ -264,14 +322,12 @@ export const PurchasesManager = {
       return false;
     }
     try {
-      const startTime = Date.now();
       await Promise.race([
         readyPromise,
         new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
       ]);
-      const elapsed = Date.now() - startTime;
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   },

@@ -132,19 +132,21 @@ export const RemoveAdsModal = ({
       const purchasePromise = isDevBuild
         ? (async () => {
             await new Promise((resolve) => setTimeout(resolve, 800));
-            await PurchasesManager.setDebugEntitlement(true, productId);
+            await PurchasesManager.setDevEntitlement(true, productId);
           })()
         : PurchasesManager.purchaseRemoveAds(productId);
 
       await purchasePromise;
 
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#007AFF", "#5856D6", "#FF2D55"],
-        zIndex: 20000,
-      });
+      if (PurchasesManager.hasRemoveAdsEntitlement()) {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#007AFF", "#5856D6", "#FF2D55"],
+          zIndex: 20000,
+        });
+      }
       setPurchaseError(null);
     } catch (err) {
       console.warn("[Purchases] Purchase failed", err);
