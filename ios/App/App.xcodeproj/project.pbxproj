@@ -33,6 +33,7 @@
 		B2C3D4E5F678901234567890A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
 		B6174CD4190B08F557A8B211 /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23DE9C22ECC85FF6C0538F38 /* CountdownWidget.swift */; };
 		C3D4E5F678901234567890AB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
+		D4E5F678901234567890ABCD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E5F678901234567890ABCD /* PrivacyInfo.xcprivacy */; };
 		E5DB9B45E898B0A532022637 /* CountdownWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 0D1F3BFBDCF22C9A502EB8FD /* CountdownWidget.appex */; };
 		E7F8A9B12F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */; };
 		E8A1B2C3D4E5F67890123456 /* EmojiSuggestionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A1B2C3D4E5F67890123457 /* EmojiSuggestionEngine.swift */; };
@@ -96,6 +97,7 @@
 		584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CountdownWidget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoPlugin.swift; sourceTree = "<group>"; };
+		E5F678901234567890ABCD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A63D32242F0BCF250063570B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A63D32252F0BCF250063570B /* CountdownEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEvent.swift; sourceTree = "<group>"; };
 		A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountdownIntent.swift; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 				A63D322E2F0BCF250063570B /* Views */,
 				00F122285137C3D8CBC5D174 /* Info.plist */,
 				23DE9C22ECC85FF6C0538F38 /* CountdownWidget.swift */,
+				E5F678901234567890ABCD /* PrivacyInfo.xcprivacy */,
 			);
 			path = CountdownWidget;
 			sourceTree = "<group>";
@@ -364,7 +367,7 @@
 			files = (
 				A6A592EA2F2D2EDC000F4200 /* StoreKit.storekit in Resources */,
 				A63D32372F0BCF250063570B /* Assets.xcassets in Resources */,
-				C3D4E5F678901234567890AB /* PrivacyInfo.xcprivacy in Resources */,
+				D4E5F678901234567890ABCD /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -560,7 +563,7 @@
 				INFOPLIST_FILE = CountdownWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
+				PRIVACY_MANIFEST_FILE = CountdownWidget/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown.CountdownWidget;
 				PRODUCT_NAME = CountdownWidget;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -739,7 +742,7 @@
 				INFOPLIST_FILE = CountdownWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
+				PRIVACY_MANIFEST_FILE = CountdownWidget/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown.CountdownWidget;
 				PRODUCT_NAME = CountdownWidget;
 				PROVISIONING_PROFILE_SPECIFIER = "AppStore CountdownWidget";
