@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   IonButton,
   IonContent,
@@ -51,6 +51,29 @@ export const RemoveAdsModal = ({
 }: RemoveAdsModalProps) => {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
+  const confettiShownRef = useRef(false);
+  const closeTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (hasRemoveAds) {
+      setPurchaseError(null);
+      setError(null);
+      if (isOpen && !closeTriggeredRef.current) {
+        closeTriggeredRef.current = true;
+        onClose();
+      }
+      if (!confettiShownRef.current) {
+        confettiShownRef.current = true;
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#007AFF", "#5856D6", "#FF2D55"],
+          zIndex: 20000,
+        });
+      }
+    }
+  }, [hasRemoveAds, isOpen, onClose]);
   const [products, setProducts] = useState<IAPProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -73,6 +96,8 @@ export const RemoveAdsModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    confettiShownRef.current = false;
+    closeTriggeredRef.current = false;
     PurchasesManager.setDevBuild(!!isDevBuild);
     setError(null);
     setRestoreError(null);
@@ -119,10 +144,28 @@ export const RemoveAdsModal = ({
   const getProductById = (id: string) => products.find((p) => p.id === id);
 
   const handlePurchase = async (productId: string) => {
+    if (actionLoadingId !== null) {
+      return;
+    }
+
     setActionLoadingId(productId);
     setPurchaseError(null);
+    trigger("light");
+
+    if (!isNative && !isDevBuild) {
+      setPurchaseError(t("iap.loadError"));
+      setActionLoadingId(null);
+      return;
+    }
 
     if (!storeReady && !isDevBuild) {
+      setPurchaseError(t("iap.loadError"));
+      setActionLoadingId(null);
+      return;
+    }
+
+    const product = getProductById(productId);
+    if (!product && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
       setActionLoadingId(null);
       return;
@@ -137,16 +180,6 @@ export const RemoveAdsModal = ({
         : PurchasesManager.purchaseRemoveAds(productId);
 
       await purchasePromise;
-
-      if (PurchasesManager.hasRemoveAdsEntitlement()) {
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#007AFF", "#5856D6", "#FF2D55"],
-          zIndex: 20000,
-        });
-      }
       setPurchaseError(null);
     } catch (err) {
       console.warn("[Purchases] Purchase failed", err);
@@ -301,13 +334,17 @@ export const RemoveAdsModal = ({
                         className={`font-bold tracking-tight m-0 h-8 ${
                           isSupporter ? "black-button min-w-[80px]" : "text-primary min-w-[70px]"
                         }`}
+                        style={{
+                          minHeight: '32px',
+                          touchAction: 'manipulation',
+                          WebkitTapHighlightColor: 'transparent',
+                          cursor: 'pointer',
+                        }}
                         disabled={
                           (!isNative && !isDevBuild) ||
                           hasRemoveAds ||
                           isBusy ||
-                          loading ||
-                          (!storeReady && !isDevBuild) ||
-                          !product
+                          loading
                         }
                         onClick={() => handlePurchase(productId)}
                       >

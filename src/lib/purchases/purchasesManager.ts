@@ -267,16 +267,11 @@ export const PurchasesManager = {
     
     try {
       await new Promise<void>((resolve, reject) => {
-        orderResult.then(() => {
-          resolve();
-        });
-        orderResult.error((err: unknown) => {
-          reject(err);
-        });
+        orderResult.then(() => resolve());
+        orderResult.error((err: unknown) => reject(err));
       });
-      
+
       const product = InAppPurchase2.get(productId);
-      
       if (product?.owned || hasRemoveAdsEntitlement) {
         removeListener();
         if (entitlementResolve) {
@@ -284,14 +279,10 @@ export const PurchasesManager = {
         }
         return;
       }
-      
-      await Promise.race([
-        entitlementPromise,
-        new Promise<void>((_, reject) => 
-          setTimeout(() => reject(new Error("Purchase confirmation timeout")), 10000)
-        ),
-      ]);
+
+      await entitlementPromise;
       removeListener();
+      return;
     } catch (error) {
       removeListener();
       throw error;
