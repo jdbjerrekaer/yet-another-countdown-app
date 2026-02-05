@@ -158,13 +158,25 @@ export const RemoveAdsModal = ({
       return;
     }
 
+    let product = getProductById(productId);
+    if ((!storeReady || !product) && !isDevBuild) {
+      try {
+        const ready = await PurchasesManager.isStoreReady();
+        setStoreReady(ready);
+        const loaded = await PurchasesManager.getProducts();
+        setProducts(loaded);
+        product = loaded.find((item) => item.id === productId);
+      } catch {
+        // Allow normal error flow below.
+      }
+    }
+
     if (!storeReady && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
       setActionLoadingId(null);
       return;
     }
 
-    const product = getProductById(productId);
     if (!product && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
       setActionLoadingId(null);
