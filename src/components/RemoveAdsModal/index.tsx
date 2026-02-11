@@ -158,20 +158,24 @@ export const RemoveAdsModal = ({
       return;
     }
 
+    let currentStoreReady = storeReady;
     let product = getProductById(productId);
-    if ((!storeReady || !product) && !isDevBuild) {
+    if ((!currentStoreReady || !product) && !isDevBuild) {
       try {
         const ready = await PurchasesManager.isStoreReady();
+        currentStoreReady = ready;
         setStoreReady(ready);
-        const loaded = await PurchasesManager.getProducts();
-        setProducts(loaded);
-        product = loaded.find((item) => item.id === productId);
+        if (ready) {
+          const loaded = await PurchasesManager.getProducts();
+          setProducts(loaded);
+          product = loaded.find((item) => item.id === productId);
+        }
       } catch {
         // Allow normal error flow below.
       }
     }
 
-    if (!storeReady && !isDevBuild) {
+    if (!currentStoreReady && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
       setActionLoadingId(null);
       return;

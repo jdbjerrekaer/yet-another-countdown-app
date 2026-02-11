@@ -1,3 +1,5 @@
+npm run build && npx cap sync ios && npx cap open ios
+
 # Yet Another Countdown
 
 A clean, iOS-style countdown app built with React, Ionic, and Capacitor. Core features are free, with optional iOS ads to support development and a one-time Remove Ads purchase (no subscription). Track birthdays, anniversaries, holidays, and launches with recurring events, widget previews, and native iOS polish.
