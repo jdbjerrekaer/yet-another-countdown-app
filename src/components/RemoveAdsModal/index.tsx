@@ -16,6 +16,7 @@ import { IAPProduct } from "@awesome-cordova-plugins/in-app-purchase-2";
 import { PurchasesManager } from "@/lib/purchases/purchasesManager";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ShieldCheck, Heart, Check, Sparkles, LucideIcon } from "lucide-react";
+import { TFunction } from "i18next";
 
 type RemoveAdsModalProps = {
   isOpen: boolean;
@@ -40,6 +41,44 @@ const productLabels: Record<
     badgeKey: "iap.tiers.supporter.badge",
     icon: Heart,
   },
+};
+
+type PurchasePhase =
+  | "idle"
+  | "preparing"
+  | "ordering"
+  | "awaiting-entitlement"
+  | "succeeded";
+
+const classifyPurchaseError = (errorMessage: string) => {
+  const normalized = errorMessage.toLowerCase();
+  const cancelled =
+    normalized.includes("cancelled") ||
+    normalized.includes("canceled") ||
+    normalized.includes("paymentcancelled");
+
+  const transient =
+    normalized.includes("skinternalerrordomain code=11") ||
+    normalized.includes("temporarily unavailable") ||
+    normalized.includes("store not available") ||
+    normalized.includes("network");
+
+  if (cancelled) return "cancelled";
+  if (transient) return "transient";
+  return "fatal";
+};
+
+const getPurchaseErrorMessage = (err: unknown, t: TFunction): string | null => {
+  const errorMessage = err instanceof Error ? err.message : String(err);
+  const classification = classifyPurchaseError(errorMessage);
+
+  if (classification === "cancelled") {
+    return null;
+  }
+  if (classification === "transient") {
+    return t("iap.loadError");
+  }
+  return t("iap.purchaseError");
 };
 
 export const RemoveAdsModal = ({
@@ -83,6 +122,7 @@ export const RemoveAdsModal = ({
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [storeReady, setStoreReady] = useState(false);
+  const [purchasePhase, setPurchasePhase] = useState<PurchasePhase>("idle");
 
   const handleCloseClick = () => {
     trigger("light");
@@ -103,6 +143,7 @@ export const RemoveAdsModal = ({
     setRestoreError(null);
     setRestoreMessage(null);
     setPurchaseError(null);
+    setPurchasePhase("idle");
     if (!isNative) {
       setProducts([]);
       setStoreReady(false);
@@ -150,10 +191,12 @@ export const RemoveAdsModal = ({
 
     setActionLoadingId(productId);
     setPurchaseError(null);
+    setPurchasePhase("preparing");
     trigger("light");
 
     if (!isNative && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
+      setPurchasePhase("idle");
       setActionLoadingId(null);
       return;
     }
@@ -165,29 +208,23 @@ export const RemoveAdsModal = ({
         const ready = await PurchasesManager.isStoreReady();
         currentStoreReady = ready;
         setStoreReady(ready);
-        if (ready) {
-          const loaded = await PurchasesManager.getProducts();
-          setProducts(loaded);
-          product = loaded.find((item) => item.id === productId);
-        }
+        const loaded = await PurchasesManager.getProducts();
+        setProducts(loaded);
+        product = loaded.find((item) => item.id === productId);
       } catch {
         // Allow normal error flow below.
       }
     }
 
-    if (!currentStoreReady && !isDevBuild) {
+    if (!currentStoreReady && !product && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
-      setActionLoadingId(null);
-      return;
-    }
-
-    if (!product && !isDevBuild) {
-      setPurchaseError(t("iap.loadError"));
+      setPurchasePhase("idle");
       setActionLoadingId(null);
       return;
     }
 
     try {
+      setPurchasePhase("ordering");
       const purchasePromise = isDevBuild
         ? (async () => {
             await new Promise((resolve) => setTimeout(resolve, 800));
@@ -195,21 +232,19 @@ export const RemoveAdsModal = ({
           })()
         : PurchasesManager.purchaseRemoveAds(productId);
 
+      setPurchasePhase("awaiting-entitlement");
       await purchasePromise;
+      setPurchasePhase("succeeded");
       setPurchaseError(null);
     } catch (err) {
       console.warn("[Purchases] Purchase failed", err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (
-        errorMessage.includes("cancelled") ||
-        errorMessage.includes("canceled")
-      ) {
-        setPurchaseError(null);
-      } else {
-        setPurchaseError(t("iap.purchaseError"));
-      }
+      setPurchaseError(getPurchaseErrorMessage(err, t));
+      setPurchasePhase("idle");
     } finally {
       setActionLoadingId(null);
+      if (!hasRemoveAds) {
+        setPurchasePhase("idle");
+      }
     }
   };
 
@@ -305,7 +340,10 @@ export const RemoveAdsModal = ({
               const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
               const priceLabel =
                 product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
-              const isBusy = actionLoadingId === productId;
+              const isBusy =
+                actionLoadingId === productId &&
+                purchasePhase !== "idle" &&
+                purchasePhase !== "succeeded";
               const isSupporter = productId.includes("supporter");
 
               return (
