@@ -4,6 +4,7 @@ import {
   InAppPurchase2,
   IAPProduct,
 } from "@awesome-cordova-plugins/in-app-purchase-2";
+import { IAP_RETRY, IAP_TIMING } from "./constants";
 
 type EntitlementListener = (entitled: boolean) => void;
 
@@ -69,10 +70,10 @@ const ensureReady = async () => {
   const startTime = Date.now();
   await Promise.race([
     readyPromise,
-    new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+    new Promise<void>((resolve) => setTimeout(resolve, IAP_TIMING.ensureReadyTimeoutMs)),
   ]);
   const elapsed = Date.now() - startTime;
-  if (elapsed >= 5000) {
+  if (elapsed >= IAP_TIMING.ensureReadyTimeoutMs) {
     return;
   }
 };
@@ -220,18 +221,36 @@ export const PurchasesManager = {
     if (validProductsBeforeRefresh.length < REMOVE_ADS_PRODUCTS.length) {
       try {
         await refreshStore();
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, IAP_TIMING.postRefreshDelayMs));
       } catch {
         // Continue anyway if refresh fails
       }
     }
     
-    const rawProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
-    const products = rawProducts.filter(
+    const maxRetries = IAP_RETRY.managerMaxAttempts;
+    const retryDelay = IAP_TIMING.managerRetryDelayMs;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const rawProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
+      const products = rawProducts.filter(
+        (product): product is IAPProduct =>
+          !!product && product.loaded && product.valid && Boolean(product.price),
+      );
+      
+      if (products.length >= REMOVE_ADS_PRODUCTS.length) {
+        return products;
+      }
+      
+      if (attempt < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+    }
+    
+    const finalProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
+    return finalProducts.filter(
       (product): product is IAPProduct =>
         !!product && product.loaded && product.valid && Boolean(product.price),
     );
-    return products;
   },
 
   purchaseRemoveAds: async (productId: string) => {
@@ -289,11 +308,19 @@ export const PurchasesManager = {
     }
   },
 
-  restorePurchases: async () => {
+  restorePurchases: async (): Promise<boolean> => {
     await PurchasesManager.init();
-    if (!Capacitor.isNativePlatform()) return;
+    if (!Capacitor.isNativePlatform()) return false;
     await refreshStore();
     await ensureReady();
+    
+    // Check if any remove ads products are owned after restore
+    const ownedProducts = REMOVE_ADS_PRODUCTS.filter((item) => {
+      const product = InAppPurchase2.get(item.id);
+      return product?.owned === true;
+    });
+    
+    return hasRemoveAdsEntitlement || ownedProducts.length > 0;
   },
   setDevEntitlement: async (value: boolean, productId?: string) => {
     await setEntitlement(value, true, productId);
@@ -315,7 +342,9 @@ export const PurchasesManager = {
     try {
       await Promise.race([
         readyPromise,
-        new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000)),
+        new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), IAP_TIMING.storeReadyTimeoutMs),
+        ),
       ]);
       return true;
     } catch {

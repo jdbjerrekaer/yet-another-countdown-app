@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import confetti from "canvas-confetti";
 import { IAPProduct } from "@awesome-cordova-plugins/in-app-purchase-2";
 import { PurchasesManager } from "@/lib/purchases/purchasesManager";
+import { IAP_RETRY, IAP_TIMING } from "@/lib/purchases/constants";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ShieldCheck, Heart, Check, Sparkles, LucideIcon } from "lucide-react";
 import { TFunction } from "i18next";
@@ -74,9 +75,6 @@ const getPurchaseErrorMessage = (err: unknown, t: TFunction): string | null => {
 
   if (classification === "cancelled") {
     return null;
-  }
-  if (classification === "transient") {
-    return t("iap.loadError");
   }
   return t("iap.purchaseError");
 };
@@ -153,30 +151,50 @@ export const RemoveAdsModal = ({
     setStoreReady(false);
 
     const loadProducts = async () => {
-      try {
-        const ready = await PurchasesManager.isStoreReady();
-        setStoreReady(ready);
+      const maxRetries = IAP_RETRY.modalMaxAttempts;
+      const retryDelay = IAP_TIMING.modalRetryDelayMs;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const ready = await PurchasesManager.isStoreReady();
+          setStoreReady(ready);
 
-        if (!ready && !isDevBuild) {
-          setError(t("iap.loadError"));
-          setLoading(false);
-          return;
-        }
+          if (!ready && !isDevBuild) {
+            if (attempt < maxRetries - 1) {
+              await new Promise((resolve) => setTimeout(resolve, retryDelay));
+              continue;
+            }
+            setError(t("iap.loadError"));
+            setLoading(false);
+            return;
+          }
 
-        const loaded = await PurchasesManager.getProducts();
-        setProducts(loaded);
-        if (loaded.length === 0 && !isDevBuild) {
-          setError(t("iap.loadError"));
+          const loaded = await PurchasesManager.getProducts();
+          setProducts(loaded);
+          
+          if (loaded.length === 0 && !isDevBuild) {
+            if (attempt < maxRetries - 1) {
+              await new Promise((resolve) => setTimeout(resolve, retryDelay));
+              continue;
+            }
+            setError(t("iap.loadError"));
+          } else {
+            break;
+          }
+        } catch (err) {
+          console.warn("[Purchases] Failed to load products", err);
+          if (attempt < maxRetries - 1) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+            continue;
+          }
+          setStoreReady(false);
+          if (!isDevBuild) {
+            setError(t("iap.loadError"));
+          }
         }
-      } catch (err) {
-        console.warn("[Purchases] Failed to load products", err);
-        setStoreReady(false);
-        if (!isDevBuild) {
-          setError(t("iap.loadError"));
-        }
-      } finally {
-        setLoading(false);
       }
+      
+      setLoading(false);
     };
 
     void loadProducts();
@@ -203,20 +221,38 @@ export const RemoveAdsModal = ({
 
     let currentStoreReady = storeReady;
     let product = getProductById(productId);
+    
     if ((!currentStoreReady || !product) && !isDevBuild) {
-      try {
-        const ready = await PurchasesManager.isStoreReady();
-        currentStoreReady = ready;
-        setStoreReady(ready);
-        const loaded = await PurchasesManager.getProducts();
-        setProducts(loaded);
-        product = loaded.find((item) => item.id === productId);
-      } catch {
-        // Allow normal error flow below.
+      const maxRetries = IAP_RETRY.modalMaxAttempts;
+      const retryDelay = IAP_TIMING.modalRetryDelayMs;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const ready = await PurchasesManager.isStoreReady();
+          currentStoreReady = ready;
+          setStoreReady(ready);
+          
+          const loaded = await PurchasesManager.getProducts();
+          setProducts(loaded);
+          product = loaded.find((item) => item.id === productId);
+          
+          if (currentStoreReady && product) {
+            break;
+          }
+          
+          if (attempt < maxRetries - 1) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          }
+        } catch {
+          if (attempt < maxRetries - 1) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
       }
     }
 
-    if (!currentStoreReady && !product && !isDevBuild) {
+    if ((!currentStoreReady || !product) && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
       setPurchasePhase("idle");
       setActionLoadingId(null);
@@ -227,7 +263,7 @@ export const RemoveAdsModal = ({
       setPurchasePhase("ordering");
       const purchasePromise = isDevBuild
         ? (async () => {
-            await new Promise((resolve) => setTimeout(resolve, 800));
+            await new Promise((resolve) => setTimeout(resolve, IAP_TIMING.devPurchaseDelayMs));
             await PurchasesManager.setDevEntitlement(true, productId);
           })()
         : PurchasesManager.purchaseRemoveAds(productId);
@@ -253,8 +289,8 @@ export const RemoveAdsModal = ({
     setRestoreError(null);
     setRestoreMessage(null);
     try {
-      await PurchasesManager.restorePurchases();
-      if (PurchasesManager.hasRemoveAdsEntitlement()) {
+      const restored = await PurchasesManager.restorePurchases();
+      if (restored) {
         confetti({
           particleCount: 150,
           spread: 70,
@@ -262,6 +298,7 @@ export const RemoveAdsModal = ({
           colors: ["#007AFF", "#5856D6", "#FF2D55"],
           zIndex: 20000,
         });
+        setRestoreMessage(t("iap.restoreSuccess"));
       } else {
         setRestoreError(null);
         setRestoreMessage(t("iap.restoreNone"));
