@@ -150,6 +150,14 @@ export const RemoveAdsModal = ({
     setLoading(true);
     setStoreReady(false);
 
+    if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+      (window as unknown as { toggleIAPTestMode?: () => void }).toggleIAPTestMode = () => {
+        const current = PurchasesManager.getTestMode();
+        PurchasesManager.setTestMode({ forceLoadFailure: !current.forceLoadFailure });
+        console.log(`[IAP] Test mode: forceLoadFailure=${!current.forceLoadFailure}`);
+      };
+    }
+
     const loadProducts = async () => {
       const maxRetries = IAP_RETRY.modalMaxAttempts;
       const retryDelay = IAP_TIMING.modalRetryDelayMs;

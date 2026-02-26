@@ -80,6 +80,97 @@ To test what happens when IAP products aren't loaded (like in App Review before 
    - **Expected:** Error message appears: "Unable to load products" or similar
    - Button should not be stuck/unresponsive
 
+### Test Scenario 4: Deterministic Reproduction of Apple's "Unable to load products" Error
+
+This test reproduces Apple's reported error scenario deterministically using the built-in test mode.
+
+**Prerequisites:**
+- App running in development mode (not production build)
+- iPad Air 11-inch (M3) simulator (or matching Apple's review device)
+- StoreKit Configuration enabled (for normal flow verification)
+
+**Step 1: Enable Test Mode (Force Load Failure)**
+
+1. **Launch the app** in iPad simulator
+2. **Open Remove Ads modal**
+3. **Enable test mode** using one of these methods:
+   - **Method A (UI):** In the modal, find the yellow "DEV" banner at the bottom. Click "Toggle Test Mode" button.
+   - **Method B (Console):** Open Safari Web Inspector (Develop → Simulator → [Your App]) or Xcode console, then run:
+     ```javascript
+     window.toggleIAPTestMode()
+     ```
+4. **Verify test mode is enabled:**
+   - UI banner should show: "DEV: Test mode: FAILURE ON"
+   - Console should log: `[IAP Test Mode] Toggled: forceLoadFailure=true`
+
+**Step 2: Reproduce the Error**
+
+1. **Close the Remove Ads modal** (test mode persists across modal opens)
+2. **Reopen the Remove Ads modal**
+3. **Observe the loading state:**
+   - Modal shows loading spinner initially
+   - After retries complete (~14 seconds total tolerance), error banner appears
+4. **Expected Result:**
+   - Red error banner displays: **"Unable to load products right now."**
+   - Products list is empty (no purchase buttons visible)
+   - Console logs: `[Purchases] TEST MODE: Forcing load failure for local reproduction`
+
+**Step 3: Test Purchase Attempt During Failure State**
+
+1. **With test mode still enabled**, if products somehow appear, tap "Unlock"
+2. **Expected:** Purchase should be blocked with "Unable to load products right now." error
+3. **Verify:** No purchase sheet appears, error message is clear
+
+**Step 4: Verify Recovery Path**
+
+1. **Disable test mode:**
+   - Click "Toggle Test Mode" button again, OR
+   - Run in console: `window.toggleIAPTestMode()`
+2. **Verify test mode is disabled:**
+   - UI banner shows: "DEV: Test mode: NORMAL"
+   - Console logs: `[IAP Test Mode] Toggled: forceLoadFailure=false`
+3. **Close and reopen the Remove Ads modal**
+4. **Expected Result:**
+   - Products load successfully (both "Remove Ads" options appear)
+   - Prices display correctly
+   - "Unlock" buttons are enabled
+   - No error banner
+5. **Test purchase flow:**
+   - Tap "Unlock" on either product
+   - **Expected:** StoreKit purchase sheet appears (if StoreKit config is enabled)
+   - Purchase completes successfully
+
+**Step 5: Verify Retry Logic**
+
+1. **Re-enable test mode** (forceLoadFailure=true)
+2. **Open Remove Ads modal**
+3. **Observe retry behavior:**
+   - Watch console logs for retry attempts
+   - Modal should retry up to 4 times with 1000ms delays
+   - Total wait time: ~14 seconds before showing error
+4. **Expected:** Error appears only after all retries are exhausted
+
+**Validation Checklist:**
+
+- [ ] Test mode can be toggled via UI button
+- [ ] Test mode can be toggled via console command
+- [ ] With test mode ON: Modal shows "Unable to load products right now." error
+- [ ] With test mode ON: Products list is empty
+- [ ] With test mode OFF: Products load successfully
+- [ ] With test mode OFF: Purchase flow works normally
+- [ ] Retry logic executes correctly (4 attempts, 1000ms delays)
+- [ ] Error message matches Apple's reported error text exactly
+- [ ] No production behavior changes when test mode is disabled
+
+**Important Notes:**
+
+- **Test mode is dev-only:** The `setTestMode` API is disabled in production builds (`process.env.NODE_ENV === "production"`)
+- **Sandbox propagation delay:** Apple's sandbox can take up to 1 hour for metadata changes to propagate. If testing with real sandbox accounts, allow time for changes to appear.
+- **StoreKit Configuration:** For most reliable testing, use StoreKit.storekit configuration file in Xcode scheme settings
+- **Console access:** To access console in simulator:
+  - Safari: Develop → Simulator → [Your App Name]
+  - Xcode: View → Debug Area → Activate Console (Cmd+Shift+Y)
+
 ## What to Look For
 
 ### ✅ Success Indicators
@@ -130,6 +221,7 @@ For the most accurate testing, especially for touch responsiveness:
 
 ## Testing Checklist
 
+### General IAP Testing
 - [ ] App launches successfully on iPad simulator
 - [ ] Remove Ads modal opens correctly
 - [ ] Purchase buttons are visible and properly sized
@@ -140,6 +232,16 @@ For the most accurate testing, especially for touch responsiveness:
 - [ ] Purchase flow works with StoreKit configuration
 - [ ] Button works in iPhone compatibility mode (scaled view)
 - [ ] Tested on actual iPad device (if available)
+
+### Deterministic Repro Test (Test Scenario 4)
+- [ ] Test mode toggle works via UI button
+- [ ] Test mode toggle works via console command (`window.toggleIAPTestMode()`)
+- [ ] With test mode ON: "Unable to load products right now." error appears
+- [ ] With test mode ON: Products list is empty after retries
+- [ ] With test mode OFF: Products load successfully
+- [ ] With test mode OFF: Purchase flow completes normally
+- [ ] Retry logic executes (4 attempts, ~14s total tolerance)
+- [ ] Error message text matches Apple's reported error exactly
 
 ## Debugging Tips
 

@@ -29,6 +29,8 @@ let readyPromise: Promise<void> | null = null;
 let readyResolve: (() => void) | null = null;
 let initPromise: Promise<void> | null = null;
 const entitlementListeners = new Set<EntitlementListener>();
+const pendingCancelRejectors = new Map<string, (error: Error) => void>();
+let testModeForceLoadFailure = false;
 
 const setEntitlement = async (
   value: boolean,
@@ -165,9 +167,19 @@ export const PurchasesManager = {
           }
         });
 
-        void refreshStore().catch((error) => {
-          void error;
+        (InAppPurchase2 as unknown as { when: () => { cancelled?: (cb: (p: IAPProduct) => void) => void } })
+          .when()
+          .cancelled?.((product) => {
+          if (isRemoveAdsProduct(product.id)) {
+            const rejectPending = pendingCancelRejectors.get(product.id);
+            if (rejectPending) {
+              rejectPending(new Error("PaymentCancelled"));
+              pendingCancelRejectors.delete(product.id);
+            }
+          }
         });
+
+        void refreshStore().catch(() => {});
         await ensureReady();
       } catch (error) {
         console.warn("[Purchases] Initialization failed", error);
@@ -184,6 +196,11 @@ export const PurchasesManager = {
   getProducts: async (): Promise<IAPProduct[]> => {
     await PurchasesManager.init();
     if (!Capacitor.isNativePlatform()) {
+      return [];
+    }
+
+    if (testModeForceLoadFailure && !isDevBuild) {
+      console.warn("[Purchases] TEST MODE: Forcing load failure");
       return [];
     }
 
@@ -259,31 +276,36 @@ export const PurchasesManager = {
       throw new Error("Purchases are not available on web.");
     }
     await ensureReady();
-    
+
     let entitlementResolve: (() => void) | null = null;
     let entitlementReject: ((err: Error) => void) | null = null;
     const entitlementPromise = new Promise<void>((resolve, reject) => {
       entitlementResolve = resolve;
       entitlementReject = reject;
     });
-    
+
     const checkEntitlement = () => {
-      if (hasRemoveAdsEntitlement) {
-        if (entitlementResolve) {
-          entitlementResolve();
-          entitlementResolve = null;
-          entitlementReject = null;
-        }
+      if (hasRemoveAdsEntitlement && entitlementResolve) {
+        entitlementResolve();
+        entitlementResolve = null;
+        entitlementReject = null;
       }
     };
     const removeListener = PurchasesManager.onEntitlementChange(() => {
       checkEntitlement();
     });
-    
+
     checkEntitlement();
-    
+    pendingCancelRejectors.set(productId, (error) => {
+      if (entitlementReject) {
+        entitlementReject(error);
+      }
+      entitlementResolve = null;
+      entitlementReject = null;
+    });
+
     const orderResult = InAppPurchase2.order(productId);
-    
+
     try {
       await new Promise<void>((resolve, reject) => {
         orderResult.then(() => resolve());
@@ -303,8 +325,11 @@ export const PurchasesManager = {
       removeListener();
       return;
     } catch (error) {
+      pendingCancelRejectors.delete(productId);
       removeListener();
       throw error;
+    } finally {
+      pendingCancelRejectors.delete(productId);
     }
   },
 
@@ -325,6 +350,16 @@ export const PurchasesManager = {
   setDevEntitlement: async (value: boolean, productId?: string) => {
     await setEntitlement(value, true, productId);
   },
+
+  setTestMode: (options: { forceLoadFailure: boolean }) => {
+    if (process.env.NODE_ENV === "production") return;
+    testModeForceLoadFailure = options.forceLoadFailure;
+    console.log(`[Purchases] Test mode: forceLoadFailure=${testModeForceLoadFailure}`);
+  },
+
+  getTestMode: () => ({
+    forceLoadFailure: testModeForceLoadFailure,
+  }),
 
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
   getRemoveAdsProducts: () => [...REMOVE_ADS_PRODUCTS],
