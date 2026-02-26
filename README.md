@@ -1,5 +1,3 @@
-> Last updated by JARVIS: 2026-02-26
-
 npm run build && npx cap sync ios && npx cap open ios
 
 # Yet Another Countdown
