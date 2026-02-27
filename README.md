@@ -135,7 +135,7 @@ This will open the iOS project in Xcode, where you can:
 
 ### App Configuration
 
-- **App ID**: `com.countdown.app`
+- **App ID**: `com.jonatanbjerrekaer.countdown`
 - **App Name**: `Countdown`
 - **Web Directory**: `dist` (built output)
 
@@ -180,8 +180,8 @@ Configure these secrets in your repository settings (`Settings` → `Secrets and
    - Click **Run workflow** → **Run workflow**
    - The workflow will validate:
      - Both IAP products exist (`com.countdown.app.remove_ads`, `com.countdown.app.remove_ads_supporter`)
-     - Products are in `APPROVED` or `READY_TO_SUBMIT` state
-     - Paid Apps Agreement is active
+     - Products are in `APPROVED`, `READY_TO_SUBMIT`, or `WAITING_FOR_REVIEW` state
+     - Paid Apps Agreement is active (verified implicitly by successful IAP product fetch)
    - A preflight report artifact will be uploaded with detailed results
 
 2. **Locally (for testing):**

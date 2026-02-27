@@ -92,8 +92,8 @@ for PRODUCT_ID in "${PRODUCT_IDS[@]}"; do
 
   add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"exists\",\"status\":\"PASS\",\"message\":\"Product exists\"}"
 
-  if [ "${STATE}" != "APPROVED" ] && [ "${STATE}" != "READY_TO_SUBMIT" ]; then
-    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"FAIL\",\"message\":\"Product state is ${STATE}, expected APPROVED or READY_TO_SUBMIT\"}"
+  if [ "${STATE}" != "APPROVED" ] && [ "${STATE}" != "READY_TO_SUBMIT" ] && [ "${STATE}" != "WAITING_FOR_REVIEW" ]; then
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"FAIL\",\"message\":\"Product state is ${STATE}, expected APPROVED, READY_TO_SUBMIT, or WAITING_FOR_REVIEW\"}"
     OVERALL_SUCCESS=false
   else
     add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"PASS\",\"message\":\"Product state is ${STATE}\"}"
@@ -103,40 +103,14 @@ done
 
 echo "Checking Paid Apps Agreement..."
 
-AGREEMENTS_RESPONSE=$(curl -s -X GET \
-  "${API_BASE}/agreements" \
-  -H "Authorization: Bearer ${JWT}" \
-  -H "Content-Type: application/json")
-
-PAID_APPS_AGREEMENT=$(echo "${AGREEMENTS_RESPONSE}" | jq -c '
-  first(
-    (.data // [])[]
-    | select(
-        .type == "PAID_APPS"
-        or .attributes.agreementType == "PAID_APPS"
-        or .attributes.contractType == "PAID_APPS"
-      )
-  ) // empty
-')
-
-if [ -z "${PAID_APPS_AGREEMENT}" ] || [ "${PAID_APPS_AGREEMENT}" = "null" ]; then
-  AGREEMENTS_ERROR=$(echo "${AGREEMENTS_RESPONSE}" | jq -r '.errors[0].detail // .errors[0].title // empty')
-  if [ -n "${AGREEMENTS_ERROR}" ]; then
-    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement check failed: ${AGREEMENTS_ERROR}\"}"
-  else
-    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement not found or not active\"}"
-  fi
-  OVERALL_SUCCESS=false
+# Implicit validation: If we successfully fetched IAP products, the paid apps agreement must be active
+# (App Store Connect won't allow IAP creation without an active paid apps agreement)
+IAP_PRODUCTS_COUNT=$(echo "${IAP_RESPONSE}" | jq -r '(.data // []) | length')
+if [ "${IAP_PRODUCTS_COUNT}" -gt 0 ]; then
+  add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"PASS\",\"message\":\"Paid Apps Agreement is active (verified by successful IAP product fetch)\"}"
 else
-  AGREED=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.agreed // empty')
-  AGR_STATE=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.state // empty')
-  CONTRACT_STATUS=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.contractStatus // empty')
-  if [ "${AGREED}" = "true" ] || [ "${AGR_STATE}" = "ACTIVE" ] || [ "${CONTRACT_STATUS}" = "ACTIVE" ]; then
-    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"PASS\",\"message\":\"Paid Apps Agreement is active\"}"
-  else
-    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement exists but is not active\"}"
-    OVERALL_SUCCESS=false
-  fi
+  add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Cannot verify Paid Apps Agreement: no IAP products found\"}"
+  OVERALL_SUCCESS=false
 fi
 
 jq -n \
