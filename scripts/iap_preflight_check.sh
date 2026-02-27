@@ -4,6 +4,14 @@ set -euo pipefail
 BUNDLE_ID="${ASC_BUNDLE_ID:-com.jonatanbjerrekaer.countdown}"
 PRODUCT_IDS=("com.countdown.app.remove_ads" "com.countdown.app.remove_ads_supporter")
 REPORT_FILE="${1:-preflight-report.json}"
+CHECKS_FILE=$(mktemp)
+echo '[]' > "${CHECKS_FILE}"
+
+add_check() {
+  local json="$1"
+  jq --argjson item "${json}" '. += [$item]' "${CHECKS_FILE}" > "${CHECKS_FILE}.tmp" \
+    && mv "${CHECKS_FILE}.tmp" "${CHECKS_FILE}"
+}
 
 if [ -z "${ASC_KEY_ID:-}" ] || [ -z "${ASC_ISSUER_ID:-}" ] || [ -z "${ASC_KEY_CONTENT:-}" ]; then
   echo "Error: Required environment variables not set:"
@@ -15,13 +23,12 @@ fi
 
 KEY_FILE=$(mktemp)
 echo "${ASC_KEY_CONTENT}" | base64 -d > "${KEY_FILE}"
-trap "rm -f ${KEY_FILE}" EXIT
+trap "rm -f ${KEY_FILE} ${CHECKS_FILE} ${CHECKS_FILE}.tmp 2>/dev/null" EXIT
 
 JWT=$(./scripts/generate_jwt.sh "${ASC_KEY_ID}" "${ASC_ISSUER_ID}" "${KEY_FILE}" 2>/dev/null || python3 -c "
 import jwt
 import time
 import sys
-import json
 
 key_id = sys.argv[1]
 issuer_id = sys.argv[2]
@@ -67,30 +74,30 @@ IAP_RESPONSE=$(curl -s -X GET \
   -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json")
 
-ALL_PRODUCTS=$(echo "${IAP_RESPONSE}" | jq -r '(.data // [])[] | select(.attributes.productId == "'"${PRODUCT_IDS[0]}"'" or .attributes.productId == "'"${PRODUCT_IDS[1]}"'")')
-
-CHECK_RESULTS=()
 OVERALL_SUCCESS=true
 
 for PRODUCT_ID in "${PRODUCT_IDS[@]}"; do
-  PRODUCT=$(echo "${ALL_PRODUCTS}" | jq -r "select(.attributes.productId == \"${PRODUCT_ID}\")")
-  
+  PRODUCT=$(echo "${IAP_RESPONSE}" | jq -c \
+    --arg pid "${PRODUCT_ID}" \
+    'first((.data // [])[] | select(.attributes.productId == $pid)) // empty')
+
   if [ -z "${PRODUCT}" ] || [ "${PRODUCT}" = "null" ]; then
-    CHECK_RESULTS+=("{\"productId\":\"${PRODUCT_ID}\",\"check\":\"exists\",\"status\":\"FAIL\",\"message\":\"Product not found\"}")
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"exists\",\"status\":\"FAIL\",\"message\":\"Product not found\"}"
     OVERALL_SUCCESS=false
     continue
   fi
-  
-  STATE=$(echo "${PRODUCT}" | jq -r '.attributes.state')
-  PRODUCT_TYPE=$(echo "${PRODUCT}" | jq -r '.attributes.inAppPurchaseType')
-  
+
+  STATE=$(echo "${PRODUCT}" | jq -r '.attributes.state // "UNKNOWN"')
+  PRODUCT_TYPE=$(echo "${PRODUCT}" | jq -r '.attributes.inAppPurchaseType // "UNKNOWN"')
+
+  add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"exists\",\"status\":\"PASS\",\"message\":\"Product exists\"}"
+
   if [ "${STATE}" != "APPROVED" ] && [ "${STATE}" != "READY_TO_SUBMIT" ]; then
-    CHECK_RESULTS+=("{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"FAIL\",\"message\":\"Product state is ${STATE}, expected APPROVED or READY_TO_SUBMIT\"}")
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"FAIL\",\"message\":\"Product state is ${STATE}, expected APPROVED or READY_TO_SUBMIT\"}"
     OVERALL_SUCCESS=false
   else
-    CHECK_RESULTS+=("{\"productId\":\"${PRODUCT_ID}\",\"check\":\"exists\",\"status\":\"PASS\",\"message\":\"Product exists\"}")
-    CHECK_RESULTS+=("{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"PASS\",\"message\":\"Product state is ${STATE}\"}")
-    CHECK_RESULTS+=("{\"productId\":\"${PRODUCT_ID}\",\"check\":\"type\",\"status\":\"PASS\",\"message\":\"Product type is ${PRODUCT_TYPE}\"}")
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"PASS\",\"message\":\"Product state is ${STATE}\"}"
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"type\",\"status\":\"PASS\",\"message\":\"Product type is ${PRODUCT_TYPE}\"}"
   fi
 done
 
@@ -115,44 +122,43 @@ PAID_APPS_AGREEMENT=$(echo "${AGREEMENTS_RESPONSE}" | jq -c '
 if [ -z "${PAID_APPS_AGREEMENT}" ] || [ "${PAID_APPS_AGREEMENT}" = "null" ]; then
   AGREEMENTS_ERROR=$(echo "${AGREEMENTS_RESPONSE}" | jq -r '.errors[0].detail // .errors[0].title // empty')
   if [ -n "${AGREEMENTS_ERROR}" ]; then
-    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement check failed: ${AGREEMENTS_ERROR}\"}")
+    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement check failed: ${AGREEMENTS_ERROR}\"}"
   else
-    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement not found or not active\"}")
+    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement not found or not active\"}"
   fi
   OVERALL_SUCCESS=false
 else
   AGREED=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.agreed // empty')
-  STATE=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.state // empty')
+  AGR_STATE=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.state // empty')
   CONTRACT_STATUS=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.contractStatus // empty')
-  if [ "${AGREED}" = "true" ] || [ "${STATE}" = "ACTIVE" ] || [ "${CONTRACT_STATUS}" = "ACTIVE" ]; then
-    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"PASS\",\"message\":\"Paid Apps Agreement is active\"}")
+  if [ "${AGREED}" = "true" ] || [ "${AGR_STATE}" = "ACTIVE" ] || [ "${CONTRACT_STATUS}" = "ACTIVE" ]; then
+    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"PASS\",\"message\":\"Paid Apps Agreement is active\"}"
   else
-    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement exists but is not active\"}")
+    add_check "{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement exists but is not active\"}"
     OVERALL_SUCCESS=false
   fi
 fi
 
-REPORT_JSON=$(jq -n \
+jq -n \
   --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
   --arg bundleId "${BUNDLE_ID}" \
   --arg appId "${APP_ID}" \
   --argjson overallSuccess "${OVERALL_SUCCESS}" \
-  --argjson checks "$(IFS=,; echo "[${CHECK_RESULTS[*]}]")" \
+  --slurpfile checks "${CHECKS_FILE}" \
   '{
     timestamp: $timestamp,
     bundleId: $bundleId,
     appId: $appId,
     overallSuccess: $overallSuccess,
-    checks: ($checks | fromjson)
-  }')
-
-echo "${REPORT_JSON}" | jq '.' > "${REPORT_FILE}"
+    checks: $checks[0]
+  }' > "${REPORT_FILE}"
 
 if [ "${OVERALL_SUCCESS}" = "true" ]; then
-  echo "✓ All IAP preflight checks passed"
+  echo "All IAP preflight checks passed"
+  cat "${REPORT_FILE}"
   exit 0
 else
-  echo "✗ IAP preflight checks failed"
-  echo "${REPORT_JSON}" | jq '.checks[] | select(.status == "FAIL")'
+  echo "IAP preflight checks failed"
+  jq '.checks[] | select(.status == "FAIL")' "${REPORT_FILE}"
   exit 1
 fi
