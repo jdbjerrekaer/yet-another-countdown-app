@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-BUNDLE_ID="com.jonatanbjerrekaer.countdown"
+BUNDLE_ID="${ASC_BUNDLE_ID:-com.jonatanbjerrekaer.countdown}"
 PRODUCT_IDS=("com.countdown.app.remove_ads" "com.countdown.app.remove_ads_supporter")
 REPORT_FILE="${1:-preflight-report.json}"
 
@@ -46,7 +46,7 @@ API_BASE="https://api.appstoreconnect.apple.com/v1"
 echo "Resolving app ID for bundle ID: ${BUNDLE_ID}"
 
 APP_RESPONSE=$(curl -s -X GET \
-  "${API_BASE}/apps?filter[bundleId]=${BUNDLE_ID}" \
+  "${API_BASE}/apps?filter%5BbundleId%5D=${BUNDLE_ID}" \
   -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json")
 
