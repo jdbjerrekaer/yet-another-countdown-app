@@ -67,7 +67,7 @@ IAP_RESPONSE=$(curl -s -X GET \
   -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json")
 
-ALL_PRODUCTS=$(echo "${IAP_RESPONSE}" | jq -r '.data[] | select(.attributes.productId == "'"${PRODUCT_IDS[0]}"'" or .attributes.productId == "'"${PRODUCT_IDS[1]}"'")')
+ALL_PRODUCTS=$(echo "${IAP_RESPONSE}" | jq -r '(.data // [])[] | select(.attributes.productId == "'"${PRODUCT_IDS[0]}"'" or .attributes.productId == "'"${PRODUCT_IDS[1]}"'")')
 
 CHECK_RESULTS=()
 OVERALL_SUCCESS=true
@@ -101,18 +101,34 @@ AGREEMENTS_RESPONSE=$(curl -s -X GET \
   -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json")
 
-PAID_APPS_AGREEMENT=$(echo "${AGREEMENTS_RESPONSE}" | jq -r '.data[] | select(.type == "PAID_APPS")')
+PAID_APPS_AGREEMENT=$(echo "${AGREEMENTS_RESPONSE}" | jq -c '
+  first(
+    (.data // [])[]
+    | select(
+        .type == "PAID_APPS"
+        or .attributes.agreementType == "PAID_APPS"
+        or .attributes.contractType == "PAID_APPS"
+      )
+  ) // empty
+')
 
 if [ -z "${PAID_APPS_AGREEMENT}" ] || [ "${PAID_APPS_AGREEMENT}" = "null" ]; then
-  CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement not found or not active\"}")
+  AGREEMENTS_ERROR=$(echo "${AGREEMENTS_RESPONSE}" | jq -r '.errors[0].detail // .errors[0].title // empty')
+  if [ -n "${AGREEMENTS_ERROR}" ]; then
+    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement check failed: ${AGREEMENTS_ERROR}\"}")
+  else
+    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement not found or not active\"}")
+  fi
   OVERALL_SUCCESS=false
 else
-  AGREED=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.agreed')
-  if [ "${AGREED}" != "true" ]; then
-    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement exists but not agreed\"}")
-    OVERALL_SUCCESS=false
-  else
+  AGREED=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.agreed // empty')
+  STATE=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.state // empty')
+  CONTRACT_STATUS=$(echo "${PAID_APPS_AGREEMENT}" | jq -r '.attributes.contractStatus // empty')
+  if [ "${AGREED}" = "true" ] || [ "${STATE}" = "ACTIVE" ] || [ "${CONTRACT_STATUS}" = "ACTIVE" ]; then
     CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"PASS\",\"message\":\"Paid Apps Agreement is active\"}")
+  else
+    CHECK_RESULTS+=("{\"check\":\"paidAppsAgreement\",\"status\":\"FAIL\",\"message\":\"Paid Apps Agreement exists but is not active\"}")
+    OVERALL_SUCCESS=false
   fi
 fi
 
