@@ -31,6 +31,8 @@ struct EmptyWidgetView: View {
             return 36
         case .systemLarge:
             return 48
+        case .accessoryInline, .accessoryCircular, .accessoryRectangular:
+            return 16
         @unknown default:
             return 32
         }
@@ -44,6 +46,8 @@ struct EmptyWidgetView: View {
             return 16
         case .systemLarge:
             return 18
+        case .accessoryInline, .accessoryCircular, .accessoryRectangular:
+            return 12
         @unknown default:
             return 14
         }

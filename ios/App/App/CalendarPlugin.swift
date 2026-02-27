@@ -363,17 +363,16 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Helper methods
     
     private func authStatusToString(_ status: EKAuthorizationStatus) -> String {
-        switch status {
-        case .notDetermined:
+        switch status.rawValue {
+        case EKAuthorizationStatus.notDetermined.rawValue:
             return "notDetermined"
-        case .restricted:
+        case EKAuthorizationStatus.restricted.rawValue:
             return "restricted"
-        case .denied:
+        case EKAuthorizationStatus.denied.rawValue:
             return "denied"
-        case .authorized:
+        case EKAuthorizationStatus.authorized.rawValue:
             return "authorized"
-        @unknown default:
-            // Handle iOS 17+ cases (fullAccess, writeOnly) via raw value check
+        default:
             if #available(iOS 17.0, *) {
                 if status == .fullAccess {
                     return "fullAccess"

@@ -649,6 +649,16 @@ struct CountdownWidgetEntryView: View {
                     progress: progress
                 )
                 .widgetURL(deepLinkURL)
+            case .accessoryInline, .accessoryCircular, .accessoryRectangular:
+                SmallWidgetView(
+                    event: event,
+                    countdown: countdown,
+                    targetDate: targetDate,
+                    appearanceMode: entry.appearanceMode,
+                    countdownStyle: entry.countdownStyle,
+                    progress: progress
+                )
+                .widgetURL(deepLinkURL)
             @unknown default:
                 SmallWidgetView(
                     event: event,

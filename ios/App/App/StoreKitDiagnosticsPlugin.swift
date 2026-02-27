@@ -75,7 +75,8 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
     private func collectStoreKit2Snapshot() async throws -> [String: Any] {
         var snapshot: [String: Any] = [:]
         snapshot["timestamp"] = ISO8601DateFormatter().string(from: Date())
-        snapshot["iosVersion"] = UIDevice.current.systemVersion
+        let iosVersion = await MainActor.run { UIDevice.current.systemVersion }
+        snapshot["iosVersion"] = iosVersion
         
         var entitlements: [[String: Any]] = []
         for await result in Transaction.currentEntitlements {
@@ -154,11 +155,9 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
                         ]
                     }
                     
-                    if #available(iOS 15.0, *) {
-                        let transactionStatus = try await product.subscription?.status.first
-                        if let statusValue = transactionStatus {
-                            status["subscriptionStatus"] = String(describing: statusValue.state)
-                        }
+                    let transactionStatus = try await product.subscription?.status.first
+                    if let statusValue = transactionStatus {
+                        status["subscriptionStatus"] = String(describing: statusValue.state)
                     }
                     
                     productStatuses.append(status)
