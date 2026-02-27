@@ -139,6 +139,69 @@ This will open the iOS project in Xcode, where you can:
 - **App Name**: `Countdown`
 - **Web Directory**: `dist` (built output)
 
+### StoreKit 2 Diagnostics
+
+The app includes native StoreKit 2 diagnostics instrumentation for enhanced IAP troubleshooting. Diagnostics snapshots are automatically collected at key IAP operation checkpoints (init, prefetch, purchase, restore) and persisted locally on the device.
+
+**Accessing Diagnostics:**
+
+Diagnostics data is available via `PurchasesManager.getDiagnostics()`, which includes:
+- Last successful product load timestamp
+- Last load failure reason
+- Store readiness status
+- StoreKit 2 snapshot metadata (if available)
+
+**Diagnostics Snapshot Contents:**
+
+- Current entitlements (verified transactions)
+- Recent transaction history
+- Product status for configured IAP products
+- Error context and verification failures
+
+Snapshots are saved to the app's Documents directory as `storekit_diagnostics_snapshot.json` and can be accessed via Xcode's device file system or through the Capacitor plugin API.
+
+### IAP Preflight Checks
+
+Before submitting iOS builds to App Store Connect, run the IAP preflight workflow to validate that all required IAP products are properly configured and ready for review.
+
+**Required GitHub Secrets:**
+
+Configure these secrets in your repository settings (`Settings` → `Secrets and variables` → `Actions`):
+
+- `ASC_KEY_ID` - Your App Store Connect API key ID
+- `ASC_ISSUER_ID` - Your App Store Connect issuer ID (UUID format)
+- `ASC_KEY_CONTENT` - Base64-encoded content of your `.p8` private key file
+
+**Running Preflight Checks:**
+
+1. **Via GitHub Actions (Recommended):**
+   - Go to the **Actions** tab in your repository
+   - Select **iOS IAP Preflight Check** workflow
+   - Click **Run workflow** → **Run workflow**
+   - The workflow will validate:
+     - Both IAP products exist (`com.countdown.app.remove_ads`, `com.countdown.app.remove_ads_supporter`)
+     - Products are in `APPROVED` or `READY_TO_SUBMIT` state
+     - Paid Apps Agreement is active
+   - A preflight report artifact will be uploaded with detailed results
+
+2. **Locally (for testing):**
+   ```bash
+   export ASC_KEY_ID="your-key-id"
+   export ASC_ISSUER_ID="your-issuer-id"
+   export ASC_KEY_CONTENT="$(base64 < path/to/AuthKey_XXXXX.p8)"
+   ./scripts/iap_preflight_check.sh preflight-report.json
+   ```
+
+**Preflight Report:**
+
+The workflow generates a JSON report (`preflight-report.json`) containing:
+- Timestamp and app metadata
+- Individual check results (PASS/FAIL) for each validation
+- Overall success status
+- Detailed error messages for failed checks
+
+Failed preflight checks will cause the GitHub Actions workflow to exit with a non-zero status, preventing accidental submissions with incomplete IAP configuration.
+
 ## Project Structure
 
 ```text

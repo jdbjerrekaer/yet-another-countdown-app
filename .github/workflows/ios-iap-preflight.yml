@@ -1,0 +1,68 @@
+name: iOS IAP Preflight Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'App version (for reference)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  iap-preflight:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          brew install jq || true
+          pip3 install pyjwt cryptography || true
+
+      - name: Validate IAP Products
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+        run: |
+          chmod +x scripts/iap_preflight_check.sh
+          scripts/iap_preflight_check.sh preflight-report.json
+
+      - name: Upload preflight report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iap-preflight-report
+          path: preflight-report.json
+          retention-days: 30
+
+      - name: Display report summary
+        if: always()
+        run: |
+          if [ -f preflight-report.json ]; then
+            echo "## IAP Preflight Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat preflight-report.json | jq '.' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            OVERALL=$(cat preflight-report.json | jq -r '.overallSuccess')
+            if [ "${OVERALL}" = "true" ]; then
+              echo "✅ **All checks passed**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ **Some checks failed**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Failed Checks:" >> $GITHUB_STEP_SUMMARY
+              cat preflight-report.json | jq -r '.checks[] | select(.status == "FAIL") | "- **\(.check)**: \(.message)"' >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

@@ -8,5 +8,6 @@ class MyViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(CalendarPlugin())
         bridge?.registerPluginInstance(BuildInfoPlugin())
         bridge?.registerPluginInstance(EmojiKeyboardPlugin())
+        bridge?.registerPluginInstance(StoreKitDiagnosticsPlugin())
     }
 }

@@ -5,6 +5,7 @@ import {
   IAPProduct,
 } from "@awesome-cordova-plugins/in-app-purchase-2";
 import { IAP_RETRY, IAP_TIMING } from "./constants";
+import StoreKitDiagnostics, { StoreKitDiagnosticsSnapshot } from "../../plugins/StoreKitDiagnosticsPlugin";
 
 type EntitlementListener = (entitled: boolean) => void;
 
@@ -34,6 +35,8 @@ let testModeForceLoadFailure = false;
 let lastSuccessfulProductLoadAt: number | null = null;
 let lastLoadFailureReason: string | null = null;
 let prefetchPromise: Promise<IAPProduct[]> | null = null;
+let lastDiagnosticsSnapshot: StoreKitDiagnosticsSnapshot | null = null;
+let lastDiagnosticsSnapshotAt: number | null = null;
 
 const setEntitlement = async (
   value: boolean,
@@ -67,6 +70,20 @@ const loadLocalEntitlement = async () => {
 
 const isRemoveAdsProduct = (productId?: string) =>
   Boolean(productId && REMOVE_ADS_PRODUCTS.some((item) => item.id === productId));
+
+const collectDiagnosticsSnapshot = async (context: string): Promise<void> => {
+  if (!Capacitor.isNativePlatform() || isDevBuild) {
+    return;
+  }
+  try {
+    const snapshot = await StoreKitDiagnostics.collectSnapshot();
+    lastDiagnosticsSnapshot = snapshot;
+    lastDiagnosticsSnapshotAt = Date.now();
+    console.log(`[Purchases] Diagnostics snapshot collected (${context}):`, snapshot);
+  } catch (error) {
+    console.warn(`[Purchases] Failed to collect diagnostics snapshot (${context}):`, error);
+  }
+};
 
 const ensureReady = async () => {
   if (!readyPromise) {
@@ -184,8 +201,10 @@ export const PurchasesManager = {
 
         void refreshStore().catch(() => {});
         await ensureReady();
+        void collectDiagnosticsSnapshot("init-success");
       } catch (error) {
         console.warn("[Purchases] Initialization failed", error);
+        void collectDiagnosticsSnapshot("init-failure");
       }
     })();
 
@@ -225,14 +244,17 @@ export const PurchasesManager = {
           lastSuccessfulProductLoadAt = Date.now();
           lastLoadFailureReason = null;
           console.log(`[Purchases] Prefetch loaded ${products.length}/${REMOVE_ADS_PRODUCTS.length} products`);
+          void collectDiagnosticsSnapshot("prefetch-success");
         } else {
           lastLoadFailureReason = "No products loaded after refresh";
+          void collectDiagnosticsSnapshot("prefetch-partial");
         }
 
         return products;
       } catch (err) {
         lastLoadFailureReason = err instanceof Error ? err.message : String(err);
         console.warn("[Purchases] Prefetch failed:", lastLoadFailureReason);
+        void collectDiagnosticsSnapshot("prefetch-failure");
         return [];
       } finally {
         setTimeout(() => {
@@ -319,6 +341,7 @@ export const PurchasesManager = {
         lastSuccessfulProductLoadAt = Date.now();
         lastLoadFailureReason = null;
         console.log(`[Purchases] getProducts: Loaded all ${products.length} products after ${attempt + 1} attempt(s)`);
+        void collectDiagnosticsSnapshot("getProducts-success");
         return products;
       }
       
@@ -335,9 +358,11 @@ export const PurchasesManager = {
     if (finalProducts.length > 0) {
       lastSuccessfulProductLoadAt = Date.now();
       console.log(`[Purchases] getProducts: Returning ${finalProducts.length}/${REMOVE_ADS_PRODUCTS.length} products (partial catalog)`);
+      void collectDiagnosticsSnapshot("getProducts-partial");
     } else {
       lastLoadFailureReason = `Failed to load products after ${maxRetries} attempts`;
       console.warn(`[Purchases] getProducts: ${lastLoadFailureReason}`);
+      void collectDiagnosticsSnapshot("getProducts-failure");
     }
 
     return finalProducts;
@@ -391,15 +416,18 @@ export const PurchasesManager = {
         if (entitlementResolve) {
           entitlementResolve();
         }
+        void collectDiagnosticsSnapshot("purchase-success");
         return;
       }
 
       await entitlementPromise;
       removeListener();
+      void collectDiagnosticsSnapshot("purchase-success");
       return;
     } catch (error) {
       pendingCancelRejectors.delete(productId);
       removeListener();
+      void collectDiagnosticsSnapshot("purchase-failure");
       throw error;
     } finally {
       pendingCancelRejectors.delete(productId);
@@ -409,16 +437,23 @@ export const PurchasesManager = {
   restorePurchases: async (): Promise<boolean> => {
     await PurchasesManager.init();
     if (!Capacitor.isNativePlatform()) return false;
-    await refreshStore();
-    await ensureReady();
-    
-    // Check if any remove ads products are owned after restore
-    const ownedProducts = REMOVE_ADS_PRODUCTS.filter((item) => {
-      const product = InAppPurchase2.get(item.id);
-      return product?.owned === true;
-    });
-    
-    return hasRemoveAdsEntitlement || ownedProducts.length > 0;
+    try {
+      await refreshStore();
+      await ensureReady();
+      
+      // Check if any remove ads products are owned after restore
+      const ownedProducts = REMOVE_ADS_PRODUCTS.filter((item) => {
+        const product = InAppPurchase2.get(item.id);
+        return product?.owned === true;
+      });
+      
+      const restored = hasRemoveAdsEntitlement || ownedProducts.length > 0;
+      void collectDiagnosticsSnapshot(`restore-${restored ? "success" : "none-found"}`);
+      return restored;
+    } catch (error) {
+      void collectDiagnosticsSnapshot("restore-failure");
+      throw error;
+    }
   },
   setDevEntitlement: async (value: boolean, productId?: string) => {
     await setEntitlement(value, true, productId);
@@ -438,6 +473,14 @@ export const PurchasesManager = {
     lastSuccessfulProductLoadAt,
     lastLoadFailureReason,
     storeReady: readyPromise !== null,
+    lastDiagnosticsSnapshotAt,
+    hasDiagnosticsSnapshot: lastDiagnosticsSnapshot !== null,
+    diagnosticsSnapshot: lastDiagnosticsSnapshot ? {
+      timestamp: lastDiagnosticsSnapshot.timestamp,
+      productStatuses: lastDiagnosticsSnapshot.productStatuses,
+      entitlementsCount: lastDiagnosticsSnapshot.currentEntitlements?.length ?? 0,
+      transactionsCount: lastDiagnosticsSnapshot.transactionCount ?? 0,
+    } : null,
   }),
 
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
