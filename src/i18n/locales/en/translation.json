@@ -180,6 +180,7 @@
     "purchaseSuccess": "You're now ad-free.",
     "purchaseError": "Purchase failed. Please try again.",
     "loadError": "Unable to load products right now.",
+    "retry": "Retry",
     "loadingProducts": "Loading offers...",
     "priceFallback": "-",
     "webUnavailable": "Purchases are available on the iOS app.",

@@ -71,7 +71,9 @@ const App = () => {
   const [, setLanguage] = useState(i18n.language);
 
   useEffect(() => {
-    void PurchasesManager.init();
+    void PurchasesManager.init().then(() => {
+      void PurchasesManager.prefetchProducts().catch(() => {});
+    });
   }, []);
 
   useEffect(() => {

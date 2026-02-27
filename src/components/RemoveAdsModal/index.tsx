@@ -121,6 +121,7 @@ export const RemoveAdsModal = ({
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [storeReady, setStoreReady] = useState(false);
   const [purchasePhase, setPurchasePhase] = useState<PurchasePhase>("idle");
+  const loadProductsRef = useRef<(() => Promise<void>) | null>(null);
 
   const handleCloseClick = () => {
     trigger("light");
@@ -166,18 +167,22 @@ export const RemoveAdsModal = ({
         try {
           const ready = await PurchasesManager.isStoreReady();
           setStoreReady(ready);
+          console.log(`[IAP Modal] Store ready: ${ready}, attempt ${attempt + 1}/${maxRetries}`);
 
           if (!ready && !isDevBuild) {
             if (attempt < maxRetries - 1) {
               await new Promise((resolve) => setTimeout(resolve, retryDelay));
               continue;
             }
+            const diagnostics = PurchasesManager.getDiagnostics();
+            console.warn(`[IAP Modal] Store not ready after ${maxRetries} attempts`, diagnostics);
             setError(t("iap.loadError"));
             setLoading(false);
             return;
           }
 
           const loaded = await PurchasesManager.getProducts();
+          console.log(`[IAP Modal] Loaded ${loaded.length} products`);
           setProducts(loaded);
           
           if (loaded.length === 0 && !isDevBuild) {
@@ -185,12 +190,15 @@ export const RemoveAdsModal = ({
               await new Promise((resolve) => setTimeout(resolve, retryDelay));
               continue;
             }
+            const diagnostics = PurchasesManager.getDiagnostics();
+            console.warn(`[IAP Modal] No products loaded after ${maxRetries} attempts`, diagnostics);
             setError(t("iap.loadError"));
-          } else {
+          } else if (loaded.length > 0) {
+            setError(null);
             break;
           }
         } catch (err) {
-          console.warn("[Purchases] Failed to load products", err);
+          console.warn("[IAP Modal] Failed to load products", err);
           if (attempt < maxRetries - 1) {
             await new Promise((resolve) => setTimeout(resolve, retryDelay));
             continue;
@@ -205,6 +213,7 @@ export const RemoveAdsModal = ({
       setLoading(false);
     };
 
+    loadProductsRef.current = loadProducts;
     void loadProducts();
   }, [isOpen, isNative, t, isDevBuild]);
 
@@ -362,10 +371,26 @@ export const RemoveAdsModal = ({
           )}
 
           {error && (
-            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center">
+            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center space-y-3">
               <IonText color="danger" className="text-sm font-medium">
                 {error}
               </IonText>
+              {isNative && (
+                <IonButton
+                  fill="outline"
+                  size="small"
+                  onClick={() => {
+                    setError(null);
+                    setLoading(true);
+                    if (loadProductsRef.current) {
+                      void loadProductsRef.current();
+                    }
+                  }}
+                  className="mt-2"
+                >
+                  {t("iap.retry") || "Retry"}
+                </IonButton>
+              )}
             </div>
           )}
 

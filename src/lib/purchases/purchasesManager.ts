@@ -31,6 +31,9 @@ let initPromise: Promise<void> | null = null;
 const entitlementListeners = new Set<EntitlementListener>();
 const pendingCancelRejectors = new Map<string, (error: Error) => void>();
 let testModeForceLoadFailure = false;
+let lastSuccessfulProductLoadAt: number | null = null;
+let lastLoadFailureReason: string | null = null;
+let prefetchPromise: Promise<IAPProduct[]> | null = null;
 
 const setEntitlement = async (
   value: boolean,
@@ -193,6 +196,54 @@ export const PurchasesManager = {
     isDevBuild = isDev;
   },
 
+  prefetchProducts: async (): Promise<IAPProduct[]> => {
+    if (prefetchPromise) return prefetchPromise;
+    
+    prefetchPromise = (async () => {
+      await PurchasesManager.init();
+      if (!Capacitor.isNativePlatform() || isDevBuild) {
+        return [];
+      }
+
+      try {
+        await ensureReady();
+        
+        try {
+          await refreshStore();
+          await new Promise((resolve) => setTimeout(resolve, IAP_TIMING.postRefreshDelayMs));
+        } catch (err) {
+          lastLoadFailureReason = err instanceof Error ? err.message : String(err);
+          console.warn("[Purchases] Prefetch refresh failed:", lastLoadFailureReason);
+        }
+
+        const products = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
+          (product): product is IAPProduct =>
+            !!product && product.loaded && product.valid && Boolean(product.price),
+        );
+
+        if (products.length > 0) {
+          lastSuccessfulProductLoadAt = Date.now();
+          lastLoadFailureReason = null;
+          console.log(`[Purchases] Prefetch loaded ${products.length}/${REMOVE_ADS_PRODUCTS.length} products`);
+        } else {
+          lastLoadFailureReason = "No products loaded after refresh";
+        }
+
+        return products;
+      } catch (err) {
+        lastLoadFailureReason = err instanceof Error ? err.message : String(err);
+        console.warn("[Purchases] Prefetch failed:", lastLoadFailureReason);
+        return [];
+      } finally {
+        setTimeout(() => {
+          prefetchPromise = null;
+        }, 60000);
+      }
+    })();
+
+    return prefetchPromise;
+  },
+
   getProducts: async (): Promise<IAPProduct[]> => {
     await PurchasesManager.init();
     if (!Capacitor.isNativePlatform()) {
@@ -235,12 +286,22 @@ export const PurchasesManager = {
         !!product && product.loaded && product.valid && Boolean(product.price),
     );
     
+    if (validProductsBeforeRefresh.length >= REMOVE_ADS_PRODUCTS.length) {
+      console.log(`[Purchases] getProducts: ${validProductsBeforeRefresh.length} products ready immediately`);
+      return validProductsBeforeRefresh;
+    }
+
+    if (validProductsBeforeRefresh.length > 0) {
+      console.log(`[Purchases] getProducts: ${validProductsBeforeRefresh.length}/${REMOVE_ADS_PRODUCTS.length} products available, refreshing for remainder`);
+    }
+    
     if (validProductsBeforeRefresh.length < REMOVE_ADS_PRODUCTS.length) {
       try {
         await refreshStore();
         await new Promise((resolve) => setTimeout(resolve, IAP_TIMING.postRefreshDelayMs));
-      } catch {
-        // Continue anyway if refresh fails
+      } catch (err) {
+        lastLoadFailureReason = err instanceof Error ? err.message : String(err);
+        console.warn("[Purchases] Refresh failed:", lastLoadFailureReason);
       }
     }
     
@@ -255,6 +316,9 @@ export const PurchasesManager = {
       );
       
       if (products.length >= REMOVE_ADS_PRODUCTS.length) {
+        lastSuccessfulProductLoadAt = Date.now();
+        lastLoadFailureReason = null;
+        console.log(`[Purchases] getProducts: Loaded all ${products.length} products after ${attempt + 1} attempt(s)`);
         return products;
       }
       
@@ -263,11 +327,20 @@ export const PurchasesManager = {
       }
     }
     
-    const finalProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
-    return finalProducts.filter(
+    const finalProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
       (product): product is IAPProduct =>
         !!product && product.loaded && product.valid && Boolean(product.price),
     );
+
+    if (finalProducts.length > 0) {
+      lastSuccessfulProductLoadAt = Date.now();
+      console.log(`[Purchases] getProducts: Returning ${finalProducts.length}/${REMOVE_ADS_PRODUCTS.length} products (partial catalog)`);
+    } else {
+      lastLoadFailureReason = `Failed to load products after ${maxRetries} attempts`;
+      console.warn(`[Purchases] getProducts: ${lastLoadFailureReason}`);
+    }
+
+    return finalProducts;
   },
 
   purchaseRemoveAds: async (productId: string) => {
@@ -359,6 +432,12 @@ export const PurchasesManager = {
 
   getTestMode: () => ({
     forceLoadFailure: testModeForceLoadFailure,
+  }),
+
+  getDiagnostics: () => ({
+    lastSuccessfulProductLoadAt,
+    lastLoadFailureReason,
+    storeReady: readyPromise !== null,
   }),
 
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
