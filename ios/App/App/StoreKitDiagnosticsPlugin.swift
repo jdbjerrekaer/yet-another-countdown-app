@@ -85,7 +85,7 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
                 entitlement["productId"] = transaction.productID
                 entitlement["transactionId"] = String(transaction.id)
                 entitlement["purchaseDate"] = ISO8601DateFormatter().string(from: transaction.purchaseDate)
-                entitlement["transactionState"] = String(describing: transaction.transactionState)
+                entitlement["transactionState"] = "verified"
                 if let revocationDate = transaction.revocationDate {
                     entitlement["revocationDate"] = ISO8601DateFormatter().string(from: revocationDate)
                 }
@@ -116,7 +116,7 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
                 transactionData["productId"] = transaction.productID
                 transactionData["transactionId"] = String(transaction.id)
                 transactionData["purchaseDate"] = ISO8601DateFormatter().string(from: transaction.purchaseDate)
-                transactionData["transactionState"] = String(describing: transaction.transactionState)
+                transactionData["transactionState"] = "verified"
                 if let revocationDate = transaction.revocationDate {
                     transactionData["revocationDate"] = ISO8601DateFormatter().string(from: revocationDate)
                 }
@@ -144,7 +144,7 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
                     status["displayName"] = product.displayName
                     status["description"] = product.description
                     status["price"] = product.price.description
-                    status["currencyCode"] = product.priceLocale?.currencyCode ?? "unknown"
+                    status["currencyCode"] = product.priceFormatStyle.currencyCode
                     
                     if let subscription = product.subscription {
                         status["subscriptionInfo"] = [
