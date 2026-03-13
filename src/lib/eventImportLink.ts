@@ -15,6 +15,12 @@ export interface EventImportPayload {
 const SCHEME = 'countdownapp';
 const VERSION = 1;
 
+type NativeCapacitorWindow = Window & {
+  Capacitor?: {
+    isNativePlatform?: () => boolean;
+  };
+};
+
 /**
  * Encodes an event payload into a shareable import link
  * Automatically detects platform and uses the appropriate URL format:
@@ -46,7 +52,7 @@ export function encodeEventImportLink(
   // Check for Capacitor's native platform indicator
   const isNativePlatform = forceNative || 
     (typeof window !== 'undefined' && 
-     (window as any).Capacitor?.isNativePlatform?.() === true);
+     (window as NativeCapacitorWindow).Capacitor?.isNativePlatform?.() === true);
   
   if (isNativePlatform) {
     // Use custom scheme for native apps (works with AirDrop, Messages, etc.)

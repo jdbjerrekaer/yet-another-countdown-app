@@ -5,6 +5,9 @@ BUNDLE_ID="${ASC_BUNDLE_ID:-com.jonatanbjerrekaer.countdown}"
 PRODUCT_IDS=("com.countdown.app.remove_ads" "com.countdown.app.remove_ads_supporter")
 REPORT_FILE="${1:-preflight-report.json}"
 CHECKS_FILE=$(mktemp)
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+APP_SCHEME_FILE="${REPO_ROOT}/ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme"
+PROJECT_FILE="${REPO_ROOT}/ios/App/App.xcodeproj/project.pbxproj"
 echo '[]' > "${CHECKS_FILE}"
 
 add_check() {
@@ -12,6 +15,24 @@ add_check() {
   jq --argjson item "${json}" '. += [$item]' "${CHECKS_FILE}" > "${CHECKS_FILE}.tmp" \
     && mv "${CHECKS_FILE}.tmp" "${CHECKS_FILE}"
 }
+
+OVERALL_SUCCESS=true
+
+echo "Checking shared scheme for local StoreKit configuration..."
+if grep -q "StoreKitConfigurationFileReference" "${APP_SCHEME_FILE}"; then
+  add_check '{"check":"sharedSchemeStoreKit","status":"FAIL","message":"Shared App scheme still references a local StoreKit configuration file"}'
+  OVERALL_SUCCESS=false
+else
+  add_check '{"check":"sharedSchemeStoreKit","status":"PASS","message":"Shared App scheme does not reference a local StoreKit configuration file"}'
+fi
+
+echo "Checking app targets for bundled StoreKit configuration..."
+if grep -q "StoreKit.storekit in Resources" "${PROJECT_FILE}"; then
+  add_check '{"check":"bundledStoreKit","status":"FAIL","message":"StoreKit.storekit is still bundled in app or widget resources"}'
+  OVERALL_SUCCESS=false
+else
+  add_check '{"check":"bundledStoreKit","status":"PASS","message":"StoreKit.storekit is not bundled in app or widget resources"}'
+fi
 
 if [ -z "${ASC_KEY_ID:-}" ] || [ -z "${ASC_ISSUER_ID:-}" ] || [ -z "${ASC_KEY_CONTENT:-}" ]; then
   echo "Error: Required environment variables not set:"
@@ -73,8 +94,6 @@ IAP_RESPONSE=$(curl -s -X GET \
   "${API_BASE}/apps/${APP_ID}/inAppPurchasesV2?limit=200" \
   -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json")
-
-OVERALL_SUCCESS=true
 
 for PRODUCT_ID in "${PRODUCT_IDS[@]}"; do
   PRODUCT=$(echo "${IAP_RESPONSE}" | jq -c \

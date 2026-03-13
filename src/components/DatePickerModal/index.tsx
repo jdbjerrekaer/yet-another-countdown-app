@@ -53,6 +53,24 @@ function formatDateForDatetime(date: Date | undefined): string | undefined {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message.toLowerCase();
+  }
+  return '';
+}
+
+function isWebShareAbort(error: unknown): boolean {
+  return error instanceof DOMException
+    ? error.name === 'AbortError'
+    : error instanceof Error && error.name === 'AbortError';
+}
+
+function getDatetimeValue(event: CustomEvent<{ value?: string | string[] | null }>): string | null {
+  const value = event.detail.value;
+  return typeof value === 'string' ? value : null;
+}
+
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -708,8 +726,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             url: importLink,
             dialogTitle: t('modal.shareEvent'),
           });
-        } catch (shareError: any) {
-          const message = shareError?.message?.toLowerCase() || '';
+        } catch (shareError: unknown) {
+          const message = getErrorMessage(shareError);
           if (message.includes('cancel') || message.includes('dismiss')) {
             return;
           }
@@ -724,9 +742,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               text: `${emoji} ${title}`,
               url: importLink,
             });
-          } catch (shareError: any) {
+          } catch (shareError: unknown) {
             // User cancelled or error occurred
-            if (shareError.name !== 'AbortError') {
+            if (!isWebShareAbort(shareError)) {
               // Only show error if it wasn't a cancellation
               throw shareError;
             }
@@ -972,7 +990,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       value={formatDateForDatetime(date)}
                       onIonChange={(e) => {
                         trigger('medium');
-                        const value = (e.detail as any).value;
+                        const value = getDatetimeValue(e);
                         if (value && typeof value === 'string') {
                           // Parse the date string as local date (YYYY-MM-DD format)
                           const [year, month, day] = value.split('T')[0].split('-').map(Number);

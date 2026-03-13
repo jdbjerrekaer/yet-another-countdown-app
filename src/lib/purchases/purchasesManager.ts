@@ -1,13 +1,60 @@
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import {
+  IAPError,
   InAppPurchase2,
   IAPProduct,
 } from "@awesome-cordova-plugins/in-app-purchase-2";
-import { IAP_RETRY, IAP_TIMING } from "./constants";
-import StoreKitDiagnostics, { StoreKitDiagnosticsSnapshot } from "../../plugins/StoreKitDiagnosticsPlugin";
+import { IAP_TIMING } from "./constants";
+import StoreKitDiagnostics, {
+  StoreKitDiagnosticsSnapshot,
+} from "../../plugins/StoreKitDiagnosticsPlugin";
 
 type EntitlementListener = (entitled: boolean) => void;
+type CatalogListener = (result: CatalogLoadResult) => void;
+type CatalogStatus = "loading" | "loaded" | "partial" | "unavailable";
+type CatalogProductState = "pending" | "loaded" | "invalid" | "error";
+
+type CatalogLoadOptions = {
+  reason?: string;
+  force?: boolean;
+  syncBeforeRefresh?: boolean;
+};
+
+type CatalogProductDiagnostics = {
+  state: CatalogProductState;
+  lastEvent: string | null;
+  message: string | null;
+  code: number | null;
+  updatedAt: number | null;
+};
+
+export interface CatalogLoadResult {
+  status: CatalogStatus;
+  products: IAPProduct[];
+  unavailableProductIds: string[];
+  errorCode: number | null;
+  errorMessage: string | null;
+  diagnostics: {
+    storeReady: boolean;
+    syncError: string | null;
+    loadStartedAt: number | null;
+    loadCompletedAt: number | null;
+    lastSuccessfulProductLoadAt: number | null;
+    lastLoadFailureReason: string | null;
+    lastStoreErrorCode: number | null;
+    lastStoreErrorMessage: string | null;
+    productStates: Record<string, CatalogProductDiagnostics>;
+    lastDiagnosticsSnapshotAt: number | null;
+    hasDiagnosticsSnapshot: boolean;
+    diagnosticsSnapshot: {
+      timestamp: string;
+      productStatuses: StoreKitDiagnosticsSnapshot["productStatuses"];
+      entitlementsCount: number;
+      transactionsCount: number;
+    } | null;
+  };
+}
 
 const PREF_REMOVE_ADS = "iap_remove_ads_entitlement";
 const PREF_REMOVE_ADS_PRODUCT_ID = "iap_remove_ads_product_id";
@@ -21,22 +68,82 @@ const REMOVE_ADS_PRODUCTS = [
     id: "com.countdown.app.remove_ads_supporter",
     tier: "supporter",
   },
-];
+] as const;
+
+const PRODUCT_IDS = REMOVE_ADS_PRODUCTS.map((product) => product.id);
+
+const defaultProductDiagnostics = (): Record<string, CatalogProductDiagnostics> =>
+  Object.fromEntries(
+    PRODUCT_IDS.map((productId) => [
+      productId,
+      {
+        state: "pending" as const,
+        lastEvent: null,
+        message: null,
+        code: null,
+        updatedAt: null,
+      },
+    ]),
+  );
 
 let isInitialized = false;
+let listenersRegistered = false;
 let isDevBuild = false;
 let hasRemoveAdsEntitlement = false;
+let initPromise: Promise<void> | null = null;
 let readyPromise: Promise<void> | null = null;
 let readyResolve: (() => void) | null = null;
-let initPromise: Promise<void> | null = null;
+let storeReady = false;
 const entitlementListeners = new Set<EntitlementListener>();
+const catalogListeners = new Set<CatalogListener>();
 const pendingCancelRejectors = new Map<string, (error: Error) => void>();
 let testModeForceLoadFailure = false;
 let lastSuccessfulProductLoadAt: number | null = null;
 let lastLoadFailureReason: string | null = null;
-let prefetchPromise: Promise<IAPProduct[]> | null = null;
 let lastDiagnosticsSnapshot: StoreKitDiagnosticsSnapshot | null = null;
 let lastDiagnosticsSnapshotAt: number | null = null;
+let lastStoreErrorCode: number | null = null;
+let lastStoreErrorMessage: string | null = null;
+let lastSyncError: string | null = null;
+let catalogProductStates = defaultProductDiagnostics();
+let catalogLoadToken = 0;
+let catalogLoadPromise: Promise<CatalogLoadResult> | null = null;
+let resolveCatalogLoad: ((result: CatalogLoadResult) => void) | null = null;
+let catalogLoadTimeout: ReturnType<typeof setTimeout> | null = null;
+let catalogSettleTimeout: ReturnType<typeof setTimeout> | null = null;
+let catalogLoadStartedAt: number | null = null;
+let catalogLoadCompletedAt: number | null = null;
+let catalogRefreshInFlight = false;
+let catalogLoadResult: CatalogLoadResult = {
+  status: "loading",
+  products: [],
+  unavailableProductIds: [...PRODUCT_IDS],
+  errorCode: null,
+  errorMessage: null,
+  diagnostics: {
+    storeReady: false,
+    syncError: null,
+    loadStartedAt: null,
+    loadCompletedAt: null,
+    lastSuccessfulProductLoadAt: null,
+    lastLoadFailureReason: null,
+    lastStoreErrorCode: null,
+    lastStoreErrorMessage: null,
+    productStates: defaultProductDiagnostics(),
+    lastDiagnosticsSnapshotAt: null,
+    hasDiagnosticsSnapshot: false,
+    diagnosticsSnapshot: null,
+  },
+};
+
+const notifyCatalogListeners = () => {
+  catalogListeners.forEach((listener) => listener(catalogLoadResult));
+};
+
+const setCatalogLoadResult = (result: CatalogLoadResult) => {
+  catalogLoadResult = result;
+  notifyCatalogListeners();
+};
 
 const setEntitlement = async (
   value: boolean,
@@ -69,7 +176,24 @@ const loadLocalEntitlement = async () => {
 };
 
 const isRemoveAdsProduct = (productId?: string) =>
-  Boolean(productId && REMOVE_ADS_PRODUCTS.some((item) => item.id === productId));
+  Boolean(productId && PRODUCT_IDS.includes(productId));
+
+const isIAPProduct = (value: unknown): value is IAPProduct =>
+  Boolean(
+    value &&
+      typeof value === "object" &&
+      "id" in value &&
+      "state" in value &&
+      "loaded" in value,
+  );
+
+const isIAPError = (value: unknown): value is IAPError =>
+  Boolean(
+    value &&
+      typeof value === "object" &&
+      "code" in value &&
+      "message" in value,
+  );
 
 const collectDiagnosticsSnapshot = async (context: string): Promise<void> => {
   if (!Capacitor.isNativePlatform() || isDevBuild) {
@@ -81,21 +205,166 @@ const collectDiagnosticsSnapshot = async (context: string): Promise<void> => {
     lastDiagnosticsSnapshotAt = Date.now();
     console.log(`[Purchases] Diagnostics snapshot collected (${context}):`, snapshot);
   } catch (error) {
-    console.warn(`[Purchases] Failed to collect diagnostics snapshot (${context}):`, error);
+    console.warn(
+      `[Purchases] Failed to collect diagnostics snapshot (${context}):`,
+      error,
+    );
   }
 };
 
-const ensureReady = async () => {
+const clearCatalogTimers = () => {
+  if (catalogLoadTimeout) {
+    clearTimeout(catalogLoadTimeout);
+    catalogLoadTimeout = null;
+  }
+  if (catalogSettleTimeout) {
+    clearTimeout(catalogSettleTimeout);
+    catalogSettleTimeout = null;
+  }
+};
+
+const createMockProduct = (
+  product: (typeof REMOVE_ADS_PRODUCTS)[number],
+): IAPProduct => ({
+  id: product.id,
+  alias: undefined,
+  type: InAppPurchase2.NON_CONSUMABLE,
+  state: InAppPurchase2.VALID,
+  title: "Remove Ads",
+  description:
+    product.tier === "supporter"
+      ? "Ad-free plus a thank you for supporting the app."
+      : "Remove banners and interstitials.",
+  priceMicros: product.tier === "supporter" ? 4990000 : 2990000,
+  price: product.tier === "supporter" ? "EUR 4.99" : "EUR 2.99",
+  currency: "EUR",
+  loaded: true,
+  valid: true,
+  canPurchase: true,
+  owned: false,
+} as IAPProduct);
+
+const getAvailableProducts = (): IAPProduct[] =>
+  PRODUCT_IDS.map((productId) => InAppPurchase2.get(productId)).filter(
+    (product): product is IAPProduct =>
+      Boolean(product && product.loaded && product.valid && product.price),
+  );
+
+const getDiagnosticsSnapshotSummary = () =>
+  lastDiagnosticsSnapshot
+    ? {
+        timestamp: lastDiagnosticsSnapshot.timestamp,
+        productStatuses: lastDiagnosticsSnapshot.productStatuses,
+        entitlementsCount: lastDiagnosticsSnapshot.currentEntitlements?.length ?? 0,
+        transactionsCount: lastDiagnosticsSnapshot.transactionCount ?? 0,
+      }
+    : null;
+
+const buildCatalogLoadResult = (
+  statusOverride?: CatalogStatus,
+): CatalogLoadResult => {
+  const products = isDevBuild
+    ? REMOVE_ADS_PRODUCTS.map((product) => createMockProduct(product))
+    : getAvailableProducts();
+
+  const unavailableProductIds = isDevBuild
+    ? []
+    : PRODUCT_IDS.filter((productId) => !products.some((product) => product.id === productId));
+
+  const status =
+    statusOverride ??
+    (products.length === PRODUCT_IDS.length
+      ? "loaded"
+      : products.length > 0
+        ? "partial"
+        : "unavailable");
+
+  return {
+    status,
+    products,
+    unavailableProductIds,
+    errorCode: lastStoreErrorCode,
+    errorMessage: lastStoreErrorMessage ?? lastSyncError ?? lastLoadFailureReason,
+    diagnostics: {
+      storeReady,
+      syncError: lastSyncError,
+      loadStartedAt: catalogLoadStartedAt,
+      loadCompletedAt: catalogLoadCompletedAt,
+      lastSuccessfulProductLoadAt,
+      lastLoadFailureReason,
+      lastStoreErrorCode,
+      lastStoreErrorMessage,
+      productStates: { ...catalogProductStates },
+      lastDiagnosticsSnapshotAt,
+      hasDiagnosticsSnapshot: lastDiagnosticsSnapshot !== null,
+      diagnosticsSnapshot: getDiagnosticsSnapshotSummary(),
+    },
+  };
+};
+
+const updateProductDiagnostics = (
+  productId: string,
+  state: CatalogProductState,
+  eventName: string,
+  message: string | null = null,
+  code: number | null = null,
+) => {
+  if (!isRemoveAdsProduct(productId)) {
+    return;
+  }
+  catalogProductStates = {
+    ...catalogProductStates,
+    [productId]: {
+      state,
+      lastEvent: eventName,
+      message,
+      code,
+      updatedAt: Date.now(),
+    },
+  };
+};
+
+const syncProductDiagnosticsFromStore = () => {
+  PRODUCT_IDS.forEach((productId) => {
+    const product = InAppPurchase2.get(productId);
+    if (!product) {
+      return;
+    }
+    if (product.loaded && product.valid && product.price) {
+      updateProductDiagnostics(productId, "loaded", "store-snapshot");
+      return;
+    }
+    if (product.loaded && !product.valid) {
+      updateProductDiagnostics(
+        productId,
+        "invalid",
+        "store-snapshot",
+        "Product marked invalid by StoreKit",
+      );
+    }
+  });
+};
+
+const resolveReady = () => {
+  storeReady = true;
+  if (readyResolve) {
+    readyResolve();
+    readyResolve = null;
+  }
+};
+
+const ensureStoreReady = async () => {
   if (!readyPromise) {
     return;
   }
-  const startTime = Date.now();
-  await Promise.race([
-    readyPromise,
-    new Promise<void>((resolve) => setTimeout(resolve, IAP_TIMING.ensureReadyTimeoutMs)),
-  ]);
-  const elapsed = Date.now() - startTime;
-  if (elapsed >= IAP_TIMING.ensureReadyTimeoutMs) {
+  try {
+    await Promise.race([
+      readyPromise,
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error("StoreReadyTimeout")), IAP_TIMING.storeReadyTimeoutMs),
+      ),
+    ]);
+  } catch {
     return;
   }
 };
@@ -103,19 +372,232 @@ const ensureReady = async () => {
 const refreshStore = async () => {
   const refreshResult = InAppPurchase2.refresh();
   await new Promise<void>((resolve, reject) => {
-    refreshResult.completed(() => {
-      resolve();
+    refreshResult.completed(() => resolve());
+    refreshResult.finished(() => resolve());
+    refreshResult.cancelled(() => resolve());
+    refreshResult.failed(() => reject(new Error("Store refresh failed")));
+  });
+};
+
+const completeCatalogLoad = (statusOverride?: CatalogStatus, context = "load-complete") => {
+  clearCatalogTimers();
+  catalogRefreshInFlight = false;
+  catalogLoadCompletedAt = Date.now();
+  syncProductDiagnosticsFromStore();
+
+  if (testModeForceLoadFailure && !isDevBuild) {
+    lastLoadFailureReason = "Test mode forced catalog load failure";
+  }
+
+  const result = buildCatalogLoadResult(statusOverride);
+
+  if (result.products.length > 0) {
+    lastSuccessfulProductLoadAt = Date.now();
+    if (result.status === "loaded") {
+      lastLoadFailureReason = null;
+      lastStoreErrorCode = null;
+      lastStoreErrorMessage = null;
+      lastSyncError = null;
+    } else {
+      lastLoadFailureReason = `Only ${result.products.length}/${PRODUCT_IDS.length} offers loaded`;
+    }
+  } else if (!lastLoadFailureReason) {
+    lastLoadFailureReason =
+      result.errorMessage ??
+      `Unable to load ${PRODUCT_IDS.length} configured products`;
+  }
+
+  const finalResult = buildCatalogLoadResult(statusOverride);
+  setCatalogLoadResult(finalResult);
+
+  if (resolveCatalogLoad) {
+    resolveCatalogLoad(finalResult);
+  }
+  resolveCatalogLoad = null;
+  catalogLoadPromise = null;
+
+  void collectDiagnosticsSnapshot(
+    `${context}-${finalResult.status === "loaded" ? "success" : finalResult.status}`,
+  );
+};
+
+const queueCatalogSettle = (loadToken: number, reason: string) => {
+  if (!catalogLoadPromise || loadToken !== catalogLoadToken) {
+    return;
+  }
+  if (catalogSettleTimeout) {
+    clearTimeout(catalogSettleTimeout);
+  }
+  catalogSettleTimeout = setTimeout(() => {
+    if (loadToken !== catalogLoadToken || !catalogLoadPromise) {
+      return;
+    }
+    syncProductDiagnosticsFromStore();
+    const resolvedCount = Object.values(catalogProductStates).filter(
+      (snapshot) => snapshot.state !== "pending",
+    ).length;
+    const hasCatalogSignal =
+      storeReady ||
+      getAvailableProducts().length > 0 ||
+      Object.values(catalogProductStates).some((snapshot) => snapshot.state !== "pending") ||
+      Boolean(lastStoreErrorMessage);
+
+    if (resolvedCount === PRODUCT_IDS.length) {
+      completeCatalogLoad(undefined, reason);
+      return;
+    }
+
+    if (!catalogRefreshInFlight && hasCatalogSignal) {
+      completeCatalogLoad(undefined, reason);
+    }
+  }, IAP_TIMING.catalogSettleDebounceMs);
+};
+
+const resetCatalogDiagnostics = () => {
+  lastStoreErrorCode = null;
+  lastStoreErrorMessage = null;
+  lastSyncError = null;
+  lastLoadFailureReason = null;
+  catalogProductStates = defaultProductDiagnostics();
+};
+
+const registerCatalogListeners = () => {
+  if (listenersRegistered || !Capacitor.isNativePlatform()) {
+    return;
+  }
+
+  listenersRegistered = true;
+  readyPromise =
+    readyPromise ||
+    new Promise<void>((resolve) => {
+      readyResolve = resolve;
     });
-    refreshResult.finished(() => {
-      resolve();
+
+  InAppPurchase2.ready(() => {
+    resolveReady();
+    queueCatalogSettle(catalogLoadToken, "store-ready");
+  });
+
+  InAppPurchase2.error((errorPayload: unknown) => {
+    if (isIAPError(errorPayload)) {
+      lastStoreErrorCode = errorPayload.code;
+      lastStoreErrorMessage = errorPayload.message;
+      lastLoadFailureReason = errorPayload.message;
+      console.warn("[Purchases] Store error", errorPayload);
+      queueCatalogSettle(catalogLoadToken, "store-error");
+    }
+  });
+
+  PRODUCT_IDS.forEach((productId) => {
+    const events = InAppPurchase2.when(productId);
+
+    events.loaded((payload: unknown) => {
+      if (!isIAPProduct(payload)) {
+        return;
+      }
+      updateProductDiagnostics(
+        productId,
+        payload.valid ? "loaded" : "invalid",
+        "loaded",
+        payload.valid ? null : "Product marked invalid by StoreKit",
+      );
+      queueCatalogSettle(catalogLoadToken, "product-loaded");
     });
-    refreshResult.cancelled(() => {
-      resolve();
+
+    events.updated((payload: unknown) => {
+      if (!isIAPProduct(payload)) {
+        return;
+      }
+      updateProductDiagnostics(
+        productId,
+        payload.valid && payload.price ? "loaded" : payload.loaded ? "invalid" : "pending",
+        "updated",
+      );
+      queueCatalogSettle(catalogLoadToken, "product-updated");
     });
-    refreshResult.failed(() => {
-      reject(new Error("Store refresh failed"));
+
+    events.valid((payload: unknown) => {
+      if (!isIAPProduct(payload)) {
+        return;
+      }
+      updateProductDiagnostics(productId, "loaded", "valid");
+      queueCatalogSettle(catalogLoadToken, "product-valid");
+    });
+
+    events.invalid((payload: unknown) => {
+      if (!isIAPProduct(payload)) {
+        return;
+      }
+      updateProductDiagnostics(
+        productId,
+        "invalid",
+        "invalid",
+        "Product unavailable from App Store",
+      );
+      queueCatalogSettle(catalogLoadToken, "product-invalid");
+    });
+
+    events.error((payload: unknown) => {
+      if (!isIAPError(payload)) {
+        return;
+      }
+      updateProductDiagnostics(
+        productId,
+        "error",
+        "error",
+        payload.message,
+        payload.code,
+      );
+      lastStoreErrorCode = payload.code;
+      lastStoreErrorMessage = payload.message;
+      lastLoadFailureReason = payload.message;
+      queueCatalogSettle(catalogLoadToken, "product-error");
+    });
+
+    events.approved((payload: unknown) => {
+      if (!isIAPProduct(payload) || !isRemoveAdsProduct(payload.id)) {
+        return;
+      }
+      void setEntitlement(true, !isDevBuild, payload.id);
+      payload.finish();
+    });
+
+    events.owned((payload: unknown) => {
+      if (!isIAPProduct(payload) || !isRemoveAdsProduct(payload.id)) {
+        return;
+      }
+      void setEntitlement(true, !isDevBuild, payload.id);
+    });
+
+    events.refunded((payload: unknown) => {
+      if (!isIAPProduct(payload) || !isRemoveAdsProduct(payload.id)) {
+        return;
+      }
+      void setEntitlement(false);
+    });
+
+    events.cancelled((payload: unknown) => {
+      if (!isIAPProduct(payload) || !isRemoveAdsProduct(payload.id)) {
+        return;
+      }
+      const rejectPending = pendingCancelRejectors.get(payload.id);
+      if (rejectPending) {
+        rejectPending(new Error("PaymentCancelled"));
+        pendingCancelRejectors.delete(payload.id);
+      }
     });
   });
+};
+
+const cancelActiveCatalogLoad = () => {
+  if (!catalogLoadPromise || !resolveCatalogLoad) {
+    clearCatalogTimers();
+    return;
+  }
+  clearCatalogTimers();
+  resolveCatalogLoad(buildCatalogLoadResult());
+  resolveCatalogLoad = null;
+  catalogLoadPromise = null;
 };
 
 export const PurchasesManager = {
@@ -136,7 +618,9 @@ export const PurchasesManager = {
       if (!Capacitor.isNativePlatform()) {
         return;
       }
+
       if (isDevBuild) {
+        setCatalogLoadResult(buildCatalogLoadResult("loaded"));
         return;
       }
 
@@ -148,62 +632,12 @@ export const PurchasesManager = {
             type: InAppPurchase2.NON_CONSUMABLE,
           })),
         );
-
-        readyPromise =
-          readyPromise ||
-          new Promise<void>((resolve) => {
-            readyResolve = resolve;
-          });
-
-        InAppPurchase2.ready(() => {
-          if (readyResolve) {
-            readyResolve();
-            readyResolve = null;
-          }
-        });
-
-        (InAppPurchase2 as unknown as { when: () => { approved: (cb: (p: IAPProduct) => void) => void } })
-          .when()
-          .approved((product) => {
-          if (isRemoveAdsProduct(product.id)) {
-            void setEntitlement(true, !isDevBuild, product.id);
-            product.finish();
-          }
-        });
-
-        (InAppPurchase2 as unknown as { when: () => { owned: (cb: (p: IAPProduct) => void) => void } })
-          .when()
-          .owned((product) => {
-          if (isRemoveAdsProduct(product.id)) {
-            void setEntitlement(true, !isDevBuild, product.id);
-          }
-        });
-
-        (InAppPurchase2 as unknown as { when: () => { refunded: (cb: (p: IAPProduct) => void) => void } })
-          .when()
-          .refunded((product) => {
-          if (isRemoveAdsProduct(product.id)) {
-            void setEntitlement(false);
-          }
-        });
-
-        (InAppPurchase2 as unknown as { when: () => { cancelled?: (cb: (p: IAPProduct) => void) => void } })
-          .when()
-          .cancelled?.((product) => {
-          if (isRemoveAdsProduct(product.id)) {
-            const rejectPending = pendingCancelRejectors.get(product.id);
-            if (rejectPending) {
-              rejectPending(new Error("PaymentCancelled"));
-              pendingCancelRejectors.delete(product.id);
-            }
-          }
-        });
-
-        void refreshStore().catch(() => {});
-        await ensureReady();
-        void collectDiagnosticsSnapshot("init-success");
+        registerCatalogListeners();
       } catch (error) {
         console.warn("[Purchases] Initialization failed", error);
+        lastLoadFailureReason =
+          error instanceof Error ? error.message : String(error);
+        setCatalogLoadResult(buildCatalogLoadResult("unavailable"));
         void collectDiagnosticsSnapshot("init-failure");
       }
     })();
@@ -213,159 +647,141 @@ export const PurchasesManager = {
 
   setDevBuild: (isDev: boolean) => {
     isDevBuild = isDev;
-  },
-
-  prefetchProducts: async (): Promise<IAPProduct[]> => {
-    if (prefetchPromise) return prefetchPromise;
-    
-    prefetchPromise = (async () => {
-      await PurchasesManager.init();
-      if (!Capacitor.isNativePlatform() || isDevBuild) {
-        return [];
-      }
-
-      try {
-        await ensureReady();
-        
-        try {
-          await refreshStore();
-          await new Promise((resolve) => setTimeout(resolve, IAP_TIMING.postRefreshDelayMs));
-        } catch (err) {
-          lastLoadFailureReason = err instanceof Error ? err.message : String(err);
-          console.warn("[Purchases] Prefetch refresh failed:", lastLoadFailureReason);
-        }
-
-        const products = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
-          (product): product is IAPProduct =>
-            !!product && product.loaded && product.valid && Boolean(product.price),
-        );
-
-        if (products.length > 0) {
-          lastSuccessfulProductLoadAt = Date.now();
-          lastLoadFailureReason = null;
-          console.log(`[Purchases] Prefetch loaded ${products.length}/${REMOVE_ADS_PRODUCTS.length} products`);
-          void collectDiagnosticsSnapshot("prefetch-success");
-        } else {
-          lastLoadFailureReason = "No products loaded after refresh";
-          void collectDiagnosticsSnapshot("prefetch-partial");
-        }
-
-        return products;
-      } catch (err) {
-        lastLoadFailureReason = err instanceof Error ? err.message : String(err);
-        console.warn("[Purchases] Prefetch failed:", lastLoadFailureReason);
-        void collectDiagnosticsSnapshot("prefetch-failure");
-        return [];
-      } finally {
-        setTimeout(() => {
-          prefetchPromise = null;
-        }, 60000);
-      }
-    })();
-
-    return prefetchPromise;
-  },
-
-  getProducts: async (): Promise<IAPProduct[]> => {
-    await PurchasesManager.init();
-    if (!Capacitor.isNativePlatform()) {
-      return [];
+    if (isDevBuild) {
+      cancelActiveCatalogLoad();
+      resetCatalogDiagnostics();
+      setCatalogLoadResult(buildCatalogLoadResult("loaded"));
+      return;
     }
+    if (isInitialized && Capacitor.isNativePlatform()) {
+      void PurchasesManager.loadCatalog({
+        reason: "dev-build-disabled",
+        force: true,
+      });
+    }
+  },
 
-    if (testModeForceLoadFailure && !isDevBuild) {
-      console.warn("[Purchases] TEST MODE: Forcing load failure");
-      return [];
+  loadCatalog: async ({
+    reason = "catalog-load",
+    force = false,
+    syncBeforeRefresh = false,
+  }: CatalogLoadOptions = {}): Promise<CatalogLoadResult> => {
+    await PurchasesManager.init();
+
+    if (!Capacitor.isNativePlatform()) {
+      return buildCatalogLoadResult("unavailable");
     }
 
     if (isDevBuild) {
-      return REMOVE_ADS_PRODUCTS.map((item) => {
-        const mockProduct = {
-          id: item.id,
-          alias: undefined,
-          type: InAppPurchase2.NON_CONSUMABLE,
-          state: InAppPurchase2.VALID,
-          title: item.tier === "supporter" ? "Remove Ads" : "Remove Ads",
-          description: item.tier === "supporter" 
-            ? "Ad-free plus a thank you for supporting the app."
-            : "Remove banners and interstitials.",
-          priceMicros: item.tier === "supporter" ? 4990000 : 2990000,
-          price: item.tier === "supporter" ? "€4.99" : "€2.99",
-          currency: "EUR",
-          loaded: true,
-          valid: true,
-          canPurchase: true,
-          owned: false,
-        } as IAPProduct;
-        return mockProduct;
+      const result = buildCatalogLoadResult("loaded");
+      setCatalogLoadResult(result);
+      return result;
+    }
+
+    if (catalogLoadPromise && !force) {
+      return catalogLoadPromise;
+    }
+
+    if (force) {
+      cancelActiveCatalogLoad();
+    }
+
+    catalogLoadToken += 1;
+    const loadToken = catalogLoadToken;
+    catalogRefreshInFlight = true;
+    catalogLoadStartedAt = Date.now();
+    catalogLoadCompletedAt = null;
+    resetCatalogDiagnostics();
+
+    setCatalogLoadResult(buildCatalogLoadResult("loading"));
+
+    catalogLoadPromise = new Promise<CatalogLoadResult>((resolve) => {
+      resolveCatalogLoad = resolve;
+    });
+
+    catalogLoadTimeout = setTimeout(() => {
+      if (loadToken !== catalogLoadToken || !catalogLoadPromise) {
+        return;
+      }
+      PRODUCT_IDS.forEach((productId) => {
+        const snapshot = catalogProductStates[productId];
+        if (snapshot.state === "pending") {
+          updateProductDiagnostics(
+            productId,
+            "error",
+            "timeout",
+            "Product did not resolve before timeout",
+          );
+        }
       });
-    }
+      lastLoadFailureReason = "Catalog load timed out";
+      completeCatalogLoad(undefined, "catalog-timeout");
+    }, IAP_TIMING.catalogStallTimeoutMs);
 
-    await ensureReady();
-    
-    const rawProductsBeforeRefresh = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
-    const validProductsBeforeRefresh = rawProductsBeforeRefresh.filter(
-      (product): product is IAPProduct =>
-        !!product && product.loaded && product.valid && Boolean(product.price),
-    );
-    
-    if (validProductsBeforeRefresh.length >= REMOVE_ADS_PRODUCTS.length) {
-      console.log(`[Purchases] getProducts: ${validProductsBeforeRefresh.length} products ready immediately`);
-      return validProductsBeforeRefresh;
-    }
+    const runLoad = async () => {
+      if (syncBeforeRefresh) {
+        try {
+          const syncResult = await StoreKitDiagnostics.syncStore();
+          if (!syncResult.success) {
+            lastSyncError = syncResult.error ?? "App Store sync failed";
+          }
+        } catch (error) {
+          lastSyncError = error instanceof Error ? error.message : String(error);
+        }
+      }
 
-    if (validProductsBeforeRefresh.length > 0) {
-      console.log(`[Purchases] getProducts: ${validProductsBeforeRefresh.length}/${REMOVE_ADS_PRODUCTS.length} products available, refreshing for remainder`);
-    }
-    
-    if (validProductsBeforeRefresh.length < REMOVE_ADS_PRODUCTS.length) {
+      if (loadToken !== catalogLoadToken || !catalogLoadPromise) {
+        return;
+      }
+
+      if (testModeForceLoadFailure) {
+        PRODUCT_IDS.forEach((productId) => {
+          updateProductDiagnostics(
+            productId,
+            "error",
+            "test-mode",
+            "Test mode forced catalog load failure",
+          );
+        });
+        lastStoreErrorMessage = "Test mode forced catalog load failure";
+        lastLoadFailureReason = lastStoreErrorMessage;
+        completeCatalogLoad("unavailable", `${reason}-test-mode`);
+        return;
+      }
+
       try {
         await refreshStore();
-        await new Promise((resolve) => setTimeout(resolve, IAP_TIMING.postRefreshDelayMs));
-      } catch (err) {
-        lastLoadFailureReason = err instanceof Error ? err.message : String(err);
-        console.warn("[Purchases] Refresh failed:", lastLoadFailureReason);
+      } catch (error) {
+        lastStoreErrorMessage =
+          error instanceof Error ? error.message : String(error);
+        lastLoadFailureReason = lastStoreErrorMessage;
+      } finally {
+        if (loadToken === catalogLoadToken && catalogLoadPromise) {
+          catalogRefreshInFlight = false;
+          queueCatalogSettle(loadToken, `${reason}-refresh`);
+        }
       }
-    }
-    
-    const maxRetries = IAP_RETRY.managerMaxAttempts;
-    const retryDelay = IAP_TIMING.managerRetryDelayMs;
-    
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const rawProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id));
-      const products = rawProducts.filter(
-        (product): product is IAPProduct =>
-          !!product && product.loaded && product.valid && Boolean(product.price),
-      );
-      
-      if (products.length >= REMOVE_ADS_PRODUCTS.length) {
-        lastSuccessfulProductLoadAt = Date.now();
-        lastLoadFailureReason = null;
-        console.log(`[Purchases] getProducts: Loaded all ${products.length} products after ${attempt + 1} attempt(s)`);
-        void collectDiagnosticsSnapshot("getProducts-success");
-        return products;
-      }
-      
-      if (attempt < maxRetries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      }
-    }
-    
-    const finalProducts = REMOVE_ADS_PRODUCTS.map((item) => InAppPurchase2.get(item.id)).filter(
-      (product): product is IAPProduct =>
-        !!product && product.loaded && product.valid && Boolean(product.price),
-    );
+    };
 
-    if (finalProducts.length > 0) {
-      lastSuccessfulProductLoadAt = Date.now();
-      console.log(`[Purchases] getProducts: Returning ${finalProducts.length}/${REMOVE_ADS_PRODUCTS.length} products (partial catalog)`);
-      void collectDiagnosticsSnapshot("getProducts-partial");
-    } else {
-      lastLoadFailureReason = `Failed to load products after ${maxRetries} attempts`;
-      console.warn(`[Purchases] getProducts: ${lastLoadFailureReason}`);
-      void collectDiagnosticsSnapshot("getProducts-failure");
-    }
+    void runLoad();
 
-    return finalProducts;
+    return catalogLoadPromise;
+  },
+
+  prefetchProducts: async (): Promise<IAPProduct[]> => {
+    const result = await PurchasesManager.loadCatalog({ reason: "prefetch" });
+    return result.products;
+  },
+
+  getProducts: async (): Promise<IAPProduct[]> => {
+    if (!Capacitor.isNativePlatform()) {
+      return [];
+    }
+    if (isDevBuild) {
+      return REMOVE_ADS_PRODUCTS.map((product) => createMockProduct(product));
+    }
+    const result = await PurchasesManager.loadCatalog({ reason: "get-products" });
+    return result.products;
   },
 
   purchaseRemoveAds: async (productId: string) => {
@@ -373,7 +789,15 @@ export const PurchasesManager = {
     if (!Capacitor.isNativePlatform()) {
       throw new Error("Purchases are not available on web.");
     }
-    await ensureReady();
+
+    const catalog = await PurchasesManager.loadCatalog({ reason: "purchase" });
+    const product = catalog.products.find((item) => item.id === productId);
+
+    if (!product) {
+      throw new Error("ProductUnavailable");
+    }
+
+    await ensureStoreReady();
 
     let entitlementResolve: (() => void) | null = null;
     let entitlementReject: ((err: Error) => void) | null = null;
@@ -389,6 +813,7 @@ export const PurchasesManager = {
         entitlementReject = null;
       }
     };
+
     const removeListener = PurchasesManager.onEntitlementChange(() => {
       checkEntitlement();
     });
@@ -410,8 +835,8 @@ export const PurchasesManager = {
         orderResult.error((err: unknown) => reject(err));
       });
 
-      const product = InAppPurchase2.get(productId);
-      if (product?.owned || hasRemoveAdsEntitlement) {
+      const orderedProduct = InAppPurchase2.get(productId);
+      if (orderedProduct?.owned || hasRemoveAdsEntitlement) {
         removeListener();
         if (entitlementResolve) {
           entitlementResolve();
@@ -420,7 +845,16 @@ export const PurchasesManager = {
         return;
       }
 
-      await entitlementPromise;
+      await Promise.race([
+        entitlementPromise,
+        new Promise<void>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("EntitlementTimeout")),
+            IAP_TIMING.purchaseEntitlementTimeoutMs,
+          ),
+        ),
+      ]);
+
       removeListener();
       void collectDiagnosticsSnapshot("purchase-success");
       return;
@@ -438,23 +872,28 @@ export const PurchasesManager = {
     await PurchasesManager.init();
     if (!Capacitor.isNativePlatform()) return false;
     try {
-      await refreshStore();
-      await ensureReady();
-      
-      // Check if any remove ads products are owned after restore
-      const ownedProducts = REMOVE_ADS_PRODUCTS.filter((item) => {
-        const product = InAppPurchase2.get(item.id);
+      await PurchasesManager.loadCatalog({
+        reason: "restore",
+        force: true,
+        syncBeforeRefresh: true,
+      });
+
+      const ownedProducts = PRODUCT_IDS.filter((productId) => {
+        const product = InAppPurchase2.get(productId);
         return product?.owned === true;
       });
-      
+
       const restored = hasRemoveAdsEntitlement || ownedProducts.length > 0;
-      void collectDiagnosticsSnapshot(`restore-${restored ? "success" : "none-found"}`);
+      void collectDiagnosticsSnapshot(
+        `restore-${restored ? "success" : "none-found"}`,
+      );
       return restored;
     } catch (error) {
       void collectDiagnosticsSnapshot("restore-failure");
       throw error;
     }
   },
+
   setDevEntitlement: async (value: boolean, productId?: string) => {
     await setEntitlement(value, true, productId);
   },
@@ -462,29 +901,41 @@ export const PurchasesManager = {
   setTestMode: (options: { forceLoadFailure: boolean }) => {
     if (process.env.NODE_ENV === "production") return;
     testModeForceLoadFailure = options.forceLoadFailure;
-    console.log(`[Purchases] Test mode: forceLoadFailure=${testModeForceLoadFailure}`);
+    console.log(
+      `[Purchases] Test mode: forceLoadFailure=${testModeForceLoadFailure}`,
+    );
   },
 
   getTestMode: () => ({
     forceLoadFailure: testModeForceLoadFailure,
   }),
 
+  getCatalogLoadResult: () => catalogLoadResult,
+
+  onCatalogChange: (listener: CatalogListener) => {
+    catalogListeners.add(listener);
+    listener(catalogLoadResult);
+    return () => catalogListeners.delete(listener);
+  },
+
   getDiagnostics: () => ({
     lastSuccessfulProductLoadAt,
     lastLoadFailureReason,
-    storeReady: readyPromise !== null,
+    storeReady,
+    lastStoreErrorCode,
+    lastStoreErrorMessage,
+    lastSyncError,
+    catalogStatus: catalogLoadResult.status,
+    unavailableProductIds: catalogLoadResult.unavailableProductIds,
+    productStates: catalogProductStates,
     lastDiagnosticsSnapshotAt,
     hasDiagnosticsSnapshot: lastDiagnosticsSnapshot !== null,
-    diagnosticsSnapshot: lastDiagnosticsSnapshot ? {
-      timestamp: lastDiagnosticsSnapshot.timestamp,
-      productStatuses: lastDiagnosticsSnapshot.productStatuses,
-      entitlementsCount: lastDiagnosticsSnapshot.currentEntitlements?.length ?? 0,
-      transactionsCount: lastDiagnosticsSnapshot.transactionCount ?? 0,
-    } : null,
+    diagnosticsSnapshot: getDiagnosticsSnapshotSummary(),
   }),
 
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
   getRemoveAdsProducts: () => [...REMOVE_ADS_PRODUCTS],
+
   isStoreReady: async () => {
     if (!Capacitor.isNativePlatform()) {
       return false;
@@ -493,21 +944,10 @@ export const PurchasesManager = {
       return true;
     }
     await PurchasesManager.init();
-    if (!readyPromise) {
-      return false;
-    }
-    try {
-      await Promise.race([
-        readyPromise,
-        new Promise<void>((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), IAP_TIMING.storeReadyTimeoutMs),
-        ),
-      ]);
-      return true;
-    } catch {
-      return false;
-    }
+    await ensureStoreReady();
+    return storeReady;
   },
+
   onEntitlementChange: (listener: EntitlementListener) => {
     entitlementListeners.add(listener);
     listener(hasRemoveAdsEntitlement);

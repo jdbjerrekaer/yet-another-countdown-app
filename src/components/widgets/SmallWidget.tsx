@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { CountdownTime } from '@/hooks/useCountdown';
@@ -46,7 +47,7 @@ const getTimeDisplay = (countdown: CountdownTime): { value: number; unit: string
   return { value: countdown.seconds, unit: 'seconds' };
 };
 
-const getTimeUnitLabel = (unit: string, value: number, t: any): string => {
+const getTimeUnitLabel = (unit: string, value: number, t: TFunction): string => {
   return t(`widget.units.${unit}`, { count: value });
 };
 

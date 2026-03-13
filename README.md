@@ -179,6 +179,8 @@ Configure these secrets in your repository settings (`Settings` → `Secrets and
    - Select **iOS IAP Preflight Check** workflow
    - Click **Run workflow** → **Run workflow**
    - The workflow will validate:
+     - The shared `App` scheme does not use a local `.storekit` file
+     - `StoreKit.storekit` is not bundled into app or widget resources
      - Both IAP products exist (`com.countdown.app.remove_ads`, `com.countdown.app.remove_ads_supporter`)
      - Products are in `APPROVED`, `READY_TO_SUBMIT`, or `WAITING_FOR_REVIEW` state
      - Paid Apps Agreement is active (verified implicitly by successful IAP product fetch)
@@ -201,6 +203,18 @@ The workflow generates a JSON report (`preflight-report.json`) containing:
 - Detailed error messages for failed checks
 
 Failed preflight checks will cause the GitHub Actions workflow to exit with a non-zero status, preventing accidental submissions with incomplete IAP configuration.
+
+**Local StoreKit vs release sandbox:**
+
+- Use the shared `App StoreKit Local` scheme when you want to test against `ios/App/StoreKit.storekit` in Xcode.
+- Use the shared `App` scheme for release, TestFlight, and App Review builds. It must stay free of local StoreKit configuration so product loading matches App Store sandbox behavior.
+
+**Manual App Store Connect checklist before resubmission:**
+
+- Confirm the Paid Apps Agreement is active in App Store Connect.
+- Confirm both IAPs are attached to the correct app and their metadata is complete.
+- Confirm each IAP is in `APPROVED`, `READY_TO_SUBMIT`, or `WAITING_FOR_REVIEW`.
+- Confirm the binary you submit was built from the shared `App` scheme, not `App StoreKit Local`.
 
 ## Project Structure
 
@@ -335,9 +349,16 @@ To deploy to the iOS App Store:
 1. Build the web app: `npm run build`
 2. Sync to iOS: `npx cap sync ios`
 3. Open in Xcode: `npx cap open ios`
-4. Follow Apple's App Store submission process:
+4. Run the IAP preflight workflow or `./scripts/iap_preflight_check.sh`.
+5. In Xcode, select the shared `App` scheme for release/TestFlight builds.
+6. Archive a release build and distribute it to TestFlight or install it directly on a real iPhone/iPad.
+7. Sign in with a sandbox tester and verify the full purchase path on device:
+   - Open the paywall and confirm the standard `Remove Ads` product shows a real price.
+   - Complete the purchase and confirm ads are removed.
+   - Relaunch the app and confirm the entitlement persists.
+   - Use Restore Purchases and confirm restore succeeds after reinstall or local state reset.
+8. Follow Apple's App Store submission process:
    - Configure app metadata and screenshots
-   - Archive the app
    - Submit through App Store Connect
 
 ## License

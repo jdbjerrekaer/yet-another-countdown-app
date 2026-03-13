@@ -639,7 +639,7 @@ struct CountdownWidgetEntryView: View {
                     progress: progress
                 )
                 .widgetURL(deepLinkURL)
-            case .systemLarge:
+            case .systemLarge, .systemExtraLarge:
                 LargeWidgetView(
                     event: event,
                     countdown: countdown,
@@ -649,7 +649,7 @@ struct CountdownWidgetEntryView: View {
                     progress: progress
                 )
                 .widgetURL(deepLinkURL)
-            case .accessoryInline, .accessoryCircular, .accessoryRectangular:
+            case .accessoryInline, .accessoryCircular, .accessoryRectangular, .accessoryCorner:
                 SmallWidgetView(
                     event: event,
                     countdown: countdown,
@@ -1312,4 +1312,3 @@ struct CountdownTripleWidget: Widget {
     )
 }
 #endif
-

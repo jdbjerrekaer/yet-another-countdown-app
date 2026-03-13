@@ -1,12 +1,9 @@
 require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
+install! 'cocoapods', :disable_input_output_paths => true
+
 platform :ios, '14.0'
 use_frameworks!
-
-# workaround to avoid Xcode caching of Pods that requires
-# Product -> Clean Build Folder after new Cordova plugins installed
-# Requires CocoaPods 1.6 or newer
-install! 'cocoapods', :disable_input_output_paths => true
 
 def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
@@ -62,6 +59,90 @@ post_install do |installer|
           config.build_settings['HEADER_SEARCH_PATHS'] = "#{current_paths} \"#{source_header_path}\""
         end
       end
+    end
+  end
+
+  frameworks_script_path = File.join(
+    installer.sandbox.root,
+    'Target Support Files',
+    'Pods-App',
+    'Pods-App-frameworks.sh'
+  )
+
+  if File.exist?(frameworks_script_path)
+    frameworks_script = File.read(frameworks_script_path)
+    updated_script = frameworks_script.gsub(
+      <<~'SH'.strip,
+install_framework()
+{
+  if [ -r "${BUILT_PRODUCTS_DIR}/$1" ]; then
+    local source="${BUILT_PRODUCTS_DIR}/$1"
+  elif [ -r "${BUILT_PRODUCTS_DIR}/$(basename "$1")" ]; then
+    local source="${BUILT_PRODUCTS_DIR}/$(basename "$1")"
+  elif [ -r "$1" ]; then
+    local source="$1"
+  fi
+
+  local destination="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+SH
+      <<~'SH'.strip
+install_framework()
+{
+  local source=""
+  if [ -r "${BUILT_PRODUCTS_DIR}/$1" ]; then
+    source="${BUILT_PRODUCTS_DIR}/$1"
+  elif [ -r "${BUILT_PRODUCTS_DIR}/$(basename "$1")" ]; then
+    source="${BUILT_PRODUCTS_DIR}/$(basename "$1")"
+  elif [ -r "$1" ]; then
+    source="$1"
+  fi
+
+  if [ -z "${source}" ]; then
+    local source_wait_attempt=0
+    local source_wait_max=20
+    while [ -z "${source}" ] && [ "${source_wait_attempt}" -lt "${source_wait_max}" ]; do
+      source_wait_attempt=$((source_wait_attempt + 1))
+      sleep 0.5
+      if [ -r "${BUILT_PRODUCTS_DIR}/$1" ]; then
+        source="${BUILT_PRODUCTS_DIR}/$1"
+      elif [ -r "${BUILT_PRODUCTS_DIR}/$(basename "$1")" ]; then
+        source="${BUILT_PRODUCTS_DIR}/$(basename "$1")"
+      elif [ -r "$1" ]; then
+        source="$1"
+      fi
+    done
+  fi
+
+  if [ -z "${source}" ]; then
+    echo "error: [CP] Unable to find framework '$1' in '${BUILT_PRODUCTS_DIR}' or at the original path."
+    exit 1
+  fi
+
+  local destination="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+SH
+    )
+
+    if updated_script != frameworks_script
+      File.write(frameworks_script_path, updated_script)
+    end
+  end
+
+  resources_script_path = File.join(
+    installer.sandbox.root,
+    'Target Support Files',
+    'Pods-App',
+    'Pods-App-resources.sh'
+  )
+
+  if File.exist?(resources_script_path)
+    resources_script = File.read(resources_script_path)
+    updated_script = resources_script.gsub(
+      'RESOURCES_TO_COPY=${PODS_ROOT}/resources-to-copy-${TARGETNAME}.txt',
+      'RESOURCES_TO_COPY=${TARGET_TEMP_DIR}/resources-to-copy-${TARGETNAME}.txt'
+    )
+
+    if updated_script != resources_script
+      File.write(resources_script_path, updated_script)
     end
   end
 end

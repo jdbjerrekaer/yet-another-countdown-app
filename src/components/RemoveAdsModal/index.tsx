@@ -12,9 +12,11 @@ import {
 } from "@ionic/react";
 import { useTranslation } from "react-i18next";
 import confetti from "canvas-confetti";
-import { IAPProduct } from "@awesome-cordova-plugins/in-app-purchase-2";
-import { PurchasesManager } from "@/lib/purchases/purchasesManager";
-import { IAP_RETRY, IAP_TIMING } from "@/lib/purchases/constants";
+import {
+  CatalogLoadResult,
+  PurchasesManager,
+} from "@/lib/purchases/purchasesManager";
+import { IAP_TIMING } from "@/lib/purchases/constants";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ShieldCheck, Heart, Check, Sparkles, LucideIcon } from "lucide-react";
 import { TFunction } from "i18next";
@@ -72,9 +74,13 @@ const classifyPurchaseError = (errorMessage: string) => {
 const getPurchaseErrorMessage = (err: unknown, t: TFunction): string | null => {
   const errorMessage = err instanceof Error ? err.message : String(err);
   const classification = classifyPurchaseError(errorMessage);
+  const normalized = errorMessage.toLowerCase();
 
   if (classification === "cancelled") {
     return null;
+  }
+  if (normalized.includes("productunavailable")) {
+    return t("iap.loadError");
   }
   return t("iap.purchaseError");
 };
@@ -90,11 +96,44 @@ export const RemoveAdsModal = ({
   const { trigger } = useHaptic();
   const confettiShownRef = useRef(false);
   const closeTriggeredRef = useRef(false);
+  const [catalog, setCatalog] = useState<CatalogLoadResult>(() =>
+    PurchasesManager.getCatalogLoadResult(),
+  );
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const [purchasePhase, setPurchasePhase] = useState<PurchasePhase>("idle");
+  const loadProductsRef = useRef<
+    ((options?: { syncBeforeRefresh?: boolean; force?: boolean }) => Promise<void>) | null
+  >(null);
+  const orderedProductIds = useMemo(
+    () => PurchasesManager.getRemoveAdsProducts().map((item) => item.id),
+    [],
+  );
+  const visibleProductIds = useMemo(
+    () =>
+      orderedProductIds.filter((productId) =>
+        catalog.products.some((product) => product.id === productId),
+      ),
+    [catalog.products, orderedProductIds],
+  );
+  const primaryProductId = orderedProductIds[0];
+  const primaryProductAvailable =
+    !!primaryProductId &&
+    catalog.products.some((product) => product.id === primaryProductId);
+  const loading = isNative && catalog.status === "loading";
+  const showGlobalLoadError =
+    isNative &&
+    !isDevBuild &&
+    !loading &&
+    !primaryProductAvailable;
+  const error = showGlobalLoadError ? t("iap.loadError") : null;
 
   useEffect(() => {
     if (hasRemoveAds) {
       setPurchaseError(null);
-      setError(null);
       if (isOpen && !closeTriggeredRef.current) {
         closeTriggeredRef.current = true;
         onClose();
@@ -111,45 +150,25 @@ export const RemoveAdsModal = ({
       }
     }
   }, [hasRemoveAds, isOpen, onClose]);
-  const [products, setProducts] = useState<IAPProduct[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-  const [restoreLoading, setRestoreLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [restoreError, setRestoreError] = useState<string | null>(null);
-  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
-  const [purchaseError, setPurchaseError] = useState<string | null>(null);
-  const [storeReady, setStoreReady] = useState(false);
-  const [purchasePhase, setPurchasePhase] = useState<PurchasePhase>("idle");
-  const loadProductsRef = useRef<(() => Promise<void>) | null>(null);
 
   const handleCloseClick = () => {
     trigger("light");
     onClose();
   };
 
-  const orderedProductIds = useMemo(
-    () => PurchasesManager.getRemoveAdsProducts().map((item) => item.id),
-    [],
-  );
-
   useEffect(() => {
     if (!isOpen) return;
     confettiShownRef.current = false;
     closeTriggeredRef.current = false;
     PurchasesManager.setDevBuild(!!isDevBuild);
-    setError(null);
     setRestoreError(null);
     setRestoreMessage(null);
     setPurchaseError(null);
     setPurchasePhase("idle");
+    setCatalog(PurchasesManager.getCatalogLoadResult());
     if (!isNative) {
-      setProducts([]);
-      setStoreReady(false);
       return;
     }
-    setLoading(true);
-    setStoreReady(false);
 
     if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
       (window as unknown as { toggleIAPTestMode?: () => void }).toggleIAPTestMode = () => {
@@ -159,65 +178,35 @@ export const RemoveAdsModal = ({
       };
     }
 
-    const loadProducts = async () => {
-      const maxRetries = IAP_RETRY.modalMaxAttempts;
-      const retryDelay = IAP_TIMING.modalRetryDelayMs;
-      
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          const ready = await PurchasesManager.isStoreReady();
-          setStoreReady(ready);
-          console.log(`[IAP Modal] Store ready: ${ready}, attempt ${attempt + 1}/${maxRetries}`);
+    const unsubscribe = PurchasesManager.onCatalogChange((result) => {
+      setCatalog(result);
+    });
 
-          if (!ready && !isDevBuild) {
-            if (attempt < maxRetries - 1) {
-              await new Promise((resolve) => setTimeout(resolve, retryDelay));
-              continue;
-            }
-            const diagnostics = PurchasesManager.getDiagnostics();
-            console.warn(`[IAP Modal] Store not ready after ${maxRetries} attempts`, diagnostics);
-            setError(t("iap.loadError"));
-            setLoading(false);
-            return;
-          }
-
-          const loaded = await PurchasesManager.getProducts();
-          console.log(`[IAP Modal] Loaded ${loaded.length} products`);
-          setProducts(loaded);
-          
-          if (loaded.length === 0 && !isDevBuild) {
-            if (attempt < maxRetries - 1) {
-              await new Promise((resolve) => setTimeout(resolve, retryDelay));
-              continue;
-            }
-            const diagnostics = PurchasesManager.getDiagnostics();
-            console.warn(`[IAP Modal] No products loaded after ${maxRetries} attempts`, diagnostics);
-            setError(t("iap.loadError"));
-          } else if (loaded.length > 0) {
-            setError(null);
-            break;
-          }
-        } catch (err) {
-          console.warn("[IAP Modal] Failed to load products", err);
-          if (attempt < maxRetries - 1) {
-            await new Promise((resolve) => setTimeout(resolve, retryDelay));
-            continue;
-          }
-          setStoreReady(false);
-          if (!isDevBuild) {
-            setError(t("iap.loadError"));
-          }
-        }
+    const loadProducts = async (options?: {
+      syncBeforeRefresh?: boolean;
+      force?: boolean;
+    }) => {
+      try {
+        await PurchasesManager.loadCatalog({
+          reason: options?.syncBeforeRefresh ? "modal-retry" : "modal-open",
+          force: options?.force,
+          syncBeforeRefresh: options?.syncBeforeRefresh,
+        });
+      } catch (err) {
+        console.warn("[IAP Modal] Failed to load catalog", err);
       }
-      
-      setLoading(false);
     };
 
     loadProductsRef.current = loadProducts;
     void loadProducts();
-  }, [isOpen, isNative, t, isDevBuild]);
 
-  const getProductById = (id: string) => products.find((p) => p.id === id);
+    return () => {
+      loadProductsRef.current = null;
+      unsubscribe();
+    };
+  }, [isOpen, isNative, isDevBuild]);
+
+  const getProductById = (id: string) => catalog.products.find((product) => product.id === id);
 
   const handlePurchase = async (productId: string) => {
     if (actionLoadingId !== null) {
@@ -236,40 +225,17 @@ export const RemoveAdsModal = ({
       return;
     }
 
-    let currentStoreReady = storeReady;
     let product = getProductById(productId);
-    
-    if ((!currentStoreReady || !product) && !isDevBuild) {
-      const maxRetries = IAP_RETRY.modalMaxAttempts;
-      const retryDelay = IAP_TIMING.modalRetryDelayMs;
-      
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          const ready = await PurchasesManager.isStoreReady();
-          currentStoreReady = ready;
-          setStoreReady(ready);
-          
-          const loaded = await PurchasesManager.getProducts();
-          setProducts(loaded);
-          product = loaded.find((item) => item.id === productId);
-          
-          if (currentStoreReady && product) {
-            break;
-          }
-          
-          if (attempt < maxRetries - 1) {
-            await new Promise((resolve) => setTimeout(resolve, retryDelay));
-          }
-        } catch {
-          if (attempt < maxRetries - 1) {
-            await new Promise((resolve) => setTimeout(resolve, retryDelay));
-            continue;
-          }
-        }
-      }
+
+    if (!product && !isDevBuild) {
+      const latestCatalog = await PurchasesManager.loadCatalog({
+        reason: "modal-purchase",
+      });
+      setCatalog(latestCatalog);
+      product = latestCatalog.products.find((item) => item.id === productId);
     }
 
-    if ((!currentStoreReady || !product) && !isDevBuild) {
+    if (!product && !isDevBuild) {
       setPurchaseError(t("iap.loadError"));
       setPurchasePhase("idle");
       setActionLoadingId(null);
@@ -380,10 +346,11 @@ export const RemoveAdsModal = ({
                   fill="outline"
                   size="small"
                   onClick={() => {
-                    setError(null);
-                    setLoading(true);
                     if (loadProductsRef.current) {
-                      void loadProductsRef.current();
+                      void loadProductsRef.current({
+                        syncBeforeRefresh: true,
+                        force: true,
+                      });
                     }
                   }}
                   className="mt-2"
@@ -403,13 +370,15 @@ export const RemoveAdsModal = ({
           )}
 
           <div className="space-y-3">
-            {orderedProductIds.map((productId) => {
+            {visibleProductIds.map((productId) => {
               const product = getProductById(productId);
+              if (!product) {
+                return null;
+              }
               const labels = productLabels[productId];
               const Icon = labels?.icon || ShieldCheck;
               const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
-              const priceLabel =
-                product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
+              const priceLabel = product.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
               const isBusy =
                 actionLoadingId === productId &&
                 purchasePhase !== "idle" &&
@@ -468,7 +437,10 @@ export const RemoveAdsModal = ({
                           (!isNative && !isDevBuild) ||
                           hasRemoveAds ||
                           isBusy ||
-                          loading
+                          loading ||
+                          !product.loaded ||
+                          !product.valid ||
+                          !product.price
                         }
                         onClick={() => handlePurchase(productId)}
                       >

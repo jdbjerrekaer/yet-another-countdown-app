@@ -2,6 +2,43 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import i18n from '../i18n';
 
+interface WebScheduledNotification {
+  eventId: string;
+  title: string;
+  targetDate: string;
+  emoji: string;
+}
+
+function readScheduledNotifications(): WebScheduledNotification[] {
+  const storedValue = localStorage.getItem('scheduledNotifications');
+  if (!storedValue) {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(storedValue);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter((item): item is WebScheduledNotification => {
+      if (!item || typeof item !== 'object') {
+        return false;
+      }
+
+      const notification = item as Partial<WebScheduledNotification>;
+      return (
+        typeof notification.eventId === 'string' &&
+        typeof notification.title === 'string' &&
+        typeof notification.targetDate === 'string' &&
+        typeof notification.emoji === 'string'
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Convert event ID string to a numeric notification ID
  * Uses a simple hash function to ensure consistent numeric IDs
@@ -147,8 +184,8 @@ export async function scheduleEventNotification(
     console.warn('Web notifications cannot be scheduled far in advance. Notification will be checked on page load.');
     
     // Store notification info in localStorage for checking later
-    const notifications = JSON.parse(localStorage.getItem('scheduledNotifications') || '[]');
-    const notificationData = {
+    const notifications = readScheduledNotifications();
+    const notificationData: WebScheduledNotification = {
       eventId,
       title,
       targetDate: targetDate.toISOString(),
@@ -156,7 +193,7 @@ export async function scheduleEventNotification(
     };
     
     // Remove existing notification for this event if any
-    const filtered = notifications.filter((n: any) => n.eventId !== eventId);
+    const filtered = notifications.filter((n) => n.eventId !== eventId);
     filtered.push(notificationData);
     
     localStorage.setItem('scheduledNotifications', JSON.stringify(filtered));
@@ -187,8 +224,8 @@ export async function cancelEventNotification(eventId: string): Promise<void> {
     }
   } else {
     // For web, remove from localStorage
-    const notifications = JSON.parse(localStorage.getItem('scheduledNotifications') || '[]');
-    const filtered = notifications.filter((n: any) => n.eventId !== eventId);
+    const notifications = readScheduledNotifications();
+    const filtered = notifications.filter((n) => n.eventId !== eventId);
     localStorage.setItem('scheduledNotifications', JSON.stringify(filtered));
   }
 }
@@ -215,7 +252,7 @@ export async function checkScheduledNotifications(): Promise<void> {
     return;
   }
 
-  const notifications = JSON.parse(localStorage.getItem('scheduledNotifications') || '[]');
+  const notifications = readScheduledNotifications();
   const now = Date.now();
   const triggered: string[] = [];
 
@@ -229,7 +266,7 @@ export async function checkScheduledNotifications(): Promise<void> {
 
   // Remove triggered notifications
   if (triggered.length > 0) {
-    const remaining = notifications.filter((n: any) => !triggered.includes(n.eventId));
+    const remaining = notifications.filter((n) => !triggered.includes(n.eventId));
     localStorage.setItem('scheduledNotifications', JSON.stringify(remaining));
   }
 }
