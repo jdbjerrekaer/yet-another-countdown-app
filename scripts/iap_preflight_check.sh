@@ -3,6 +3,8 @@ set -euo pipefail
 
 BUNDLE_ID="${ASC_BUNDLE_ID:-com.jonatanbjerrekaer.countdown}"
 PRODUCT_IDS=("com.countdown.app.remove_ads" "com.countdown.app.remove_ads_supporter")
+REVIEWABLE_STATES=("APPROVED" "READY_TO_SUBMIT" "WAITING_FOR_REVIEW" "IN_REVIEW" "PENDING_BINARY_APPROVAL")
+SUBMITTED_STATES=("APPROVED" "WAITING_FOR_REVIEW" "IN_REVIEW" "PENDING_BINARY_APPROVAL")
 REPORT_FILE="${1:-preflight-report.json}"
 CHECKS_FILE=$(mktemp)
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -14,6 +16,18 @@ add_check() {
   local json="$1"
   jq --argjson item "${json}" '. += [$item]' "${CHECKS_FILE}" > "${CHECKS_FILE}.tmp" \
     && mv "${CHECKS_FILE}.tmp" "${CHECKS_FILE}"
+}
+
+state_in_list() {
+  local needle="$1"
+  shift
+  local candidate
+  for candidate in "$@"; do
+    if [ "${candidate}" = "${needle}" ]; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 OVERALL_SUCCESS=true
@@ -91,7 +105,7 @@ echo "Found app ID: ${APP_ID}"
 echo "Fetching IAP products..."
 
 IAP_RESPONSE=$(curl -s -X GET \
-  "${API_BASE}/apps/${APP_ID}/inAppPurchasesV2?limit=200" \
+  "${API_BASE}/apps/${APP_ID}/inAppPurchasesV2?include=appStoreReviewScreenshot&limit=200" \
   -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json")
 
@@ -108,15 +122,40 @@ for PRODUCT_ID in "${PRODUCT_IDS[@]}"; do
 
   STATE=$(echo "${PRODUCT}" | jq -r '.attributes.state // "UNKNOWN"')
   PRODUCT_TYPE=$(echo "${PRODUCT}" | jq -r '.attributes.inAppPurchaseType // "UNKNOWN"')
+  SCREENSHOT_ID=$(echo "${PRODUCT}" | jq -r '
+    .relationships.appStoreReviewScreenshot.data.id //
+    .relationships.appStoreReviewScreenshot.data[0].id //
+    empty
+  ')
 
   add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"exists\",\"status\":\"PASS\",\"message\":\"Product exists\"}"
 
-  if [ "${STATE}" != "APPROVED" ] && [ "${STATE}" != "READY_TO_SUBMIT" ] && [ "${STATE}" != "WAITING_FOR_REVIEW" ]; then
-    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"FAIL\",\"message\":\"Product state is ${STATE}, expected APPROVED, READY_TO_SUBMIT, or WAITING_FOR_REVIEW\"}"
-    OVERALL_SUCCESS=false
-  else
+  if state_in_list "${STATE}" "${REVIEWABLE_STATES[@]}"; then
     add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"PASS\",\"message\":\"Product state is ${STATE}\"}"
+  else
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"state\",\"status\":\"FAIL\",\"message\":\"Product state is ${STATE}, expected one of: ${REVIEWABLE_STATES[*]}\"}"
+    OVERALL_SUCCESS=false
+  fi
+
+  if [ "${PRODUCT_TYPE}" = "NON_CONSUMABLE" ]; then
     add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"type\",\"status\":\"PASS\",\"message\":\"Product type is ${PRODUCT_TYPE}\"}"
+  else
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"type\",\"status\":\"FAIL\",\"message\":\"Product type is ${PRODUCT_TYPE}, expected NON_CONSUMABLE\"}"
+    OVERALL_SUCCESS=false
+  fi
+
+  if [ -n "${SCREENSHOT_ID}" ]; then
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"appReviewScreenshot\",\"status\":\"PASS\",\"message\":\"App Review screenshot is configured\"}"
+  else
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"appReviewScreenshot\",\"status\":\"FAIL\",\"message\":\"App Review screenshot is missing\"}"
+    OVERALL_SUCCESS=false
+  fi
+
+  if state_in_list "${STATE}" "${SUBMITTED_STATES[@]}"; then
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"submittedForReview\",\"status\":\"PASS\",\"message\":\"Product has been submitted for review (state: ${STATE})\"}"
+  else
+    add_check "{\"productId\":\"${PRODUCT_ID}\",\"check\":\"submittedForReview\",\"status\":\"FAIL\",\"message\":\"Product has not been submitted for review yet (state: ${STATE})\"}"
+    OVERALL_SUCCESS=false
   fi
 done
 

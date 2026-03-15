@@ -29,31 +29,40 @@ type CatalogProductDiagnostics = {
   updatedAt: number | null;
 };
 
+type CatalogDiagnostics = {
+  storeReady: boolean;
+  cordovaReady: boolean;
+  pluginAvailable: boolean;
+  bootstrapInProgress: boolean;
+  bootstrapStartedAt: number | null;
+  bootstrapCompletedAt: number | null;
+  bootstrapError: string | null;
+  initAttempts: number;
+  syncError: string | null;
+  loadStartedAt: number | null;
+  loadCompletedAt: number | null;
+  lastSuccessfulProductLoadAt: number | null;
+  lastLoadFailureReason: string | null;
+  lastStoreErrorCode: number | null;
+  lastStoreErrorMessage: string | null;
+  productStates: Record<string, CatalogProductDiagnostics>;
+  lastDiagnosticsSnapshotAt: number | null;
+  hasDiagnosticsSnapshot: boolean;
+  diagnosticsSnapshot: {
+    timestamp: string;
+    productStatuses: StoreKitDiagnosticsSnapshot["productStatuses"];
+    entitlementsCount: number;
+    transactionsCount: number;
+  } | null;
+};
+
 export interface CatalogLoadResult {
   status: CatalogStatus;
   products: IAPProduct[];
   unavailableProductIds: string[];
   errorCode: number | null;
   errorMessage: string | null;
-  diagnostics: {
-    storeReady: boolean;
-    syncError: string | null;
-    loadStartedAt: number | null;
-    loadCompletedAt: number | null;
-    lastSuccessfulProductLoadAt: number | null;
-    lastLoadFailureReason: string | null;
-    lastStoreErrorCode: number | null;
-    lastStoreErrorMessage: string | null;
-    productStates: Record<string, CatalogProductDiagnostics>;
-    lastDiagnosticsSnapshotAt: number | null;
-    hasDiagnosticsSnapshot: boolean;
-    diagnosticsSnapshot: {
-      timestamp: string;
-      productStatuses: StoreKitDiagnosticsSnapshot["productStatuses"];
-      entitlementsCount: number;
-      transactionsCount: number;
-    } | null;
-  };
+  diagnostics: CatalogDiagnostics;
 }
 
 const PREF_REMOVE_ADS = "iap_remove_ads_entitlement";
@@ -72,6 +81,16 @@ const REMOVE_ADS_PRODUCTS = [
 
 const PRODUCT_IDS = REMOVE_ADS_PRODUCTS.map((product) => product.id);
 
+type PurchaseStore = {
+  register: (...args: unknown[]) => unknown;
+  ready: (...args: unknown[]) => unknown;
+  when: (...args: unknown[]) => unknown;
+  error: (...args: unknown[]) => unknown;
+  refresh: (...args: unknown[]) => unknown;
+  get: (...args: unknown[]) => unknown;
+  order: (...args: unknown[]) => unknown;
+};
+
 const defaultProductDiagnostics = (): Record<string, CatalogProductDiagnostics> =>
   Object.fromEntries(
     PRODUCT_IDS.map((productId) => [
@@ -88,12 +107,22 @@ const defaultProductDiagnostics = (): Record<string, CatalogProductDiagnostics> 
 
 let isInitialized = false;
 let listenersRegistered = false;
+let productsRegistered = false;
+let baseStateLoaded = false;
 let isDevBuild = false;
 let hasRemoveAdsEntitlement = false;
-let initPromise: Promise<void> | null = null;
+let baseInitPromise: Promise<void> | null = null;
+let bootstrapPromise: Promise<void> | null = null;
 let readyPromise: Promise<void> | null = null;
 let readyResolve: (() => void) | null = null;
 let storeReady = false;
+let cordovaReady = false;
+let pluginAvailable = false;
+let bootstrapInProgress = false;
+let bootstrapStartedAt: number | null = null;
+let bootstrapCompletedAt: number | null = null;
+let bootstrapError: string | null = null;
+let initAttempts = 0;
 const entitlementListeners = new Set<EntitlementListener>();
 const catalogListeners = new Set<CatalogListener>();
 const pendingCancelRejectors = new Map<string, (error: Error) => void>();
@@ -122,6 +151,13 @@ let catalogLoadResult: CatalogLoadResult = {
   errorMessage: null,
   diagnostics: {
     storeReady: false,
+    cordovaReady: false,
+    pluginAvailable: false,
+    bootstrapInProgress: false,
+    bootstrapStartedAt: null,
+    bootstrapCompletedAt: null,
+    bootstrapError: null,
+    initAttempts: 0,
     syncError: null,
     loadStartedAt: null,
     loadCompletedAt: null,
@@ -134,6 +170,33 @@ let catalogLoadResult: CatalogLoadResult = {
     hasDiagnosticsSnapshot: false,
     diagnosticsSnapshot: null,
   },
+};
+
+const getPurchaseStore = (): PurchaseStore | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const store = (window as Window & { store?: unknown }).store;
+  if (!store || typeof store !== "object") {
+    return null;
+  }
+  return store as PurchaseStore;
+};
+
+const hasPurchasePlugin = () => {
+  const store = getPurchaseStore();
+  if (!store) {
+    return false;
+  }
+  return [
+    "register",
+    "ready",
+    "when",
+    "error",
+    "refresh",
+    "get",
+    "order",
+  ].every((methodName) => typeof store[methodName as keyof PurchaseStore] === "function");
 };
 
 const notifyCatalogListeners = () => {
@@ -212,6 +275,191 @@ const collectDiagnosticsSnapshot = async (context: string): Promise<void> => {
   }
 };
 
+const createReadyPromise = () => {
+  if (readyPromise) {
+    return;
+  }
+  readyPromise = new Promise<void>((resolve) => {
+    readyResolve = resolve;
+  });
+};
+
+const setBootstrapFailure = (error: unknown) => {
+  bootstrapError = error instanceof Error ? error.message : String(error);
+  bootstrapCompletedAt = Date.now();
+  bootstrapInProgress = false;
+  isInitialized = false;
+  lastLoadFailureReason = bootstrapError;
+  pluginAvailable = hasPurchasePlugin();
+};
+
+const waitForNativePurchasePrerequisites = async () => {
+  pluginAvailable = hasPurchasePlugin();
+  if (pluginAvailable) {
+    cordovaReady = true;
+    return;
+  }
+
+  if (typeof document === "undefined") {
+    throw new Error("CordovaDocumentUnavailable");
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve();
+    };
+
+    const fail = (message: string) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      reject(new Error(message));
+    };
+
+    const onDeviceReady = () => {
+      cordovaReady = true;
+      if (pluginAvailable) {
+        finish();
+      }
+    };
+
+    const pollForPlugin = () => {
+      pluginAvailable = hasPurchasePlugin();
+      if (pluginAvailable) {
+        cordovaReady = true;
+        finish();
+      }
+    };
+
+    const cleanup = () => {
+      document.removeEventListener("deviceready", onDeviceReady);
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    };
+
+    document.addEventListener("deviceready", onDeviceReady);
+
+    const intervalId = setInterval(
+      pollForPlugin,
+      IAP_TIMING.bootstrapPollIntervalMs,
+    );
+    const timeoutId = setTimeout(() => {
+      fail(cordovaReady ? "PurchasePluginUnavailable" : "CordovaReadyTimeout");
+    }, IAP_TIMING.bootstrapTimeoutMs);
+
+    pollForPlugin();
+  });
+};
+
+const ensureBaseInit = async () => {
+  if (baseStateLoaded) {
+    return;
+  }
+
+  if (baseInitPromise) {
+    return baseInitPromise;
+  }
+
+  baseInitPromise = (async () => {
+    if (isDevBuild) {
+      await Preferences.remove({ key: PREF_REMOVE_ADS });
+      await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
+    }
+
+    await loadLocalEntitlement();
+    entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
+    baseStateLoaded = true;
+
+    if (!Capacitor.isNativePlatform() || isDevBuild) {
+      isInitialized = true;
+    }
+  })();
+
+  try {
+    await baseInitPromise;
+  } finally {
+    baseInitPromise = null;
+  }
+};
+
+const ensureNativeBootstrap = async (options?: { force?: boolean }) => {
+  await ensureBaseInit();
+
+  if (!Capacitor.isNativePlatform() || isDevBuild) {
+    isInitialized = true;
+    return;
+  }
+
+  if (options?.force) {
+    bootstrapPromise = null;
+  }
+
+  if (isInitialized && !bootstrapError && !options?.force) {
+    pluginAvailable = hasPurchasePlugin();
+    cordovaReady = cordovaReady || pluginAvailable;
+    return;
+  }
+
+  if (bootstrapPromise) {
+    return bootstrapPromise;
+  }
+
+  bootstrapPromise = (async () => {
+    initAttempts += 1;
+    bootstrapStartedAt = Date.now();
+    bootstrapCompletedAt = null;
+    bootstrapError = null;
+    bootstrapInProgress = true;
+    pluginAvailable = hasPurchasePlugin();
+    createReadyPromise();
+
+    try {
+      await waitForNativePurchasePrerequisites();
+
+      if (!hasPurchasePlugin()) {
+        throw new Error("PurchasePluginUnavailable");
+      }
+
+      InAppPurchase2.verbosity = InAppPurchase2.ERROR;
+
+      if (!productsRegistered) {
+        InAppPurchase2.register(
+          REMOVE_ADS_PRODUCTS.map((product) => ({
+            id: product.id,
+            type: InAppPurchase2.NON_CONSUMABLE,
+          })),
+        );
+        productsRegistered = true;
+      }
+
+      registerCatalogListeners();
+      pluginAvailable = true;
+      cordovaReady = true;
+      bootstrapError = null;
+      bootstrapCompletedAt = Date.now();
+      bootstrapInProgress = false;
+      isInitialized = true;
+    } catch (error) {
+      console.warn("[Purchases] Native bootstrap failed", error);
+      setBootstrapFailure(error);
+      throw error instanceof Error ? error : new Error(String(error));
+    } finally {
+      bootstrapPromise = null;
+    }
+  })();
+
+  return bootstrapPromise;
+};
+
 const clearCatalogTimers = () => {
   if (catalogLoadTimeout) {
     clearTimeout(catalogLoadTimeout);
@@ -244,11 +492,16 @@ const createMockProduct = (
   owned: false,
 } as IAPProduct);
 
-const getAvailableProducts = (): IAPProduct[] =>
-  PRODUCT_IDS.map((productId) => InAppPurchase2.get(productId)).filter(
+const getAvailableProducts = (): IAPProduct[] => {
+  if (!isDevBuild && !hasPurchasePlugin()) {
+    return [];
+  }
+
+  return PRODUCT_IDS.map((productId) => InAppPurchase2.get(productId)).filter(
     (product): product is IAPProduct =>
       Boolean(product && product.loaded && product.valid && product.price),
   );
+};
 
 const getDiagnosticsSnapshotSummary = () =>
   lastDiagnosticsSnapshot
@@ -284,9 +537,20 @@ const buildCatalogLoadResult = (
     products,
     unavailableProductIds,
     errorCode: lastStoreErrorCode,
-    errorMessage: lastStoreErrorMessage ?? lastSyncError ?? lastLoadFailureReason,
+    errorMessage:
+      bootstrapError ??
+      lastStoreErrorMessage ??
+      lastSyncError ??
+      lastLoadFailureReason,
     diagnostics: {
       storeReady,
+      cordovaReady,
+      pluginAvailable,
+      bootstrapInProgress,
+      bootstrapStartedAt,
+      bootstrapCompletedAt,
+      bootstrapError,
+      initAttempts,
       syncError: lastSyncError,
       loadStartedAt: catalogLoadStartedAt,
       loadCompletedAt: catalogLoadCompletedAt,
@@ -325,6 +589,9 @@ const updateProductDiagnostics = (
 };
 
 const syncProductDiagnosticsFromStore = () => {
+  if (!hasPurchasePlugin()) {
+    return;
+  }
   PRODUCT_IDS.forEach((productId) => {
     const product = InAppPurchase2.get(productId);
     if (!product) {
@@ -467,11 +734,7 @@ const registerCatalogListeners = () => {
   }
 
   listenersRegistered = true;
-  readyPromise =
-    readyPromise ||
-    new Promise<void>((resolve) => {
-      readyResolve = resolve;
-    });
+  createReadyPromise();
 
   InAppPurchase2.ready(() => {
     resolveReady();
@@ -602,58 +865,46 @@ const cancelActiveCatalogLoad = () => {
 
 export const PurchasesManager = {
   init: async () => {
-    if (initPromise) return initPromise;
-    if (isInitialized) return;
+    await ensureBaseInit();
 
-    initPromise = (async () => {
-      if (isDevBuild) {
-        await Preferences.remove({ key: PREF_REMOVE_ADS });
-        await Preferences.remove({ key: PREF_REMOVE_ADS_PRODUCT_ID });
-      }
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
 
-      await loadLocalEntitlement();
-      isInitialized = true;
-      entitlementListeners.forEach((listener) => listener(hasRemoveAdsEntitlement));
-
-      if (!Capacitor.isNativePlatform()) {
-        return;
-      }
-
-      if (isDevBuild) {
-        setCatalogLoadResult(buildCatalogLoadResult("loaded"));
-        return;
-      }
-
-      try {
-        InAppPurchase2.verbosity = InAppPurchase2.ERROR;
-        InAppPurchase2.register(
-          REMOVE_ADS_PRODUCTS.map((product) => ({
-            id: product.id,
-            type: InAppPurchase2.NON_CONSUMABLE,
-          })),
-        );
-        registerCatalogListeners();
-      } catch (error) {
-        console.warn("[Purchases] Initialization failed", error);
-        lastLoadFailureReason =
-          error instanceof Error ? error.message : String(error);
-        setCatalogLoadResult(buildCatalogLoadResult("unavailable"));
-        void collectDiagnosticsSnapshot("init-failure");
-      }
-    })();
-
-    return initPromise;
-  },
-
-  setDevBuild: (isDev: boolean) => {
-    isDevBuild = isDev;
     if (isDevBuild) {
-      cancelActiveCatalogLoad();
       resetCatalogDiagnostics();
       setCatalogLoadResult(buildCatalogLoadResult("loaded"));
       return;
     }
-    if (isInitialized && Capacitor.isNativePlatform()) {
+
+    await ensureNativeBootstrap().catch(() => {
+      setCatalogLoadResult(buildCatalogLoadResult("unavailable"));
+      void collectDiagnosticsSnapshot("init-failure");
+    });
+  },
+
+  setDevBuild: (isDev: boolean) => {
+    const wasInitialized = isInitialized;
+    isDevBuild = isDev;
+    bootstrapPromise = null;
+    if (isDevBuild) {
+      cancelActiveCatalogLoad();
+      resetCatalogDiagnostics();
+      bootstrapInProgress = false;
+      bootstrapError = null;
+      bootstrapCompletedAt = Date.now();
+      bootstrapStartedAt = bootstrapStartedAt ?? bootstrapCompletedAt;
+      isInitialized = true;
+      setCatalogLoadResult(buildCatalogLoadResult("loaded"));
+      return;
+    }
+    isInitialized = false;
+    bootstrapInProgress = false;
+    bootstrapError = null;
+    bootstrapStartedAt = null;
+    bootstrapCompletedAt = null;
+    storeReady = false;
+    if (wasInitialized && Capacitor.isNativePlatform()) {
       void PurchasesManager.loadCatalog({
         reason: "dev-build-disabled",
         force: true,
@@ -686,14 +937,28 @@ export const PurchasesManager = {
       cancelActiveCatalogLoad();
     }
 
+    resetCatalogDiagnostics();
+    catalogLoadStartedAt = Date.now();
+    catalogLoadCompletedAt = null;
+
+    setCatalogLoadResult(buildCatalogLoadResult("loading"));
+
+    await ensureNativeBootstrap({
+      force: force || bootstrapError !== null,
+    }).catch(() => {
+      catalogLoadCompletedAt = Date.now();
+      const result = buildCatalogLoadResult("unavailable");
+      setCatalogLoadResult(result);
+      return undefined;
+    });
+
+    if (!isInitialized) {
+      return buildCatalogLoadResult("unavailable");
+    }
+
     catalogLoadToken += 1;
     const loadToken = catalogLoadToken;
     catalogRefreshInFlight = true;
-    catalogLoadStartedAt = Date.now();
-    catalogLoadCompletedAt = null;
-    resetCatalogDiagnostics();
-
-    setCatalogLoadResult(buildCatalogLoadResult("loading"));
 
     catalogLoadPromise = new Promise<CatalogLoadResult>((resolve) => {
       resolveCatalogLoad = resolve;
@@ -922,6 +1187,13 @@ export const PurchasesManager = {
     lastSuccessfulProductLoadAt,
     lastLoadFailureReason,
     storeReady,
+    cordovaReady,
+    pluginAvailable,
+    bootstrapInProgress,
+    bootstrapStartedAt,
+    bootstrapCompletedAt,
+    bootstrapError,
+    initAttempts,
     lastStoreErrorCode,
     lastStoreErrorMessage,
     lastSyncError,
@@ -944,6 +1216,9 @@ export const PurchasesManager = {
       return true;
     }
     await PurchasesManager.init();
+    await ensureNativeBootstrap({
+      force: bootstrapError !== null,
+    }).catch(() => undefined);
     await ensureStoreReady();
     return storeReady;
   },

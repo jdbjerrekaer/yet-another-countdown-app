@@ -6,7 +6,6 @@ import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
 import { Keyboard } from '@capacitor/keyboard';
-import { Preferences } from '@capacitor/preferences';
 import {
   DndContext,
   closestCenter,
@@ -479,35 +478,6 @@ export default function Index() {
     };
     loadBuildInfo();
   }, [isNative]);
-
-  useEffect(() => {
-    const checkAndShowRemoveAdsModal = async () => {
-      await PurchasesManager.init();
-      
-      if (PurchasesManager.hasRemoveAdsEntitlement()) return;
-      
-      const PREF_SHOULD_SHOW_MODAL = 'removeAdsModal_shouldShow';
-      
-      try {
-        const { value } = await Preferences.get({ key: PREF_SHOULD_SHOW_MODAL });
-        const shouldShow = value === null ? false : value === 'true';
-        
-        await Preferences.set({ key: PREF_SHOULD_SHOW_MODAL, value: String(!shouldShow) });
-        
-        if (shouldShow) {
-          setIsRemoveAdsOpen(true);
-        }
-      } catch (error) {
-        console.warn('[RemoveAdsModal] Failed to check app open state', error);
-      }
-    };
-    
-    const timeoutId = setTimeout(() => {
-      void checkAndShowRemoveAdsModal();
-    }, 500);
-    
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   useEffect(() => {
     // On web, always show placeholder (ads don't load on web)
@@ -1773,4 +1743,3 @@ export default function Index() {
     </IonPage>
   );
 }
-

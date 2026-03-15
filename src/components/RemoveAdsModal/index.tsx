@@ -114,8 +114,10 @@ export const RemoveAdsModal = ({
   );
   const visibleProductIds = useMemo(
     () =>
-      orderedProductIds.filter((productId) =>
-        catalog.products.some((product) => product.id === productId),
+      orderedProductIds.filter(
+        (productId) =>
+          catalog.products.some((product) => product.id === productId) ||
+          Boolean(productLabels[productId]),
       ),
     [catalog.products, orderedProductIds],
   );
@@ -123,11 +125,15 @@ export const RemoveAdsModal = ({
   const primaryProductAvailable =
     !!primaryProductId &&
     catalog.products.some((product) => product.id === primaryProductId);
-  const loading = isNative && catalog.status === "loading";
+  const hasAttemptedCatalogLoad = Boolean(catalog.diagnostics.loadStartedAt);
+  const bootstrapCompleted = Boolean(catalog.diagnostics.bootstrapCompletedAt);
+  const loading = isNative && hasAttemptedCatalogLoad && catalog.status === "loading";
   const showGlobalLoadError =
     isNative &&
     !isDevBuild &&
+    hasAttemptedCatalogLoad &&
     !loading &&
+    bootstrapCompleted &&
     !primaryProductAvailable;
   const error = showGlobalLoadError ? t("iap.loadError") : null;
 
@@ -198,7 +204,6 @@ export const RemoveAdsModal = ({
     };
 
     loadProductsRef.current = loadProducts;
-    void loadProducts();
 
     return () => {
       loadProductsRef.current = null;
@@ -372,13 +377,14 @@ export const RemoveAdsModal = ({
           <div className="space-y-3">
             {visibleProductIds.map((productId) => {
               const product = getProductById(productId);
-              if (!product) {
+              const labels = productLabels[productId];
+              if (!product && !labels) {
                 return null;
               }
-              const labels = productLabels[productId];
               const Icon = labels?.icon || ShieldCheck;
               const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
-              const priceLabel = product.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
+              const priceLabel =
+                product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
               const isBusy =
                 actionLoadingId === productId &&
                 purchasePhase !== "idle" &&
@@ -437,10 +443,7 @@ export const RemoveAdsModal = ({
                           (!isNative && !isDevBuild) ||
                           hasRemoveAds ||
                           isBusy ||
-                          loading ||
-                          !product.loaded ||
-                          !product.valid ||
-                          !product.price
+                          loading
                         }
                         onClick={() => handlePurchase(productId)}
                       >
@@ -470,12 +473,16 @@ export const RemoveAdsModal = ({
             </div>
 
             <div className="flex flex-col gap-3">
-              <IonButton
-                fill="clear"
-                onClick={handleRestore}
-                className="text-primary text-sm font-semibold h-10 m-0"
-                disabled={(!isNative && !isDevBuild) || restoreLoading}
-              >
+                <IonButton
+                  fill="clear"
+                  onClick={handleRestore}
+                  className="text-primary text-sm font-semibold h-10 m-0"
+                  disabled={
+                    (!isNative && !isDevBuild) ||
+                    restoreLoading ||
+                    loading
+                  }
+                >
                 {restoreLoading ? (
                   <IonSpinner name="crescent" className="w-4 h-4" />
                 ) : (

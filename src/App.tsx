@@ -14,7 +14,6 @@ import Support from "./pages/Support";
 import { DeepLinkHandler } from "./components/DeepLinkHandler";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
-import { PurchasesManager } from "@/lib/purchases/purchasesManager";
 import { useTranslation } from "react-i18next";
 
 const queryClient = new QueryClient();
@@ -69,12 +68,6 @@ const App = () => {
   useSystemTheme();
   const { i18n } = useTranslation();
   const [, setLanguage] = useState(i18n.language);
-
-  useEffect(() => {
-    void PurchasesManager.init().then(() => {
-      void PurchasesManager.prefetchProducts().catch(() => {});
-    });
-  }, []);
 
   useEffect(() => {
     const handleLanguageChanged = (lng: string) => {

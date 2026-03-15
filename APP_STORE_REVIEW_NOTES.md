@@ -4,6 +4,14 @@ Copy and paste the content below into the "Review Notes" section in App Store Co
 
 ---
 
+## Reply For March 13, 2026 IAP Rejection
+
+This build addresses the Guideline 2.1(b) in-app purchase issue reported on March 13, 2026 for submission `d810746c-c91f-47d5-990e-82be085dc91f`.
+
+- We fixed an initialization race in the iOS sandbox purchase flow so the app now waits for Cordova and the native StoreKit purchase bridge before requesting products.
+- We retested the `Remove Ads` non-consumable flow in sandbox, including both purchase loading and Restore Purchases behavior.
+- The app still offers only two non-consumable products: `com.countdown.app.remove_ads` and `com.countdown.app.remove_ads_supporter`.
+
 ## Privacy & Consent Flow
 
 The app uses Google UMP (User Messaging Platform) for GDPR compliance in EEA/UK regions. For users in EEA/UK, a GDPR consent form is shown first. For users outside EEA/UK, consent is not required.
@@ -29,7 +37,7 @@ The app uses Google UMP (User Messaging Platform) for GDPR compliance in EEA/UK 
 - Two purchase options are available: Standard and Supporter tiers
 - Both are non-consumable, one-time purchases (no subscriptions)
 - Test the purchase flow and restore purchases functionality
-- **iPad Compatibility:** The app runs in iPhone compatibility mode on iPad. Product loading has been hardened with retry logic to handle transient StoreKit initialization delays in the sandbox environment. If products don't load immediately, the app will automatically retry up to 3 times before showing an error.
+- **iPad Compatibility:** The app runs in iPhone compatibility mode on iPad. The purchase flow now waits for the native sandbox purchase bridge to finish initializing before the paywall reports product availability, which avoids the earlier iPad sandbox startup race.
 
 ---
 
