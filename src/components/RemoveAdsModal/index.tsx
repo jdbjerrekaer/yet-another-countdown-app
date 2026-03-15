@@ -105,36 +105,43 @@ export const RemoveAdsModal = ({
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [purchasePhase, setPurchasePhase] = useState<PurchasePhase>("idle");
+  const [catalogRequestInFlight, setCatalogRequestInFlight] = useState(false);
   const loadProductsRef = useRef<
-    ((options?: { syncBeforeRefresh?: boolean; force?: boolean }) => Promise<void>) | null
+    ((options?: { force?: boolean; reason?: string }) => Promise<void>) | null
   >(null);
   const orderedProductIds = useMemo(
     () => PurchasesManager.getRemoveAdsProducts().map((item) => item.id),
     [],
   );
   const visibleProductIds = useMemo(
-    () =>
-      orderedProductIds.filter(
-        (productId) =>
-          catalog.products.some((product) => product.id === productId) ||
-          Boolean(productLabels[productId]),
-      ),
-    [catalog.products, orderedProductIds],
+    () => {
+      if (!isNative) {
+        return orderedProductIds;
+      }
+      return orderedProductIds.filter((productId) =>
+        catalog.products.some((product) => product.id === productId),
+      );
+    },
+    [catalog.products, isNative, orderedProductIds],
   );
-  const primaryProductId = orderedProductIds[0];
-  const primaryProductAvailable =
-    !!primaryProductId &&
-    catalog.products.some((product) => product.id === primaryProductId);
+  const hasVisibleProducts = visibleProductIds.length > 0;
   const hasAttemptedCatalogLoad = Boolean(catalog.diagnostics.loadStartedAt);
   const bootstrapCompleted = Boolean(catalog.diagnostics.bootstrapCompletedAt);
-  const loading = isNative && hasAttemptedCatalogLoad && catalog.status === "loading";
+  const loading =
+    isNative &&
+    !isDevBuild &&
+    !hasVisibleProducts &&
+    (!hasAttemptedCatalogLoad ||
+      catalogRequestInFlight ||
+      catalog.status === "loading" ||
+      catalog.diagnostics.bootstrapInProgress);
   const showGlobalLoadError =
     isNative &&
     !isDevBuild &&
-    hasAttemptedCatalogLoad &&
     !loading &&
+    hasAttemptedCatalogLoad &&
     bootstrapCompleted &&
-    !primaryProductAvailable;
+    !hasVisibleProducts;
   const error = showGlobalLoadError ? t("iap.loadError") : null;
 
   useEffect(() => {
@@ -163,7 +170,12 @@ export const RemoveAdsModal = ({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setCatalogRequestInFlight(false);
+      return;
+    }
+
+    let cancelled = false;
     confettiShownRef.current = false;
     closeTriggeredRef.current = false;
     PurchasesManager.setDevBuild(!!isDevBuild);
@@ -171,7 +183,9 @@ export const RemoveAdsModal = ({
     setRestoreMessage(null);
     setPurchaseError(null);
     setPurchasePhase("idle");
-    setCatalog(PurchasesManager.getCatalogLoadResult());
+    const currentCatalog = PurchasesManager.getCatalogLoadResult();
+    setCatalog(currentCatalog);
+    setCatalogRequestInFlight(false);
     if (!isNative) {
       return;
     }
@@ -185,27 +199,40 @@ export const RemoveAdsModal = ({
     }
 
     const unsubscribe = PurchasesManager.onCatalogChange((result) => {
-      setCatalog(result);
+      if (!cancelled) {
+        setCatalog(result);
+      }
     });
 
-    const loadProducts = async (options?: {
-      syncBeforeRefresh?: boolean;
-      force?: boolean;
-    }) => {
+    const loadProducts = async (options?: { force?: boolean; reason?: string }) => {
+      if (!cancelled) {
+        setCatalogRequestInFlight(true);
+      }
       try {
         await PurchasesManager.loadCatalog({
-          reason: options?.syncBeforeRefresh ? "modal-retry" : "modal-open",
+          reason: options?.reason ?? "modal-open",
           force: options?.force,
-          syncBeforeRefresh: options?.syncBeforeRefresh,
         });
       } catch (err) {
         console.warn("[IAP Modal] Failed to load catalog", err);
+      } finally {
+        if (!cancelled) {
+          setCatalogRequestInFlight(false);
+        }
       }
     };
 
     loadProductsRef.current = loadProducts;
+    void loadProducts({
+      force:
+        currentCatalog.products.length === 0 ||
+        currentCatalog.status === "unavailable" ||
+        currentCatalog.diagnostics.bootstrapError !== null,
+      reason: "modal-open",
+    });
 
     return () => {
+      cancelled = true;
       loadProductsRef.current = null;
       unsubscribe();
     };
@@ -353,8 +380,8 @@ export const RemoveAdsModal = ({
                   onClick={() => {
                     if (loadProductsRef.current) {
                       void loadProductsRef.current({
-                        syncBeforeRefresh: true,
                         force: true,
+                        reason: "modal-retry",
                       });
                     }
                   }}
@@ -374,7 +401,8 @@ export const RemoveAdsModal = ({
             </div>
           )}
 
-          <div className="space-y-3">
+          {visibleProductIds.length > 0 && (
+            <div className="space-y-3">
             {visibleProductIds.map((productId) => {
               const product = getProductById(productId);
               const labels = productLabels[productId];
@@ -383,8 +411,7 @@ export const RemoveAdsModal = ({
               }
               const Icon = labels?.icon || ShieldCheck;
               const badge = labels?.badgeKey ? t(labels.badgeKey) : null;
-              const priceLabel =
-                product?.price || (isDevBuild ? "€0.00 (Dev)" : t("iap.priceFallback"));
+              const priceLabel = product?.price || (isDevBuild ? "€0.00 (Dev)" : null);
               const isBusy =
                 actionLoadingId === productId &&
                 purchasePhase !== "idle" &&
@@ -424,9 +451,11 @@ export const RemoveAdsModal = ({
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                      <div className="text-sm font-bold text-foreground mb-1">
-                        {priceLabel}
-                      </div>
+                      {priceLabel && (
+                        <div className="text-sm font-bold text-foreground mb-1">
+                          {priceLabel}
+                        </div>
+                      )}
                       <IonButton
                         size="small"
                         fill={isSupporter ? "solid" : "clear"}
@@ -460,7 +489,8 @@ export const RemoveAdsModal = ({
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
 
           <div 
             key={`disclaimer-${isOpen}`}

@@ -13,12 +13,23 @@ import StoreKitDiagnostics, {
 type EntitlementListener = (entitled: boolean) => void;
 type CatalogListener = (result: CatalogLoadResult) => void;
 type CatalogStatus = "loading" | "loaded" | "partial" | "unavailable";
-type CatalogProductState = "pending" | "loaded" | "invalid" | "error";
+type CatalogProductState =
+  | "pending"
+  | "loaded_no_price"
+  | "loaded_priced"
+  | "invalid"
+  | "error";
+type SyncTrigger = "restore";
+type StoreKitComparisonStatus =
+  | "unknown"
+  | "aligned"
+  | "wrapper_plugin_hydration_failure"
+  | "app_store_or_sandbox_missing_prices";
 
 type CatalogLoadOptions = {
   reason?: string;
   force?: boolean;
-  syncBeforeRefresh?: boolean;
+  syncTriggeredBy?: SyncTrigger;
 };
 
 type CatalogProductDiagnostics = {
@@ -45,6 +56,12 @@ type CatalogDiagnostics = {
   lastLoadFailureReason: string | null;
   lastStoreErrorCode: number | null;
   lastStoreErrorMessage: string | null;
+  pricedProductIds: string[];
+  unpricedProductIds: string[];
+  hasUnpricedProducts: boolean;
+  syncTriggeredBy: SyncTrigger | null;
+  storeKitComparisonStatus: StoreKitComparisonStatus;
+  storeKitComparisonMessage: string | null;
   productStates: Record<string, CatalogProductDiagnostics>;
   lastDiagnosticsSnapshotAt: number | null;
   hasDiagnosticsSnapshot: boolean;
@@ -134,6 +151,7 @@ let lastDiagnosticsSnapshotAt: number | null = null;
 let lastStoreErrorCode: number | null = null;
 let lastStoreErrorMessage: string | null = null;
 let lastSyncError: string | null = null;
+let lastSyncTriggeredBy: SyncTrigger | null = null;
 let catalogProductStates = defaultProductDiagnostics();
 let catalogLoadToken = 0;
 let catalogLoadPromise: Promise<CatalogLoadResult> | null = null;
@@ -165,6 +183,12 @@ let catalogLoadResult: CatalogLoadResult = {
     lastLoadFailureReason: null,
     lastStoreErrorCode: null,
     lastStoreErrorMessage: null,
+    pricedProductIds: [],
+    unpricedProductIds: [],
+    hasUnpricedProducts: false,
+    syncTriggeredBy: null,
+    storeKitComparisonStatus: "unknown",
+    storeKitComparisonMessage: null,
     productStates: defaultProductDiagnostics(),
     lastDiagnosticsSnapshotAt: null,
     hasDiagnosticsSnapshot: false,
@@ -266,7 +290,16 @@ const collectDiagnosticsSnapshot = async (context: string): Promise<void> => {
     const snapshot = await StoreKitDiagnostics.collectSnapshot();
     lastDiagnosticsSnapshot = snapshot;
     lastDiagnosticsSnapshotAt = Date.now();
+    const refreshedResult = buildCatalogLoadResult(catalogLoadResult.status);
     console.log(`[Purchases] Diagnostics snapshot collected (${context}):`, snapshot);
+    if (refreshedResult.diagnostics.storeKitComparisonMessage) {
+      console.warn(
+        `[Purchases] StoreKit comparison (${context}): ${refreshedResult.diagnostics.storeKitComparisonMessage}`,
+      );
+    }
+    if (!catalogLoadPromise) {
+      setCatalogLoadResult(refreshedResult);
+    }
   } catch (error) {
     console.warn(
       `[Purchases] Failed to collect diagnostics snapshot (${context}):`,
@@ -492,15 +525,106 @@ const createMockProduct = (
   owned: false,
 } as IAPProduct);
 
-const getAvailableProducts = (): IAPProduct[] => {
+const getCatalogProductState = (product: IAPProduct): CatalogProductState => {
+  if (product.loaded && product.valid && product.price) {
+    return "loaded_priced";
+  }
+  if (product.loaded && product.valid) {
+    return "loaded_no_price";
+  }
+  if (product.loaded && !product.valid) {
+    return "invalid";
+  }
+  return "pending";
+};
+
+const getCatalogProductMessage = (product: IAPProduct): string | null => {
+  const state = getCatalogProductState(product);
+  if (state === "loaded_no_price") {
+    return "Product loaded without price";
+  }
+  if (state === "invalid") {
+    return "Product marked invalid by StoreKit";
+  }
+  return null;
+};
+
+const getPluginProducts = (): IAPProduct[] => {
   if (!isDevBuild && !hasPurchasePlugin()) {
     return [];
   }
 
   return PRODUCT_IDS.map((productId) => InAppPurchase2.get(productId)).filter(
-    (product): product is IAPProduct =>
-      Boolean(product && product.loaded && product.valid && product.price),
+    (product): product is IAPProduct => Boolean(product),
   );
+};
+
+const getPricedProducts = (): IAPProduct[] =>
+  getPluginProducts().filter((product) => getCatalogProductState(product) === "loaded_priced");
+
+const getUnpricedProductIds = (): string[] =>
+  PRODUCT_IDS.filter((productId) => {
+    const product = InAppPurchase2.get(productId);
+    return Boolean(
+      product &&
+        getCatalogProductState(product as IAPProduct) === "loaded_no_price",
+    );
+  });
+
+const getStoreKitComparison = (
+  pricedProductIds: string[],
+  unpricedProductIds: string[],
+): {
+  status: StoreKitComparisonStatus;
+  message: string | null;
+} => {
+  const productStatuses = lastDiagnosticsSnapshot?.productStatuses ?? [];
+  if (productStatuses.length === 0) {
+    return {
+      status: "unknown",
+      message: null,
+    };
+  }
+
+  const storeKitPricedProductIds = PRODUCT_IDS.filter((productId) => {
+    const status = productStatuses.find((item) => item.productId === productId);
+    return Boolean(status?.available && status.price);
+  });
+  const storeKitUnpricedProductIds = PRODUCT_IDS.filter((productId) => {
+    const status = productStatuses.find((item) => item.productId === productId);
+    return Boolean(status?.available && !status.price);
+  });
+
+  if (storeKitPricedProductIds.some((productId) => !pricedProductIds.includes(productId))) {
+    return {
+      status: "wrapper_plugin_hydration_failure",
+      message:
+        "StoreKit returned priced products, but the Cordova purchase wrapper did not expose them.",
+    };
+  }
+
+  const storeKitMissingProducts = productStatuses.some(
+    (status) => !status.available || Boolean(status.error),
+  );
+  if (
+    pricedProductIds.length === 0 &&
+    (unpricedProductIds.length > 0 ||
+      storeKitUnpricedProductIds.length > 0 ||
+      storeKitMissingProducts)
+  ) {
+    return {
+      status: "app_store_or_sandbox_missing_prices",
+      message:
+        storeKitUnpricedProductIds.length > 0 || unpricedProductIds.length > 0
+          ? "Products were discovered without prices. Check App Store Connect state and sandbox readiness."
+          : "StoreKit could not load the configured products or prices. Check App Store Connect state and sandbox readiness.",
+    };
+  }
+
+  return {
+    status: "aligned",
+    message: null,
+  };
 };
 
 const getDiagnosticsSnapshotSummary = () =>
@@ -518,11 +642,16 @@ const buildCatalogLoadResult = (
 ): CatalogLoadResult => {
   const products = isDevBuild
     ? REMOVE_ADS_PRODUCTS.map((product) => createMockProduct(product))
-    : getAvailableProducts();
+    : getPricedProducts();
+  const pricedProductIds = products.map((product) => product.id);
+  const unpricedProductIds = isDevBuild ? [] : getUnpricedProductIds();
+  const storeKitComparison = isDevBuild
+    ? { status: "aligned" as const, message: null }
+    : getStoreKitComparison(pricedProductIds, unpricedProductIds);
 
   const unavailableProductIds = isDevBuild
     ? []
-    : PRODUCT_IDS.filter((productId) => !products.some((product) => product.id === productId));
+    : PRODUCT_IDS.filter((productId) => !pricedProductIds.includes(productId));
 
   const status =
     statusOverride ??
@@ -558,6 +687,12 @@ const buildCatalogLoadResult = (
       lastLoadFailureReason,
       lastStoreErrorCode,
       lastStoreErrorMessage,
+      pricedProductIds,
+      unpricedProductIds,
+      hasUnpricedProducts: unpricedProductIds.length > 0,
+      syncTriggeredBy: lastSyncTriggeredBy,
+      storeKitComparisonStatus: storeKitComparison.status,
+      storeKitComparisonMessage: storeKitComparison.message,
       productStates: { ...catalogProductStates },
       lastDiagnosticsSnapshotAt,
       hasDiagnosticsSnapshot: lastDiagnosticsSnapshot !== null,
@@ -597,16 +732,13 @@ const syncProductDiagnosticsFromStore = () => {
     if (!product) {
       return;
     }
-    if (product.loaded && product.valid && product.price) {
-      updateProductDiagnostics(productId, "loaded", "store-snapshot");
-      return;
-    }
-    if (product.loaded && !product.valid) {
+    const state = getCatalogProductState(product as IAPProduct);
+    if (state !== "pending") {
       updateProductDiagnostics(
         productId,
-        "invalid",
+        state,
         "store-snapshot",
-        "Product marked invalid by StoreKit",
+        getCatalogProductMessage(product as IAPProduct),
       );
     }
   });
@@ -668,8 +800,11 @@ const completeCatalogLoad = (statusOverride?: CatalogStatus, context = "load-com
     } else {
       lastLoadFailureReason = `Only ${result.products.length}/${PRODUCT_IDS.length} offers loaded`;
     }
+  } else if (result.diagnostics.hasUnpricedProducts) {
+    lastLoadFailureReason = "Products were discovered without prices";
   } else if (!lastLoadFailureReason) {
     lastLoadFailureReason =
+      result.diagnostics.storeKitComparisonMessage ??
       result.errorMessage ??
       `Unable to load ${PRODUCT_IDS.length} configured products`;
   }
@@ -705,7 +840,7 @@ const queueCatalogSettle = (loadToken: number, reason: string) => {
     ).length;
     const hasCatalogSignal =
       storeReady ||
-      getAvailableProducts().length > 0 ||
+      getPricedProducts().length > 0 ||
       Object.values(catalogProductStates).some((snapshot) => snapshot.state !== "pending") ||
       Boolean(lastStoreErrorMessage);
 
@@ -724,6 +859,7 @@ const resetCatalogDiagnostics = () => {
   lastStoreErrorCode = null;
   lastStoreErrorMessage = null;
   lastSyncError = null;
+  lastSyncTriggeredBy = null;
   lastLoadFailureReason = null;
   catalogProductStates = defaultProductDiagnostics();
 };
@@ -760,9 +896,9 @@ const registerCatalogListeners = () => {
       }
       updateProductDiagnostics(
         productId,
-        payload.valid ? "loaded" : "invalid",
+        getCatalogProductState(payload),
         "loaded",
-        payload.valid ? null : "Product marked invalid by StoreKit",
+        getCatalogProductMessage(payload),
       );
       queueCatalogSettle(catalogLoadToken, "product-loaded");
     });
@@ -773,8 +909,9 @@ const registerCatalogListeners = () => {
       }
       updateProductDiagnostics(
         productId,
-        payload.valid && payload.price ? "loaded" : payload.loaded ? "invalid" : "pending",
+        getCatalogProductState(payload),
         "updated",
+        getCatalogProductMessage(payload),
       );
       queueCatalogSettle(catalogLoadToken, "product-updated");
     });
@@ -783,7 +920,12 @@ const registerCatalogListeners = () => {
       if (!isIAPProduct(payload)) {
         return;
       }
-      updateProductDiagnostics(productId, "loaded", "valid");
+      updateProductDiagnostics(
+        productId,
+        getCatalogProductState(payload),
+        "valid",
+        getCatalogProductMessage(payload),
+      );
       queueCatalogSettle(catalogLoadToken, "product-valid");
     });
 
@@ -915,7 +1057,7 @@ export const PurchasesManager = {
   loadCatalog: async ({
     reason = "catalog-load",
     force = false,
-    syncBeforeRefresh = false,
+    syncTriggeredBy,
   }: CatalogLoadOptions = {}): Promise<CatalogLoadResult> => {
     await PurchasesManager.init();
 
@@ -940,6 +1082,7 @@ export const PurchasesManager = {
     resetCatalogDiagnostics();
     catalogLoadStartedAt = Date.now();
     catalogLoadCompletedAt = null;
+    lastSyncTriggeredBy = syncTriggeredBy ?? null;
 
     setCatalogLoadResult(buildCatalogLoadResult("loading"));
 
@@ -984,7 +1127,7 @@ export const PurchasesManager = {
     }, IAP_TIMING.catalogStallTimeoutMs);
 
     const runLoad = async () => {
-      if (syncBeforeRefresh) {
+      if (syncTriggeredBy) {
         try {
           const syncResult = await StoreKitDiagnostics.syncStore();
           if (!syncResult.success) {
@@ -1140,7 +1283,7 @@ export const PurchasesManager = {
       await PurchasesManager.loadCatalog({
         reason: "restore",
         force: true,
-        syncBeforeRefresh: true,
+        syncTriggeredBy: "restore",
       });
 
       const ownedProducts = PRODUCT_IDS.filter((productId) => {
@@ -1197,6 +1340,12 @@ export const PurchasesManager = {
     lastStoreErrorCode,
     lastStoreErrorMessage,
     lastSyncError,
+    pricedProductIds: catalogLoadResult.diagnostics.pricedProductIds,
+    unpricedProductIds: catalogLoadResult.diagnostics.unpricedProductIds,
+    hasUnpricedProducts: catalogLoadResult.diagnostics.hasUnpricedProducts,
+    syncTriggeredBy: catalogLoadResult.diagnostics.syncTriggeredBy,
+    storeKitComparisonStatus: catalogLoadResult.diagnostics.storeKitComparisonStatus,
+    storeKitComparisonMessage: catalogLoadResult.diagnostics.storeKitComparisonMessage,
     catalogStatus: catalogLoadResult.status,
     unavailableProductIds: catalogLoadResult.unavailableProductIds,
     productStates: catalogProductStates,

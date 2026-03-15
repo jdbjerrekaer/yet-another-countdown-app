@@ -61,7 +61,10 @@ final class WidgetDataSync {
     
     /// Load all countdown events
     func loadEvents() -> [CountdownEvent] {
-        loadWidgetData()?.events ?? []
+        let events = loadWidgetData()?.events ?? []
+        let eventIds = events.map(\.id)
+        print("WidgetDataSync: loadEvents returning \(events.count) events with IDs: \(eventIds)")
+        return events
     }
     
     /// Load a specific event by ID

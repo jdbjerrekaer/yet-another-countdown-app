@@ -10,7 +10,7 @@ struct CountdownWidgetEntry: TimelineEntry {
     let event: CountdownEvent?
     let appearanceMode: WidgetAppearanceMode
     let countdownStyle: WidgetCountdownStyle
-    let configuration: CountdownEventEntity?
+    let configuration: WidgetCountdownEntity?
 }
 
 /// Timeline entry containing three countdown events for triple widget display
@@ -22,6 +22,33 @@ struct TripleCountdownWidgetEntry: TimelineEntry {
     let event3: CountdownEvent?
     let appearanceMode: WidgetAppearanceMode
     let countdownStyle: WidgetCountdownStyle
+}
+
+@available(iOS 17.0, *)
+private func resolveConfiguredEvent(
+    selection: WidgetCountdownEntity?,
+    widgetData: WidgetData?,
+    providerName: String
+) -> CountdownEvent? {
+    let events = widgetData?.events ?? []
+
+    guard let selection else {
+        let fallbackEvent = events.first
+        print("\(providerName): No configured countdown ID; using first available event ID \(fallbackEvent?.id ?? "nil")")
+        return fallbackEvent
+    }
+
+    let selectedId = selection.id
+
+    print("\(providerName): Resolving configured countdown ID \(selectedId) from \(events.count) events")
+
+    guard let event = events.first(where: { $0.id == selectedId }) else {
+        print("\(providerName): Failed to resolve configured countdown ID \(selectedId); rendering empty state")
+        return nil
+    }
+
+    print("\(providerName): Resolved configured countdown ID \(selectedId) to '\(event.title)'")
+    return event
 }
 
 // MARK: - Timeline Provider for iOS 17+ (Focus/Timer Style)
@@ -51,14 +78,12 @@ struct CountdownTimerWidgetProvider: AppIntentTimelineProvider {
     
     func snapshot(for configuration: SelectCountdownIntent, in context: Context) async -> CountdownWidgetEntry {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        
-        // Get selected event or first available
-        let event: CountdownEvent?
-        if let selectedId = configuration.countdown?.id {
-            event = widgetData?.events.first { $0.id == selectedId }
-        } else {
-            event = widgetData?.events.first
-        }
+        print("CountdownTimerWidgetProvider.snapshot: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
+        let event = resolveConfiguredEvent(
+            selection: configuration.countdown,
+            widgetData: widgetData,
+            providerName: "CountdownTimerWidgetProvider.snapshot"
+        )
         
         return CountdownWidgetEntry(
             date: Date(),
@@ -71,14 +96,12 @@ struct CountdownTimerWidgetProvider: AppIntentTimelineProvider {
     
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        
-        // Get selected event or first available
-        let event: CountdownEvent?
-        if let selectedId = configuration.countdown?.id {
-            event = widgetData?.events.first { $0.id == selectedId }
-        } else {
-            event = widgetData?.events.first
-        }
+        print("CountdownTimerWidgetProvider.timeline: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
+        let event = resolveConfiguredEvent(
+            selection: configuration.countdown,
+            widgetData: widgetData,
+            providerName: "CountdownTimerWidgetProvider.timeline"
+        )
         
         let entry = CountdownWidgetEntry(
             date: Date(),
@@ -122,14 +145,12 @@ struct CountdownVisualWidgetProvider: AppIntentTimelineProvider {
     
     func snapshot(for configuration: SelectCountdownIntent, in context: Context) async -> CountdownWidgetEntry {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        
-        // Get selected event or first available
-        let event: CountdownEvent?
-        if let selectedId = configuration.countdown?.id {
-            event = widgetData?.events.first { $0.id == selectedId }
-        } else {
-            event = widgetData?.events.first
-        }
+        print("CountdownVisualWidgetProvider.snapshot: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
+        let event = resolveConfiguredEvent(
+            selection: configuration.countdown,
+            widgetData: widgetData,
+            providerName: "CountdownVisualWidgetProvider.snapshot"
+        )
         
         return CountdownWidgetEntry(
             date: Date(),
@@ -142,14 +163,12 @@ struct CountdownVisualWidgetProvider: AppIntentTimelineProvider {
     
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        
-        // Get selected event or first available
-        let event: CountdownEvent?
-        if let selectedId = configuration.countdown?.id {
-            event = widgetData?.events.first { $0.id == selectedId }
-        } else {
-            event = widgetData?.events.first
-        }
+        print("CountdownVisualWidgetProvider.timeline: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
+        let event = resolveConfiguredEvent(
+            selection: configuration.countdown,
+            widgetData: widgetData,
+            providerName: "CountdownVisualWidgetProvider.timeline"
+        )
         
         let entry = CountdownWidgetEntry(
             date: Date(),
@@ -245,14 +264,12 @@ struct CountdownClassicWidgetProvider: AppIntentTimelineProvider {
     
     func snapshot(for configuration: SelectCountdownIntent, in context: Context) async -> CountdownWidgetEntry {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        
-        // Get selected event or first available
-        let event: CountdownEvent?
-        if let selectedId = configuration.countdown?.id {
-            event = widgetData?.events.first { $0.id == selectedId }
-        } else {
-            event = widgetData?.events.first
-        }
+        print("CountdownClassicWidgetProvider.snapshot: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
+        let event = resolveConfiguredEvent(
+            selection: configuration.countdown,
+            widgetData: widgetData,
+            providerName: "CountdownClassicWidgetProvider.snapshot"
+        )
         
         return CountdownWidgetEntry(
             date: Date(),
@@ -265,14 +282,12 @@ struct CountdownClassicWidgetProvider: AppIntentTimelineProvider {
     
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        
-        // Get selected event or first available
-        let event: CountdownEvent?
-        if let selectedId = configuration.countdown?.id {
-            event = widgetData?.events.first { $0.id == selectedId }
-        } else {
-            event = widgetData?.events.first
-        }
+        print("CountdownClassicWidgetProvider.timeline: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
+        let event = resolveConfiguredEvent(
+            selection: configuration.countdown,
+            widgetData: widgetData,
+            providerName: "CountdownClassicWidgetProvider.timeline"
+        )
         
         let entry = CountdownWidgetEntry(
             date: Date(),

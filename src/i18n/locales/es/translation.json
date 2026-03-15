@@ -181,7 +181,6 @@
     "purchaseError": "Error en la compra. Inténtalo de nuevo.",
     "loadError": "No se pudieron cargar los productos.",
     "loadingProducts": "Cargando...",
-    "priceFallback": "-",
     "webUnavailable": "Las compras están disponibles en la app de iOS.",
     "disclaimer": "Compra única. Se puede restaurar en cualquier momento.",
     "adFreeBadge": "Sin anuncios",

@@ -181,7 +181,6 @@
     "purchaseError": "Kjøp mislyktes. Prøv igjen.",
     "loadError": "Kunne ikke laste inn produkter akkurat nå.",
     "loadingProducts": "Henter priser...",
-    "priceFallback": "-",
     "webUnavailable": "Kjøp er tilgjengelige i iOS-appen.",
     "disclaimer": "Engangskjøp. Kan alltid gjenopprettes.",
     "adFreeBadge": "Reklamefri",

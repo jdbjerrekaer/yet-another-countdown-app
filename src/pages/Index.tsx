@@ -209,6 +209,7 @@ export default function Index() {
   const calendarImportModalRef = useRef<CalendarImportModalRef>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
+  const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -587,58 +588,6 @@ export default function Index() {
   };
 
   // Debug: Test CalendarPlugin immediately on mount - use direct Capacitor call
-  useEffect(() => {
-    const testPlugin = async () => {
-      const platform = Capacitor.getPlatform();
-      const native = Capacitor.isNativePlatform();
-      
-      // Log directly to native console via a trick
-      console.log('[WidgetSync] Platform:', platform, 'isNative:', native);
-      
-      // Get events from localStorage directly to avoid closure issues
-      const saved = localStorage.getItem('countdowns');
-      const storedEvents = saved ? JSON.parse(saved) : [];
-      
-      // Get saved appearance mode and countdown style from localStorage
-      const savedAppearanceMode = localStorage.getItem('widgetAppearanceMode') || 'light';
-      const savedCountdownStyle = localStorage.getItem('widgetCountdownStyle') || 'focus';
-      
-      console.log('[WidgetSync] Events from localStorage:', storedEvents.length);
-      
-      if (native && storedEvents.length > 0) {
-        try {
-          console.log('[WidgetSync] Calling CalendarPlugin.updateWidgetData...');
-          const testEvents = storedEvents.map((e: CountdownEvent) => ({
-            id: e.id,
-            title: e.title,
-            targetDate: e.targetDate,
-            emoji: e.emoji,
-            emojiColor: e.emojiColor,
-            isRecurring: e.isRecurring,
-            createdAt: e.createdAt,
-          }));
-          
-          console.log('[WidgetSync] Events to sync:', JSON.stringify(testEvents));
-          
-          const result = await CalendarPlugin.updateWidgetData({
-            events: testEvents,
-            appearanceMode: savedAppearanceMode,
-            countdownStyle: savedCountdownStyle,
-          });
-          console.log('[WidgetSync] SUCCESS! Result:', JSON.stringify(result));
-        } catch (error) {
-          console.error('[WidgetSync] FAILED:', error);
-        }
-      } else {
-        console.log('[WidgetSync] Skipping sync - native:', native, 'events:', storedEvents.length);
-      }
-    };
-    
-    // Run immediately and after delay
-    testPlugin();
-    setTimeout(testPlugin, 2000);
-  }, []);
-
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
   useEffect(() => {
@@ -729,14 +678,24 @@ export default function Index() {
           createdAt: event.createdAt,
         }));
 
-        console.log('[WidgetSync] Calling updateWidgetData with', widgetEvents.length, 'events');
-        console.log('[WidgetSync] Events:', JSON.stringify(widgetEvents, null, 2));
-        
-        const result = await CalendarPlugin.updateWidgetData({
+        const payload = {
           events: widgetEvents,
           appearanceMode: selectedAppearanceMode,
           countdownStyle: selectedCountdownStyle,
-        });
+        };
+        const serializedPayload = JSON.stringify(payload);
+        const widgetEventIds = widgetEvents.map(event => event.id);
+
+        if (lastSyncedWidgetPayloadRef.current === serializedPayload) {
+          console.log('[WidgetSync] Skipping native sync - payload unchanged. Event IDs:', widgetEventIds);
+          return;
+        }
+
+        console.log('[WidgetSync] Calling updateWidgetData with', widgetEvents.length, 'events. Event IDs:', widgetEventIds);
+        console.log('[WidgetSync] Events:', JSON.stringify(widgetEvents, null, 2));
+        
+        const result = await CalendarPlugin.updateWidgetData(payload);
+        lastSyncedWidgetPayloadRef.current = serializedPayload;
         
         console.log('[WidgetSync] Success:', result);
       } catch (error) {

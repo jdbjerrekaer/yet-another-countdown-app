@@ -181,7 +181,6 @@
     "purchaseError": "L'achat a échoué. Réessayez.",
     "loadError": "Impossible de charger les produits.",
     "loadingProducts": "Chargement...",
-    "priceFallback": "-",
     "webUnavailable": "Achats disponibles dans l'app iOS.",
     "disclaimer": "Achat unique. Peut être restauré à tout moment.",
     "adFreeBadge": "Sans pubs",

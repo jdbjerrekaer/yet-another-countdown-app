@@ -8,8 +8,9 @@ Copy and paste the content below into the "Review Notes" section in App Store Co
 
 This build addresses the Guideline 2.1(b) in-app purchase issue reported on March 13, 2026 for submission `d810746c-c91f-47d5-990e-82be085dc91f`.
 
-- We fixed an initialization race in the iOS sandbox purchase flow so the app now waits for Cordova and the native StoreKit purchase bridge before requesting products.
-- We retested the `Remove Ads` non-consumable flow in sandbox, including both purchase loading and Restore Purchases behavior.
+- We fixed the iOS sandbox purchase startup flow so the paywall no longer triggers restore/account-recovery behavior while loading products or retrying product fetches.
+- We also changed the paywall to wait for real App Store pricing before rendering native purchase options, which avoids showing placeholder offers without prices during review.
+- We retested the `Remove Ads` non-consumable flow in sandbox, including price loading, purchase, and explicit Restore Purchases behavior.
 - The app still offers only two non-consumable products: `com.countdown.app.remove_ads` and `com.countdown.app.remove_ads_supporter`.
 
 ## Privacy & Consent Flow
@@ -37,13 +38,13 @@ The app uses Google UMP (User Messaging Platform) for GDPR compliance in EEA/UK 
 - Two purchase options are available: Standard and Supporter tiers
 - Both are non-consumable, one-time purchases (no subscriptions)
 - Test the purchase flow and restore purchases functionality
-- **iPad Compatibility:** The app runs in iPhone compatibility mode on iPad. The purchase flow now waits for the native sandbox purchase bridge to finish initializing before the paywall reports product availability, which avoids the earlier iPad sandbox startup race.
+- **iPad Compatibility:** The app runs in iPhone compatibility mode on iPad. The paywall now waits for priced sandbox products before showing purchase buttons, and restore/account sync is only triggered from the explicit Restore Purchases action.
 
 ---
 
 **Important IAP Clarifications:**
 - The app contains **only two non-consumable in-app purchases** (Remove Ads Standard and Remove Ads Supporter)
 - **No subscription products** are included in this app
-- Product loading has been optimized for iPad sandbox environments where StoreKit initialization can be slower
+- Product loading has been optimized for iPad sandbox environments where StoreKit initialization can be slower, and the app no longer surfaces placeholder native offers without App Store prices
 
 **Note:** The app does not have region-specific behavior differences for privacy/consent flows beyond the standard GDPR requirements for EEA/UK users.

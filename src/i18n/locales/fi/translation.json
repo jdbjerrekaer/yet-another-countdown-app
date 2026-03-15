@@ -181,7 +181,6 @@
     "purchaseError": "Osto epäonnistui. Yritä uudelleen.",
     "loadError": "Tuotteita ei voitu ladata.",
     "loadingProducts": "Ladataan...",
-    "priceFallback": "-",
     "webUnavailable": "Ostot ovat saatavilla iOS-sovelluksessa.",
     "disclaimer": "Kertaostos. Voidaan palauttaa milloin vain.",
     "adFreeBadge": "Mainokseton",

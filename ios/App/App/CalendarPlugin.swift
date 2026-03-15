@@ -276,6 +276,8 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         let countdownStyle = call.getString("countdownStyle") ?? "focus"
         
         print("CalendarPlugin: Received \(eventsArray.count) events, appearance: \(appearanceMode), style: \(countdownStyle)")
+        let incomingIds = eventsArray.compactMap { $0["id"] as? String }
+        print("CalendarPlugin: Incoming event IDs: \(incomingIds)")
         
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             print("CalendarPlugin: FAILED to access App Group with identifier: \(appGroupIdentifier)")
@@ -300,20 +302,46 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             print("CalendarPlugin: Event - \(cleanEvent["title"] ?? "unknown") targeting \(cleanEvent["targetDate"] ?? "unknown")")
         }
         
-        // Store widget data as JSON
-        let widgetData: [String: Any] = [
+        let stableWidgetData: [String: Any] = [
             "events": cleanedEvents,
             "appearanceMode": appearanceMode,
-            "countdownStyle": countdownStyle,
-            "lastUpdated": ISO8601DateFormatter().string(from: Date())
+            "countdownStyle": countdownStyle
         ]
         
         do {
-            let jsonData = try JSONSerialization.data(withJSONObject: widgetData, options: [.prettyPrinted])
+            let stableJsonData = try JSONSerialization.data(withJSONObject: stableWidgetData, options: [.sortedKeys])
+
+            if let existingData = userDefaults.data(forKey: "widgetData"),
+               let existingObject = try JSONSerialization.jsonObject(with: existingData) as? [String: Any] {
+                let existingStableWidgetData: [String: Any] = [
+                    "events": existingObject["events"] as? [[String: Any]] ?? [],
+                    "appearanceMode": existingObject["appearanceMode"] as? String ?? "light",
+                    "countdownStyle": existingObject["countdownStyle"] as? String ?? "focus"
+                ]
+                let existingStableJsonData = try JSONSerialization.data(withJSONObject: existingStableWidgetData, options: [.sortedKeys])
+
+                if existingStableJsonData == stableJsonData {
+                    let existingIds = (existingObject["events"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+                    print("CalendarPlugin: Widget data unchanged - skipping write and timeline reload")
+                    print("CalendarPlugin: Existing stored event IDs: \(existingIds)")
+                    call.resolve(["success": true])
+                    return
+                }
+            }
+
+            // Store widget data as JSON
+            let widgetData: [String: Any] = [
+                "events": cleanedEvents,
+                "appearanceMode": appearanceMode,
+                "countdownStyle": countdownStyle,
+                "lastUpdated": ISO8601DateFormatter().string(from: Date())
+            ]
+            let jsonData = try JSONSerialization.data(withJSONObject: widgetData, options: [.prettyPrinted, .sortedKeys])
             userDefaults.set(jsonData, forKey: "widgetData")
             userDefaults.synchronize()
             
             print("CalendarPlugin: Saved \(jsonData.count) bytes to App Group")
+            print("CalendarPlugin: Persisted event IDs: \(cleanedEvents.compactMap { $0["id"] as? String })")
             
             // Verify the data was saved
             if let verifyData = userDefaults.data(forKey: "widgetData") {
@@ -343,6 +371,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         guard let jsonData = userDefaults.data(forKey: "widgetData") else {
+            print("CalendarPlugin.getWidgetData: No widgetData present in App Group storage")
             call.resolve(["widgetData": NSNull()])
             return
         }
@@ -350,11 +379,15 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: jsonData, options: [])
             if let widgetData = jsonObject as? [String: Any] {
+                let ids = (widgetData["events"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
+                print("CalendarPlugin.getWidgetData: Returning \(ids.count) stored event IDs: \(ids)")
                 call.resolve(["widgetData": widgetData])
             } else {
+                print("CalendarPlugin.getWidgetData: Stored widgetData is not a dictionary")
                 call.resolve(["widgetData": NSNull()])
             }
         } catch {
+            print("CalendarPlugin.getWidgetData: Failed to read widget data: \(error)")
             call.reject("Failed to read widget data: \(error.localizedDescription)")
         }
     }

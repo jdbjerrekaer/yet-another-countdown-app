@@ -182,7 +182,6 @@
     "loadError": "Unable to load products right now.",
     "retry": "Retry",
     "loadingProducts": "Loading offers...",
-    "priceFallback": "-",
     "webUnavailable": "Purchases are available on the iOS app.",
     "disclaimer": "One-time purchase. Restore any time after reinstalling.",
     "adFreeBadge": "Ad-free",

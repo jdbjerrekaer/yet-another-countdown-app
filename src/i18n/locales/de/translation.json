@@ -181,7 +181,6 @@
     "purchaseError": "Kauf fehlgeschlagen. Bitte erneut versuchen.",
     "loadError": "Produkte können derzeit nicht geladen werden.",
     "loadingProducts": "Wird geladen...",
-    "priceFallback": "-",
     "webUnavailable": "Käufe sind in der iOS-App verfügbar.",
     "disclaimer": "Einmaliger Kauf. Kann jederzeit wiederhergestellt werden.",
     "adFreeBadge": "Werbefrei",
