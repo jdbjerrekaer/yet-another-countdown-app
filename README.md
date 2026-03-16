@@ -181,7 +181,7 @@ Configure these secrets in your repository settings (`Settings` → `Secrets and
    - The workflow will validate:
      - The shared `App` scheme does not use a local `.storekit` file
      - `StoreKit.storekit` is not bundled into app or widget resources
-     - Both IAP products exist (`com.countdown.app.remove_ads`, `com.countdown.app.remove_ads_supporter`)
+     - Both IAP products exist (`com.jonatanbjerrekaer.countdown.remove_ads`, `com.jonatanbjerrekaer.countdown.remove_ads_supporter`)
      - Products are in `APPROVED`, `READY_TO_SUBMIT`, or `WAITING_FOR_REVIEW` state
      - Paid Apps Agreement is active (verified implicitly by successful IAP product fetch)
    - A preflight report artifact will be uploaded with detailed results

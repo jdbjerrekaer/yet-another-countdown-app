@@ -565,7 +565,7 @@ export default function Index() {
       const nextValue = !hasRemoveAds;
       await PurchasesManager.setDevEntitlement(
         nextValue,
-        "com.countdown.app.remove_ads_supporter",
+        "com.jonatanbjerrekaer.countdown.remove_ads_supporter",
       );
       setHasRemoveAds(nextValue);
       if (nextValue) {

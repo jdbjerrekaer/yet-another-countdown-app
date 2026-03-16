@@ -780,7 +780,7 @@
 			baseConfigurationReference = 4CCD2CE16498043E24F048D0 /* Pods-CountdownWidget.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_ENTITLEMENTS = CountdownWidget/CountdownWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 5N8M677RB6;

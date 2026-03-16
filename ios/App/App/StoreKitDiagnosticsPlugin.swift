@@ -9,13 +9,14 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "StoreKitDiagnosticsPlugin"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "collectSnapshot", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "fetchProducts", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "syncStore", returnType: CAPPluginReturnPromise)
     ]
     
     private let snapshotFileName = "storekit_diagnostics_snapshot.json"
     private let productIds = [
-        "com.countdown.app.remove_ads",
-        "com.countdown.app.remove_ads_supporter"
+        "com.jonatanbjerrekaer.countdown.remove_ads",
+        "com.jonatanbjerrekaer.countdown.remove_ads_supporter"
     ]
     
     @objc func collectSnapshot(_ call: CAPPluginCall) {
@@ -51,6 +52,36 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
             ])
         }
     }
+
+    @objc func fetchProducts(_ call: CAPPluginCall) {
+        if #available(iOS 15.0, *) {
+            Task {
+                do {
+                    let products = try await fetchStoreKitProducts()
+                    await MainActor.run {
+                        call.resolve([
+                            "timestamp": ISO8601DateFormatter().string(from: Date()),
+                            "products": products
+                        ])
+                    }
+                } catch {
+                    await MainActor.run {
+                        call.resolve([
+                            "timestamp": ISO8601DateFormatter().string(from: Date()),
+                            "products": [],
+                            "error": error.localizedDescription
+                        ])
+                    }
+                }
+            }
+        } else {
+            call.resolve([
+                "timestamp": ISO8601DateFormatter().string(from: Date()),
+                "products": [],
+                "error": "StoreKit 2 requires iOS 15.0+"
+            ])
+        }
+    }
     
     @objc func syncStore(_ call: CAPPluginCall) {
         if #available(iOS 15.0, *) {
@@ -71,6 +102,29 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
+    @available(iOS 15.0, *)
+    private func fetchStoreKitProducts() async throws -> [[String: Any]] {
+        let products = try await Product.products(for: productIds)
+        return productIds.map { productId in
+            guard let product = products.first(where: { $0.id == productId }) else {
+                return [
+                    "productId": productId,
+                    "available": false,
+                    "error": "Product not found"
+                ]
+            }
+
+            return [
+                "productId": productId,
+                "available": true,
+                "displayName": product.displayName,
+                "description": product.description,
+                "price": product.displayPrice,
+                "currencyCode": product.priceFormatStyle.currencyCode
+            ]
+        }
+    }
+
     @available(iOS 15.0, *)
     private func collectStoreKit2Snapshot() async throws -> [String: Any] {
         var snapshot: [String: Any] = [:]

@@ -7,6 +7,8 @@ import {
 } from "@awesome-cordova-plugins/in-app-purchase-2";
 import { IAP_TIMING } from "./constants";
 import StoreKitDiagnostics, {
+  StoreKitFetchedProduct,
+  StoreKitProductFetchResult,
   StoreKitDiagnosticsSnapshot,
 } from "../../plugins/StoreKitDiagnosticsPlugin";
 
@@ -19,7 +21,8 @@ type CatalogProductState =
   | "loaded_priced"
   | "invalid"
   | "error";
-type SyncTrigger = "restore";
+type CatalogOperation = "passive" | "restore";
+type CatalogSource = "storekit2" | "cordova-plugin";
 type StoreKitComparisonStatus =
   | "unknown"
   | "aligned"
@@ -29,7 +32,7 @@ type StoreKitComparisonStatus =
 type CatalogLoadOptions = {
   reason?: string;
   force?: boolean;
-  syncTriggeredBy?: SyncTrigger;
+  operation?: CatalogOperation;
 };
 
 type CatalogProductDiagnostics = {
@@ -56,10 +59,15 @@ type CatalogDiagnostics = {
   lastLoadFailureReason: string | null;
   lastStoreErrorCode: number | null;
   lastStoreErrorMessage: string | null;
+  catalogSource: CatalogSource;
+  storeKitProductFetchError: string | null;
   pricedProductIds: string[];
   unpricedProductIds: string[];
   hasUnpricedProducts: boolean;
-  syncTriggeredBy: SyncTrigger | null;
+  catalogOperation: CatalogOperation;
+  receiptLoadErrorIgnored: boolean;
+  lastReceiptErrorCode: number | null;
+  lastReceiptErrorMessage: string | null;
   storeKitComparisonStatus: StoreKitComparisonStatus;
   storeKitComparisonMessage: string | null;
   productStates: Record<string, CatalogProductDiagnostics>;
@@ -87,11 +95,11 @@ const PREF_REMOVE_ADS_PRODUCT_ID = "iap_remove_ads_product_id";
 
 const REMOVE_ADS_PRODUCTS = [
   {
-    id: "com.countdown.app.remove_ads",
+    id: "com.jonatanbjerrekaer.countdown.remove_ads",
     tier: "standard",
   },
   {
-    id: "com.countdown.app.remove_ads_supporter",
+    id: "com.jonatanbjerrekaer.countdown.remove_ads_supporter",
     tier: "supporter",
   },
 ] as const;
@@ -104,6 +112,11 @@ type PurchaseStore = {
   when: (...args: unknown[]) => unknown;
   error: (...args: unknown[]) => unknown;
   refresh: (...args: unknown[]) => unknown;
+  update: (
+    successCb?: (...args: unknown[]) => void,
+    errorCb?: (...args: unknown[]) => void,
+    skipLoad?: boolean,
+  ) => unknown;
   get: (...args: unknown[]) => unknown;
   order: (...args: unknown[]) => unknown;
 };
@@ -150,8 +163,13 @@ let lastDiagnosticsSnapshot: StoreKitDiagnosticsSnapshot | null = null;
 let lastDiagnosticsSnapshotAt: number | null = null;
 let lastStoreErrorCode: number | null = null;
 let lastStoreErrorMessage: string | null = null;
+let catalogSource: CatalogSource = "storekit2";
+let storeKitProductFetchError: string | null = null;
 let lastSyncError: string | null = null;
-let lastSyncTriggeredBy: SyncTrigger | null = null;
+let currentCatalogOperation: CatalogOperation = "passive";
+let receiptLoadErrorIgnored = false;
+let lastReceiptErrorCode: number | null = null;
+let lastReceiptErrorMessage: string | null = null;
 let catalogProductStates = defaultProductDiagnostics();
 let catalogLoadToken = 0;
 let catalogLoadPromise: Promise<CatalogLoadResult> | null = null;
@@ -161,6 +179,7 @@ let catalogSettleTimeout: ReturnType<typeof setTimeout> | null = null;
 let catalogLoadStartedAt: number | null = null;
 let catalogLoadCompletedAt: number | null = null;
 let catalogRefreshInFlight = false;
+let storeKitCatalogProducts: IAPProduct[] = [];
 let catalogLoadResult: CatalogLoadResult = {
   status: "loading",
   products: [],
@@ -183,10 +202,15 @@ let catalogLoadResult: CatalogLoadResult = {
     lastLoadFailureReason: null,
     lastStoreErrorCode: null,
     lastStoreErrorMessage: null,
+    catalogSource: "storekit2",
+    storeKitProductFetchError: null,
     pricedProductIds: [],
     unpricedProductIds: [],
     hasUnpricedProducts: false,
-    syncTriggeredBy: null,
+    catalogOperation: "passive",
+    receiptLoadErrorIgnored: false,
+    lastReceiptErrorCode: null,
+    lastReceiptErrorMessage: null,
     storeKitComparisonStatus: "unknown",
     storeKitComparisonMessage: null,
     productStates: defaultProductDiagnostics(),
@@ -218,6 +242,7 @@ const hasPurchasePlugin = () => {
     "when",
     "error",
     "refresh",
+    "update",
     "get",
     "order",
   ].every((methodName) => typeof store[methodName as keyof PurchaseStore] === "function");
@@ -525,6 +550,24 @@ const createMockProduct = (
   owned: false,
 } as IAPProduct);
 
+const createStoreKitCatalogProduct = (
+  product: StoreKitFetchedProduct,
+): IAPProduct => ({
+  id: product.productId,
+  alias: undefined,
+  type: InAppPurchase2.NON_CONSUMABLE,
+  state: product.available ? InAppPurchase2.VALID : InAppPurchase2.INVALID,
+  title: product.displayName ?? "Remove Ads",
+  description: product.description ?? "",
+  priceMicros: undefined,
+  price: product.price,
+  currency: product.currencyCode,
+  loaded: product.available,
+  valid: product.available,
+  canPurchase: product.available,
+  owned: hasRemoveAdsEntitlement,
+} as IAPProduct);
+
 const getCatalogProductState = (product: IAPProduct): CatalogProductState => {
   if (product.loaded && product.valid && product.price) {
     return "loaded_priced";
@@ -559,12 +602,17 @@ const getPluginProducts = (): IAPProduct[] => {
   );
 };
 
+const getCatalogProductsForSource = (): IAPProduct[] =>
+  catalogSource === "storekit2" ? storeKitCatalogProducts : getPluginProducts();
+
 const getPricedProducts = (): IAPProduct[] =>
-  getPluginProducts().filter((product) => getCatalogProductState(product) === "loaded_priced");
+  getCatalogProductsForSource().filter(
+    (product) => getCatalogProductState(product) === "loaded_priced",
+  );
 
 const getUnpricedProductIds = (): string[] =>
   PRODUCT_IDS.filter((productId) => {
-    const product = InAppPurchase2.get(productId);
+    const product = getCatalogProductsForSource().find((item) => item.id === productId);
     return Boolean(
       product &&
         getCatalogProductState(product as IAPProduct) === "loaded_no_price",
@@ -668,6 +716,7 @@ const buildCatalogLoadResult = (
     errorCode: lastStoreErrorCode,
     errorMessage:
       bootstrapError ??
+      storeKitProductFetchError ??
       lastStoreErrorMessage ??
       lastSyncError ??
       lastLoadFailureReason,
@@ -687,10 +736,15 @@ const buildCatalogLoadResult = (
       lastLoadFailureReason,
       lastStoreErrorCode,
       lastStoreErrorMessage,
+      catalogSource,
+      storeKitProductFetchError,
       pricedProductIds,
       unpricedProductIds,
       hasUnpricedProducts: unpricedProductIds.length > 0,
-      syncTriggeredBy: lastSyncTriggeredBy,
+      catalogOperation: currentCatalogOperation,
+      receiptLoadErrorIgnored,
+      lastReceiptErrorCode,
+      lastReceiptErrorMessage,
       storeKitComparisonStatus: storeKitComparison.status,
       storeKitComparisonMessage: storeKitComparison.message,
       productStates: { ...catalogProductStates },
@@ -721,6 +775,20 @@ const updateProductDiagnostics = (
       updatedAt: Date.now(),
     },
   };
+};
+
+const syncProductDiagnosticsFromStoreKitFetch = (
+  result: StoreKitProductFetchResult,
+) => {
+  result.products.forEach((product) => {
+    const catalogProduct = createStoreKitCatalogProduct(product);
+    updateProductDiagnostics(
+      product.productId,
+      getCatalogProductState(catalogProduct),
+      "storekit-fetch",
+      product.error ?? getCatalogProductMessage(catalogProduct),
+    );
+  });
 };
 
 const syncProductDiagnosticsFromStore = () => {
@@ -768,7 +836,39 @@ const ensureStoreReady = async () => {
   }
 };
 
-const refreshStore = async () => {
+const isPassiveReceiptError = (code: number | null, message: string | null) => {
+  const normalized = message?.toLowerCase() ?? "";
+  return (
+    code === InAppPurchase2.ERR_LOAD_RECEIPTS ||
+    code === InAppPurchase2.ERR_REFRESH_RECEIPTS ||
+    normalized.includes("no appstorereceipt") ||
+    normalized.includes("failed to load receipt")
+  );
+};
+
+const recordPassiveReceiptError = (code: number | null, message: string | null) => {
+  receiptLoadErrorIgnored = true;
+  lastReceiptErrorCode = code;
+  lastReceiptErrorMessage = message;
+};
+
+const fetchCatalogFromStoreKit = async () => {
+  const result = await StoreKitDiagnostics.fetchProducts();
+  catalogSource = "storekit2";
+  storeKitProductFetchError = result.error ?? null;
+  storeKitCatalogProducts = result.products
+    .filter((product) => product.available)
+    .map((product) => createStoreKitCatalogProduct(product));
+  syncProductDiagnosticsFromStoreKitFetch(result);
+
+  if (result.error) {
+    lastLoadFailureReason = result.error;
+  } else if (storeKitCatalogProducts.length === 0) {
+    lastLoadFailureReason = "StoreKit did not return any priced products";
+  }
+};
+
+const refreshStoreForRestore = async () => {
   const refreshResult = InAppPurchase2.refresh();
   await new Promise<void>((resolve, reject) => {
     refreshResult.completed(() => resolve());
@@ -782,7 +882,9 @@ const completeCatalogLoad = (statusOverride?: CatalogStatus, context = "load-com
   clearCatalogTimers();
   catalogRefreshInFlight = false;
   catalogLoadCompletedAt = Date.now();
-  syncProductDiagnosticsFromStore();
+  if (catalogSource === "cordova-plugin") {
+    syncProductDiagnosticsFromStore();
+  }
 
   if (testModeForceLoadFailure && !isDevBuild) {
     lastLoadFailureReason = "Test mode forced catalog load failure";
@@ -800,6 +902,13 @@ const completeCatalogLoad = (statusOverride?: CatalogStatus, context = "load-com
     } else {
       lastLoadFailureReason = `Only ${result.products.length}/${PRODUCT_IDS.length} offers loaded`;
     }
+  } else if (storeKitProductFetchError) {
+    lastLoadFailureReason = storeKitProductFetchError;
+  } else if (receiptLoadErrorIgnored && lastReceiptErrorMessage) {
+    lastLoadFailureReason =
+      currentCatalogOperation === "passive"
+        ? "Passive paywall load could not access a local App Store receipt"
+        : lastReceiptErrorMessage;
   } else if (result.diagnostics.hasUnpricedProducts) {
     lastLoadFailureReason = "Products were discovered without prices";
   } else if (!lastLoadFailureReason) {
@@ -834,11 +943,14 @@ const queueCatalogSettle = (loadToken: number, reason: string) => {
     if (loadToken !== catalogLoadToken || !catalogLoadPromise) {
       return;
     }
-    syncProductDiagnosticsFromStore();
+    if (catalogSource === "cordova-plugin") {
+      syncProductDiagnosticsFromStore();
+    }
     const resolvedCount = Object.values(catalogProductStates).filter(
       (snapshot) => snapshot.state !== "pending",
     ).length;
     const hasCatalogSignal =
+      catalogSource === "storekit2" ||
       storeReady ||
       getPricedProducts().length > 0 ||
       Object.values(catalogProductStates).some((snapshot) => snapshot.state !== "pending") ||
@@ -858,9 +970,14 @@ const queueCatalogSettle = (loadToken: number, reason: string) => {
 const resetCatalogDiagnostics = () => {
   lastStoreErrorCode = null;
   lastStoreErrorMessage = null;
+  storeKitProductFetchError = null;
   lastSyncError = null;
-  lastSyncTriggeredBy = null;
+  receiptLoadErrorIgnored = false;
+  lastReceiptErrorCode = null;
+  lastReceiptErrorMessage = null;
   lastLoadFailureReason = null;
+  catalogSource = "storekit2";
+  storeKitCatalogProducts = [];
   catalogProductStates = defaultProductDiagnostics();
 };
 
@@ -879,6 +996,15 @@ const registerCatalogListeners = () => {
 
   InAppPurchase2.error((errorPayload: unknown) => {
     if (isIAPError(errorPayload)) {
+      if (
+        currentCatalogOperation === "passive" &&
+        isPassiveReceiptError(errorPayload.code, errorPayload.message)
+      ) {
+        recordPassiveReceiptError(errorPayload.code, errorPayload.message);
+        console.warn("[Purchases] Passive receipt error ignored", errorPayload);
+        queueCatalogSettle(catalogLoadToken, "passive-receipt-error");
+        return;
+      }
       lastStoreErrorCode = errorPayload.code;
       lastStoreErrorMessage = errorPayload.message;
       lastLoadFailureReason = errorPayload.message;
@@ -1016,13 +1142,7 @@ export const PurchasesManager = {
     if (isDevBuild) {
       resetCatalogDiagnostics();
       setCatalogLoadResult(buildCatalogLoadResult("loaded"));
-      return;
     }
-
-    await ensureNativeBootstrap().catch(() => {
-      setCatalogLoadResult(buildCatalogLoadResult("unavailable"));
-      void collectDiagnosticsSnapshot("init-failure");
-    });
   },
 
   setDevBuild: (isDev: boolean) => {
@@ -1050,6 +1170,7 @@ export const PurchasesManager = {
       void PurchasesManager.loadCatalog({
         reason: "dev-build-disabled",
         force: true,
+        operation: "passive",
       });
     }
   },
@@ -1057,7 +1178,7 @@ export const PurchasesManager = {
   loadCatalog: async ({
     reason = "catalog-load",
     force = false,
-    syncTriggeredBy,
+    operation = "passive",
   }: CatalogLoadOptions = {}): Promise<CatalogLoadResult> => {
     await PurchasesManager.init();
 
@@ -1082,22 +1203,9 @@ export const PurchasesManager = {
     resetCatalogDiagnostics();
     catalogLoadStartedAt = Date.now();
     catalogLoadCompletedAt = null;
-    lastSyncTriggeredBy = syncTriggeredBy ?? null;
+    currentCatalogOperation = operation;
 
     setCatalogLoadResult(buildCatalogLoadResult("loading"));
-
-    await ensureNativeBootstrap({
-      force: force || bootstrapError !== null,
-    }).catch(() => {
-      catalogLoadCompletedAt = Date.now();
-      const result = buildCatalogLoadResult("unavailable");
-      setCatalogLoadResult(result);
-      return undefined;
-    });
-
-    if (!isInitialized) {
-      return buildCatalogLoadResult("unavailable");
-    }
 
     catalogLoadToken += 1;
     const loadToken = catalogLoadToken;
@@ -1122,12 +1230,32 @@ export const PurchasesManager = {
           );
         }
       });
-      lastLoadFailureReason = "Catalog load timed out";
+      lastLoadFailureReason =
+        storeKitProductFetchError ??
+        (receiptLoadErrorIgnored && lastReceiptErrorMessage
+          ? "Passive paywall load could not access a local App Store receipt"
+          : "Catalog load timed out");
       completeCatalogLoad(undefined, "catalog-timeout");
     }, IAP_TIMING.catalogStallTimeoutMs);
 
     const runLoad = async () => {
-      if (syncTriggeredBy) {
+      catalogSource = operation === "restore" ? "cordova-plugin" : "storekit2";
+
+      if (operation === "restore") {
+        await ensureNativeBootstrap({
+          force: force || bootstrapError !== null,
+        }).catch(() => {
+          catalogLoadCompletedAt = Date.now();
+          const result = buildCatalogLoadResult("unavailable");
+          setCatalogLoadResult(result);
+          return undefined;
+        });
+
+        if (!isInitialized) {
+          completeCatalogLoad("unavailable", `${reason}-bootstrap-failed`);
+          return;
+        }
+
         try {
           const syncResult = await StoreKitDiagnostics.syncStore();
           if (!syncResult.success) {
@@ -1158,15 +1286,24 @@ export const PurchasesManager = {
       }
 
       try {
-        await refreshStore();
+        if (operation === "restore") {
+          await refreshStoreForRestore();
+        } else {
+          await fetchCatalogFromStoreKit();
+        }
       } catch (error) {
-        lastStoreErrorMessage =
+        const failureMessage =
           error instanceof Error ? error.message : String(error);
-        lastLoadFailureReason = lastStoreErrorMessage;
+        if (operation === "restore") {
+          lastStoreErrorMessage = failureMessage;
+        } else {
+          storeKitProductFetchError = failureMessage;
+        }
+        lastLoadFailureReason = failureMessage;
       } finally {
         if (loadToken === catalogLoadToken && catalogLoadPromise) {
           catalogRefreshInFlight = false;
-          queueCatalogSettle(loadToken, `${reason}-refresh`);
+          queueCatalogSettle(loadToken, `${reason}-${operation}`);
         }
       }
     };
@@ -1177,7 +1314,10 @@ export const PurchasesManager = {
   },
 
   prefetchProducts: async (): Promise<IAPProduct[]> => {
-    const result = await PurchasesManager.loadCatalog({ reason: "prefetch" });
+    const result = await PurchasesManager.loadCatalog({
+      reason: "prefetch",
+      operation: "passive",
+    });
     return result.products;
   },
 
@@ -1188,7 +1328,10 @@ export const PurchasesManager = {
     if (isDevBuild) {
       return REMOVE_ADS_PRODUCTS.map((product) => createMockProduct(product));
     }
-    const result = await PurchasesManager.loadCatalog({ reason: "get-products" });
+    const result = await PurchasesManager.loadCatalog({
+      reason: "get-products",
+      operation: "passive",
+    });
     return result.products;
   },
 
@@ -1198,13 +1341,19 @@ export const PurchasesManager = {
       throw new Error("Purchases are not available on web.");
     }
 
-    const catalog = await PurchasesManager.loadCatalog({ reason: "purchase" });
+    const catalog = await PurchasesManager.loadCatalog({
+      reason: "purchase",
+      operation: "passive",
+    });
     const product = catalog.products.find((item) => item.id === productId);
 
     if (!product) {
       throw new Error("ProductUnavailable");
     }
 
+    await ensureNativeBootstrap({
+      force: bootstrapError !== null,
+    });
     await ensureStoreReady();
 
     let entitlementResolve: (() => void) | null = null;
@@ -1283,7 +1432,7 @@ export const PurchasesManager = {
       await PurchasesManager.loadCatalog({
         reason: "restore",
         force: true,
-        syncTriggeredBy: "restore",
+        operation: "restore",
       });
 
       const ownedProducts = PRODUCT_IDS.filter((productId) => {
@@ -1339,11 +1488,16 @@ export const PurchasesManager = {
     initAttempts,
     lastStoreErrorCode,
     lastStoreErrorMessage,
+    catalogSource: catalogLoadResult.diagnostics.catalogSource,
+    storeKitProductFetchError: catalogLoadResult.diagnostics.storeKitProductFetchError,
     lastSyncError,
+    catalogOperation: catalogLoadResult.diagnostics.catalogOperation,
+    receiptLoadErrorIgnored: catalogLoadResult.diagnostics.receiptLoadErrorIgnored,
+    lastReceiptErrorCode: catalogLoadResult.diagnostics.lastReceiptErrorCode,
+    lastReceiptErrorMessage: catalogLoadResult.diagnostics.lastReceiptErrorMessage,
     pricedProductIds: catalogLoadResult.diagnostics.pricedProductIds,
     unpricedProductIds: catalogLoadResult.diagnostics.unpricedProductIds,
     hasUnpricedProducts: catalogLoadResult.diagnostics.hasUnpricedProducts,
-    syncTriggeredBy: catalogLoadResult.diagnostics.syncTriggeredBy,
     storeKitComparisonStatus: catalogLoadResult.diagnostics.storeKitComparisonStatus,
     storeKitComparisonMessage: catalogLoadResult.diagnostics.storeKitComparisonMessage,
     catalogStatus: catalogLoadResult.status,

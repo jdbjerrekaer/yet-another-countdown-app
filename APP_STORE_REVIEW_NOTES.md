@@ -11,7 +11,7 @@ This build addresses the Guideline 2.1(b) in-app purchase issue reported on Marc
 - We fixed the iOS sandbox purchase startup flow so the paywall no longer triggers restore/account-recovery behavior while loading products or retrying product fetches.
 - We also changed the paywall to wait for real App Store pricing before rendering native purchase options, which avoids showing placeholder offers without prices during review.
 - We retested the `Remove Ads` non-consumable flow in sandbox, including price loading, purchase, and explicit Restore Purchases behavior.
-- The app still offers only two non-consumable products: `com.countdown.app.remove_ads` and `com.countdown.app.remove_ads_supporter`.
+- The app still offers only two non-consumable products: `com.jonatanbjerrekaer.countdown.remove_ads` and `com.jonatanbjerrekaer.countdown.remove_ads_supporter`.
 
 ## Privacy & Consent Flow
 

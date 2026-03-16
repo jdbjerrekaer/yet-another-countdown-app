@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BUNDLE_ID="${ASC_BUNDLE_ID:-com.jonatanbjerrekaer.countdown}"
-PRODUCT_IDS=("com.countdown.app.remove_ads" "com.countdown.app.remove_ads_supporter")
+PRODUCT_IDS=("com.jonatanbjerrekaer.countdown.remove_ads" "com.jonatanbjerrekaer.countdown.remove_ads_supporter")
 REVIEWABLE_STATES=("APPROVED" "READY_TO_SUBMIT" "WAITING_FOR_REVIEW" "IN_REVIEW" "PENDING_BINARY_APPROVAL")
 SUBMITTED_STATES=("APPROVED" "WAITING_FOR_REVIEW" "IN_REVIEW" "PENDING_BINARY_APPROVAL")
 REPORT_FILE="${1:-preflight-report.json}"

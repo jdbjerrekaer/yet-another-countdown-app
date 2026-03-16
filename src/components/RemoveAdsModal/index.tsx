@@ -33,12 +33,12 @@ const productLabels: Record<
   string,
   { titleKey: string; descriptionKey: string; badgeKey?: string; icon: LucideIcon }
 > = {
-  "com.countdown.app.remove_ads": {
+  "com.jonatanbjerrekaer.countdown.remove_ads": {
     titleKey: "iap.tiers.standard.title",
     descriptionKey: "iap.tiers.standard.description",
     icon: ShieldCheck,
   },
-  "com.countdown.app.remove_ads_supporter": {
+  "com.jonatanbjerrekaer.countdown.remove_ads_supporter": {
     titleKey: "iap.tiers.supporter.title",
     descriptionKey: "iap.tiers.supporter.description",
     badgeKey: "iap.tiers.supporter.badge",
@@ -85,6 +85,50 @@ const getPurchaseErrorMessage = (err: unknown, t: TFunction): string | null => {
   return t("iap.purchaseError");
 };
 
+const getCatalogDebugReason = (catalog: CatalogLoadResult): string | null => {
+  const diagnostics = catalog.diagnostics;
+
+  if (diagnostics.storeKitProductFetchError) {
+    return diagnostics.storeKitProductFetchError;
+  }
+
+  if (diagnostics.lastLoadFailureReason) {
+    return diagnostics.lastLoadFailureReason;
+  }
+
+  if (catalog.unavailableProductIds.length > 0) {
+    return `Unavailable product IDs: ${catalog.unavailableProductIds.join(", ")}`;
+  }
+
+  if (diagnostics.bootstrapError) {
+    return `Bootstrap failed: ${diagnostics.bootstrapError}`;
+  }
+
+  if (
+    diagnostics.storeKitComparisonStatus === "wrapper_plugin_hydration_failure" &&
+    diagnostics.storeKitComparisonMessage
+  ) {
+    return diagnostics.storeKitComparisonMessage;
+  }
+
+  if (diagnostics.hasUnpricedProducts && diagnostics.unpricedProductIds.length > 0) {
+    return `Products loaded without prices: ${diagnostics.unpricedProductIds.join(", ")}`;
+  }
+
+  if (
+    diagnostics.receiptLoadErrorIgnored &&
+    diagnostics.lastReceiptErrorMessage
+  ) {
+    return diagnostics.lastReceiptErrorMessage;
+  }
+
+  if (diagnostics.lastStoreErrorMessage) {
+    return diagnostics.lastStoreErrorMessage;
+  }
+
+  return null;
+};
+
 export const RemoveAdsModal = ({
   isOpen,
   onClose,
@@ -96,6 +140,7 @@ export const RemoveAdsModal = ({
   const { trigger } = useHaptic();
   const confettiShownRef = useRef(false);
   const closeTriggeredRef = useRef(false);
+  const lastLoggedCatalogErrorRef = useRef<string | null>(null);
   const [catalog, setCatalog] = useState<CatalogLoadResult>(() =>
     PurchasesManager.getCatalogLoadResult(),
   );
@@ -126,12 +171,14 @@ export const RemoveAdsModal = ({
   );
   const hasVisibleProducts = visibleProductIds.length > 0;
   const hasAttemptedCatalogLoad = Boolean(catalog.diagnostics.loadStartedAt);
-  const bootstrapCompleted = Boolean(catalog.diagnostics.bootstrapCompletedAt);
+  const catalogSettled =
+    hasAttemptedCatalogLoad &&
+    (Boolean(catalog.diagnostics.loadCompletedAt) || catalog.status !== "loading");
   const loading =
     isNative &&
     !isDevBuild &&
     !hasVisibleProducts &&
-    (!hasAttemptedCatalogLoad ||
+    (!catalogSettled ||
       catalogRequestInFlight ||
       catalog.status === "loading" ||
       catalog.diagnostics.bootstrapInProgress);
@@ -139,10 +186,58 @@ export const RemoveAdsModal = ({
     isNative &&
     !isDevBuild &&
     !loading &&
-    hasAttemptedCatalogLoad &&
-    bootstrapCompleted &&
-    !hasVisibleProducts;
+    catalogSettled &&
+    !hasVisibleProducts &&
+    catalog.status === "unavailable";
   const error = showGlobalLoadError ? t("iap.loadError") : null;
+  const catalogDebugReason = showGlobalLoadError
+    ? getCatalogDebugReason(catalog)
+    : null;
+
+  useEffect(() => {
+    if (!showGlobalLoadError || !isOpen) {
+      lastLoggedCatalogErrorRef.current = null;
+      return;
+    }
+
+    const diagnostics = PurchasesManager.getDiagnostics();
+    const failureSignature = JSON.stringify({
+      status: catalog.status,
+      errorCode: catalog.errorCode,
+      errorMessage: catalog.errorMessage,
+      unavailableProductIds: catalog.unavailableProductIds,
+      lastLoadFailureReason: diagnostics.lastLoadFailureReason,
+      lastStoreErrorCode: diagnostics.lastStoreErrorCode,
+      lastStoreErrorMessage: diagnostics.lastStoreErrorMessage,
+      bootstrapError: diagnostics.bootstrapError,
+      catalogSource: diagnostics.catalogSource,
+      storeKitProductFetchError: diagnostics.storeKitProductFetchError,
+      storeKitComparisonStatus: diagnostics.storeKitComparisonStatus,
+      storeKitComparisonMessage: diagnostics.storeKitComparisonMessage,
+      pricedProductIds: diagnostics.pricedProductIds,
+      unpricedProductIds: diagnostics.unpricedProductIds,
+      receiptLoadErrorIgnored: diagnostics.receiptLoadErrorIgnored,
+      lastReceiptErrorCode: diagnostics.lastReceiptErrorCode,
+      lastReceiptErrorMessage: diagnostics.lastReceiptErrorMessage,
+    });
+
+    if (lastLoggedCatalogErrorRef.current === failureSignature) {
+      return;
+    }
+
+    lastLoggedCatalogErrorRef.current = failureSignature;
+
+    console.error("[IAP Modal] Catalog load failed", {
+      debugReason: catalogDebugReason,
+      catalog: {
+        status: catalog.status,
+        errorCode: catalog.errorCode,
+        errorMessage: catalog.errorMessage,
+        unavailableProductIds: catalog.unavailableProductIds,
+      },
+      diagnostics,
+    });
+  }, [catalog, catalogDebugReason, isOpen, showGlobalLoadError]);
 
   useEffect(() => {
     if (hasRemoveAds) {
@@ -212,6 +307,7 @@ export const RemoveAdsModal = ({
         await PurchasesManager.loadCatalog({
           reason: options?.reason ?? "modal-open",
           force: options?.force,
+          operation: "passive",
         });
       } catch (err) {
         console.warn("[IAP Modal] Failed to load catalog", err);
@@ -262,6 +358,7 @@ export const RemoveAdsModal = ({
     if (!product && !isDevBuild) {
       const latestCatalog = await PurchasesManager.loadCatalog({
         reason: "modal-purchase",
+        operation: "passive",
       });
       setCatalog(latestCatalog);
       product = latestCatalog.products.find((item) => item.id === productId);
@@ -369,27 +466,36 @@ export const RemoveAdsModal = ({
           )}
 
           {error && (
-            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 text-center space-y-3">
-              <IonText color="danger" className="text-sm font-medium">
-                {error}
-              </IonText>
-              {isNative && (
-                <IonButton
-                  fill="outline"
-                  size="small"
-                  onClick={() => {
-                    if (loadProductsRef.current) {
-                      void loadProductsRef.current({
-                        force: true,
-                        reason: "modal-retry",
-                      });
-                    }
-                  }}
-                  className="mt-2"
-                >
-                  {t("iap.retry") || "Retry"}
-                </IonButton>
-              )}
+            <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 animate-fade-in">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <IonText color="danger" className="block text-sm font-medium leading-relaxed">
+                    {error}
+                  </IonText>
+                  {catalogDebugReason && (
+                    <p className="mt-2 break-words text-[11px] leading-relaxed text-destructive/80">
+                      {catalogDebugReason}
+                    </p>
+                  )}
+                </div>
+                {isNative && (
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    onClick={() => {
+                      if (loadProductsRef.current) {
+                        void loadProductsRef.current({
+                          force: true,
+                          reason: "modal-retry",
+                        });
+                      }
+                    }}
+                    className="m-0 shrink-0"
+                  >
+                    {t("iap.retry") || "Retry"}
+                  </IonButton>
+                )}
+              </div>
             </div>
           )}
 

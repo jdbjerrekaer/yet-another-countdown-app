@@ -25,7 +25,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.countdown.app.remove_ads",
+      "productID" : "com.jonatanbjerrekaer.countdown.remove_ads",
       "referenceName" : "Remove Ads - Standard",
       "type" : "NonConsumable"
     },
@@ -40,7 +40,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.countdown.app.remove_ads_supporter",
+      "productID" : "com.jonatanbjerrekaer.countdown.remove_ads_supporter",
       "referenceName" : "Remove Ads - Supporter",
       "type" : "NonConsumable"
     }

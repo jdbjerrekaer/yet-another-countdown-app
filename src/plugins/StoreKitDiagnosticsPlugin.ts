@@ -50,8 +50,25 @@ export interface StoreKitProductStatus {
   error?: string;
 }
 
+export interface StoreKitFetchedProduct {
+  productId: string;
+  available: boolean;
+  displayName?: string;
+  description?: string;
+  price?: string;
+  currencyCode?: string;
+  error?: string;
+}
+
+export interface StoreKitProductFetchResult {
+  timestamp: string;
+  products: StoreKitFetchedProduct[];
+  error?: string;
+}
+
 export interface StoreKitDiagnosticsPlugin {
   collectSnapshot(): Promise<StoreKitDiagnosticsSnapshot>;
+  fetchProducts(): Promise<StoreKitProductFetchResult>;
   syncStore(): Promise<{ success: boolean; error?: string }>;
 }
 
@@ -63,6 +80,11 @@ const StoreKitDiagnostics = registerPlugin<StoreKitDiagnosticsPlugin>(
         timestamp: new Date().toISOString(),
         available: false,
         error: "StoreKit 2 diagnostics only available on native iOS",
+      }),
+      fetchProducts: async () => ({
+        timestamp: new Date().toISOString(),
+        error: "StoreKit 2 product fetch only available on native iOS",
+        products: [],
       }),
       syncStore: async () => ({
         success: false,

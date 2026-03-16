@@ -74,19 +74,19 @@ If user denies GDPR consent, ATT prompt will NOT be shown, respecting the user's
 2. Click the "+" button to create a new in-app purchase (if products don't exist)
 3. Select "Non-Consumable" as the product type
 4. Create two products with these Product IDs:
-   - `com.countdown.app.remove_ads` (Standard tier)
-   - `com.countdown.app.remove_ads_supporter` (Supporter tier)
+   - `com.jonatanbjerrekaer.countdown.remove_ads` (Standard tier)
+   - `com.jonatanbjerrekaer.countdown.remove_ads_supporter` (Supporter tier)
 
 #### Step 2: Configure Each Product
-For each product (`com.countdown.app.remove_ads` and `com.countdown.app.remove_ads_supporter`):
+For each product (`com.jonatanbjerrekaer.countdown.remove_ads` and `com.jonatanbjerrekaer.countdown.remove_ads_supporter`):
 
 1. **Reference Name** (internal, not shown to users):
    - Standard: "Remove Ads - Standard"
    - Supporter: "Remove Ads - Supporter"
 
 2. **Product ID** (must match exactly):
-   - `com.countdown.app.remove_ads`
-   - `com.countdown.app.remove_ads_supporter`
+   - `com.jonatanbjerrekaer.countdown.remove_ads`
+   - `com.jonatanbjerrekaer.countdown.remove_ads_supporter`
 
 3. **Price and Availability**:
    - Set appropriate pricing for your region
