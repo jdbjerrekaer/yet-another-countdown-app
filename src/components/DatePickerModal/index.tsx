@@ -500,32 +500,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         }
       }
       
-      // Check if creating a new event with a date > 1 year in the past and not recurring
-      let finalIsRecurring = isRecurring;
-      if (!isEditing && !isRecurring && differenceInYears(new Date(), date) >= 1) {
-        // Prompt user to make it yearly using native Dialog (wider, with highlighted primary button)
-        let shouldMakeYearly = false;
-        
-        try {
-          const { value } = await Dialog.confirm({
-            title: t('dialogs.suggestYearly.title'),
-            message: t('dialogs.suggestYearly.message'),
-            okButtonTitle: t('dialogs.suggestYearly.enable'),
-            cancelButtonTitle: t('dialogs.suggestYearly.keepOneTime'),
-          });
-          shouldMakeYearly = value;
-          
-          if (shouldMakeYearly) {
-            finalIsRecurring = true;
-          }
-        } catch (error) {
-          // If dialog is dismissed, treat it as "keep one-time" - don't make it yearly
-          // shouldMakeYearly already defaults to false, so event will be created as one-time
-          console.error('Yearly suggestion dialog dismissed or failed:', error);
-        }
-      }
-      
-      await onSave(title, date, emoji, finalIsRecurring, emojiColor);
+      await onSave(title, date, emoji, isRecurring, emojiColor);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
       onClose();
@@ -711,7 +686,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       onDidPresent={handleModalPresent}
       aria-labelledby="modal-title"
     >
-      <IonHeader>
+      <IonHeader translucent>
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleClose}>{t('modal.cancel')}</IonButton>
@@ -729,7 +704,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         </IonToolbar>
       </IonHeader>
 
-      <IonContent ref={contentRef} className="ion-padding">
+      <IonContent ref={contentRef} fullscreen className="ion-padding">
         {/* Form content */}
           <div 
             key={`modal-content-${modalSessionKey}`}
@@ -970,6 +945,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     />
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground pl-4 pb-2">
+                  {t('modal.dateMaxHelper')}
+                </p>
               </div>
 
               {/* Recurring toggle with expandable suggestion */}
@@ -1036,20 +1014,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Advanced section - only show when editing */}
             {isEditing && onDelete && (
               <div className="pt-4 border-t border-border/50">
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('modal.advancedLabel')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={handleDeleteClick}
-                    className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
-                    aria-label={t('aria.deleteEvent')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {t('modal.delete')}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
+                  aria-label={t('aria.deleteEvent')}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t('modal.delete')}
+                </button>
               </div>
             )}
             

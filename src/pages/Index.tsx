@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
-import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons';
-import { format, differenceInYears } from 'date-fns';
+import { add, checkmark, calendarOutline } from 'ionicons/icons';
+import { ShieldOff } from 'lucide-react';
+import { format } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
 import {
@@ -46,16 +47,6 @@ import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { toast } from 'sonner';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -215,9 +206,7 @@ export default function Index() {
   const placeholderHeight = 60; // Increased to match adaptive banners better
   const [hasRemoveAds, setHasRemoveAds] = useState(false);
   const [isRemoveAdsOpen, setIsRemoveAdsOpen] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
-  const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
+  const pendingDeleteRef = useRef<Map<string, CountdownEvent>>(new Map());
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [importPrefillData, setImportPrefillData] = useState<EventImportPayload | null>(null);
@@ -901,6 +890,13 @@ export default function Index() {
     }
     setEditingEvent(null);
 
+    toast.success(saveKind === 'create' ? t('feedback.eventCreated') : t('feedback.eventUpdated'));
+
+    if (saveKind === 'create' && events.length === 0 && isNative && !localStorage.getItem('widgetTipShown')) {
+      localStorage.setItem('widgetTipShown', '1');
+      setTimeout(() => toast(t('widget.homeScreenTip'), { duration: 6000 }), 1500);
+    }
+
     void AdsManager.maybeShowInterstitialAfterSave({ kind: saveKind });
   };
 
@@ -909,77 +905,51 @@ export default function Index() {
     setIsModalOpen(true);
   };
 
+  const commitDelete = (eventId: string) => {
+    if (!pendingDeleteRef.current.has(eventId)) return;
+    pendingDeleteRef.current.delete(eventId);
+    void cancelEventNotification(eventId);
+    void AdsManager.maybeShowInterstitialAfterSave({ kind: 'delete' });
+  };
+
+  const handleUndoDelete = (eventId: string) => {
+    const event = pendingDeleteRef.current.get(eventId);
+    if (!event) return;
+    pendingDeleteRef.current.delete(eventId);
+    trigger('light');
+    setEvents(prev =>
+      [...prev, event].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    );
+  };
+
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
-    let confirmed = false;
+    trigger('heavy');
+    setDeletingEventId(event.id);
+    pendingDeleteRef.current.set(event.id, event);
 
-    if (isNative) {
-      // Use Capacitor Dialog on native platforms
-      const { value } = await Dialog.confirm({
-        title: t('dialogs.deleteEvent.title'),
-        message: t('dialogs.deleteEvent.message', { title: event.title }),
-        okButtonTitle: t('dialogs.deleteEvent.delete'),
-        cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
-      });
-      confirmed = value;
-    } else {
-      // Use AlertDialog on web
-      setEventToDelete(event);
-      setDeleteConfirmOpen(true);
-      
-      // Wait for user response
-      confirmed = await new Promise<boolean>((resolve) => {
-        deleteConfirmResolveRef.current = resolve;
-      });
-      
-      setDeleteConfirmOpen(false);
-      setEventToDelete(null);
-      deleteConfirmResolveRef.current = null;
-    }
+    await new Promise(resolve => setTimeout(resolve, 400));
 
-    if (confirmed) {
-      setDeletingEventId(event.id);
-      trigger('heavy');
-      await new Promise(resolve => setTimeout(resolve, 400));
+    const eventId = event.id;
+    const wasSelected = selectedEventId === eventId;
 
-      const eventId = event.id;
-      const wasSelected = selectedEventId === eventId;
-      
-      // Cancel the notification for this event
-      await cancelEventNotification(eventId);
-      
-      setEvents(prev => {
-        const filtered = prev.filter(e => e.id !== eventId);
-        if (wasSelected) {
-          if (filtered.length > 0) {
-            setSelectedEventId(filtered[0].id);
-          } else {
-            setSelectedEventId(null);
-          }
-        }
-        return filtered;
-      });
+    setEvents(prev => {
+      const filtered = prev.filter(e => e.id !== eventId);
+      if (wasSelected) {
+        setSelectedEventId(filtered.length > 0 ? filtered[0].id : null);
+      }
+      return filtered;
+    });
+    setDeletingEventId(null);
 
-      setDeletingEventId(null);
-      void AdsManager.maybeShowInterstitialAfterSave({ kind: "delete" });
+    toast(`${event.emoji} ${event.title}`, {
+      description: t('feedback.eventDeleted'),
+      action: { label: t('feedback.undoDelete'), onClick: () => handleUndoDelete(eventId) },
+      duration: 5000,
+      onDismiss: () => commitDelete(eventId),
+      onAutoClose: () => commitDelete(eventId),
+    });
 
-      return true;
-    } else {
-      // Cancel button was pressed
-      trigger('light');
-      return false; // Deletion cancelled
-    }
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deleteConfirmResolveRef.current) {
-      deleteConfirmResolveRef.current(true);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    if (deleteConfirmResolveRef.current) {
-      deleteConfirmResolveRef.current(false);
-    }
+    return true;
   };
 
   const handleAddNew = async () => {
@@ -1323,7 +1293,7 @@ export default function Index() {
                     aria-label={t('aria.openRemoveAds')}
                     className="header-action-button"
                   >
-                    <IonIcon icon={sparklesOutline} />
+                    <ShieldOff className="w-5 h-5" />
                   </IonButton>
                 </div>
               )}
@@ -1354,13 +1324,12 @@ export default function Index() {
               <p className="text-muted-foreground text-center max-w-xs mb-8">
                 {t('app.createFirst')}
               </p>
-              <IonButton
-                fill="outline"
+              <button
                 onClick={handleOpenCalendarImport}
-                className="min-h-11"
+                className="text-sm text-primary underline underline-offset-2 active:opacity-70 transition-opacity"
               >
-                {t('calendar.importTitle')}
-              </IonButton>
+                {t('app.orImportFromCalendar')}
+              </button>
             </div>
           ) : (
             <div className="space-y-8 animate-fade-in">
@@ -1639,37 +1608,6 @@ export default function Index() {
         isDevBuild={isDevBuild}
       />
 
-      {/* Delete confirmation dialog for web */}
-      {!isNative && (
-        <AlertDialog 
-          open={deleteConfirmOpen} 
-          onOpenChange={(open) => {
-            if (!open) {
-              handleDeleteCancel();
-            }
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t('dialogs.deleteEvent.title')}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {eventToDelete && t('dialogs.deleteEvent.message', { title: eventToDelete.title })}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleDeleteCancel}>
-                {t('dialogs.deleteEvent.cancel')}
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {t('dialogs.deleteEvent.delete')}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
 
     </IonPage>
   );
