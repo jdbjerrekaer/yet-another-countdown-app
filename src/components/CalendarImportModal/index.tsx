@@ -289,7 +289,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
   
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onClose}>
-      <IonHeader>
+      <IonHeader translucent>
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleCloseClick}>{t('modal.cancel')}</IonButton>
@@ -308,7 +308,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
         </IonToolbar>
       </IonHeader>
       
-      <IonContent className="ion-padding">
+      <IonContent fullscreen className="ion-padding">
         {/* Web: URL input for .ics files */}
         {!isNative && (
           <div className="space-y-4 mb-6">
