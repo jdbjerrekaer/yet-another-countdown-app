@@ -27,28 +27,11 @@ struct TripleCountdownWidgetEntry: TimelineEntry {
 @available(iOS 17.0, *)
 private func resolveConfiguredEvent(
     selection: WidgetCountdownEntity?,
-    widgetData: WidgetData?,
-    providerName: String
+    widgetData: WidgetData?
 ) -> CountdownEvent? {
     let events = widgetData?.events ?? []
-
-    guard let selection else {
-        let fallbackEvent = events.first
-        print("\(providerName): No configured countdown ID; using first available event ID \(fallbackEvent?.id ?? "nil")")
-        return fallbackEvent
-    }
-
-    let selectedId = selection.id
-
-    print("\(providerName): Resolving configured countdown ID \(selectedId) from \(events.count) events")
-
-    guard let event = events.first(where: { $0.id == selectedId }) else {
-        print("\(providerName): Failed to resolve configured countdown ID \(selectedId); rendering empty state")
-        return nil
-    }
-
-    print("\(providerName): Resolved configured countdown ID \(selectedId) to '\(event.title)'")
-    return event
+    guard let selection else { return events.first }
+    return events.first(where: { $0.id == selection.id })
 }
 
 // MARK: - Timeline Provider for iOS 17+ (Focus/Timer Style)
@@ -78,42 +61,28 @@ struct CountdownTimerWidgetProvider: AppIntentTimelineProvider {
     
     func snapshot(for configuration: SelectCountdownIntent, in context: Context) async -> CountdownWidgetEntry {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        print("CountdownTimerWidgetProvider.snapshot: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
-        let event = resolveConfiguredEvent(
-            selection: configuration.countdown,
-            widgetData: widgetData,
-            providerName: "CountdownTimerWidgetProvider.snapshot"
-        )
-        
+        let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
         return CountdownWidgetEntry(
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus, // Always use focus style for Timer widget
+            countdownStyle: .focus,
             configuration: configuration.countdown
         )
     }
-    
+
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        print("CountdownTimerWidgetProvider.timeline: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
-        let event = resolveConfiguredEvent(
-            selection: configuration.countdown,
-            widgetData: widgetData,
-            providerName: "CountdownTimerWidgetProvider.timeline"
-        )
+        let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
         
         let entry = CountdownWidgetEntry(
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus, // Always use focus style for Timer widget
+            countdownStyle: .focus,
             configuration: configuration.countdown
         )
-        
-        // Refresh every minute for countdown accuracy
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 }
@@ -124,7 +93,7 @@ struct CountdownTimerWidgetProvider: AppIntentTimelineProvider {
 struct CountdownVisualWidgetProvider: AppIntentTimelineProvider {
     typealias Entry = CountdownWidgetEntry
     typealias Intent = SelectCountdownIntent
-    
+
     func placeholder(in context: Context) -> CountdownWidgetEntry {
         CountdownWidgetEntry(
             date: Date(),
@@ -142,45 +111,30 @@ struct CountdownVisualWidgetProvider: AppIntentTimelineProvider {
             configuration: nil
         )
     }
-    
+
     func snapshot(for configuration: SelectCountdownIntent, in context: Context) async -> CountdownWidgetEntry {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        print("CountdownVisualWidgetProvider.snapshot: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
-        let event = resolveConfiguredEvent(
-            selection: configuration.countdown,
-            widgetData: widgetData,
-            providerName: "CountdownVisualWidgetProvider.snapshot"
-        )
-        
+        let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
         return CountdownWidgetEntry(
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual, // Always use visual style for Visual widget
+            countdownStyle: .visual,
             configuration: configuration.countdown
         )
     }
-    
+
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        print("CountdownVisualWidgetProvider.timeline: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
-        let event = resolveConfiguredEvent(
-            selection: configuration.countdown,
-            widgetData: widgetData,
-            providerName: "CountdownVisualWidgetProvider.timeline"
-        )
-        
+        let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
         let entry = CountdownWidgetEntry(
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual, // Always use visual style for Visual widget
+            countdownStyle: .visual,
             configuration: configuration.countdown
         )
-        
-        // Refresh every minute for countdown accuracy
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 }
@@ -215,7 +169,7 @@ struct CountdownTimerWidgetProviderStatic: TimelineProvider {
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus, // Always use focus style for Timer widget
+            countdownStyle: .focus,
             configuration: nil
         )
         completion(entry)
@@ -228,7 +182,7 @@ struct CountdownTimerWidgetProviderStatic: TimelineProvider {
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus, // Always use focus style for Timer widget
+            countdownStyle: .focus,
             configuration: nil
         )
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
@@ -264,42 +218,27 @@ struct CountdownClassicWidgetProvider: AppIntentTimelineProvider {
     
     func snapshot(for configuration: SelectCountdownIntent, in context: Context) async -> CountdownWidgetEntry {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        print("CountdownClassicWidgetProvider.snapshot: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
-        let event = resolveConfiguredEvent(
-            selection: configuration.countdown,
-            widgetData: widgetData,
-            providerName: "CountdownClassicWidgetProvider.snapshot"
-        )
-        
+        let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
         return CountdownWidgetEntry(
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .classic, // Always use classic style for Classic widget
+            countdownStyle: .classic,
             configuration: configuration.countdown
         )
     }
-    
+
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
-        print("CountdownClassicWidgetProvider.timeline: configuration.countdown.id = \(configuration.countdown?.id ?? "nil")")
-        let event = resolveConfiguredEvent(
-            selection: configuration.countdown,
-            widgetData: widgetData,
-            providerName: "CountdownClassicWidgetProvider.timeline"
-        )
-        
+        let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
         let entry = CountdownWidgetEntry(
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .classic, // Always use classic style for Classic widget
+            countdownStyle: .classic,
             configuration: configuration.countdown
         )
-        
-        // Refresh every minute for countdown accuracy
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 }
@@ -334,7 +273,7 @@ struct CountdownVisualWidgetProviderStatic: TimelineProvider {
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual, // Always use visual style for Visual widget
+            countdownStyle: .visual,
             configuration: nil
         )
         completion(entry)
@@ -347,7 +286,7 @@ struct CountdownVisualWidgetProviderStatic: TimelineProvider {
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual, // Always use visual style for Visual widget
+            countdownStyle: .visual,
             configuration: nil
         )
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
@@ -386,7 +325,7 @@ struct CountdownClassicWidgetProviderStatic: TimelineProvider {
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .classic, // Always use classic style for Classic widget
+            countdownStyle: .classic,
             configuration: nil
         )
         completion(entry)
@@ -399,7 +338,7 @@ struct CountdownClassicWidgetProviderStatic: TimelineProvider {
             date: Date(),
             event: event,
             appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .classic, // Always use classic style for Classic widget
+            countdownStyle: .classic,
             configuration: nil
         )
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()

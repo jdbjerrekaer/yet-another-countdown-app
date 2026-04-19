@@ -23,7 +23,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
     
     private let eventStore = EKEventStore()
     
-    /// Check if calendar permission is granted
     @objc func checkPermission(_ call: CAPPluginCall) {
         let status = EKEventStore.authorizationStatus(for: .event)
         var granted = status == .authorized
@@ -33,7 +32,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["granted": granted, "status": authStatusToString(status)])
     }
     
-    /// Request calendar access permission
     @objc func requestPermission(_ call: CAPPluginCall) {
         if #available(iOS 17.0, *) {
             eventStore.requestFullAccessToEvents { granted, error in
@@ -58,7 +56,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
-    /// Open the iOS Settings app
     @objc func openSettings(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
@@ -75,7 +72,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
-    /// Get list of calendars
     @objc func getCalendars(_ call: CAPPluginCall) {
         let calendars = eventStore.calendars(for: .event)
         let calendarData = calendars.map { calendar -> [String: Any] in
@@ -106,45 +102,32 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         
-        // Get all calendars including the Birthdays calendar
         let calendars = eventStore.calendars(for: .event)
-        
-        // Create predicate for events
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
         let events = eventStore.events(matching: predicate)
-        
-        // Filter for recurring events (yearly recurrence like birthdays/anniversaries)
+
         var recurringEvents: [[String: Any]] = []
         var seenEventIds = Set<String>()
-        
+
         for event in events {
-            // Skip duplicates (recurring events may appear multiple times)
             let eventKey = "\(event.title ?? "")-\(event.startDate?.description ?? "")"
             if seenEventIds.contains(eventKey) {
                 continue
             }
             
-            // Check if event is recurring
             var isYearlyRecurring = false
             var recurrenceRule: String? = nil
-            
+
             if let rules = event.recurrenceRules {
-                for rule in rules {
-                    if rule.frequency == .yearly {
-                        isYearlyRecurring = true
-                        recurrenceRule = "FREQ=YEARLY"
-                        if rule.interval > 1 {
-                            recurrenceRule = "FREQ=YEARLY;INTERVAL=\(rule.interval)"
-                        }
-                        break
-                    }
+                for rule in rules where rule.frequency == .yearly {
+                    isYearlyRecurring = true
+                    recurrenceRule = rule.interval > 1 ? "FREQ=YEARLY;INTERVAL=\(rule.interval)" : "FREQ=YEARLY"
+                    break
                 }
             }
-            
-            // Also check if it's from the Birthdays calendar
+
             let isBirthdayCalendar = event.calendar.type == .birthday
-            
-            // Include event if it's yearly recurring or from birthdays calendar
+
             if isYearlyRecurring || isBirthdayCalendar {
                 seenEventIds.insert(eventKey)
                 
@@ -165,12 +148,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             }
         }
         
-        // Sort by start date
-        recurringEvents.sort { event1, event2 in
-            let date1 = event1["startDate"] as? String ?? ""
-            let date2 = event2["startDate"] as? String ?? ""
-            return date1 < date2
-        }
+        recurringEvents.sort { ($0["startDate"] as? String ?? "") < ($1["startDate"] as? String ?? "") }
         
         call.resolve(["events": recurringEvents])
     }
@@ -183,59 +161,46 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         
-        let calendarId = call.getString("calendarId") // Optional: filter by specific calendar
-        
+        let calendarId = call.getString("calendarId")
+
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
+
         guard let startDate = dateFormatter.date(from: startDateString) ?? ISO8601DateFormatter().date(from: startDateString),
               let endDate = dateFormatter.date(from: endDateString) ?? ISO8601DateFormatter().date(from: endDateString) else {
             call.reject("Invalid date format. Use ISO8601 format.")
             return
         }
-        
-        // Get calendars - either specific one or all
+
         var calendars: [EKCalendar]
         if let calId = calendarId, let calendar = eventStore.calendar(withIdentifier: calId) {
             calendars = [calendar]
         } else {
             calendars = eventStore.calendars(for: .event)
         }
-        
-        // Create predicate for events
+
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
         let events = eventStore.events(matching: predicate)
-        
-        // Convert all events (not filtering for recurring)
+
         var allEvents: [[String: Any]] = []
         var seenEventIds = Set<String>()
-        
+
         for event in events {
-            // Skip duplicates
             let eventKey = "\(event.title ?? "")-\(event.startDate?.description ?? "")"
-            if seenEventIds.contains(eventKey) {
-                continue
-            }
+            if seenEventIds.contains(eventKey) { continue }
             seenEventIds.insert(eventKey)
-            
-            // Check if event is recurring
+
             var isYearlyRecurring = false
             var recurrenceRule: String? = nil
-            
+
             if let rules = event.recurrenceRules {
-                for rule in rules {
-                    if rule.frequency == .yearly {
-                        isYearlyRecurring = true
-                        recurrenceRule = "FREQ=YEARLY"
-                        if rule.interval > 1 {
-                            recurrenceRule = "FREQ=YEARLY;INTERVAL=\(rule.interval)"
-                        }
-                        break
-                    }
+                for rule in rules where rule.frequency == .yearly {
+                    isYearlyRecurring = true
+                    recurrenceRule = rule.interval > 1 ? "FREQ=YEARLY;INTERVAL=\(rule.interval)" : "FREQ=YEARLY"
+                    break
                 }
             }
-            
-            // Check if from Birthdays calendar
+
             let isBirthdayCalendar = event.calendar.type == .birthday
             
             let eventData: [String: Any] = [
@@ -254,40 +219,25 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             allEvents.append(eventData)
         }
         
-        // Sort by start date
-        allEvents.sort { event1, event2 in
-            let date1 = event1["startDate"] as? String ?? ""
-            let date2 = event2["startDate"] as? String ?? ""
-            return date1 < date2
-        }
+        allEvents.sort { ($0["startDate"] as? String ?? "") < ($1["startDate"] as? String ?? "") }
         
         call.resolve(["events": allEvents])
     }
     
-    /// Update widget data in shared App Group storage
     @objc func updateWidgetData(_ call: CAPPluginCall) {
         guard let eventsArray = call.getArray("events") as? [[String: Any]] else {
-            print("CalendarPlugin: Missing events array in updateWidgetData call")
             call.reject("Missing events array")
             return
         }
-        
+
         let appearanceMode = call.getString("appearanceMode") ?? "light"
         let countdownStyle = call.getString("countdownStyle") ?? "focus"
-        
-        print("CalendarPlugin: Received \(eventsArray.count) events, appearance: \(appearanceMode), style: \(countdownStyle)")
-        let incomingIds = eventsArray.compactMap { $0["id"] as? String }
-        print("CalendarPlugin: Incoming event IDs: \(incomingIds)")
-        
+
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
-            print("CalendarPlugin: FAILED to access App Group with identifier: \(appGroupIdentifier)")
             call.reject("Failed to access App Group storage")
             return
         }
         
-        print("CalendarPlugin: Successfully accessed App Group: \(appGroupIdentifier)")
-        
-        // Convert events array - ensure all values are proper types for JSON encoding
         var cleanedEvents: [[String: Any]] = []
         for event in eventsArray {
             var cleanEvent: [String: Any] = [:]
@@ -299,7 +249,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             cleanEvent["isRecurring"] = event["isRecurring"] as? Bool ?? false
             cleanEvent["createdAt"] = event["createdAt"] as? String ?? ISO8601DateFormatter().string(from: Date())
             cleanedEvents.append(cleanEvent)
-            print("CalendarPlugin: Event - \(cleanEvent["title"] ?? "unknown") targeting \(cleanEvent["targetDate"] ?? "unknown")")
         }
         
         let stableWidgetData: [String: Any] = [
@@ -321,9 +270,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
                 let existingStableJsonData = try JSONSerialization.data(withJSONObject: existingStableWidgetData, options: [.sortedKeys])
 
                 if existingStableJsonData == stableJsonData {
-                    let existingIds = (existingObject["events"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
-                    print("CalendarPlugin: Widget data unchanged - skipping write and timeline reload")
-                    print("CalendarPlugin: Existing stored event IDs: \(existingIds)")
                     call.resolve(["success": true])
                     return
                 }
@@ -339,31 +285,17 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             let jsonData = try JSONSerialization.data(withJSONObject: widgetData, options: [.prettyPrinted, .sortedKeys])
             userDefaults.set(jsonData, forKey: "widgetData")
             userDefaults.synchronize()
-            
-            print("CalendarPlugin: Saved \(jsonData.count) bytes to App Group")
-            print("CalendarPlugin: Persisted event IDs: \(cleanedEvents.compactMap { $0["id"] as? String })")
-            
-            // Verify the data was saved
-            if let verifyData = userDefaults.data(forKey: "widgetData") {
-                print("CalendarPlugin: Verified data exists: \(verifyData.count) bytes")
-            } else {
-                print("CalendarPlugin: WARNING - Data verification failed!")
-            }
-            
-            // Reload widgets to reflect new data
+
             if #available(iOS 14.0, *) {
                 WidgetCenter.shared.reloadAllTimelines()
-                print("CalendarPlugin: Requested widget timeline reload")
             }
             
             call.resolve(["success": true])
         } catch {
-            print("CalendarPlugin: Failed to serialize: \(error)")
             call.reject("Failed to serialize widget data: \(error.localizedDescription)")
         }
     }
 
-    /// Read widget data from shared App Group storage
     @objc func getWidgetData(_ call: CAPPluginCall) {
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             call.reject("Failed to access App Group storage")
@@ -371,7 +303,6 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         guard let jsonData = userDefaults.data(forKey: "widgetData") else {
-            print("CalendarPlugin.getWidgetData: No widgetData present in App Group storage")
             call.resolve(["widgetData": NSNull()])
             return
         }
@@ -379,15 +310,11 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: jsonData, options: [])
             if let widgetData = jsonObject as? [String: Any] {
-                let ids = (widgetData["events"] as? [[String: Any]] ?? []).compactMap { $0["id"] as? String }
-                print("CalendarPlugin.getWidgetData: Returning \(ids.count) stored event IDs: \(ids)")
                 call.resolve(["widgetData": widgetData])
             } else {
-                print("CalendarPlugin.getWidgetData: Stored widgetData is not a dictionary")
                 call.resolve(["widgetData": NSNull()])
             }
         } catch {
-            print("CalendarPlugin.getWidgetData: Failed to read widget data: \(error)")
             call.reject("Failed to read widget data: \(error.localizedDescription)")
         }
     }
@@ -396,21 +323,17 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Helper methods
     
     private func authStatusToString(_ status: EKAuthorizationStatus) -> String {
-        switch status.rawValue {
-        case EKAuthorizationStatus.notDetermined.rawValue:
-            return "notDetermined"
-        case EKAuthorizationStatus.restricted.rawValue:
-            return "restricted"
-        case EKAuthorizationStatus.denied.rawValue:
-            return "denied"
-        case EKAuthorizationStatus.authorized.rawValue:
-            return "authorized"
+        switch status {
+        case .notDetermined: return "notDetermined"
+        case .restricted: return "restricted"
+        case .denied: return "denied"
+        case .authorized: return "authorized"
         default:
             if #available(iOS 17.0, *) {
-                if status == .fullAccess {
-                    return "fullAccess"
-                } else if status == .writeOnly {
-                    return "writeOnly"
+                switch status {
+                case .fullAccess: return "fullAccess"
+                case .writeOnly: return "writeOnly"
+                default: break
                 }
             }
             return "unknown"
