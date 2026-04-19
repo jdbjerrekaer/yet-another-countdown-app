@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
-import { ChevronRight, RefreshCw, CalendarIcon, Trash2 } from 'lucide-react';
+import { RefreshCw, CalendarIcon, Trash2 } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
@@ -63,14 +63,6 @@ export function CountdownCard({
     } else {
       onSelect();
     }
-  };
-
-  const handleEdit = (e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    trigger('medium');
-    onEdit();
   };
 
   const handleDelete = async () => {
@@ -330,7 +322,7 @@ export function CountdownCard({
           {/* Main card content */}
           <IonItem 
             button
-            detail={false}
+            detail={isNative}
             onClick={handleSelect}
             lines="none"
             className={styles.item}
@@ -386,14 +378,6 @@ export function CountdownCard({
                   )}
                 </div>
               </div>
-              
-              <button
-                className="w-11 h-11 rounded-full flex items-center justify-center active:bg-secondary transition-colors flex-shrink-0"
-                onClick={handleEdit}
-                aria-label={t('aria.editEvent')}
-              >
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </button>
             </div>
           </IonItem>
         </IonItemSliding>

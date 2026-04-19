@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
-import { add, calendarOutline, sparklesOutline } from 'ionicons/icons';
+import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons';
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
@@ -24,7 +24,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
 import { WidgetPreview } from '@/components/WidgetPreview';
-import { DatePickerModal } from '@/components/DatePickerModal';
+import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -35,7 +35,7 @@ import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle 
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
-import { CalendarImportModal } from '@/components/CalendarImportModal';
+import { CalendarImportModal, CalendarImportModalRef } from '@/components/CalendarImportModal';
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
@@ -220,6 +220,10 @@ export default function Index() {
   const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [canSaveForm, setCanSaveForm] = useState(false);
+  const [canImportCalendar, setCanImportCalendar] = useState(false);
+  const datePickerModalRef = useRef<DatePickerModalRef>(null);
+  const calendarImportModalRef = useRef<CalendarImportModalRef>(null);
 
   // Helper function to check if an element is within ion-item-option
   const isWithinDeleteOption = (element: Element | null): boolean => {
@@ -1028,6 +1032,17 @@ export default function Index() {
     // Note: Focus is now handled by onDidPresent + Capacitor Keyboard.show()
   };
 
+  const handleFabClick = async () => {
+    trigger('medium');
+    if (isCalendarImportOpen) {
+      calendarImportModalRef.current?.import();
+    } else if (isModalOpen) {
+      datePickerModalRef.current?.save();
+    } else {
+      await handleAddNew();
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingEvent(null);
@@ -1265,26 +1280,38 @@ export default function Index() {
   };
 
   const isAnyModalOpen = isModalOpen || isCalendarImportOpen;
+  const fabDisabled = (isModalOpen && !canSaveForm) || (isCalendarImportOpen && !canImportCalendar);
+  const fabIcon = isAnyModalOpen ? checkmark : add;
+  const fabAriaLabel = isCalendarImportOpen
+    ? t('aria.importEvents')
+    : isModalOpen
+      ? t('aria.saveEvent')
+      : t('aria.addEvent');
 
   const fabPortal = (
-    <div 
-      className="fab-portal transition-all duration-300"
+    <div
+      className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''} transition-all duration-300`}
       style={{
         position: 'fixed',
         right: 'calc(16px + env(safe-area-inset-left))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
-        zIndex: 50,
-        display: isCalendarImportOpen || isRemoveAdsOpen ? 'none' : undefined,
+        zIndex: isAnyModalOpen ? 100000 : 50,
+        display: isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
-        <IonFabButton 
-          onClick={handleAddNew} 
-          aria-label={t('aria.addEvent')}
+        <IonFabButton
+          onClick={handleFabClick}
+          aria-label={fabAriaLabel}
+          disabled={fabDisabled}
+          style={fabDisabled ? {
+            '--background': 'var(--ion-color-medium, #92949c)',
+            '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
+          } as React.CSSProperties : undefined}
         >
           <div className="relative w-full h-full flex items-center justify-center">
-            <IonIcon 
-              icon={add} 
+            <IonIcon
+              icon={fabIcon}
               style={{ fontSize: '40px' }}
             />
           </div>
@@ -1614,9 +1641,11 @@ export default function Index() {
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal
+        ref={datePickerModalRef}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSave}
+        onCanSaveChange={setCanSaveForm}
         initialTitle={editingEvent?.title}
         initialDate={editingEvent ? new Date(editingEvent.targetDate) : (() => {
           const today = new Date();
@@ -1634,9 +1663,11 @@ export default function Index() {
       />
 
       <CalendarImportModal
+        ref={calendarImportModalRef}
         isOpen={isCalendarImportOpen}
         onClose={() => setIsCalendarImportOpen(false)}
         onImport={handleCalendarImport}
+        onCanImportChange={setCanImportCalendar}
       />
 
       <RemoveAdsModal

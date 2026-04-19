@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { format, differenceInYears } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon } from '@ionic/react';
 import { shareOutline } from 'ionicons/icons';
@@ -71,6 +71,11 @@ function getDatetimeValue(event: CustomEvent<{ value?: string | string[] | null 
   return typeof value === 'string' ? value : null;
 }
 
+export interface DatePickerModalRef {
+  save: () => Promise<void>;
+  canSave: () => boolean;
+}
+
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -84,21 +89,13 @@ interface DatePickerModalProps {
   initialImportedFrom?: string;
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
-  onValidityChange?: (canSave: boolean) => void;
   onConfirmDateChange?: (title: string, oldDate: Date, newDate: Date) => Promise<boolean>;
-}
-
-export interface DatePickerModalRef {
-  save: () => Promise<void>;
-  canSave: () => boolean;
-  hasDateChanged: () => boolean;
-  getCurrentDate: () => Date | undefined;
-  focusInput: () => void;
+  onCanSaveChange?: (canSave: boolean) => void;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
 
-export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
+export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(function DatePickerModal({
   isOpen,
   onClose,
   onSave,
@@ -111,9 +108,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   initialImportedFrom,
   isEditing = false,
   onDelete,
-  onValidityChange,
   onConfirmDateChange,
-}, ref) => {
+  onCanSaveChange,
+}: DatePickerModalProps, ref) {
   const { t } = useTranslation();
   
   const [title, setTitle] = useState(initialTitle);
@@ -327,6 +324,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   const canSave = () => Boolean(title && date && emoji);
 
+  useEffect(() => {
+    onCanSaveChange?.(Boolean(title && date && emoji));
+  }, [title, date, emoji, onCanSaveChange]);
+
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+    canSave,
+  }));
+
   // Check if the date has changed from the original (for editing mode)
   const hasDateChanged = (): boolean => {
     if (!isEditing || !originalDateRef.current || !date) {
@@ -338,13 +344,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     }
     return originalDateRef.current.getTime() !== date.getTime();
   };
-
-  // Notify parent when validity changes
-  useEffect(() => {
-    if (onValidityChange) {
-      onValidityChange(canSave());
-    }
-  }, [title, date, emoji, onValidityChange]);
 
   // Manage yearly suggestion banner visibility with exit animation
   useEffect(() => {
@@ -532,62 +531,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       onClose();
     }
   };
-
-  // Focus input method - transfers focus from proxy input to modal input (Safari mobile fix)
-  const focusInput = async () => {
-    if (isEditing) return;
-    
-    // On native iOS, use Capacitor Keyboard plugin to show keyboard
-    const isNative = Capacitor.isNativePlatform();
-    
-    // Schedule focus attempts for when modal and input are ready
-    const attempts = [100, 250, 400, 600, 800];
-    attempts.forEach((delay) => {
-      setTimeout(async () => {
-        const input = titleInputRef.current;
-        if (!input) return;
-        
-        // Check if input is visible and ready
-        const isVisible = input.offsetParent !== null && 
-                         input.offsetWidth > 0 && 
-                         input.offsetHeight > 0;
-        
-        if (isVisible) {
-          try {
-            // Focus the input
-            input.focus();
-            
-            // Set selection to trigger cursor
-            if (input.setSelectionRange) {
-              input.setSelectionRange(0, 0);
-            }
-            
-            // On native iOS, explicitly show keyboard using Capacitor
-            if (isNative) {
-              try {
-                await Keyboard.show();
-              } catch (e) {
-                // Keyboard plugin may not be available
-              }
-            }
-          } catch (e) {
-            // Ignore errors
-          }
-        }
-      }, delay);
-    });
-  };
-
-  // Expose save method to parent via ref
-  // Must include all dependencies that handleSave and other functions use
-  // to prevent stale closures when called from parent
-  useImperativeHandle(ref, () => ({
-    save: handleSave,
-    canSave,
-    hasDateChanged,
-    getCurrentDate: () => date,
-    focusInput,
-  }), [title, date, emoji, isRecurring, emojiColor, isEditing, onConfirmDateChange, onSave, onClose, trigger]);
 
   const handleEmojiSelect = async (e: string) => {
     trigger('light');
