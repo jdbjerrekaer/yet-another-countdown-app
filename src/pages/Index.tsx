@@ -220,6 +220,7 @@ export default function Index() {
   const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [importPrefillData, setImportPrefillData] = useState<EventImportPayload | null>(null);
   const [canSaveForm, setCanSaveForm] = useState(false);
   const [canImportCalendar, setCanImportCalendar] = useState(false);
   const datePickerModalRef = useRef<DatePickerModalRef>(null);
@@ -692,73 +693,30 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle pending imported events
+  // Handle pending imported events — open DatePickerModal prefilled
   useEffect(() => {
-    const handlePendingImport = async () => {
+    const handlePendingImport = () => {
       const pendingImportStr = localStorage.getItem('pendingImportedEvent');
-      if (!pendingImportStr) {
-        return;
-      }
+      if (!pendingImportStr) return;
 
       try {
         const payload: EventImportPayload = JSON.parse(pendingImportStr);
-        
-        // Format date for display
-        const eventDate = new Date(payload.targetDate);
-        const dateFormatted = format(eventDate, 'MMM d, yyyy');
-        
-        // Show confirmation dialog
-        const { value: confirmed } = await Dialog.confirm({
-          title: t('dialogs.importEvent.title'),
-          message: t('dialogs.importEvent.message', { 
-            title: payload.title, 
-            emoji: payload.emoji,
-            date: dateFormatted 
-          }),
-          okButtonTitle: t('dialogs.importEvent.import'),
-          cancelButtonTitle: t('dialogs.importEvent.cancel'),
-        });
-
-        if (confirmed) {
-          // Create new event from imported payload
-          const newEvent: CountdownEvent = {
-            id: generateId(),
-            title: payload.title,
-            targetDate: payload.targetDate,
-            emoji: payload.emoji,
-            emojiColor: payload.emojiColor,
-            isRecurring: payload.isRecurring,
-            createdAt: new Date().toISOString(),
-          };
-          
-          setEvents(prev => [...prev, newEvent]);
-          setSelectedEventId(newEvent.id);
-          
-          // Schedule notification only if permission is already granted (don't prompt on import)
-          const hasPermission = await checkNotificationPermission();
-          if (hasPermission) {
-            const targetDateForNotification = payload.isRecurring 
-              ? getNextRecurringDate(new Date(payload.targetDate))
-              : new Date(payload.targetDate);
-            await scheduleEventNotification(newEvent.id, payload.title, targetDateForNotification, payload.emoji);
-          }
-        }
-        
-        // Clear pending import regardless of confirmation
         localStorage.removeItem('pendingImportedEvent');
+        setImportPrefillData(payload);
+        setEditingEvent(null);
+        setIsModalOpen(true);
+        trigger('medium');
       } catch (error) {
         console.error('Failed to import event:', error);
-        // Clear invalid pending import
         localStorage.removeItem('pendingImportedEvent');
       }
     };
 
     handlePendingImport();
 
-    // Also trigger when Import.tsx signals it stored a new pending event
     window.addEventListener(IMPORT_EVENT_READY, handlePendingImport);
     return () => window.removeEventListener(IMPORT_EVENT_READY, handlePendingImport);
-  }, [isNative, t]);
+  }, [trigger]);
 
   // Handle deep link edit event (when user taps widget to edit an event)
   useEffect(() => {
@@ -1046,6 +1004,7 @@ export default function Index() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingEvent(null);
+    setImportPrefillData(null);
   };
 
   const handleOpenRemoveAds = () => {
@@ -1646,15 +1605,17 @@ export default function Index() {
         onClose={handleCloseModal}
         onSave={handleSave}
         onCanSaveChange={setCanSaveForm}
-        initialTitle={editingEvent?.title}
-        initialDate={editingEvent ? new Date(editingEvent.targetDate) : (() => {
-          const today = new Date();
-          today.setHours(8, 0, 0, 0);
-          return today;
-        })()}
-        initialEmoji={editingEvent?.emoji}
-        initialEmojiColor={editingEvent?.emojiColor}
-        initialIsRecurring={editingEvent?.isRecurring}
+        initialTitle={editingEvent?.title ?? importPrefillData?.title}
+        initialDate={
+          editingEvent
+            ? new Date(editingEvent.targetDate)
+            : importPrefillData
+              ? new Date(importPrefillData.targetDate)
+              : (() => { const d = new Date(); d.setHours(8, 0, 0, 0); return d; })()
+        }
+        initialEmoji={editingEvent?.emoji ?? importPrefillData?.emoji}
+        initialEmojiColor={editingEvent?.emojiColor ?? importPrefillData?.emojiColor}
+        initialIsRecurring={editingEvent?.isRecurring ?? importPrefillData?.isRecurring}
         initialIsImported={editingEvent?.isImported}
         initialImportedFrom={editingEvent?.importedFrom}
         isEditing={!!editingEvent}
