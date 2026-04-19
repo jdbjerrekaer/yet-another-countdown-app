@@ -190,9 +190,11 @@ export const RemoveAdsModal = ({
     !hasVisibleProducts &&
     catalog.status === "unavailable";
   const error = showGlobalLoadError ? t("iap.loadError") : null;
-  const catalogDebugReason = showGlobalLoadError
+  const loggedCatalogDebugReason = showGlobalLoadError
     ? getCatalogDebugReason(catalog)
     : null;
+  const visibleCatalogDebugReason =
+    isDevBuild && showGlobalLoadError ? loggedCatalogDebugReason : null;
 
   useEffect(() => {
     if (!showGlobalLoadError || !isOpen) {
@@ -228,7 +230,7 @@ export const RemoveAdsModal = ({
     lastLoggedCatalogErrorRef.current = failureSignature;
 
     console.error("[IAP Modal] Catalog load failed", {
-      debugReason: catalogDebugReason,
+      debugReason: loggedCatalogDebugReason,
       catalog: {
         status: catalog.status,
         errorCode: catalog.errorCode,
@@ -237,7 +239,7 @@ export const RemoveAdsModal = ({
       },
       diagnostics,
     });
-  }, [catalog, catalogDebugReason, isOpen, showGlobalLoadError]);
+  }, [catalog, isOpen, loggedCatalogDebugReason, showGlobalLoadError]);
 
   useEffect(() => {
     if (hasRemoveAds) {
@@ -246,7 +248,7 @@ export const RemoveAdsModal = ({
         closeTriggeredRef.current = true;
         onClose();
       }
-      if (!confettiShownRef.current) {
+      if (!confettiShownRef.current && isOpen) {
         confettiShownRef.current = true;
         confetti({
           particleCount: 150,
@@ -472,9 +474,9 @@ export const RemoveAdsModal = ({
                   <IonText color="danger" className="block text-sm font-medium leading-relaxed">
                     {error}
                   </IonText>
-                  {catalogDebugReason && (
+                  {visibleCatalogDebugReason && (
                     <p className="mt-2 break-words text-[11px] leading-relaxed text-destructive/80">
-                      {catalogDebugReason}
+                      {visibleCatalogDebugReason}
                     </p>
                   )}
                 </div>

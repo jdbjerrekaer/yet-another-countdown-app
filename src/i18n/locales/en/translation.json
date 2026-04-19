@@ -69,7 +69,7 @@
     "cancel": "Cancel",
     "close": "Close",
     "delete": "Delete Event",
-    "advancedLabel": "Advanced",
+    "advancedLabel": "Danger Zone",
     "repeatYearlyLabel": "Repeat Yearly",
     "repeatYearlySublabel": "For birthdays, anniversaries",
     "customEmojiTitle": "Custom emoji",
@@ -123,7 +123,11 @@
     "format": "{{days}}d {{hours}}h {{minutes}}m"
   },
   "notifications": {
-    "reachedZero": "Your countdown has reached zero!"
+    "reachedZero": "Your countdown has reached zero!",
+    "enableTitle": "Enable Notifications?",
+    "enableMessage": "Would you like a reminder when this countdown reaches zero?",
+    "enable": "Enable",
+    "notNow": "Not Now"
   },
   "calendar": {
     "importTitle": "Import from Calendar",

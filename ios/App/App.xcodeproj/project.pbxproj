@@ -23,6 +23,7 @@
 		A63D32322F0BCF250063570B /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322B2F0BCF250063570B /* LargeWidgetView.swift */; };
 		A63D32332F0BCF250063570B /* EmptyWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32292F0BCF250063570B /* EmptyWidgetView.swift */; };
 		A63D32342F0BCF250063570B /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322C2F0BCF250063570B /* MediumWidgetView.swift */; };
+		A63D32402F0BCF250063570B /* LockscreenWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */; };
 		A63D32352F0BCF250063570B /* WidgetDataSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32272F0BCF250063570B /* WidgetDataSync.swift */; };
 		A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32252F0BCF250063570B /* CountdownEvent.swift */; };
 		A63D32372F0BCF250063570B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A63D32242F0BCF250063570B /* Assets.xcassets */; };
@@ -103,6 +104,7 @@
 		A63D322B2F0BCF250063570B /* LargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetView.swift; sourceTree = "<group>"; };
 		A63D322C2F0BCF250063570B /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
 		A63D322D2F0BCF250063570B /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
+		A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockscreenWidgetView.swift; sourceTree = "<group>"; };
 		A63D32382F0BD8350063570B /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		A63D32392F0BD9030063570B /* CountdownWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CountdownWidget.entitlements; sourceTree = "<group>"; };
 		A6A592E82F2D2EDC000F4200 /* StoreKit.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = StoreKit.storekit; sourceTree = "<group>"; };
@@ -264,6 +266,7 @@
 			children = (
 				A63D32292F0BCF250063570B /* EmptyWidgetView.swift */,
 				A63D322B2F0BCF250063570B /* LargeWidgetView.swift */,
+				A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */,
 				A63D322C2F0BCF250063570B /* MediumWidgetView.swift */,
 				A63D322D2F0BCF250063570B /* SmallWidgetView.swift */,
 			);
@@ -537,6 +540,7 @@
 				A63D32332F0BCF250063570B /* EmptyWidgetView.swift in Sources */,
 				A63D32322F0BCF250063570B /* LargeWidgetView.swift in Sources */,
 				A63D32342F0BCF250063570B /* MediumWidgetView.swift in Sources */,
+				A63D32402F0BCF250063570B /* LockscreenWidgetView.swift in Sources */,
 				A63D32312F0BCF250063570B /* SelectCountdownIntent.swift in Sources */,
 				B6174CD4190B08F557A8B211 /* CountdownWidget.swift in Sources */,
 			);

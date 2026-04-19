@@ -664,16 +664,18 @@ struct CountdownWidgetEntryView: View {
                     progress: progress
                 )
                 .widgetURL(deepLinkURL)
-            case .accessoryInline, .accessoryCircular, .accessoryRectangular, .accessoryCorner:
-                SmallWidgetView(
-                    event: event,
-                    countdown: countdown,
-                    targetDate: targetDate,
-                    appearanceMode: entry.appearanceMode,
-                    countdownStyle: entry.countdownStyle,
-                    progress: progress
-                )
-                .widgetURL(deepLinkURL)
+            case .accessoryInline:
+                LockscreenInlineView(event: event, countdown: countdown)
+                    .widgetURL(deepLinkURL)
+            case .accessoryCircular:
+                LockscreenCircularView(event: event, countdown: countdown)
+                    .widgetURL(deepLinkURL)
+            case .accessoryRectangular:
+                LockscreenRectangularView(event: event, countdown: countdown, targetDate: targetDate)
+                    .widgetURL(deepLinkURL)
+            case .accessoryCorner:
+                LockscreenCircularView(event: event, countdown: countdown)
+                    .widgetURL(deepLinkURL)
             @unknown default:
                 SmallWidgetView(
                     event: event,
@@ -1065,6 +1067,38 @@ struct TripleVisualCountdownWidgetEntryView: View {
 }
 
 
+// MARK: - Lockscreen Widget
+
+struct CountdownLockscreenWidget: Widget {
+    let kind: String = "CountdownLockscreenWidget"
+
+    var body: some WidgetConfiguration {
+        if #available(iOS 17.0, *) {
+            return AppIntentConfiguration(
+                kind: kind,
+                intent: SelectCountdownIntent.self,
+                provider: CountdownTimerWidgetProvider()
+            ) { entry in
+                CountdownWidgetEntryView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            }
+            .configurationDisplayName("Countdown Lock Screen")
+            .description("Show a countdown on your lock screen.")
+            .supportedFamilies([.accessoryInline, .accessoryCircular, .accessoryRectangular])
+        } else {
+            return StaticConfiguration(
+                kind: kind,
+                provider: CountdownTimerWidgetProviderStatic()
+            ) { _ in
+                EmptyView()
+            }
+            .configurationDisplayName("Countdown Lock Screen")
+            .description("Requires iOS 17 or later.")
+            .supportedFamilies([])
+        }
+    }
+}
+
 // MARK: - Widget Bundle
 
 @main
@@ -1075,6 +1109,7 @@ struct CountdownWidgetBundle: WidgetBundle {
         CountdownVisualWidget()       // Visual/Progress bars style widget (single event)
         CountdownVisualTripleWidget() // Visual/Progress bars style widget (triple event)
         CountdownClassicWidget()      // Classic/Flip digit style widget
+        CountdownLockscreenWidget()   // Lock screen widget (inline, circular, rectangular)
     }
 }
 

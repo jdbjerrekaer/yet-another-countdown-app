@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
-import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons';
+import { add, calendarOutline, sparklesOutline } from 'ionicons/icons';
 import { format, differenceInYears } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
-import { Keyboard } from '@capacitor/keyboard';
 import {
   DndContext,
   closestCenter,
@@ -25,7 +24,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
 import { WidgetPreview } from '@/components/WidgetPreview';
-import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
+import { DatePickerModal } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { CountdownCard } from '@/components/CountdownCard';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -36,12 +35,13 @@ import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle 
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
-import { CalendarImportModal, CalendarImportModalRef } from '@/components/CalendarImportModal';
+import { CalendarImportModal } from '@/components/CalendarImportModal';
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
+import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { toast } from 'sonner';
@@ -195,8 +195,6 @@ export default function Index() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isCalendarImportOpen, setIsCalendarImportOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [canSaveForm, setCanSaveForm] = useState(false);
-  const [canImportCalendar, setCanImportCalendar] = useState(false);
   const [draggedCardWidth, setDraggedCardWidth] = useState<number | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
@@ -205,15 +203,12 @@ export default function Index() {
   const displayedDragRotationRef = useRef<number>(0);
   const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
-  const datePickerModalRef = useRef<DatePickerModalRef>(null);
-  const calendarImportModalRef = useRef<CalendarImportModalRef>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isDevBuild, setIsDevBuild] = useState(import.meta.env.MODE !== 'production');
   const [devAdsEnabled, setDevAdsEnabled] = useState(false);
   const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
@@ -508,29 +503,6 @@ export default function Index() {
   }, [isNative, isDevBuild, devAdsEnabled, hasRemoveAds]);
 
   useEffect(() => {
-    if (!isNative) return;
-
-    let showListener: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-    let hideListener: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-
-    const setupListeners = async () => {
-      showListener = await Keyboard.addListener('keyboardWillShow', (info) => {
-        setKeyboardHeight(info.keyboardHeight);
-      });
-      hideListener = await Keyboard.addListener('keyboardWillHide', () => {
-        setKeyboardHeight(0);
-      });
-    };
-
-    setupListeners();
-
-    return () => {
-      showListener?.remove();
-      hideListener?.remove();
-    };
-  }, [isNative]);
-
-  useEffect(() => {
     if (!isDevBuild) return;
     if (!devAdsEnabled || hasRemoveAds) {
       setShowAdPlaceholder(false);
@@ -778,6 +750,10 @@ export default function Index() {
     };
 
     handlePendingImport();
+
+    // Also trigger when Import.tsx signals it stored a new pending event
+    window.addEventListener(IMPORT_EVENT_READY, handlePendingImport);
+    return () => window.removeEventListener(IMPORT_EVENT_READY, handlePendingImport);
   }, [isNative, t]);
 
   // Handle deep link edit event (when user taps widget to edit an event)
@@ -887,14 +863,37 @@ export default function Index() {
     return value;
   };
 
+  const offerNotificationPermissionAfterSave = (
+    eventId: string,
+    title: string,
+    targetDate: Date | null,
+    emoji: string
+  ) => {
+    if (!isNative || !targetDate) return;
+
+    window.setTimeout(async () => {
+      const { value: shouldEnable } = await Dialog.confirm({
+        title: t('notifications.enableTitle'),
+        message: t('notifications.enableMessage'),
+        okButtonTitle: t('notifications.enable'),
+        cancelButtonTitle: t('notifications.notNow'),
+      });
+
+      if (!shouldEnable) {
+        return;
+      }
+
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        await scheduleEventNotification(eventId, title, targetDate, emoji);
+      }
+    }, 0);
+  };
+
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
     const saveKind = editingEvent ? 'edit' : 'create';
 
-    // Request notification permission when creating or editing an event
     const hasPermission = await checkNotificationPermission();
-    if (!hasPermission) {
-      await requestNotificationPermission();
-    }
 
     if (editingEvent) {
       // Cancel old notification and schedule new one
@@ -910,7 +909,11 @@ export default function Index() {
       const targetDateForNotification = isRecurring 
         ? getNextRecurringDate(date)
         : date;
-      await scheduleEventNotification(editingEvent.id, title, targetDateForNotification, emoji);
+      if (hasPermission) {
+        await scheduleEventNotification(editingEvent.id, title, targetDateForNotification, emoji);
+      } else {
+        offerNotificationPermissionAfterSave(editingEvent.id, title, targetDateForNotification, emoji);
+      }
     } else {
       const newEvent: CountdownEvent = {
         id: generateId(),
@@ -928,7 +931,11 @@ export default function Index() {
       const targetDateForNotification = isRecurring 
         ? getNextRecurringDate(date)
         : date;
-      await scheduleEventNotification(newEvent.id, title, targetDateForNotification, emoji);
+      if (hasPermission) {
+        await scheduleEventNotification(newEvent.id, title, targetDateForNotification, emoji);
+      } else {
+        offerNotificationPermissionAfterSave(newEvent.id, title, targetDateForNotification, emoji);
+      }
     }
     setEditingEvent(null);
 
@@ -1021,24 +1028,9 @@ export default function Index() {
     // Note: Focus is now handled by onDidPresent + Capacitor Keyboard.show()
   };
 
-  const handleFabClick = async () => {
-    trigger('medium');
-    if (isCalendarImportOpen) {
-      // Calendar import modal is open - trigger import
-      calendarImportModalRef.current?.import();
-    } else if (isModalOpen) {
-      // Date picker modal is open - trigger save
-      datePickerModalRef.current?.save();
-    } else {
-      // No modal is open - open add new event modal
-      await handleAddNew();
-    }
-  };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingEvent(null);
-    setCanSaveForm(false);
   };
 
   const handleOpenRemoveAds = () => {
@@ -1272,42 +1264,27 @@ export default function Index() {
     return Date.now() - lastDragEndTs.current < 200;
   };
 
-  // Determine FAB state based on which modal is open
   const isAnyModalOpen = isModalOpen || isCalendarImportOpen;
-  const fabDisabled = (isModalOpen && !canSaveForm) || (isCalendarImportOpen && !canImportCalendar);
-  const fabIcon = isAnyModalOpen ? checkmark : add;
-  const fabAriaLabel = isCalendarImportOpen 
-    ? t('aria.importEvents') 
-    : isModalOpen 
-      ? t('aria.saveEvent') 
-      : t('aria.addEvent');
 
   const fabPortal = (
     <div 
-      className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''} transition-all duration-300`}
+      className="fab-portal transition-all duration-300"
       style={{
         position: 'fixed',
         right: 'calc(16px + env(safe-area-inset-left))',
-        bottom: isNative && keyboardHeight > 0 
-          ? `calc(16px + env(safe-area-inset-bottom) + ${keyboardHeight}px)` 
-          : 'calc(16px + env(safe-area-inset-bottom) + 56px)',
-        zIndex: isAnyModalOpen ? 100000 : 50,
-        display: isRemoveAdsOpen ? 'none' : undefined,
+        bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
+        zIndex: 50,
+        display: isAnyModalOpen || isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
         <IonFabButton 
-          onClick={handleFabClick} 
-          aria-label={fabAriaLabel}
-          disabled={fabDisabled}
-          style={fabDisabled ? { 
-            '--background': 'var(--ion-color-medium, #92949c)',
-            '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
-          } as React.CSSProperties : undefined}
+          onClick={handleAddNew} 
+          aria-label={t('aria.addEvent')}
         >
           <div className="relative w-full h-full flex items-center justify-center">
             <IonIcon 
-              icon={fabIcon} 
+              icon={add} 
               style={{ fontSize: '40px' }}
             />
           </div>
@@ -1391,6 +1368,13 @@ export default function Index() {
               <p className="text-muted-foreground text-center max-w-xs mb-8">
                 {t('app.createFirst')}
               </p>
+              <IonButton
+                fill="outline"
+                onClick={handleOpenCalendarImport}
+                className="min-h-11"
+              >
+                {t('calendar.importTitle')}
+              </IonButton>
             </div>
           ) : (
             <div className="space-y-8 animate-fade-in">
@@ -1630,7 +1614,6 @@ export default function Index() {
 
       {/* Modals rendered outside IonContent to ensure proper z-index */}
       <DatePickerModal
-        ref={datePickerModalRef}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSave}
@@ -1647,16 +1630,13 @@ export default function Index() {
         initialImportedFrom={editingEvent?.importedFrom}
         isEditing={!!editingEvent}
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
-        onValidityChange={setCanSaveForm}
         onConfirmDateChange={confirmDateChange}
       />
 
       <CalendarImportModal
-        ref={calendarImportModalRef}
         isOpen={isCalendarImportOpen}
         onClose={() => setIsCalendarImportOpen(false)}
         onImport={handleCalendarImport}
-        onCanImportChange={setCanImportCalendar}
       />
 
       <RemoveAdsModal
