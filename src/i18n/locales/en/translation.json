@@ -2,7 +2,14 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "No Countdowns",
-    "createFirst": "Tap the + button below to create your first countdown"
+    "createFirst": "Tap the + button below to create your first countdown",
+    "orImportFromCalendar": "Or import from Calendar"
+  },
+  "feedback": {
+    "eventCreated": "Event created",
+    "eventUpdated": "Event updated",
+    "eventDeleted": "Deleted",
+    "undoDelete": "Undo"
   },
   "events": {
     "title": "Events",
@@ -36,6 +43,7 @@
       "secondsShort_one": "Sec",
       "secondsShort_other": "Sec"
     },
+    "homeScreenTip": "Add a widget to your Home Screen to see your countdowns at a glance 📱",
     "daysAgoText": "ago",
     "daysAgoTextUpper_one": "day ago",
     "daysAgoTextUpper_other": "days ago",
@@ -69,7 +77,7 @@
     "cancel": "Cancel",
     "close": "Close",
     "delete": "Delete Event",
-    "advancedLabel": "Advanced",
+    "advancedLabel": "Danger Zone",
     "repeatYearlyLabel": "Repeat Yearly",
     "repeatYearlySublabel": "For birthdays, anniversaries",
     "customEmojiTitle": "Custom emoji",
@@ -81,7 +89,8 @@
     "yearlySuggestion": "This date is over a year ago. Make it yearly?",
     "yearlySuggestionHint": "Make this repeat yearly?",
     "yearlySuggestionReason": "This date occurred over a year ago",
-    "enableYearly": "Enable"
+    "enableYearly": "Enable",
+    "dateMaxHelper": "Up to 5 years ahead"
   },
   "dialogs": {
     "dateChanged": {
@@ -123,7 +132,11 @@
     "format": "{{days}}d {{hours}}h {{minutes}}m"
   },
   "notifications": {
-    "reachedZero": "Your countdown has reached zero!"
+    "reachedZero": "Your countdown has reached zero!",
+    "enableTitle": "Enable Notifications?",
+    "enableMessage": "Would you like a reminder when this countdown reaches zero?",
+    "enable": "Enable",
+    "notNow": "Not Now"
   },
   "calendar": {
     "importTitle": "Import from Calendar",

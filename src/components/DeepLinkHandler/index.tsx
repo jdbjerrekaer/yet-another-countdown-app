@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { decodeEventImportLink, validatePayload } from '@/lib/eventImportLink';
+import { IMPORT_EVENT_READY } from '@/pages/Import';
 
 // Custom event for edit deep links
 export const EDIT_EVENT_DEEP_LINK = 'editEventDeepLink';
@@ -88,9 +90,18 @@ export function DeepLinkHandler() {
         return;
       }
       
-      // Route to import page with the full URL as query
+      // Handle import link: decode payload directly on native (no page navigation)
       if (pathname === '/import' || pathname.endsWith('/import')) {
-        history.push(`/import?${searchParams.toString()}`);
+        try {
+          const payload = decodeEventImportLink(url);
+          if (validatePayload(payload)) {
+            localStorage.setItem('pendingImportedEvent', JSON.stringify(payload));
+            window.dispatchEvent(new CustomEvent(IMPORT_EVENT_READY));
+          }
+        } catch (e) {
+          console.error('[DeepLink] Failed to decode import payload', e);
+        }
+        return;
       }
     } catch (error) {
       console.error('Failed to handle deep link:', error);

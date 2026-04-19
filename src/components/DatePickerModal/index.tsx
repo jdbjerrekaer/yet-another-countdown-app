@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { format, differenceInYears } from 'date-fns';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon } from '@ionic/react';
 import { shareOutline } from 'ionicons/icons';
@@ -71,6 +71,11 @@ function getDatetimeValue(event: CustomEvent<{ value?: string | string[] | null 
   return typeof value === 'string' ? value : null;
 }
 
+export interface DatePickerModalRef {
+  save: () => Promise<void>;
+  canSave: () => boolean;
+}
+
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -84,21 +89,13 @@ interface DatePickerModalProps {
   initialImportedFrom?: string;
   isEditing?: boolean;
   onDelete?: () => Promise<boolean> | boolean;
-  onValidityChange?: (canSave: boolean) => void;
   onConfirmDateChange?: (title: string, oldDate: Date, newDate: Date) => Promise<boolean>;
-}
-
-export interface DatePickerModalRef {
-  save: () => Promise<void>;
-  canSave: () => boolean;
-  hasDateChanged: () => boolean;
-  getCurrentDate: () => Date | undefined;
-  focusInput: () => void;
+  onCanSaveChange?: (canSave: boolean) => void;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
 
-export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(({
+export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalProps>(function DatePickerModal({
   isOpen,
   onClose,
   onSave,
@@ -111,9 +108,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   initialImportedFrom,
   isEditing = false,
   onDelete,
-  onValidityChange,
   onConfirmDateChange,
-}, ref) => {
+  onCanSaveChange,
+}: DatePickerModalProps, ref) {
   const { t } = useTranslation();
   
   const [title, setTitle] = useState(initialTitle);
@@ -327,6 +324,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   const canSave = () => Boolean(title && date && emoji);
 
+  useEffect(() => {
+    onCanSaveChange?.(Boolean(title && date && emoji));
+  }, [title, date, emoji, onCanSaveChange]);
+
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+    canSave,
+  }));
+
   // Check if the date has changed from the original (for editing mode)
   const hasDateChanged = (): boolean => {
     if (!isEditing || !originalDateRef.current || !date) {
@@ -338,13 +344,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     }
     return originalDateRef.current.getTime() !== date.getTime();
   };
-
-  // Notify parent when validity changes
-  useEffect(() => {
-    if (onValidityChange) {
-      onValidityChange(canSave());
-    }
-  }, [title, date, emoji, onValidityChange]);
 
   // Manage yearly suggestion banner visibility with exit animation
   useEffect(() => {
@@ -501,93 +500,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         }
       }
       
-      // Check if creating a new event with a date > 1 year in the past and not recurring
-      let finalIsRecurring = isRecurring;
-      if (!isEditing && !isRecurring && differenceInYears(new Date(), date) >= 1) {
-        // Prompt user to make it yearly using native Dialog (wider, with highlighted primary button)
-        let shouldMakeYearly = false;
-        
-        try {
-          const { value } = await Dialog.confirm({
-            title: t('dialogs.suggestYearly.title'),
-            message: t('dialogs.suggestYearly.message'),
-            okButtonTitle: t('dialogs.suggestYearly.enable'),
-            cancelButtonTitle: t('dialogs.suggestYearly.keepOneTime'),
-          });
-          shouldMakeYearly = value;
-          
-          if (shouldMakeYearly) {
-            finalIsRecurring = true;
-          }
-        } catch (error) {
-          // If dialog is dismissed, treat it as "keep one-time" - don't make it yearly
-          // shouldMakeYearly already defaults to false, so event will be created as one-time
-          console.error('Yearly suggestion dialog dismissed or failed:', error);
-        }
-      }
-      
-      await onSave(title, date, emoji, finalIsRecurring, emojiColor);
+      await onSave(title, date, emoji, isRecurring, emojiColor);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
       onClose();
     }
   };
-
-  // Focus input method - transfers focus from proxy input to modal input (Safari mobile fix)
-  const focusInput = async () => {
-    if (isEditing) return;
-    
-    // On native iOS, use Capacitor Keyboard plugin to show keyboard
-    const isNative = Capacitor.isNativePlatform();
-    
-    // Schedule focus attempts for when modal and input are ready
-    const attempts = [100, 250, 400, 600, 800];
-    attempts.forEach((delay) => {
-      setTimeout(async () => {
-        const input = titleInputRef.current;
-        if (!input) return;
-        
-        // Check if input is visible and ready
-        const isVisible = input.offsetParent !== null && 
-                         input.offsetWidth > 0 && 
-                         input.offsetHeight > 0;
-        
-        if (isVisible) {
-          try {
-            // Focus the input
-            input.focus();
-            
-            // Set selection to trigger cursor
-            if (input.setSelectionRange) {
-              input.setSelectionRange(0, 0);
-            }
-            
-            // On native iOS, explicitly show keyboard using Capacitor
-            if (isNative) {
-              try {
-                await Keyboard.show();
-              } catch (e) {
-                // Keyboard plugin may not be available
-              }
-            }
-          } catch (e) {
-            // Ignore errors
-          }
-        }
-      }, delay);
-    });
-  };
-
-  // Expose save method to parent via ref
-  // Must include all dependencies that handleSave and other functions use
-  // to prevent stale closures when called from parent
-  useImperativeHandle(ref, () => ({
-    save: handleSave,
-    canSave,
-    hasDateChanged,
-    getCurrentDate: () => date,
-    focusInput,
-  }), [title, date, emoji, isRecurring, emojiColor, isEditing, onConfirmDateChange, onSave, onClose, trigger]);
 
   const handleEmojiSelect = async (e: string) => {
     trigger('light');
@@ -768,7 +686,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       onDidPresent={handleModalPresent}
       aria-labelledby="modal-title"
     >
-      <IonHeader>
+      <IonHeader translucent>
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleClose}>{t('modal.cancel')}</IonButton>
@@ -786,7 +704,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         </IonToolbar>
       </IonHeader>
 
-      <IonContent ref={contentRef} className="ion-padding">
+      <IonContent ref={contentRef} fullscreen className="ion-padding">
         {/* Form content */}
           <div 
             key={`modal-content-${modalSessionKey}`}
@@ -1027,6 +945,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     />
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground pl-4 pb-2">
+                  {t('modal.dateMaxHelper')}
+                </p>
               </div>
 
               {/* Recurring toggle with expandable suggestion */}
@@ -1093,20 +1014,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             {/* Advanced section - only show when editing */}
             {isEditing && onDelete && (
               <div className="pt-4 border-t border-border/50">
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('modal.advancedLabel')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={handleDeleteClick}
-                    className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
-                    aria-label={t('aria.deleteEvent')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {t('modal.delete')}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  className="w-full py-3 px-4 rounded-xl bg-destructive/10 text-destructive font-medium active:opacity-70 transition-opacity flex items-center justify-center gap-2"
+                  aria-label={t('aria.deleteEvent')}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t('modal.delete')}
+                </button>
               </div>
             )}
             

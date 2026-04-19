@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
-import { add, checkmark, calendarOutline, sparklesOutline } from 'ionicons/icons';
-import { format, differenceInYears } from 'date-fns';
+import { add, checkmark, calendarOutline } from 'ionicons/icons';
+import { ShieldOff } from 'lucide-react';
+import { format } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
-import { Keyboard } from '@capacitor/keyboard';
 import {
   DndContext,
   closestCenter,
@@ -42,20 +42,11 @@ import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/l
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
+import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { toast } from 'sonner';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
@@ -195,8 +186,6 @@ export default function Index() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isCalendarImportOpen, setIsCalendarImportOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [canSaveForm, setCanSaveForm] = useState(false);
-  const [canImportCalendar, setCanImportCalendar] = useState(false);
   const [draggedCardWidth, setDraggedCardWidth] = useState<number | null>(null);
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
@@ -205,26 +194,26 @@ export default function Index() {
   const displayedDragRotationRef = useRef<number>(0);
   const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
-  const datePickerModalRef = useRef<DatePickerModalRef>(null);
-  const calendarImportModalRef = useRef<CalendarImportModalRef>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isDevBuild, setIsDevBuild] = useState(import.meta.env.MODE !== 'production');
   const [devAdsEnabled, setDevAdsEnabled] = useState(false);
   const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
   const placeholderHeight = 60; // Increased to match adaptive banners better
   const [hasRemoveAds, setHasRemoveAds] = useState(false);
   const [isRemoveAdsOpen, setIsRemoveAdsOpen] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<CountdownEvent | null>(null);
-  const deleteConfirmResolveRef = useRef<((value: boolean) => void) | null>(null);
+  const pendingDeleteRef = useRef<Map<string, CountdownEvent>>(new Map());
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [importPrefillData, setImportPrefillData] = useState<EventImportPayload | null>(null);
+  const [canSaveForm, setCanSaveForm] = useState(false);
+  const [canImportCalendar, setCanImportCalendar] = useState(false);
+  const datePickerModalRef = useRef<DatePickerModalRef>(null);
+  const calendarImportModalRef = useRef<CalendarImportModalRef>(null);
 
   // Helper function to check if an element is within ion-item-option
   const isWithinDeleteOption = (element: Element | null): boolean => {
@@ -508,29 +497,6 @@ export default function Index() {
   }, [isNative, isDevBuild, devAdsEnabled, hasRemoveAds]);
 
   useEffect(() => {
-    if (!isNative) return;
-
-    let showListener: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-    let hideListener: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-
-    const setupListeners = async () => {
-      showListener = await Keyboard.addListener('keyboardWillShow', (info) => {
-        setKeyboardHeight(info.keyboardHeight);
-      });
-      hideListener = await Keyboard.addListener('keyboardWillHide', () => {
-        setKeyboardHeight(0);
-      });
-    };
-
-    setupListeners();
-
-    return () => {
-      showListener?.remove();
-      hideListener?.remove();
-    };
-  }, [isNative]);
-
-  useEffect(() => {
     if (!isDevBuild) return;
     if (!devAdsEnabled || hasRemoveAds) {
       setShowAdPlaceholder(false);
@@ -716,69 +682,30 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle pending imported events
+  // Handle pending imported events — open DatePickerModal prefilled
   useEffect(() => {
-    const handlePendingImport = async () => {
+    const handlePendingImport = () => {
       const pendingImportStr = localStorage.getItem('pendingImportedEvent');
-      if (!pendingImportStr) {
-        return;
-      }
+      if (!pendingImportStr) return;
 
       try {
         const payload: EventImportPayload = JSON.parse(pendingImportStr);
-        
-        // Format date for display
-        const eventDate = new Date(payload.targetDate);
-        const dateFormatted = format(eventDate, 'MMM d, yyyy');
-        
-        // Show confirmation dialog
-        const { value: confirmed } = await Dialog.confirm({
-          title: t('dialogs.importEvent.title'),
-          message: t('dialogs.importEvent.message', { 
-            title: payload.title, 
-            emoji: payload.emoji,
-            date: dateFormatted 
-          }),
-          okButtonTitle: t('dialogs.importEvent.import'),
-          cancelButtonTitle: t('dialogs.importEvent.cancel'),
-        });
-
-        if (confirmed) {
-          // Create new event from imported payload
-          const newEvent: CountdownEvent = {
-            id: generateId(),
-            title: payload.title,
-            targetDate: payload.targetDate,
-            emoji: payload.emoji,
-            emojiColor: payload.emojiColor,
-            isRecurring: payload.isRecurring,
-            createdAt: new Date().toISOString(),
-          };
-          
-          setEvents(prev => [...prev, newEvent]);
-          setSelectedEventId(newEvent.id);
-          
-          // Schedule notification only if permission is already granted (don't prompt on import)
-          const hasPermission = await checkNotificationPermission();
-          if (hasPermission) {
-            const targetDateForNotification = payload.isRecurring 
-              ? getNextRecurringDate(new Date(payload.targetDate))
-              : new Date(payload.targetDate);
-            await scheduleEventNotification(newEvent.id, payload.title, targetDateForNotification, payload.emoji);
-          }
-        }
-        
-        // Clear pending import regardless of confirmation
         localStorage.removeItem('pendingImportedEvent');
+        setImportPrefillData(payload);
+        setEditingEvent(null);
+        setIsModalOpen(true);
+        trigger('medium');
       } catch (error) {
         console.error('Failed to import event:', error);
-        // Clear invalid pending import
         localStorage.removeItem('pendingImportedEvent');
       }
     };
 
     handlePendingImport();
-  }, [isNative, t]);
+
+    window.addEventListener(IMPORT_EVENT_READY, handlePendingImport);
+    return () => window.removeEventListener(IMPORT_EVENT_READY, handlePendingImport);
+  }, [trigger]);
 
   // Handle deep link edit event (when user taps widget to edit an event)
   useEffect(() => {
@@ -887,14 +814,37 @@ export default function Index() {
     return value;
   };
 
+  const offerNotificationPermissionAfterSave = (
+    eventId: string,
+    title: string,
+    targetDate: Date | null,
+    emoji: string
+  ) => {
+    if (!isNative || !targetDate) return;
+
+    window.setTimeout(async () => {
+      const { value: shouldEnable } = await Dialog.confirm({
+        title: t('notifications.enableTitle'),
+        message: t('notifications.enableMessage'),
+        okButtonTitle: t('notifications.enable'),
+        cancelButtonTitle: t('notifications.notNow'),
+      });
+
+      if (!shouldEnable) {
+        return;
+      }
+
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        await scheduleEventNotification(eventId, title, targetDate, emoji);
+      }
+    }, 0);
+  };
+
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
     const saveKind = editingEvent ? 'edit' : 'create';
 
-    // Request notification permission when creating or editing an event
     const hasPermission = await checkNotificationPermission();
-    if (!hasPermission) {
-      await requestNotificationPermission();
-    }
 
     if (editingEvent) {
       // Cancel old notification and schedule new one
@@ -910,7 +860,11 @@ export default function Index() {
       const targetDateForNotification = isRecurring 
         ? getNextRecurringDate(date)
         : date;
-      await scheduleEventNotification(editingEvent.id, title, targetDateForNotification, emoji);
+      if (hasPermission) {
+        await scheduleEventNotification(editingEvent.id, title, targetDateForNotification, emoji);
+      } else {
+        offerNotificationPermissionAfterSave(editingEvent.id, title, targetDateForNotification, emoji);
+      }
     } else {
       const newEvent: CountdownEvent = {
         id: generateId(),
@@ -928,9 +882,20 @@ export default function Index() {
       const targetDateForNotification = isRecurring 
         ? getNextRecurringDate(date)
         : date;
-      await scheduleEventNotification(newEvent.id, title, targetDateForNotification, emoji);
+      if (hasPermission) {
+        await scheduleEventNotification(newEvent.id, title, targetDateForNotification, emoji);
+      } else {
+        offerNotificationPermissionAfterSave(newEvent.id, title, targetDateForNotification, emoji);
+      }
     }
     setEditingEvent(null);
+
+    toast.success(saveKind === 'create' ? t('feedback.eventCreated') : t('feedback.eventUpdated'));
+
+    if (saveKind === 'create' && events.length === 0 && isNative && !localStorage.getItem('widgetTipShown')) {
+      localStorage.setItem('widgetTipShown', '1');
+      setTimeout(() => toast(t('widget.homeScreenTip'), { duration: 6000 }), 1500);
+    }
 
     void AdsManager.maybeShowInterstitialAfterSave({ kind: saveKind });
   };
@@ -940,77 +905,51 @@ export default function Index() {
     setIsModalOpen(true);
   };
 
+  const commitDelete = (eventId: string) => {
+    if (!pendingDeleteRef.current.has(eventId)) return;
+    pendingDeleteRef.current.delete(eventId);
+    void cancelEventNotification(eventId);
+    void AdsManager.maybeShowInterstitialAfterSave({ kind: 'delete' });
+  };
+
+  const handleUndoDelete = (eventId: string) => {
+    const event = pendingDeleteRef.current.get(eventId);
+    if (!event) return;
+    pendingDeleteRef.current.delete(eventId);
+    trigger('light');
+    setEvents(prev =>
+      [...prev, event].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    );
+  };
+
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
-    let confirmed = false;
+    trigger('heavy');
+    setDeletingEventId(event.id);
+    pendingDeleteRef.current.set(event.id, event);
 
-    if (isNative) {
-      // Use Capacitor Dialog on native platforms
-      const { value } = await Dialog.confirm({
-        title: t('dialogs.deleteEvent.title'),
-        message: t('dialogs.deleteEvent.message', { title: event.title }),
-        okButtonTitle: t('dialogs.deleteEvent.delete'),
-        cancelButtonTitle: t('dialogs.deleteEvent.cancel'),
-      });
-      confirmed = value;
-    } else {
-      // Use AlertDialog on web
-      setEventToDelete(event);
-      setDeleteConfirmOpen(true);
-      
-      // Wait for user response
-      confirmed = await new Promise<boolean>((resolve) => {
-        deleteConfirmResolveRef.current = resolve;
-      });
-      
-      setDeleteConfirmOpen(false);
-      setEventToDelete(null);
-      deleteConfirmResolveRef.current = null;
-    }
+    await new Promise(resolve => setTimeout(resolve, 400));
 
-    if (confirmed) {
-      setDeletingEventId(event.id);
-      trigger('heavy');
-      await new Promise(resolve => setTimeout(resolve, 400));
+    const eventId = event.id;
+    const wasSelected = selectedEventId === eventId;
 
-      const eventId = event.id;
-      const wasSelected = selectedEventId === eventId;
-      
-      // Cancel the notification for this event
-      await cancelEventNotification(eventId);
-      
-      setEvents(prev => {
-        const filtered = prev.filter(e => e.id !== eventId);
-        if (wasSelected) {
-          if (filtered.length > 0) {
-            setSelectedEventId(filtered[0].id);
-          } else {
-            setSelectedEventId(null);
-          }
-        }
-        return filtered;
-      });
+    setEvents(prev => {
+      const filtered = prev.filter(e => e.id !== eventId);
+      if (wasSelected) {
+        setSelectedEventId(filtered.length > 0 ? filtered[0].id : null);
+      }
+      return filtered;
+    });
+    setDeletingEventId(null);
 
-      setDeletingEventId(null);
-      void AdsManager.maybeShowInterstitialAfterSave({ kind: "delete" });
+    toast(`${event.emoji} ${event.title}`, {
+      description: t('feedback.eventDeleted'),
+      action: { label: t('feedback.undoDelete'), onClick: () => handleUndoDelete(eventId) },
+      duration: 5000,
+      onDismiss: () => commitDelete(eventId),
+      onAutoClose: () => commitDelete(eventId),
+    });
 
-      return true;
-    } else {
-      // Cancel button was pressed
-      trigger('light');
-      return false; // Deletion cancelled
-    }
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deleteConfirmResolveRef.current) {
-      deleteConfirmResolveRef.current(true);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    if (deleteConfirmResolveRef.current) {
-      deleteConfirmResolveRef.current(false);
-    }
+    return true;
   };
 
   const handleAddNew = async () => {
@@ -1024,13 +963,10 @@ export default function Index() {
   const handleFabClick = async () => {
     trigger('medium');
     if (isCalendarImportOpen) {
-      // Calendar import modal is open - trigger import
       calendarImportModalRef.current?.import();
     } else if (isModalOpen) {
-      // Date picker modal is open - trigger save
       datePickerModalRef.current?.save();
     } else {
-      // No modal is open - open add new event modal
       await handleAddNew();
     }
   };
@@ -1038,7 +974,7 @@ export default function Index() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingEvent(null);
-    setCanSaveForm(false);
+    setImportPrefillData(null);
   };
 
   const handleOpenRemoveAds = () => {
@@ -1272,42 +1208,39 @@ export default function Index() {
     return Date.now() - lastDragEndTs.current < 200;
   };
 
-  // Determine FAB state based on which modal is open
   const isAnyModalOpen = isModalOpen || isCalendarImportOpen;
   const fabDisabled = (isModalOpen && !canSaveForm) || (isCalendarImportOpen && !canImportCalendar);
   const fabIcon = isAnyModalOpen ? checkmark : add;
-  const fabAriaLabel = isCalendarImportOpen 
-    ? t('aria.importEvents') 
-    : isModalOpen 
-      ? t('aria.saveEvent') 
+  const fabAriaLabel = isCalendarImportOpen
+    ? t('aria.importEvents')
+    : isModalOpen
+      ? t('aria.saveEvent')
       : t('aria.addEvent');
 
   const fabPortal = (
-    <div 
+    <div
       className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''} transition-all duration-300`}
       style={{
         position: 'fixed',
         right: 'calc(16px + env(safe-area-inset-left))',
-        bottom: isNative && keyboardHeight > 0 
-          ? `calc(16px + env(safe-area-inset-bottom) + ${keyboardHeight}px)` 
-          : 'calc(16px + env(safe-area-inset-bottom) + 56px)',
+        bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isAnyModalOpen ? 100000 : 50,
         display: isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
-        <IonFabButton 
-          onClick={handleFabClick} 
+        <IonFabButton
+          onClick={handleFabClick}
           aria-label={fabAriaLabel}
           disabled={fabDisabled}
-          style={fabDisabled ? { 
+          style={fabDisabled ? {
             '--background': 'var(--ion-color-medium, #92949c)',
             '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
           } as React.CSSProperties : undefined}
         >
           <div className="relative w-full h-full flex items-center justify-center">
-            <IonIcon 
-              icon={fabIcon} 
+            <IonIcon
+              icon={fabIcon}
               style={{ fontSize: '40px' }}
             />
           </div>
@@ -1360,7 +1293,7 @@ export default function Index() {
                     aria-label={t('aria.openRemoveAds')}
                     className="header-action-button"
                   >
-                    <IonIcon icon={sparklesOutline} />
+                    <ShieldOff className="w-5 h-5" />
                   </IonButton>
                 </div>
               )}
@@ -1391,6 +1324,12 @@ export default function Index() {
               <p className="text-muted-foreground text-center max-w-xs mb-8">
                 {t('app.createFirst')}
               </p>
+              <button
+                onClick={handleOpenCalendarImport}
+                className="text-sm text-primary underline underline-offset-2 active:opacity-70 transition-opacity"
+              >
+                {t('app.orImportFromCalendar')}
+              </button>
             </div>
           ) : (
             <div className="space-y-8 animate-fade-in">
@@ -1634,20 +1573,22 @@ export default function Index() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSave}
-        initialTitle={editingEvent?.title}
-        initialDate={editingEvent ? new Date(editingEvent.targetDate) : (() => {
-          const today = new Date();
-          today.setHours(8, 0, 0, 0);
-          return today;
-        })()}
-        initialEmoji={editingEvent?.emoji}
-        initialEmojiColor={editingEvent?.emojiColor}
-        initialIsRecurring={editingEvent?.isRecurring}
+        onCanSaveChange={setCanSaveForm}
+        initialTitle={editingEvent?.title ?? importPrefillData?.title}
+        initialDate={
+          editingEvent
+            ? new Date(editingEvent.targetDate)
+            : importPrefillData
+              ? new Date(importPrefillData.targetDate)
+              : (() => { const d = new Date(); d.setHours(8, 0, 0, 0); return d; })()
+        }
+        initialEmoji={editingEvent?.emoji ?? importPrefillData?.emoji}
+        initialEmojiColor={editingEvent?.emojiColor ?? importPrefillData?.emojiColor}
+        initialIsRecurring={editingEvent?.isRecurring ?? importPrefillData?.isRecurring}
         initialIsImported={editingEvent?.isImported}
         initialImportedFrom={editingEvent?.importedFrom}
         isEditing={!!editingEvent}
         onDelete={editingEvent ? () => handleDeleteRequest(editingEvent) : undefined}
-        onValidityChange={setCanSaveForm}
         onConfirmDateChange={confirmDateChange}
       />
 
@@ -1667,37 +1608,6 @@ export default function Index() {
         isDevBuild={isDevBuild}
       />
 
-      {/* Delete confirmation dialog for web */}
-      {!isNative && (
-        <AlertDialog 
-          open={deleteConfirmOpen} 
-          onOpenChange={(open) => {
-            if (!open) {
-              handleDeleteCancel();
-            }
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t('dialogs.deleteEvent.title')}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {eventToDelete && t('dialogs.deleteEvent.message', { title: eventToDelete.title })}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleDeleteCancel}>
-                {t('dialogs.deleteEvent.cancel')}
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {t('dialogs.deleteEvent.delete')}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
 
     </IonPage>
   );

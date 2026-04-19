@@ -36,6 +36,11 @@ import {
 import { isValidICSUrl } from '@/lib/icsParser';
 import CalendarPlugin from '@/plugins/CalendarPlugin';
 
+export interface CalendarImportModalRef {
+  import: () => void;
+  canImport: () => boolean;
+}
+
 interface CalendarImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -43,12 +48,7 @@ interface CalendarImportModalProps {
   onCanImportChange?: (canImport: boolean) => void;
 }
 
-export interface CalendarImportModalRef {
-  import: () => void;
-  canImport: () => boolean;
-}
-
-export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarImportModalProps>(({ isOpen, onClose, onImport, onCanImportChange }, ref) => {
+export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarImportModalProps>(function CalendarImportModal({ isOpen, onClose, onImport, onCanImportChange }, ref) {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
@@ -65,22 +65,17 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
   const [urlError, setUrlError] = useState<string | null>(null);
   const [selectedCalendars, setSelectedCalendars] = useState<Set<string>>(new Set());
 
-  // Notify parent when canImport changes
   const canImport = selectedEventIds.size > 0;
+
   useEffect(() => {
     onCanImportChange?.(canImport);
   }, [canImport, onCanImportChange]);
 
-  // Expose import function via ref
   useImperativeHandle(ref, () => ({
-    import: () => {
-      if (canImport) {
-        handleImportInternal();
-      }
-    },
+    import: () => { if (canImport) handleImportInternal(); },
     canImport: () => canImport,
   }));
-  
+
   // Determine which event set to use based on filters
   // Show all events when: calendar is selected OR search query is entered
   const shouldShowAllEvents = selectedCalendars.size > 0 || searchQuery.trim().length > 0;
@@ -294,16 +289,26 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
   
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onClose}>
-      <IonHeader>
+      <IonHeader translucent>
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleCloseClick}>{t('modal.cancel')}</IonButton>
           </IonButtons>
           <IonTitle>{t('calendar.importTitle')}</IonTitle>
+          <IonButtons slot="end">
+            <IonButton
+              strong
+              onClick={handleImportInternal}
+              disabled={!canImport || loading}
+              aria-label={t('aria.importEvents')}
+            >
+              {t('calendar.importButton')}
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
       
-      <IonContent className="ion-padding">
+      <IonContent fullscreen className="ion-padding">
         {/* Web: URL input for .ics files */}
         {!isNative && (
           <div className="space-y-4 mb-6">

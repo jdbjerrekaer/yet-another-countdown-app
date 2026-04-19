@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { decodeEventImportLink, validatePayload } from '@/lib/eventImportLink';
 
+export const IMPORT_EVENT_READY = 'importEventReady';
+
 /**
  * Import page that handles event import links
  * Decodes the payload from URL, stores it in localStorage, and redirects to home
@@ -40,7 +42,10 @@ export default function Import() {
         
         // Store pending import in localStorage
         localStorage.setItem('pendingImportedEvent', JSON.stringify(payload));
-        
+
+        // Notify Index.tsx (already mounted) that an import is ready
+        window.dispatchEvent(new CustomEvent(IMPORT_EVENT_READY));
+
         // Redirect to home page
         history.push('/');
       } catch (error) {

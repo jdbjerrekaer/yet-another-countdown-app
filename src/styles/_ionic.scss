@@ -9,10 +9,6 @@
     background: hsl(var(--background)) !important;
   }
 
-  ion-modal ion-toolbar {
-    --background: hsl(var(--background)) !important;
-    background: hsl(var(--background)) !important;
-  }
 
   .dark ion-content, 
   .ion-palette-dark ion-content {
@@ -44,8 +40,9 @@
     background: hsl(var(--background)) !important;
   }
 
-  .dark ion-toolbar,
-  .ion-palette-dark ion-toolbar {
+  // Dark mode: opaque background only on page (non-modal) toolbars
+  .dark ion-page ion-toolbar,
+  .ion-palette-dark ion-page ion-toolbar {
     --background: hsl(var(--background)) !important;
   }
 
@@ -190,12 +187,13 @@
                   0 1px 4px -1px hsl(0 0% 0% / 0.2);
   }
 
-  ion-header {
+  // Page headers (non-modal): keep transparent background and relative positioning
+  ion-page ion-header {
     position: relative !important;
     z-index: auto !important;
   }
 
-  ion-header ion-toolbar {
+  ion-page ion-header ion-toolbar {
     position: relative !important;
     z-index: auto !important;
     --background: transparent !important;
@@ -205,9 +203,20 @@
     border: none !important;
   }
 
-  ion-header ion-toolbar::part(native) {
+  ion-page ion-header ion-toolbar::part(native) {
     position: relative !important;
     background: transparent !important;
+    border: none !important;
+  }
+
+  // Modal headers: remove borders only — let IonHeader translucent manage background/blur
+  ion-modal ion-header ion-toolbar {
+    --border-width: 0 !important;
+    --border-color: transparent !important;
+    border: none !important;
+  }
+
+  ion-modal ion-header ion-toolbar::part(native) {
     border: none !important;
   }
 

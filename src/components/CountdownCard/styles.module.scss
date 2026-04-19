@@ -20,7 +20,7 @@
   --background: hsl(var(--card));
   --color: hsl(var(--foreground));
   --padding-start: 0;
-  --padding-end: 0;
+  --padding-end: 32px;
   --inner-padding-start: 0;
   --inner-padding-end: 0;
   --inner-border-width: 0;
@@ -29,6 +29,10 @@
   --min-height: auto;
   --ripple-color: transparent;
   --border-radius: 1rem;
+  --background-activated: hsl(var(--card));
+  --background-activated-opacity: 1;
+  --background-hover: hsl(var(--card));
+  --background-hover-opacity: 1;
   border-radius: 1rem !important;
   overflow: hidden !important;
 }
@@ -52,6 +56,7 @@
   outline: none !important;
   box-shadow: none !important;
   border-radius: inherit;
+  background: hsl(var(--card)) !important;
 }
 
 .wrapperSelected .item::part(native) {

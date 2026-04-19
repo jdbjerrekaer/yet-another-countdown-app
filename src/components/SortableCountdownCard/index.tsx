@@ -37,7 +37,7 @@ export function SortableCountdownCard({
     isDragging,
   } = useSortable({ 
     id: event.id,
-    disabled: isDragDisabled || isMobile,
+    disabled: isDragDisabled,
   });
 
   const initialTransformRef = useRef<{ x: number; y: number } | null>(null);
