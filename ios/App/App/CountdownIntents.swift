@@ -872,8 +872,8 @@ struct CountdownShortcutsProvider: AppShortcutsProvider {
         AppShortcut(
             intent: CreateCountdownIntent(),
             phrases: [
-                AppShortcutPhrase(String(localized: "phrase.create1", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.create2", table: "AppIntents"))
+                "Create a countdown in \(.applicationName)",
+                "Add a countdown in \(.applicationName)"
             ],
             shortTitle: LocalizedStringResource("intent.create.title", table: "AppIntents"),
             systemImageName: "calendar.badge.plus"
@@ -881,8 +881,8 @@ struct CountdownShortcutsProvider: AppShortcutsProvider {
         AppShortcut(
             intent: ListCountdownsIntent(),
             phrases: [
-                AppShortcutPhrase(String(localized: "phrase.list1", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.list2", table: "AppIntents"))
+                "List my countdowns in \(.applicationName)",
+                "Show my countdowns in \(.applicationName)"
             ],
             shortTitle: LocalizedStringResource("intent.list.title", table: "AppIntents"),
             systemImageName: "list.bullet"
@@ -890,12 +890,10 @@ struct CountdownShortcutsProvider: AppShortcutsProvider {
         AppShortcut(
             intent: GetCountdownIntent(),
             phrases: [
-                AppShortcutPhrase(String(localized: "phrase.get1", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.get2", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.get3", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.get4", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.get5", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.get6", table: "AppIntents"))
+                "Get countdown details in \(.applicationName)",
+                "Show countdown details in \(.applicationName)",
+                "What date is my countdown in \(.applicationName)",
+                "When is my countdown in \(.applicationName)"
             ],
             shortTitle: LocalizedStringResource("intent.get.title", table: "AppIntents"),
             systemImageName: "info.circle"
@@ -903,12 +901,9 @@ struct CountdownShortcutsProvider: AppShortcutsProvider {
         AppShortcut(
             intent: GetCountdownRelativeTimeIntent(),
             phrases: [
-                AppShortcutPhrase(String(localized: "phrase.rel1", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.rel2", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.rel3", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.rel4", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.rel5", table: "AppIntents")),
-                AppShortcutPhrase(String(localized: "phrase.rel6", table: "AppIntents"))
+                "How long until my countdown in \(.applicationName)",
+                "How many days until my countdown in \(.applicationName)",
+                "Days until my countdown in \(.applicationName)"
             ],
             shortTitle: LocalizedStringResource("intent.relative.title", table: "AppIntents"),
             systemImageName: "clock"
