@@ -1274,7 +1274,7 @@ export default function Index() {
         right: 'calc(16px + env(safe-area-inset-left))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: 50,
-        display: isAnyModalOpen || isRemoveAdsOpen ? 'none' : undefined,
+        display: isCalendarImportOpen || isRemoveAdsOpen ? 'none' : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
