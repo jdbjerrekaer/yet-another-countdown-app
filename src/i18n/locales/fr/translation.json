@@ -81,7 +81,9 @@
     "yearlySuggestion": "Cette date remonte à plus d'un an. La rendre annuelle ?",
     "yearlySuggestionHint": "Répéter chaque année ?",
     "yearlySuggestionReason": "Cette date remonte à plus d'un an",
-    "enableYearly": "Activer"
+    "enableYearly": "Activer",
+    "setSpecificTimeLabel": "Définir une heure précise",
+    "setSpecificTimeSublabel": "Compte à rebours jusqu'à un moment exact"
   },
   "dialogs": {
     "dateChanged": {

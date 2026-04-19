@@ -97,7 +97,9 @@
     "yearlySuggestion": "Дата была более года назад. Сделать ежегодным?",
     "yearlySuggestionHint": "Повторять ежегодно?",
     "yearlySuggestionReason": "Событие было более года назад",
-    "enableYearly": "Включить"
+    "enableYearly": "Включить",
+    "setSpecificTimeLabel": "Указать точное время",
+    "setSpecificTimeSublabel": "Обратный отсчёт до конкретного момента"
   },
   "dialogs": {
     "dateChanged": {

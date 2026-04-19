@@ -81,7 +81,9 @@
     "yearlySuggestion": "Datoen er over et år gammel. Gør den årlig?",
     "yearlySuggestionHint": "Skal denne gentages hvert år?",
     "yearlySuggestionReason": "Denne dato fandt sted for over et år siden",
-    "enableYearly": "Aktiver"
+    "enableYearly": "Aktiver",
+    "setSpecificTimeLabel": "Indstil specifik tid",
+    "setSpecificTimeSublabel": "Nedtæl til et præcist tidspunkt"
   },
   "dialogs": {
     "dateChanged": {

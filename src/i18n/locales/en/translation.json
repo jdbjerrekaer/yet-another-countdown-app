@@ -90,7 +90,9 @@
     "yearlySuggestionHint": "Make this repeat yearly?",
     "yearlySuggestionReason": "This date occurred over a year ago",
     "enableYearly": "Enable",
-    "dateMaxHelper": "Up to 5 years ahead"
+    "dateMaxHelper": "Up to 5 years ahead",
+    "setSpecificTimeLabel": "Set Specific Time",
+    "setSpecificTimeSublabel": "Countdown to a precise moment"
   },
   "dialogs": {
     "dateChanged": {

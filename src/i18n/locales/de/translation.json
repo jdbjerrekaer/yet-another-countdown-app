@@ -81,7 +81,9 @@
     "yearlySuggestion": "Dieses Datum liegt über ein Jahr zurück. Jährlich machen?",
     "yearlySuggestionHint": "Soll dies jährlich wiederholt werden?",
     "yearlySuggestionReason": "Dieses Datum liegt über ein Jahr zurück",
-    "enableYearly": "Aktivieren"
+    "enableYearly": "Aktivieren",
+    "setSpecificTimeLabel": "Genaue Uhrzeit festlegen",
+    "setSpecificTimeSublabel": "Countdown bis zu einem genauen Moment"
   },
   "dialogs": {
     "dateChanged": {

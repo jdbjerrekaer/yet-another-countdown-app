@@ -81,7 +81,9 @@
     "yearlySuggestion": "Tämä päivämäärä oli yli vuosi sitten. Tehdäänkö siitä vuosittainen?",
     "yearlySuggestionHint": "Toistetaanko tämä joka vuosi?",
     "yearlySuggestionReason": "Tämä päivämäärä oli yli vuosi sitten",
-    "enableYearly": "Ota käyttöön"
+    "enableYearly": "Ota käyttöön",
+    "setSpecificTimeLabel": "Aseta tarkka aika",
+    "setSpecificTimeSublabel": "Lähtölaskenta tiettyyn hetkeen"
   },
   "dialogs": {
     "dateChanged": {

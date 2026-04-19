@@ -7,7 +7,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Share } from '@capacitor/share';
 import { Dialog } from '@capacitor/dialog';
 import EmojiKeyboardPlugin from '@/plugins/EmojiKeyboardPlugin';
-import { CalendarIcon, RefreshCw, Trash2, Plus, X } from 'lucide-react';
+import { CalendarIcon, Clock, RefreshCw, Trash2, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import { Input } from '@/components/ui/input';
@@ -142,6 +142,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const [showYearlySuggestion, setShowYearlySuggestion] = useState(false);
   const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
   const [datetimeKey, setDatetimeKey] = useState(0);
+  const [hasSpecificTime, setHasSpecificTime] = useState(false);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -208,6 +209,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       setEmoji(initialEmoji ?? '');
       setEmojiColor(initialEmojiColor || DEFAULT_COLOR);
       setIsRecurring(initialIsRecurring ?? false);
+      // Detect specific time: editing with non-default (non-8am) time
+      const initTime = initialDate ?? normalizedDate;
+      setHasSpecificTime(isEditing && (initTime.getHours() !== 8 || initTime.getMinutes() !== 0));
       // Reset manual change flag when modal opens
       colorManuallyChangedRef.current = false;
       // Increment key to force ColorWheelPicker remount with correct initial value
@@ -603,6 +607,24 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     setIsRecurring(checked);
   };
 
+  const handleSpecificTimeToggle = (checked: boolean) => {
+    trigger('selection');
+    setHasSpecificTime(checked);
+    if (!checked && date) {
+      const reset = new Date(date);
+      reset.setHours(8, 0, 0, 0);
+      setDate(reset);
+    }
+  };
+
+  const handleTimeChange = (timeStr: string) => {
+    if (!timeStr || !date) return;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return;
+    const updated = new Date(date);
+    updated.setHours(hours, minutes, 0, 0);
+    setDate(updated);
+  };
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -950,8 +972,41 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                 </p>
               </div>
 
+              {/* Specific time toggle */}
+              <div className="bg-secondary/40 rounded-2xl overflow-hidden">
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t('modal.setSpecificTimeLabel')}</p>
+                      <p className="text-sm text-muted-foreground">{t('modal.setSpecificTimeSublabel')}</p>
+                    </div>
+                  </div>
+                  <IonToggle
+                    checked={hasSpecificTime}
+                    onIonChange={(e) => handleSpecificTimeToggle(e.detail.checked)}
+                  />
+                </div>
+                {hasSpecificTime && date && (
+                  <div className="overflow-hidden">
+                    <div className="mx-4 border-t border-border/50" />
+                    <div className="p-4 pl-[68px]">
+                      <input
+                        type="time"
+                        value={`${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`}
+                        onChange={(e) => handleTimeChange(e.target.value)}
+                        className="bg-background/60 border border-border/60 rounded-xl px-3 py-2 text-foreground text-base font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        style={{ colorScheme: 'inherit' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Recurring toggle with expandable suggestion */}
-              <div 
+              <div
                 className="bg-secondary/40 rounded-2xl overflow-hidden"
               >
                 {/* Main recurring toggle row */}
@@ -1005,7 +1060,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
               {date && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center pt-2">
                   <CalendarIcon className="w-4 h-4" />
-                  <span className="font-medium">{format(date, 'EEEE, MMMM d, yyyy')}</span>
+                  <span className="font-medium">
+                    {format(date, hasSpecificTime ? 'EEEE, MMMM d, yyyy • HH:mm' : 'EEEE, MMMM d, yyyy')}
+                  </span>
                   {isRecurring && <RefreshCw className="w-3.5 h-3.5 text-primary" />}
                 </div>
               )}

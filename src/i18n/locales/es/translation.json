@@ -81,7 +81,9 @@
     "yearlySuggestion": "Esta fecha es de hace más de un año. ¿Hacerla anual?",
     "yearlySuggestionHint": "¿Repetir anualmente?",
     "yearlySuggestionReason": "Esta fecha ocurrió hace más de un año",
-    "enableYearly": "Activar"
+    "enableYearly": "Activar",
+    "setSpecificTimeLabel": "Establecer hora exacta",
+    "setSpecificTimeSublabel": "Cuenta regresiva hasta un momento preciso"
   },
   "dialogs": {
     "dateChanged": {
