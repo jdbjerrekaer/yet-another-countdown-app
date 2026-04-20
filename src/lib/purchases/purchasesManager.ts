@@ -870,12 +870,20 @@ const fetchCatalogFromStoreKit = async () => {
 
 const refreshStoreForRestore = async () => {
   const refreshResult = InAppPurchase2.refresh();
-  await new Promise<void>((resolve, reject) => {
-    refreshResult.completed(() => resolve());
-    refreshResult.finished(() => resolve());
-    refreshResult.cancelled(() => resolve());
-    refreshResult.failed(() => reject(new Error("Store refresh failed")));
-  });
+  await Promise.race([
+    new Promise<void>((resolve, reject) => {
+      refreshResult.completed(() => resolve());
+      refreshResult.finished(() => resolve());
+      refreshResult.cancelled(() => resolve());
+      refreshResult.failed(() => reject(new Error("Store refresh failed")));
+    }),
+    new Promise<void>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("StoreRefreshTimeout")),
+        IAP_TIMING.catalogStallTimeoutMs,
+      ),
+    ),
+  ]);
 };
 
 const completeCatalogLoad = (statusOverride?: CatalogStatus, context = "load-complete") => {
@@ -1387,10 +1395,24 @@ export const PurchasesManager = {
     const orderResult = InAppPurchase2.order(productId);
 
     try {
-      await new Promise<void>((resolve, reject) => {
+      const orderResultPromise = new Promise<void>((resolve, reject) => {
         orderResult.then(() => resolve());
         orderResult.error((err: unknown) => reject(err));
       });
+
+      // Race orderResult, entitlement (approved event may resolve it first), and timeout.
+      // On some iOS/iPadOS versions orderResult.then() never fires after sandbox approval,
+      // causing an indefinite hang — entitlementPromise and the timeout provide the escape.
+      await Promise.race([
+        orderResultPromise,
+        entitlementPromise,
+        new Promise<void>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("EntitlementTimeout")),
+            IAP_TIMING.purchaseEntitlementTimeoutMs,
+          ),
+        ),
+      ]);
 
       const orderedProduct = InAppPurchase2.get(productId);
       if (orderedProduct?.owned || hasRemoveAdsEntitlement) {
@@ -1402,6 +1424,7 @@ export const PurchasesManager = {
         return;
       }
 
+      // orderResult.then() fired but entitlement not yet propagated — wait for it.
       await Promise.race([
         entitlementPromise,
         new Promise<void>((_, reject) =>
