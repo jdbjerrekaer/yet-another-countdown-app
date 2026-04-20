@@ -8,18 +8,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = MyViewController()
+        let vc = MyViewController()
+        // Store the cold-launch URL so MyViewController.capacitorDidLoad can fire it
+        // after CAPBridgeViewController.viewDidLoad has registered its observers.
+        // Calling ApplicationDelegateProxy here is too early — the capacitorOpenURL
+        // notification would be missed and getLaunchUrl() would return nil.
+        vc.pendingLaunchUrl = connectionOptions.urlContexts.first?.url
+        window.rootViewController = vc
         self.window = window
         window.makeKeyAndVisible()
-
-        // Handle URL delivered at cold launch (e.g. AirDrop while app was closed)
-        for context in connectionOptions.urlContexts {
-            _ = ApplicationDelegateProxy.shared.application(
-                UIApplication.shared,
-                open: context.url,
-                options: [:]
-            )
-        }
     }
 
     // Called when the app is already running and receives a URL (AirDrop, custom scheme, etc.)
