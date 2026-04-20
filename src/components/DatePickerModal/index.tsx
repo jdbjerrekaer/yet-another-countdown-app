@@ -232,7 +232,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       }, 500);
       
       // Try to focus immediately when modal opens (while still in user gesture context for Safari mobile)
-      if (!isEditing && titleInputRef.current) {
+      // Skip auto-focus when title is prefilled (e.g. from AirDrop import) — keyboard would be unwanted.
+      if (!isEditing && !initialTitle && titleInputRef.current) {
         // Immediate attempt while in user gesture context
         const input = titleInputRef.current;
         // Try focus immediately (within user gesture context)
@@ -283,7 +284,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   // Handle modal presentation - focus input after modal is fully presented
   const handleModalPresent = async () => {
-    if (!isEditing && titleInputRef.current) {
+    if (!isEditing && !initialTitle && titleInputRef.current) {
       const input = titleInputRef.current;
       const isNative = Capacitor.isNativePlatform();
       
@@ -745,8 +746,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   onChange={(e) => setTitle(e.target.value)}
                   onFocus={() => setIsTitleFocused(true)}
                   onBlur={() => setIsTitleFocused(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                      if (title && date && emoji) {
+                        void handleSave();
+                      }
+                    }
+                  }}
+                  enterKeyHint="done"
                   placeholder={t('modal.eventNamePlaceholder')}
-                  autoFocus={!isEditing && !Capacitor.isNativePlatform() && !isSafariMobile()}
+                  autoFocus={!isEditing && !initialTitle && !Capacitor.isNativePlatform() && !isSafariMobile()}
                   className="h-12 rounded-xl text-base bg-secondary/50 border-0 focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50 pr-10 pl-4"
                 />
                 {isTitleFocused && title && (

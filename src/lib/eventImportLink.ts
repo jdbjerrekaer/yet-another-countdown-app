@@ -103,7 +103,13 @@ export function decodeEventImportLink(url: string): EventImportPayload {
       throw new Error(`Invalid scheme: expected ${SCHEME}://, http://, or https://`);
     }
     
-    if (urlObj.pathname !== '/import' && !urlObj.pathname.endsWith('/import')) {
+    // For custom scheme URLs (countdownapp://import?...), the URL parser treats
+    // "import" as the host and leaves pathname empty. Accept that as a valid path.
+    const isImportPath =
+      urlObj.pathname === '/import' ||
+      urlObj.pathname.endsWith('/import') ||
+      (urlObj.protocol === `${SCHEME}:` && urlObj.host === 'import');
+    if (!isImportPath) {
       throw new Error(`Invalid path: expected /import`);
     }
     

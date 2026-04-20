@@ -12,16 +12,12 @@ class MyViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(EmojiKeyboardPlugin())
         bridge?.registerPluginInstance(StoreKitDiagnosticsPlugin())
 
-        // Replay cold-launch URL now that viewDidLoad has registered the
-        // capacitorOpenURL observer — this sets bridge.launchUrl so that
-        // JavaScript's App.getLaunchUrl() returns the correct URL.
+        // Persist cold-launch URL to UserDefaults (timing-immune). JS reads it via
+        // @capacitor/preferences in DeepLinkHandler — avoids the capacitorOpenURL
+        // notification race (observer registers in viewDidLoad, after this point).
         if let url = pendingLaunchUrl {
             pendingLaunchUrl = nil
-            _ = ApplicationDelegateProxy.shared.application(
-                UIApplication.shared,
-                open: url,
-                options: [:]
-            )
+            UserDefaults.standard.set(url.absoluteString, forKey: "CapacitorStorage.pendingColdLaunchUrl")
         }
     }
 }

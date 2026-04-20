@@ -18,7 +18,8 @@ import {
 } from "@/lib/purchases/purchasesManager";
 import { IAP_TIMING } from "@/lib/purchases/constants";
 import { useHaptic } from "@/hooks/useHaptic";
-import { ShieldCheck, Heart, Check, Sparkles, LucideIcon } from "lucide-react";
+import { ShieldCheck, Heart, Check, LucideIcon } from "lucide-react";
+import { NoAdsIcon } from "@/components/icons/NoAdsIcon";
 import { TFunction } from "i18next";
 
 type RemoveAdsModalProps = {
@@ -440,7 +441,7 @@ export const RemoveAdsModal = ({
         <div className="max-w-md mx-auto space-y-8 pb-8">
           <div className="flex flex-col gap-2 text-center pt-4">
             <div className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-1">
-              <Sparkles className="w-6 h-6 text-primary" />
+              <NoAdsIcon className="w-6 h-6 text-primary" />
             </div>
             <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-bold tracking-tight text-foreground">

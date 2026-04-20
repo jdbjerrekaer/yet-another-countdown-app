@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 import { decodeEventImportLink, validatePayload } from '@/lib/eventImportLink';
 import { IMPORT_EVENT_READY } from '@/pages/Import';
 
@@ -22,11 +23,19 @@ export function DeepLinkHandler() {
   useEffect(() => {
     // Handle native deep links
     if (Capacitor.isNativePlatform()) {
-      // Handle app launch URL (if app was opened via deep link)
-      App.getLaunchUrl().then((result) => {
-        if (result?.url) {
-          handleDeepLink(result.url);
+      // Cold-launch URL is written to UserDefaults by MyViewController.capacitorDidLoad
+      // — that path is timing-immune. App.getLaunchUrl() remains as a fallback.
+      Preferences.get({ key: 'pendingColdLaunchUrl' }).then(({ value }) => {
+        if (value) {
+          void Preferences.remove({ key: 'pendingColdLaunchUrl' });
+          handleDeepLink(value);
+          return;
         }
+        App.getLaunchUrl().then((result) => {
+          if (result?.url) {
+            handleDeepLink(result.url);
+          }
+        });
       });
 
       // Listen for app URL open events (when app is already running)

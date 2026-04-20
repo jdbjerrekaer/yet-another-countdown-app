@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSegment, IonSegmentButton, IonFabButton, IonButton, IonButtons } from '@ionic/react';
 import { add, checkmark, calendarOutline } from 'ionicons/icons';
-import { ShieldOff } from 'lucide-react';
+import { NoAdsIcon } from '@/components/icons/NoAdsIcon';
 import { format } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Dialog } from '@capacitor/dialog';
@@ -1293,7 +1293,7 @@ export default function Index() {
                     aria-label={t('aria.openRemoveAds')}
                     className="header-action-button"
                   >
-                    <ShieldOff className="w-5 h-5" />
+                    <NoAdsIcon className="w-5 h-5" />
                   </IonButton>
                 </div>
               )}
