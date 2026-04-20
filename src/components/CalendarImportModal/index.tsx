@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   IonModal,
   IonHeader,
@@ -54,6 +54,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
   const isNative = Capacitor.isNativePlatform();
   
   // State
+  const contentRef = useRef<HTMLIonContentElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPermissionError, setIsPermissionError] = useState(false);
@@ -288,8 +289,21 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
   };
   
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose}>
-      <IonHeader translucent>
+    <IonModal
+      isOpen={isOpen}
+      onDidDismiss={onClose}
+      onDidPresent={() => {
+        // See DatePickerModal for why: force ion-content to re-read its
+        // offset-top after the entrance animation so fullscreen actually
+        // engages and the translucent header shows content scrolling behind.
+        requestAnimationFrame(() => {
+          const content = contentRef.current as unknown as { recalculateDimensions?: () => void } | null;
+          content?.recalculateDimensions?.();
+          window.dispatchEvent(new Event('resize'));
+        });
+      }}
+    >
+      <IonHeader translucent className="modal-header-transparent">
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleCloseClick}>{t('modal.cancel')}</IonButton>
@@ -308,7 +322,7 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
         </IonToolbar>
       </IonHeader>
       
-      <IonContent fullscreen className="ion-padding">
+      <IonContent ref={contentRef} fullscreen className="ion-padding">
         {/* Web: URL input for .ics files */}
         {!isNative && (
           <div className="space-y-4 mb-6">

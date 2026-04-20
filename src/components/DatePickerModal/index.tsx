@@ -284,6 +284,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   // Handle modal presentation - focus input after modal is fully presented
   const handleModalPresent = async () => {
+    // Re-read ion-content dimensions after the modal's entrance animation
+    // completes. Without this, --offset-top is computed at mount before the
+    // header has laid out, comes back 0, and `fullscreen` silently does
+    // nothing — content starts below the header instead of scrolling under
+    // it, and the translucent header shows the modal card's solid
+    // background through, looking "filled".
+    requestAnimationFrame(() => {
+      const content = contentRef.current as unknown as { recalculateDimensions?: () => void } | null;
+      content?.recalculateDimensions?.();
+      window.dispatchEvent(new Event('resize'));
+    });
+
     if (!isEditing && !initialTitle && titleInputRef.current) {
       const input = titleInputRef.current;
       const isNative = Capacitor.isNativePlatform();
@@ -709,7 +721,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       onDidPresent={handleModalPresent}
       aria-labelledby="modal-title"
     >
-      <IonHeader translucent>
+      <IonHeader translucent className="modal-header-transparent">
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleClose}>{t('modal.cancel')}</IonButton>

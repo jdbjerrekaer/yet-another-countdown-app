@@ -220,6 +220,33 @@
     border: none !important;
   }
 
+  // Race-condition fix for modal headers that should stay transparent.
+  // Both the iOS26 theme and Ionic's default iOS CSS only make the toolbar
+  // transparent once they've asynchronously added their own classes
+  // (`header-translucent`, `.ios26-*`, scroll-collapse classes). Between
+  // mount and that class application, the default filled iOS toolbar
+  // background paints — and if the user scrolls during that window, the
+  // scrolled-state can latch in. We opt specific modal headers into a
+  // synchronously-applied transparent state via a className set at render
+  // time, so nothing waits on Ionic's lifecycle.
+  // Scope opacity to ::part(background) only — setting --opacity on the
+  // toolbar host cascades to ion-button (which uses --opacity for its own
+  // text opacity) and hides the Cancel button text.
+  ion-modal ion-header.modal-header-transparent ion-toolbar {
+    --background: transparent !important;
+    --ion-toolbar-background: transparent !important;
+  }
+
+  ion-modal ion-header.modal-header-transparent ion-toolbar::part(background) {
+    background: transparent !important;
+    --opacity: 0 !important;
+    opacity: 0 !important;
+  }
+
+  ion-modal ion-header.modal-header-transparent ion-toolbar::part(native) {
+    background: transparent !important;
+  }
+
   ion-content section {
     position: relative !important;
     z-index: auto !important;
