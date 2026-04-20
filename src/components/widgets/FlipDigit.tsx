@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 
 interface FlipDigitProps {
   value: number;
@@ -9,7 +9,7 @@ interface FlipDigitProps {
   layout?: 'row' | 'column';
 }
 
-export function FlipDigit({ value, label, size = 'medium', theme = 'dark', className = '', layout = 'column' }: FlipDigitProps) {
+function FlipDigitComponent({ value, label, size = 'medium', theme = 'dark', className = '', layout = 'column' }: FlipDigitProps) {
   const [currentValue, setCurrentValue] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -272,3 +272,5 @@ export function FlipDigit({ value, label, size = 'medium', theme = 'dark', class
     </div>
   );
 }
+
+export const FlipDigit = memo(FlipDigitComponent);

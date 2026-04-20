@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/react';
 import { RefreshCw, CalendarIcon, Trash2 } from 'lucide-react';
@@ -43,7 +43,7 @@ export function CountdownCard({
     ? getNextRecurringDate(new Date(event.targetDate))
     : new Date(event.targetDate);
   
-  const countdown = useCountdown(targetDate);
+  const countdown = useCountdown(targetDate, { resolution: 'minute' });
   
   // Calculate occurrence number for events (only for recurring events)
   const occurrenceNumber = event.isRecurring
@@ -86,30 +86,36 @@ export function CountdownCard({
     }
   };
 
-  // Check if the sliding item has returned to closed position
-  const checkIfClosed = useCallback(async () => {
-    if (!slidingRef.current) return;
-    try {
-      const openAmount = await slidingRef.current.getOpenAmount();
-      if (Math.abs(openAmount) <= 2) {
-        setIsSliding(false);
-        setSwipeProgress(0);
-        hapticTriggeredRef.current = false;
-      }
-    } catch {
-      // Ignore errors if element is unmounted
-    }
-  }, []);
-
-  // Poll to check if sliding is closed after drag ends
+  // After a swipe ends, Ionic animates the item back to closed (~250ms).
+  // Instead of polling every 100ms, chain setTimeout checks at 250ms —
+  // fewer CPU wakeups, and the effect self-terminates once closed.
   useEffect(() => {
     if (!isSliding) return;
-    
-    // Start polling when sliding begins
-    const intervalId = setInterval(checkIfClosed, 100);
-    
-    return () => clearInterval(intervalId);
-  }, [isSliding, checkIfClosed]);
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const check = async () => {
+      if (cancelled || !slidingRef.current) return;
+      try {
+        const openAmount = await slidingRef.current.getOpenAmount();
+        if (Math.abs(openAmount) <= 2) {
+          setIsSliding(false);
+          setSwipeProgress(0);
+          hapticTriggeredRef.current = false;
+          return;
+        }
+      } catch {
+        return;
+      }
+      timeoutId = setTimeout(check, 250);
+    };
+
+    timeoutId = setTimeout(check, 250);
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isSliding]);
 
   useEffect(() => {
     const deleteOptionEl = slidingRef.current?.querySelector('ion-item-option');

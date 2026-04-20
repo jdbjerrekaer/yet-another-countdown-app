@@ -62,26 +62,18 @@
     animation: float 4s ease-in-out infinite;
   }
 
+  // NOTE: backdrop-filter blur is held static (applied inline on the backdrop
+  // element) rather than animated. Interpolating `blur()` radii is extremely
+  // expensive on iOS — the browser re-rasterizes the blur each frame. Animating
+  // only opacity lets the GPU cache the blurred backing store and just fade.
   @keyframes modal-backdrop-in {
-    from {
-      opacity: 0;
-      backdrop-filter: blur(0px);
-    }
-    to {
-      opacity: 1;
-      backdrop-filter: blur(20px);
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes modal-backdrop-out {
-    from {
-      opacity: 1;
-      backdrop-filter: blur(20px);
-    }
-    to {
-      opacity: 0;
-      backdrop-filter: blur(0px);
-    }
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   @keyframes modal-content-in {

@@ -672,14 +672,42 @@ export default function Index() {
     syncWidgetData();
   }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative]);
 
-  // Check scheduled notifications on app load (for web platform)
+  // Check scheduled notifications on app load (for web platform).
+  // Only runs while the tab/app is visible — no point polling in background.
   useEffect(() => {
-    checkScheduledNotifications();
-    // Check every minute for web notifications
-    const interval = setInterval(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => {
+      if (interval !== null) return;
       checkScheduledNotifications();
-    }, 60000);
-    return () => clearInterval(interval);
+      interval = setInterval(() => {
+        checkScheduledNotifications();
+      }, 60000);
+    };
+
+    const stop = () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    if (document.visibilityState === 'visible') {
+      start();
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      stop();
+    };
   }, []);
 
   // Handle pending imported events — open DatePickerModal prefilled
