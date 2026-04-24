@@ -737,7 +737,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2026.4.22;
+				MARKETING_VERSION = 2026.4.24;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown;
@@ -767,7 +767,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2026.4.22;
+				MARKETING_VERSION = 2026.4.24;
 				PRIVACY_MANIFEST_FILE = App/PrivacyInfo.xcprivacy;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonatanbjerrekaer.countdown;
 				PRODUCT_NAME = "Yet Another Countdown";
