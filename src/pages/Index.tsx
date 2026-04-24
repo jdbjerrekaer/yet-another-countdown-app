@@ -25,6 +25,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
 import { WidgetPreview } from '@/components/WidgetPreview';
+import { MorphingFab, MorphingFabHandle } from '@/components/MorphingFab';
 import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { CountdownCard } from '@/components/CountdownCard';
@@ -195,6 +196,7 @@ export default function Index() {
   const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
+  const fabRef = useRef<MorphingFabHandle>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
   const { trigger } = useHaptic();
@@ -918,7 +920,9 @@ export default function Index() {
     }
     setEditingEvent(null);
 
-    toast.success(saveKind === 'create' ? t('feedback.eventCreated') : t('feedback.eventUpdated'));
+    fabRef.current?.confirm(
+      saveKind === 'create' ? t('feedback.eventCreated') : t('feedback.eventUpdated'),
+    );
 
     if (saveKind === 'create' && events.length === 0 && isNative && !localStorage.getItem('widgetTipShown')) {
       localStorage.setItem('widgetTipShown', '1');
@@ -969,12 +973,10 @@ export default function Index() {
     });
     setDeletingEventId(null);
 
-    toast(`${event.emoji} ${event.title}`, {
-      description: t('feedback.eventDeleted'),
-      action: { label: t('feedback.undoDelete'), onClick: () => handleUndoDelete(eventId) },
-      duration: 5000,
+    fabRef.current?.confirm(t('feedback.eventDeleted'), {
+      onUndo: () => handleUndoDelete(eventId),
+      holdMs: 3500,
       onDismiss: () => commitDelete(eventId),
-      onAutoClose: () => commitDelete(eventId),
     });
 
     return true;
@@ -1257,22 +1259,13 @@ export default function Index() {
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
-        <IonFabButton
+        <MorphingFab
+          ref={fabRef}
+          icon={fabIcon}
           onClick={handleFabClick}
-          aria-label={fabAriaLabel}
+          ariaLabel={fabAriaLabel}
           disabled={fabDisabled}
-          style={fabDisabled ? {
-            '--background': 'var(--ion-color-medium, #92949c)',
-            '--background-activated': 'var(--ion-color-medium-shade, #7a7c85)',
-          } as React.CSSProperties : undefined}
-        >
-          <div className="relative w-full h-full flex items-center justify-center">
-            <IonIcon
-              icon={fabIcon}
-              style={{ fontSize: '40px' }}
-            />
-          </div>
-        </IonFabButton>
+        />
       </div>
     </div>
   );
