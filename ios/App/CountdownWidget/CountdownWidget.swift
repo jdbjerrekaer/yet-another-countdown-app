@@ -2,6 +2,18 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
+/// Returns the Date of the next top-of-minute boundary (:00 seconds).
+/// Used as the timeline refresh policy so the large widget's static minute/
+/// hour/day cards re-render at the same moment the live seconds timer rolls
+/// from 59 → 00, keeping them in visual sync.
+private func nextMinuteBoundary() -> Date {
+    let cal = Calendar.current
+    let now = Date()
+    let plusOne = cal.date(byAdding: .minute, value: 1, to: now) ?? now.addingTimeInterval(60)
+    let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: plusOne)
+    return cal.date(from: comps) ?? plusOne
+}
+
 // MARK: - Widget Entry
 
 /// Timeline entry containing countdown data for widget display
@@ -82,8 +94,7 @@ struct CountdownTimerWidgetProvider: AppIntentTimelineProvider {
             countdownStyle: .focus,
             configuration: configuration.countdown
         )
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        return Timeline(entries: [entry], policy: .after(nextUpdate))
+        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
     }
 }
 
@@ -134,8 +145,7 @@ struct CountdownVisualWidgetProvider: AppIntentTimelineProvider {
             countdownStyle: .visual,
             configuration: configuration.countdown
         )
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        return Timeline(entries: [entry], policy: .after(nextUpdate))
+        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
     }
 }
 
@@ -185,8 +195,7 @@ struct CountdownTimerWidgetProviderStatic: TimelineProvider {
             countdownStyle: .focus,
             configuration: nil
         )
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        let timeline = Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
         completion(timeline)
     }
 }
@@ -238,8 +247,7 @@ struct CountdownClassicWidgetProvider: AppIntentTimelineProvider {
             countdownStyle: .classic,
             configuration: configuration.countdown
         )
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        return Timeline(entries: [entry], policy: .after(nextUpdate))
+        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
     }
 }
 
@@ -289,8 +297,7 @@ struct CountdownVisualWidgetProviderStatic: TimelineProvider {
             countdownStyle: .visual,
             configuration: nil
         )
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        let timeline = Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
         completion(timeline)
     }
 }
@@ -341,8 +348,7 @@ struct CountdownClassicWidgetProviderStatic: TimelineProvider {
             countdownStyle: .classic,
             configuration: nil
         )
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        let timeline = Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
         completion(timeline)
     }
 }
@@ -445,10 +451,9 @@ struct CountdownTripleWidgetProvider: AppIntentTimelineProvider {
             countdownStyle: .focus
         )
         
-        // Refresh every minute for countdown accuracy
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        
-        return Timeline(entries: [entry], policy: .after(nextUpdate))
+        // Refresh at the top of each minute so countdown cards stay in sync
+        // with live-ticking seconds in the large widget.
+        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
     }
 }
 
@@ -550,10 +555,9 @@ struct CountdownVisualTripleWidgetProvider: AppIntentTimelineProvider {
             countdownStyle: .visual
         )
         
-        // Refresh every minute for countdown accuracy
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-        
-        return Timeline(entries: [entry], policy: .after(nextUpdate))
+        // Refresh at the top of each minute so countdown cards stay in sync
+        // with live-ticking seconds in the large widget.
+        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
     }
 }
 
@@ -585,16 +589,6 @@ struct CountdownWidgetEntryView: View {
                 .widgetURL(deepLinkURL)
             case .systemMedium:
                 MediumWidgetView(
-                    event: event,
-                    countdown: countdown,
-                    targetDate: targetDate,
-                    appearanceMode: entry.appearanceMode,
-                    countdownStyle: entry.countdownStyle,
-                    progress: progress
-                )
-                .widgetURL(deepLinkURL)
-            case .systemLarge, .systemExtraLarge:
-                LargeWidgetView(
                     event: event,
                     countdown: countdown,
                     targetDate: targetDate,
@@ -1132,7 +1126,7 @@ struct CountdownTimerWidget: Widget {
             }
             .configurationDisplayName("Yet Another Countdown")
             .description("Track your events with days, hours, and minutes.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+            .supportedFamilies([.systemSmall, .systemMedium])
         } else {
             return StaticConfiguration(
                 kind: kind,
@@ -1142,7 +1136,7 @@ struct CountdownTimerWidget: Widget {
             }
             .configurationDisplayName("Yet Another Countdown")
             .description("Track your events with days, hours, and minutes.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+            .supportedFamilies([.systemSmall, .systemMedium])
         }
     }
 }
@@ -1165,7 +1159,7 @@ struct CountdownVisualWidget: Widget {
             }
             .configurationDisplayName("Countdown Visual")
             .description("Track your events with visual progress bars.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+            .supportedFamilies([.systemSmall, .systemMedium])
         } else {
             return StaticConfiguration(
                 kind: kind,
@@ -1175,7 +1169,7 @@ struct CountdownVisualWidget: Widget {
             }
             .configurationDisplayName("Countdown Visual")
             .description("Track your events with visual progress bars.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+            .supportedFamilies([.systemSmall, .systemMedium])
         }
     }
 }

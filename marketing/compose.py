@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compose App Store screenshots.
 
-Reads raw/6.9/*.png, outputs final/6.9/*.png at 1290x2796.
+Reads raw/6.9/*.png, outputs final/6.9/*.png at 1320x2868 (iPhone 16 Pro Max).
 Also generates 6.5" variants at 1284x2778.
 
 Layout per screen:
@@ -73,8 +73,8 @@ def compose(
     bg_hex: str,
     crop_top_pct: float,
     crop_bottom_pct: float,
-    width: int = 1290,
-    height: int = 2796,
+    width: int = 1320,
+    height: int = 2868,
 ) -> None:
     bg = hex_to_rgb(bg_hex)
     canvas = Image.new("RGB", (width, height), bg)
@@ -148,7 +148,7 @@ def main() -> None:
             continue
 
         out69 = FINAL_69 / out_name
-        compose(src, caption, out69, bg, top, bottom, width=1290, height=2796)
+        compose(src, caption, out69, bg, top, bottom, width=1320, height=2868)
         print(f"wrote {out69.relative_to(ROOT)}")
 
         out65 = FINAL_65 / out_name

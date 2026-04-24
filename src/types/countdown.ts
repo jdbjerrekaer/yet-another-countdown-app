@@ -10,7 +10,7 @@ export interface CountdownEvent {
   importedFrom?: string; // Calendar name
 }
 
-export type WidgetSize = 'small' | 'medium' | 'large';
+export type WidgetSize = 'small' | 'medium';
 
 export type WidgetAppearanceMode = 'light' | 'dark' | 'transparent' | 'tinted';
 

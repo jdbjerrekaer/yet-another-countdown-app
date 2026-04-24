@@ -52,16 +52,12 @@ import BuildInfo from '@/plugins/BuildInfoPlugin';
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
   { id: 'small', labelKey: 'widget.sizes.small' },
   { id: 'medium', labelKey: 'widget.sizes.medium' },
-  { id: 'large', labelKey: 'widget.sizes.large' },
 ];
 
-// Get available widget sizes based on countdown style
-const getAvailableSizes = (countdownStyle: WidgetCountdownStyle): { id: WidgetSize; labelKey: string }[] => {
-  return WIDGET_SIZES.filter(size => {
-    // Exclude large when classic style is selected
-    if (countdownStyle === 'classic' && size.id === 'large') return false;
-    return true;
-  });
+// Large was removed because iOS widgets cannot render seconds live without
+// sacrificing either layout or correctness (see CountdownWidget.swift).
+const getAvailableSizes = (_countdownStyle: WidgetCountdownStyle): { id: WidgetSize; labelKey: string }[] => {
+  return WIDGET_SIZES;
 };
 
 const WIDGET_APPEARANCE_MODES: { id: WidgetAppearanceMode; labelKey: string }[] = [
@@ -174,7 +170,7 @@ function TripleWidgetPreview({
 export default function Index() {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<WidgetSize>('large');
+  const [selectedSize, setSelectedSize] = useState<WidgetSize>('medium');
   const [selectedAppearanceMode, setSelectedAppearanceMode] = useState<WidgetAppearanceMode>(() => {
     const saved = localStorage.getItem('widgetAppearanceMode');
     return (saved as WidgetAppearanceMode) || 'light';
@@ -920,13 +916,21 @@ export default function Index() {
     }
     setEditingEvent(null);
 
+    const shouldShowWidgetTip =
+      saveKind === 'create' &&
+      events.length === 0 &&
+      isNative &&
+      !localStorage.getItem('widgetTipShown');
+
     fabRef.current?.confirm(
       saveKind === 'create' ? t('feedback.eventCreated') : t('feedback.eventUpdated'),
     );
 
-    if (saveKind === 'create' && events.length === 0 && isNative && !localStorage.getItem('widgetTipShown')) {
+    if (shouldShowWidgetTip) {
       localStorage.setItem('widgetTipShown', '1');
-      setTimeout(() => toast(t('widget.homeScreenTip'), { duration: 6000 }), 1500);
+      setTimeout(() => {
+        fabRef.current?.confirm(t('widget.homeScreenTip'), { holdMs: 4500 });
+      }, 2200);
     }
 
     void AdsManager.maybeShowInterstitialAfterSave({ kind: saveKind });
@@ -1486,11 +1490,6 @@ export default function Index() {
                         trigger('selection');
                         const newStyle = e.detail.value as WidgetCountdownStyle;
                         setSelectedCountdownStyle(newStyle);
-                        
-                        // If switching to classic style and current size is large, switch to medium
-                        if (newStyle === 'classic' && selectedSize === 'large') {
-                          setSelectedSize('medium');
-                        }
                       }}
                     >
                       {WIDGET_COUNTDOWN_STYLES.map((style) => (
@@ -1545,8 +1544,8 @@ export default function Index() {
                     </div>
                   </section>
 
-                  {/* Triple widget preview */}
-                  {selectedSize === 'large' && events.length > 0 && (
+                  {/* Triple widget preview (iOS Triple Countdown widget is large-only in the system picker) */}
+                  {events.length > 0 && (
                     <section className="space-y-3">
                       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider pl-4">
                         Triple Countdown Preview
