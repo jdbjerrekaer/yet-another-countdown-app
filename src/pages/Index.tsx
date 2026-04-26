@@ -1106,7 +1106,13 @@ export default function Index() {
       // We need to wait for state to update, so we'll set it after the events are added
       // This is handled by the useEffect that selects first event if none selected
     }
-    
+
+    if (deduplicatedImports.length > 0) {
+      fabRef.current?.confirm(
+        t('feedback.eventImported', { count: deduplicatedImports.length }),
+      );
+    }
+
     trigger('medium');
   };
 

@@ -9,7 +9,9 @@
     "eventCreated": "Event created",
     "eventUpdated": "Event updated",
     "eventDeleted": "Deleted",
-    "undoDelete": "Undo"
+    "undoDelete": "Undo",
+    "eventImported_one": "Imported {{count}} event",
+    "eventImported_other": "Imported {{count}} events"
   },
   "events": {
     "title": "Events",
