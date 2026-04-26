@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -27,7 +28,10 @@ interface Props {
 }
 
 const COLLAPSED_WIDTH = 72;
-const EXPANDED_WIDTH = 260;
+const TEXT_LEFT_PADDING = 24;
+const TEXT_RIGHT_GAP = 8;
+const MIN_EXPANDED_WIDTH = 200;
+const VIEWPORT_MARGIN = 32;
 const RADIUS = 18;
 const EXPAND_MS = 340;
 const DEFAULT_HOLD_MS = 1400;
@@ -37,6 +41,8 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
   ({ icon, onClick, ariaLabel, disabled }, ref) => {
     const [confirming, setConfirming] = useState(false);
     const [confirmText, setConfirmText] = useState('');
+    const [expandedWidth, setExpandedWidth] = useState(MIN_EXPANDED_WIDTH);
+    const measureRef = useRef<HTMLSpanElement>(null);
     const collapseTimer = useRef<number | null>(null);
     const clearTimer = useRef<number | null>(null);
     const undoRef = useRef<(() => void) | null>(null);
@@ -91,9 +97,19 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
 
     useEffect(() => clearTimers, [clearTimers]);
 
+    // Measure confirmText width and size the expanded FAB to fit, capped at the
+    // viewport so long messages don't overflow the screen.
+    useLayoutEffect(() => {
+      if (!confirmText || !measureRef.current) return;
+      const textWidth = measureRef.current.getBoundingClientRect().width;
+      const required = TEXT_LEFT_PADDING + textWidth + TEXT_RIGHT_GAP + COLLAPSED_WIDTH;
+      const cap = (typeof window !== 'undefined' ? window.innerWidth : 360) - VIEWPORT_MARGIN * 2;
+      setExpandedWidth(Math.min(cap, Math.max(MIN_EXPANDED_WIDTH, Math.ceil(required))));
+    }, [confirmText]);
+
     const hasUndo = confirming && undoRef.current !== null;
     const displayIcon = confirming ? checkmark : icon;
-    const width = confirming ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
+    const width = confirming ? expandedWidth : COLLAPSED_WIDTH;
 
     const handleClick = () => {
       if (confirming) {
@@ -138,7 +154,7 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
           aria-hidden={!confirming}
           style={{
             position: 'absolute',
-            left: 24,
+            left: TEXT_LEFT_PADDING,
             right: COLLAPSED_WIDTH,
             textAlign: 'left',
             fontSize: 16,
@@ -149,6 +165,25 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
             opacity: confirming ? 1 : 0,
             transform: confirming ? 'translateX(0)' : 'translateX(-6px)',
             transition: `opacity ${confirming ? EXPAND_MS : COLLAPSE_MS / 2}ms ease ${confirming ? EXPAND_MS / 2 : 0}ms, transform ${confirming ? EXPAND_MS : COLLAPSE_MS / 2}ms cubic-bezier(0.32, 0.72, 0, 1) ${confirming ? EXPAND_MS / 2 : 0}ms`,
+            pointerEvents: 'none',
+          }}
+        >
+          {confirmText}
+        </span>
+
+        {/* Hidden mirror used to measure the natural text width so the FAB
+            expands just enough to fit the message. */}
+        <span
+          ref={measureRef}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: -9999,
+            top: -9999,
+            visibility: 'hidden',
+            whiteSpace: 'nowrap',
+            fontSize: 16,
+            fontWeight: 600,
             pointerEvents: 'none',
           }}
         >
