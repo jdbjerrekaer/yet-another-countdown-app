@@ -244,18 +244,6 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
     });
   };
   
-  // Select all visible events
-  const selectAll = () => {
-    trigger('light');
-    setSelectedEventIds(new Set(filteredEvents.map(e => e.id)));
-  };
-  
-  // Deselect all events
-  const deselectAll = () => {
-    trigger('light');
-    setSelectedEventIds(new Set());
-  };
-  
   // Handle import (internal function called by ref and button)
   const handleImportInternal = () => {
     trigger('medium');
@@ -309,16 +297,6 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
             <IonButton onClick={handleCloseClick}>{t('modal.cancel')}</IonButton>
           </IonButtons>
           <IonTitle>{t('calendar.importTitle')}</IonTitle>
-          <IonButtons slot="end">
-            <IonButton
-              strong
-              onClick={handleImportInternal}
-              disabled={!canImport || loading}
-              aria-label={t('aria.importEvents')}
-            >
-              {t('calendar.importButton')}
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
       
@@ -394,17 +372,17 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
         {!loading && !error && (recurringEvents.length > 0 || allEvents.length > 0) && (
           <>
             {/* Search and select all */}
-            <div className="space-y-3 mb-4 -ml-4 pl-0">
+            <div className="space-y-3 mb-3 -mx-4">
               <IonSearchbar
                 value={searchQuery}
                 onIonInput={(e) => setSearchQuery(e.detail.value || '')}
                 placeholder={t('calendar.searchPlaceholder')}
                 className="p-0"
               />
-              
+
               {/* Calendar filter chips */}
               {availableCalendars.length > 1 && (
-                <div className="flex flex-wrap gap-2 ps-3 pe-2 calendar-filter-chips">
+                <div className="flex flex-wrap gap-2 px-4 calendar-filter-chips">
                   {availableCalendars.map((calendar) => (
                     <IonChip
                       key={calendar}
@@ -431,22 +409,14 @@ export const CalendarImportModal = forwardRef<CalendarImportModalRef, CalendarIm
                   )}
                 </div>
               )}
-              
-              <div className="flex justify-between items-center ps-6 pe-2">
+
+              <div className="px-4">
                 <IonText color="medium" className="text-sm">
-                  {shouldShowAllEvents 
+                  {shouldShowAllEvents
                     ? t('calendar.eventsFound', { count: filteredEvents.length })
                     : t('calendar.recurringEventsFound', { count: filteredEvents.length })
                   }
                 </IonText>
-                <div className="flex gap-2">
-                  <IonButton fill="clear" size="small" onClick={selectAll}>
-                    {t('calendar.selectAll')}
-                  </IonButton>
-                  <IonButton fill="clear" size="small" onClick={deselectAll}>
-                    {t('calendar.deselectAll')}
-                  </IonButton>
-                </div>
               </div>
             </div>
             
