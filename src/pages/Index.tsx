@@ -1081,37 +1081,45 @@ export default function Index() {
     // This handles edge cases where duplicates might slip through the import modal
     const deduplicatedImports = deduplicateEvents(importedEvents);
 
-    // Convert and add each event
-    for (const importedEvent of deduplicatedImports) {
+    // Build the new countdown events first so we know which IDs to undo.
+    const newEvents: CountdownEvent[] = deduplicatedImports.map((importedEvent) => {
       const eventData = convertToCountdownEvent(importedEvent, generateId);
-      const newEvent: CountdownEvent = {
+      return {
         id: generateId(),
         ...eventData,
         createdAt: new Date().toISOString(),
       };
-      
-      setEvents(prev => [...prev, newEvent]);
-      
-      // Schedule notification if permission is already granted
-      if (hasPermission) {
-        const targetDateForNotification = newEvent.isRecurring 
+    });
+
+    if (newEvents.length === 0) {
+      trigger('medium');
+      return;
+    }
+
+    setEvents(prev => [...prev, ...newEvents]);
+
+    // Schedule notifications if permission is already granted
+    if (hasPermission) {
+      for (const newEvent of newEvents) {
+        const targetDateForNotification = newEvent.isRecurring
           ? getNextRecurringDate(new Date(newEvent.targetDate))
           : new Date(newEvent.targetDate);
         await scheduleEventNotification(newEvent.id, newEvent.title, targetDateForNotification, newEvent.emoji);
       }
     }
-    
-    // Select the first imported event
-    if (importedEvents.length > 0) {
-      // We need to wait for state to update, so we'll set it after the events are added
-      // This is handled by the useEffect that selects first event if none selected
-    }
 
-    if (deduplicatedImports.length > 0) {
-      fabRef.current?.confirm(
-        t('feedback.eventImported', { count: deduplicatedImports.length }),
-      );
-    }
+    const importedIds = new Set(newEvents.map(e => e.id));
+    fabRef.current?.confirm(
+      t('feedback.eventImported', { count: newEvents.length }),
+      {
+        onUndo: () => {
+          setEvents(prev => prev.filter(e => !importedIds.has(e.id)));
+          for (const id of importedIds) void cancelEventNotification(id);
+          trigger('light');
+        },
+        holdMs: 3500,
+      },
+    );
 
     trigger('medium');
   };
