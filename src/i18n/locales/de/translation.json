@@ -4,6 +4,14 @@
     "noCountdowns": "Keine Countdowns",
     "createFirst": "Tippe auf das + Symbol, um deinen ersten Countdown zu erstellen"
   },
+  "feedback": {
+    "eventCreated": "Ereignis erstellt",
+    "eventUpdated": "Ereignis aktualisiert",
+    "eventDeleted": "Gelöscht",
+    "undoDelete": "Rückgängig",
+    "eventImported_one": "{{count}} Ereignis importiert",
+    "eventImported_other": "{{count}} Ereignisse importiert"
+  },
   "events": {
     "title": "Ereignisse",
     "delete": "Löschen",

@@ -4,6 +4,14 @@
     "noCountdowns": "Ingen nedtellinger",
     "createFirst": "Trykk på + knappen for å opprette din første nedtelling"
   },
+  "feedback": {
+    "eventCreated": "Hendelse opprettet",
+    "eventUpdated": "Hendelse oppdatert",
+    "eventDeleted": "Slettet",
+    "undoDelete": "Angre",
+    "eventImported_one": "Importerte {{count}} hendelse",
+    "eventImported_other": "Importerte {{count}} hendelser"
+  },
   "events": {
     "title": "Hendelser",
     "delete": "Slett",

@@ -4,6 +4,14 @@
     "noCountdowns": "Ei laskureita",
     "createFirst": "Napauta + painiketta luodaksesi ensimmäisen laskurisi"
   },
+  "feedback": {
+    "eventCreated": "Tapahtuma luotu",
+    "eventUpdated": "Tapahtuma päivitetty",
+    "eventDeleted": "Poistettu",
+    "undoDelete": "Kumoa",
+    "eventImported_one": "Tuotiin {{count}} tapahtuma",
+    "eventImported_other": "Tuotiin {{count}} tapahtumaa"
+  },
   "events": {
     "title": "Tapahtumat",
     "delete": "Poista",

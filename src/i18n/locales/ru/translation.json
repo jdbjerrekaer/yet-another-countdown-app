@@ -4,6 +4,14 @@
     "noCountdowns": "Нет отсчетов",
     "createFirst": "Нажмите на кнопку +, чтобы создать свой первый отсчет"
   },
+  "feedback": {
+    "eventCreated": "Событие создано",
+    "eventUpdated": "Событие обновлено",
+    "eventDeleted": "Удалено",
+    "undoDelete": "Отменить",
+    "eventImported_one": "Импортировано {{count}} событие",
+    "eventImported_other": "Импортировано {{count}} событий"
+  },
   "events": {
     "title": "События",
     "delete": "Удалить",

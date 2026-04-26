@@ -4,6 +4,14 @@
     "noCountdowns": "Sem contagens regressivas",
     "createFirst": "Toque no botão + para criar sua primeira contagem regressiva"
   },
+  "feedback": {
+    "eventCreated": "Evento criado",
+    "eventUpdated": "Evento atualizado",
+    "eventDeleted": "Excluído",
+    "undoDelete": "Desfazer",
+    "eventImported_one": "{{count}} evento importado",
+    "eventImported_other": "{{count}} eventos importados"
+  },
   "events": {
     "title": "Eventos",
     "delete": "Excluir",

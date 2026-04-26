@@ -4,6 +4,14 @@
     "noCountdowns": "Ingen nedtællinger",
     "createFirst": "Tryk på + knappen for at oprette din første nedtælling"
   },
+  "feedback": {
+    "eventCreated": "Begivenhed oprettet",
+    "eventUpdated": "Begivenhed opdateret",
+    "eventDeleted": "Slettet",
+    "undoDelete": "Fortryd",
+    "eventImported_one": "Importerede {{count}} begivenhed",
+    "eventImported_other": "Importerede {{count}} begivenheder"
+  },
   "events": {
     "title": "Begivenheder",
     "delete": "Slet",

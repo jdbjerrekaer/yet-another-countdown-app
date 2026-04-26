@@ -4,6 +4,14 @@
     "noCountdowns": "Aucun compte à rebours",
     "createFirst": "Appuyez sur le bouton + pour créer votre premier compte à rebours"
   },
+  "feedback": {
+    "eventCreated": "Évènement créé",
+    "eventUpdated": "Évènement mis à jour",
+    "eventDeleted": "Supprimé",
+    "undoDelete": "Annuler",
+    "eventImported_one": "{{count}} évènement importé",
+    "eventImported_other": "{{count}} évènements importés"
+  },
   "events": {
     "title": "Événements",
     "delete": "Supprimer",

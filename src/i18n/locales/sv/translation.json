@@ -4,6 +4,14 @@
     "noCountdowns": "Inga nedräkningar",
     "createFirst": "Tryck på + knappen för att skapa din första nedräkning"
   },
+  "feedback": {
+    "eventCreated": "Händelse skapad",
+    "eventUpdated": "Händelse uppdaterad",
+    "eventDeleted": "Raderad",
+    "undoDelete": "Ångra",
+    "eventImported_one": "Importerade {{count}} händelse",
+    "eventImported_other": "Importerade {{count}} händelser"
+  },
   "events": {
     "title": "Händelser",
     "delete": "Radera",
