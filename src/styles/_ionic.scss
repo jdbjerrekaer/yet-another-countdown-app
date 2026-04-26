@@ -192,6 +192,13 @@
   // The iOS26 theme's translucent rules need a concrete --background to
   // render a visible blur — without this, the layer is fully transparent
   // and content just appears to overlap the title.
+  // While at the top of scroll, the inner condense header carries the title
+  // and trailing buttons — collapse the outer nav bar entirely so the empty
+  // toolbar space doesn't show above the large title.
+  ion-page > ion-header.header-collapse-condense-inactive {
+    display: none !important;
+  }
+
   ion-page > ion-header.header-translucent ion-toolbar {
     --background: rgba(255, 255, 255, 0.72) !important;
     --border-width: 0 0 0.55px 0 !important;
