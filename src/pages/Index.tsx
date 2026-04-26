@@ -46,7 +46,6 @@ import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/Deep
 import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
-import { toast } from 'sonner';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
@@ -534,11 +533,11 @@ export default function Index() {
       );
       setHasRemoveAds(nextValue);
       if (nextValue) {
-        toast.success('Ad-free enabled (dev build).');
+        fabRef.current?.confirm('Ad-free enabled (dev build)');
         await AdsManager.hideBanner();
         setShowAdPlaceholder(false);
       } else {
-        toast.message('Ad-free disabled (dev build).');
+        fabRef.current?.confirm('Ad-free disabled (dev build)');
         await AdsManager.setDevAdsEnabled(true);
         AdsManager.resetInitialization();
         await AdsManager.showBanner();
