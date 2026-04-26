@@ -145,3 +145,34 @@
     isolation: isolate;
   }
 }
+
+/* Top scroll-shadow overlay for the home page. Sits above ion-content,
+   reserved height matches the safe-area inset; fades a translucent blur
+   in when the page is scrolled past the top. Independent of Ionic's
+   IonHeader collapse machinery so it doesn't add empty layout space. */
+.home-scroll-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--ion-safe-area-top, 0);
+  z-index: 10;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  transition: background 200ms ease, backdrop-filter 200ms ease, -webkit-backdrop-filter 200ms ease, box-shadow 200ms ease;
+}
+
+.home-scroll-shadow.is-scrolled {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 0.55px 0 0 rgba(0, 0, 0, 0.12);
+}
+
+.dark .home-scroll-shadow.is-scrolled,
+.ion-palette-dark .home-scroll-shadow.is-scrolled {
+  background: rgba(20, 20, 20, 0.72);
+  box-shadow: 0 0.55px 0 0 rgba(255, 255, 255, 0.12);
+}

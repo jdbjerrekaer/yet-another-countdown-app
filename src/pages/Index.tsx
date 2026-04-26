@@ -169,6 +169,7 @@ function TripleWidgetPreview({
 
 export default function Index() {
   const { t } = useTranslation();
+  const [isHomeScrolled, setIsHomeScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('medium');
   const [selectedAppearanceMode, setSelectedAppearanceMode] = useState<WidgetAppearanceMode>(() => {
@@ -1277,19 +1278,23 @@ export default function Index() {
   return (
     <IonPage>
 
-      {/* Condensed header revealed on scroll — provides translucent blur backdrop */}
-      <IonHeader translucent={true} className="ion-no-border">
-        <IonToolbar>
-          <IonTitle>Yet Another Countdown</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+      {/* Sticky top scroll-shadow: fades in when the page is scrolled. */}
+      <div
+        className={`home-scroll-shadow${isHomeScrolled ? ' is-scrolled' : ''}`}
+        aria-hidden="true"
+      />
 
       <IonContent
         fullscreen
+        scrollEvents
+        onIonScroll={(e) => {
+          const top = e.detail.scrollTop;
+          setIsHomeScrolled(top > 4);
+        }}
         className="ion-padding"
       >
-        {/* iOS large title header (collapses into the condensed header above on scroll) */}
-        <IonHeader collapse="condense" className="ion-no-border">
+        {/* iOS large title header */}
+        <IonHeader className="ion-no-border">
           <IonToolbar className="px-2 pt-4">
             <IonTitle size="large" className="ion-no-padding">
               <div
