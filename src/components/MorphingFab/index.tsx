@@ -29,7 +29,8 @@ interface Props {
 
 const COLLAPSED_WIDTH = 72;
 const TEXT_LEFT_PADDING = 24;
-const TEXT_RIGHT_GAP = 8;
+const TEXT_RIGHT_GAP = 16;
+const TEXT_BUFFER = 4;
 const MIN_EXPANDED_WIDTH = 200;
 const VIEWPORT_MARGIN = 32;
 const RADIUS = 18;
@@ -102,7 +103,7 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
     useLayoutEffect(() => {
       if (!confirmText || !measureRef.current) return;
       const textWidth = measureRef.current.getBoundingClientRect().width;
-      const required = TEXT_LEFT_PADDING + textWidth + TEXT_RIGHT_GAP + COLLAPSED_WIDTH;
+      const required = TEXT_LEFT_PADDING + textWidth + TEXT_BUFFER + TEXT_RIGHT_GAP + COLLAPSED_WIDTH;
       const cap = (typeof window !== 'undefined' ? window.innerWidth : 360) - VIEWPORT_MARGIN * 2;
       setExpandedWidth(Math.min(cap, Math.max(MIN_EXPANDED_WIDTH, Math.ceil(required))));
     }, [confirmText]);
@@ -155,7 +156,7 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
           style={{
             position: 'absolute',
             left: TEXT_LEFT_PADDING,
-            right: COLLAPSED_WIDTH,
+            right: COLLAPSED_WIDTH - TEXT_RIGHT_GAP,
             textAlign: 'left',
             fontSize: 16,
             fontWeight: 600,
@@ -172,7 +173,8 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
         </span>
 
         {/* Hidden mirror used to measure the natural text width so the FAB
-            expands just enough to fit the message. */}
+            expands just enough to fit the message. Inherits the page's font
+            so the measurement matches the visible label glyph metrics. */}
         <span
           ref={measureRef}
           aria-hidden="true"
@@ -182,8 +184,10 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
             top: -9999,
             visibility: 'hidden',
             whiteSpace: 'nowrap',
+            fontFamily: 'inherit',
             fontSize: 16,
             fontWeight: 600,
+            letterSpacing: 'inherit',
             pointerEvents: 'none',
           }}
         >
