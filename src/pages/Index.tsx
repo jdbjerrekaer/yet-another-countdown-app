@@ -1277,12 +1277,19 @@ export default function Index() {
   return (
     <IonPage>
 
-      <IonContent 
-        fullscreen 
+      {/* Condensed header revealed on scroll — provides translucent blur backdrop */}
+      <IonHeader translucent={true} className="ion-no-border">
+        <IonToolbar>
+          <IonTitle>Yet Another Countdown</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent
+        fullscreen
         className="ion-padding"
       >
-        {/* iOS large title header */}
-        <IonHeader className="ion-no-border">
+        {/* iOS large title header (collapses into the condensed header above on scroll) */}
+        <IonHeader collapse="condense" className="ion-no-border">
           <IonToolbar className="px-2 pt-4">
             <IonTitle size="large" className="ion-no-padding">
               <div
@@ -1323,8 +1330,8 @@ export default function Index() {
                 </div>
               )}
               <div className="active:scale-90 transition-transform duration-150">
-                <IonButton 
-                  onClick={handleOpenCalendarImport} 
+                <IonButton
+                  onClick={handleOpenCalendarImport}
                   aria-label={t('aria.importFromCalendar')}
                   className="header-action-button"
                 >

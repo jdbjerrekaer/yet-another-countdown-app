@@ -187,13 +187,43 @@
                   0 1px 4px -1px hsl(0 0% 0% / 0.2);
   }
 
-  // Page headers (non-modal): keep transparent background and relative positioning
-  ion-page ion-header {
+  // Outer (page-level) translucent header: provide an explicit blur backdrop
+  // and a hairline bottom divider so the scroll-through stays visible.
+  // The iOS26 theme's translucent rules need a concrete --background to
+  // render a visible blur — without this, the layer is fully transparent
+  // and content just appears to overlap the title.
+  ion-page > ion-header.header-translucent ion-toolbar {
+    --background: rgba(255, 255, 255, 0.72) !important;
+    --border-width: 0 0 0.55px 0 !important;
+    --border-color: rgba(0, 0, 0, 0.12) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  }
+  ion-page > ion-header.header-translucent ion-toolbar::part(background) {
+    background: rgba(255, 255, 255, 0.72) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    opacity: 1 !important;
+  }
+
+  .dark ion-page > ion-header.header-translucent ion-toolbar,
+  .ion-palette-dark ion-page > ion-header.header-translucent ion-toolbar {
+    --background: rgba(20, 20, 20, 0.72) !important;
+    --border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+  .dark ion-page > ion-header.header-translucent ion-toolbar::part(background),
+  .ion-palette-dark ion-page > ion-header.header-translucent ion-toolbar::part(background) {
+    background: rgba(20, 20, 20, 0.72) !important;
+  }
+
+  // Inline (collapse="condense") page headers inside IonContent: keep transparent
+  // and let the outer translucent IonHeader provide the blur on scroll.
+  ion-page ion-content ion-header {
     position: relative !important;
     z-index: auto !important;
   }
 
-  ion-page ion-header ion-toolbar {
+  ion-page ion-content ion-header ion-toolbar {
     position: relative !important;
     z-index: auto !important;
     --background: transparent !important;
@@ -203,7 +233,7 @@
     border: none !important;
   }
 
-  ion-page ion-header ion-toolbar::part(native) {
+  ion-page ion-content ion-header ion-toolbar::part(native) {
     position: relative !important;
     background: transparent !important;
     border: none !important;
