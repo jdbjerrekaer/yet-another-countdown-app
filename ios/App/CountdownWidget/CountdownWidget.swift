@@ -3,15 +3,25 @@ import SwiftUI
 import AppIntents
 
 /// Returns the Date of the next top-of-minute boundary (:00 seconds).
-/// Used as the timeline refresh policy so the large widget's static minute/
-/// hour/day cards re-render at the same moment the live seconds timer rolls
-/// from 59 → 00, keeping them in visual sync.
-private func nextMinuteBoundary() -> Date {
+private func nextMinuteBoundary(after date: Date = Date()) -> Date {
     let cal = Calendar.current
-    let now = Date()
-    let plusOne = cal.date(byAdding: .minute, value: 1, to: now) ?? now.addingTimeInterval(60)
+    let plusOne = cal.date(byAdding: .minute, value: 1, to: date) ?? date.addingTimeInterval(60)
     let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: plusOne)
     return cal.date(from: comps) ?? plusOne
+}
+
+/// Build an array of dates, one per minute boundary, starting at the current
+/// instant and continuing for `count` minutes. WidgetKit displays each entry
+/// at its `date`; emitting many pre-computed entries lets the home-screen
+/// widget tick down without depending on the unreliable `.after` reload hint.
+private func minuteEntryDates(count: Int = 60) -> [Date] {
+    var dates: [Date] = [Date()]
+    var cursor = nextMinuteBoundary()
+    for _ in 1..<count {
+        dates.append(cursor)
+        cursor = nextMinuteBoundary(after: cursor)
+    }
+    return dates
 }
 
 // MARK: - Widget Entry
@@ -86,15 +96,18 @@ struct CountdownTimerWidgetProvider: AppIntentTimelineProvider {
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
         let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
-        
-        let entry = CountdownWidgetEntry(
-            date: Date(),
-            event: event,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus,
-            configuration: configuration.countdown
-        )
-        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+
+        let entries = minuteEntryDates().map { date in
+            CountdownWidgetEntry(
+                date: date,
+                event: event,
+                appearanceMode: appearance,
+                countdownStyle: .focus,
+                configuration: configuration.countdown
+            )
+        }
+        return Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
     }
 }
 
@@ -138,14 +151,18 @@ struct CountdownVisualWidgetProvider: AppIntentTimelineProvider {
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
         let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
-        let entry = CountdownWidgetEntry(
-            date: Date(),
-            event: event,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual,
-            configuration: configuration.countdown
-        )
-        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+
+        let entries = minuteEntryDates().map { date in
+            CountdownWidgetEntry(
+                date: date,
+                event: event,
+                appearanceMode: appearance,
+                countdownStyle: .visual,
+                configuration: configuration.countdown
+            )
+        }
+        return Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
     }
 }
 
@@ -188,14 +205,17 @@ struct CountdownTimerWidgetProviderStatic: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<CountdownWidgetEntry>) -> ()) {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
         let event = widgetData?.events.first
-        let entry = CountdownWidgetEntry(
-            date: Date(),
-            event: event,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus,
-            configuration: nil
-        )
-        let timeline = Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+        let entries = minuteEntryDates().map { date in
+            CountdownWidgetEntry(
+                date: date,
+                event: event,
+                appearanceMode: appearance,
+                countdownStyle: .focus,
+                configuration: nil
+            )
+        }
+        let timeline = Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
         completion(timeline)
     }
 }
@@ -240,14 +260,18 @@ struct CountdownClassicWidgetProvider: AppIntentTimelineProvider {
     func timeline(for configuration: SelectCountdownIntent, in context: Context) async -> Timeline<CountdownWidgetEntry> {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
         let event = resolveConfiguredEvent(selection: configuration.countdown, widgetData: widgetData)
-        let entry = CountdownWidgetEntry(
-            date: Date(),
-            event: event,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .classic,
-            configuration: configuration.countdown
-        )
-        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+
+        let entries = minuteEntryDates().map { date in
+            CountdownWidgetEntry(
+                date: date,
+                event: event,
+                appearanceMode: appearance,
+                countdownStyle: .classic,
+                configuration: configuration.countdown
+            )
+        }
+        return Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
     }
 }
 
@@ -290,14 +314,17 @@ struct CountdownVisualWidgetProviderStatic: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<CountdownWidgetEntry>) -> ()) {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
         let event = widgetData?.events.first
-        let entry = CountdownWidgetEntry(
-            date: Date(),
-            event: event,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual,
-            configuration: nil
-        )
-        let timeline = Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+        let entries = minuteEntryDates().map { date in
+            CountdownWidgetEntry(
+                date: date,
+                event: event,
+                appearanceMode: appearance,
+                countdownStyle: .visual,
+                configuration: nil
+            )
+        }
+        let timeline = Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
         completion(timeline)
     }
 }
@@ -341,14 +368,17 @@ struct CountdownClassicWidgetProviderStatic: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<CountdownWidgetEntry>) -> ()) {
         let widgetData = WidgetDataSync.shared.loadWidgetData()
         let event = widgetData?.events.first
-        let entry = CountdownWidgetEntry(
-            date: Date(),
-            event: event,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .classic,
-            configuration: nil
-        )
-        let timeline = Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+        let entries = minuteEntryDates().map { date in
+            CountdownWidgetEntry(
+                date: date,
+                event: event,
+                appearanceMode: appearance,
+                countdownStyle: .classic,
+                configuration: nil
+            )
+        }
+        let timeline = Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
         completion(timeline)
     }
 }
@@ -442,18 +472,18 @@ struct CountdownTripleWidgetProvider: AppIntentTimelineProvider {
             return events.count > 2 ? events[2] : nil
         }()
         
-        let entry = TripleCountdownWidgetEntry(
-            date: Date(),
-            event1: event1,
-            event2: event2,
-            event3: event3,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .focus
-        )
-        
-        // Refresh at the top of each minute so countdown cards stay in sync
-        // with live-ticking seconds in the large widget.
-        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+        let entries = minuteEntryDates().map { date in
+            TripleCountdownWidgetEntry(
+                date: date,
+                event1: event1,
+                event2: event2,
+                event3: event3,
+                appearanceMode: appearance,
+                countdownStyle: .focus
+            )
+        }
+        return Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
     }
 }
 
@@ -546,18 +576,18 @@ struct CountdownVisualTripleWidgetProvider: AppIntentTimelineProvider {
             return events.count > 2 ? events[2] : nil
         }()
         
-        let entry = TripleCountdownWidgetEntry(
-            date: Date(),
-            event1: event1,
-            event2: event2,
-            event3: event3,
-            appearanceMode: widgetData?.appearanceModeEnum ?? .light,
-            countdownStyle: .visual
-        )
-        
-        // Refresh at the top of each minute so countdown cards stay in sync
-        // with live-ticking seconds in the large widget.
-        return Timeline(entries: [entry], policy: .after(nextMinuteBoundary()))
+        let appearance = widgetData?.appearanceModeEnum ?? .light
+        let entries = minuteEntryDates().map { date in
+            TripleCountdownWidgetEntry(
+                date: date,
+                event1: event1,
+                event2: event2,
+                event3: event3,
+                appearanceMode: appearance,
+                countdownStyle: .visual
+            )
+        }
+        return Timeline(entries: entries, policy: .after(entries.last?.date ?? nextMinuteBoundary()))
     }
 }
 
@@ -570,7 +600,7 @@ struct CountdownWidgetEntryView: View {
     var body: some View {
         if let event = entry.event {
             let targetDate = event.isRecurring ? event.getNextRecurringDate() : event.targetDateAsDate
-            let countdown = CountdownTime.calculate(from: targetDate)
+            let countdown = CountdownTime.calculate(from: targetDate, now: entry.date)
             let progress = WidgetDataSync.shared.calculateProgress(for: event)
             
             // Create deep link URL to open edit modal for this event
@@ -635,10 +665,11 @@ struct TripleLargeWidgetView: View {
     let event3: CountdownEvent?
     let appearanceMode: WidgetAppearanceMode
     let countdownStyle: WidgetCountdownStyle
-    
+    let now: Date
+
     @Environment(\.widgetRenderingMode) var widgetRenderingMode
     @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         VStack(spacing: 0) {
             if let event1 = event1 {
@@ -648,16 +679,17 @@ struct TripleLargeWidgetView: View {
                         appearanceMode: appearanceMode,
                         countdownStyle: countdownStyle,
                         widgetRenderingMode: widgetRenderingMode,
-                        colorScheme: colorScheme
+                        colorScheme: colorScheme,
+                        now: now
                     )
                 }
             } else {
                 EmptyRowView(appearanceMode: appearanceMode)
             }
-            
+
             Divider()
                 .background(dividerColor)
-            
+
             if let event2 = event2 {
                 Link(destination: URL(string: "countdownapp://edit?id=\(event2.id)")!) {
                     EventRowView(
@@ -665,16 +697,17 @@ struct TripleLargeWidgetView: View {
                         appearanceMode: appearanceMode,
                         countdownStyle: countdownStyle,
                         widgetRenderingMode: widgetRenderingMode,
-                        colorScheme: colorScheme
+                        colorScheme: colorScheme,
+                        now: now
                     )
                 }
             } else {
                 EmptyRowView(appearanceMode: appearanceMode)
             }
-            
+
             Divider()
                 .background(dividerColor)
-            
+
             if let event3 = event3 {
                 Link(destination: URL(string: "countdownapp://edit?id=\(event3.id)")!) {
                     EventRowView(
@@ -682,7 +715,8 @@ struct TripleLargeWidgetView: View {
                         appearanceMode: appearanceMode,
                         countdownStyle: countdownStyle,
                         widgetRenderingMode: widgetRenderingMode,
-                        colorScheme: colorScheme
+                        colorScheme: colorScheme,
+                        now: now
                     )
                 }
             } else {
@@ -713,10 +747,11 @@ struct EventRowView: View {
     let countdownStyle: WidgetCountdownStyle
     let widgetRenderingMode: WidgetRenderingMode
     let colorScheme: ColorScheme
-    
+    let now: Date
+
     var body: some View {
         let targetDate = event.isRecurring ? event.getNextRecurringDate() : event.targetDateAsDate
-        let countdown = CountdownTime.calculate(from: targetDate)
+        let countdown = CountdownTime.calculate(from: targetDate, now: now)
         let progress = WidgetDataSync.shared.calculateProgress(for: event)
         
         HStack(spacing: 12) {
@@ -979,7 +1014,8 @@ struct TripleCountdownWidgetEntryView: View {
             event2: entry.event2,
             event3: entry.event3,
             appearanceMode: entry.appearanceMode,
-            countdownStyle: entry.countdownStyle
+            countdownStyle: entry.countdownStyle,
+            now: entry.date
         )
     }
 }
@@ -994,7 +1030,8 @@ struct TripleVisualCountdownWidgetEntryView: View {
             event2: entry.event2,
             event3: entry.event3,
             appearanceMode: entry.appearanceMode,
-            countdownStyle: .visual
+            countdownStyle: .visual,
+            now: entry.date
         )
     }
 }

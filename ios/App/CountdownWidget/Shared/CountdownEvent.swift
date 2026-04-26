@@ -177,12 +177,11 @@ struct CountdownTime {
     let isComplete: Bool
     let daysSince: Int
     
-    static func calculate(from target: Date?) -> CountdownTime {
+    static func calculate(from target: Date?, now: Date = Date()) -> CountdownTime {
         guard let target = target else {
             return CountdownTime(days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false, isComplete: false, daysSince: 0)
         }
-        
-        let now = Date()
+
         let calendar = Calendar.current
         
         // Check if it's today

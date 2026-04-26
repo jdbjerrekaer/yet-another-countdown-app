@@ -1,4 +1,15 @@
 @layer components {
+  .morphing-fab {
+    background: hsl(0 0% 9%);
+    color: #fff;
+  }
+
+  .dark .morphing-fab,
+  .ion-palette-dark .morphing-fab {
+    background: hsl(0 0% 98%);
+    color: hsl(0 0% 9%);
+  }
+
   .gradient-sky {
     background: var(--gradient-sky);
   }
