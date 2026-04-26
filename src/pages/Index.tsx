@@ -192,6 +192,9 @@ export default function Index() {
   const dragAnimationFrameRef = useRef<number | null>(null);
   const dragOverlayRef = useRef<HTMLDivElement>(null);
   const titlePressTimeoutRef = useRef<number | null>(null);
+  const titlePressStartRef = useRef<number>(0);
+  const titleTapCountRef = useRef<number>(0);
+  const titleLastTapRef = useRef<number>(0);
   const fabRef = useRef<MorphingFabHandle>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
@@ -524,6 +527,7 @@ export default function Index() {
   }, [showAdPlaceholder, placeholderHeight]);
 
   const handleTitlePressStart = () => {
+    titlePressStartRef.current = Date.now();
     if (!isDevBuild || titlePressTimeoutRef.current !== null) return;
     titlePressTimeoutRef.current = window.setTimeout(async () => {
       const nextValue = !hasRemoveAds;
@@ -546,9 +550,34 @@ export default function Index() {
   };
 
   const handleTitlePressEnd = () => {
-    if (titlePressTimeoutRef.current === null) return;
-    window.clearTimeout(titlePressTimeoutRef.current);
-    titlePressTimeoutRef.current = null;
+    if (titlePressTimeoutRef.current !== null) {
+      window.clearTimeout(titlePressTimeoutRef.current);
+      titlePressTimeoutRef.current = null;
+    }
+
+    // Easter egg: 7 quick taps within 1.5s of each other.
+    const now = Date.now();
+    const pressDuration = now - titlePressStartRef.current;
+    if (pressDuration > 220) {
+      titleTapCountRef.current = 0;
+      return;
+    }
+    if (now - titleLastTapRef.current > 1500) {
+      titleTapCountRef.current = 0;
+    }
+    titleLastTapRef.current = now;
+    titleTapCountRef.current += 1;
+    if (titleTapCountRef.current >= 7) {
+      titleTapCountRef.current = 0;
+      const messages = t('easterEgg.messages', { returnObjects: true }) as string[];
+      if (Array.isArray(messages) && messages.length > 0) {
+        const stored = parseInt(localStorage.getItem('easterEggIndex') || '0', 10);
+        const idx = Number.isFinite(stored) ? Math.max(0, stored) % messages.length : 0;
+        localStorage.setItem('easterEggIndex', String((idx + 1) % messages.length));
+        trigger('medium');
+        fabRef.current?.confirm(messages[idx], { holdMs: 2200 });
+      }
+    }
   };
 
   // Debug: Test CalendarPlugin immediately on mount - use direct Capacitor call

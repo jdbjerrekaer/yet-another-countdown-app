@@ -12,6 +12,15 @@
     "eventImported_one": "Importerade {{count}} händelse",
     "eventImported_other": "Importerade {{count}} händelser"
   },
+  "easterEgg": {
+    "messages": [
+      "Ännu ett tryck 👀",
+      "Du hittade en hemlighet 🥚",
+      "Tålamod är överskattat ⏳",
+      "Det är många tryck 🎉",
+      "Okej, du tog oss 🙌"
+    ]
+  },
   "events": {
     "title": "Händelser",
     "delete": "Radera",

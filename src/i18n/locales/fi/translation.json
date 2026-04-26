@@ -12,6 +12,15 @@
     "eventImported_one": "Tuotiin {{count}} tapahtuma",
     "eventImported_other": "Tuotiin {{count}} tapahtumaa"
   },
+  "easterEgg": {
+    "messages": [
+      "Vielä yksi näpäytys 👀",
+      "Löysit salaisuuden 🥚",
+      "Kärsivällisyys on yliarvostettua ⏳",
+      "Aikamoinen näpyttely 🎉",
+      "Selvä, sait meidät 🙌"
+    ]
+  },
   "events": {
     "title": "Tapahtumat",
     "delete": "Poista",

@@ -12,6 +12,15 @@
     "eventImported_one": "Importato {{count}} evento",
     "eventImported_other": "Importati {{count}} eventi"
   },
+  "easterEgg": {
+    "messages": [
+      "Ancora un tocco 👀",
+      "Hai trovato un segreto 🥚",
+      "La pazienza è sopravvalutata ⏳",
+      "Quanti tocchi 🎉",
+      "Okay, ci hai presi 🙌"
+    ]
+  },
   "events": {
     "title": "Eventi",
     "delete": "Elimina",

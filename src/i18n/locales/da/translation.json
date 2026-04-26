@@ -12,6 +12,15 @@
     "eventImported_one": "Importerede {{count}} begivenhed",
     "eventImported_other": "Importerede {{count}} begivenheder"
   },
+  "easterEgg": {
+    "messages": [
+      "Endnu et tryk 👀",
+      "Du fandt en hemmelighed 🥚",
+      "Tålmodighed er overvurderet ⏳",
+      "Det er mange tryk 🎉",
+      "Okay, du fangede os 🙌"
+    ]
+  },
   "events": {
     "title": "Begivenheder",
     "delete": "Slet",
