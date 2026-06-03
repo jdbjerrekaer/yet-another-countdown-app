@@ -2,24 +2,33 @@ import Foundation
 import UIKit
 import Capacitor
 
-/// Custom UITextField that forces emoji keyboard
+/// Custom UITextField that opens on the emoji keyboard but still allows
+/// switching to other input modes (e.g. the emoji keyboard's own search field,
+/// which needs the alphabetic keyboard).
 class EmojiTextField: UITextField {
+    /// While true, the field reports the emoji input mode so the keyboard opens
+    /// on the emoji picker. Cleared after the first presentation so UIKit can
+    /// freely switch modes (the in-keyboard search field requires this).
+    var forceEmojiOnNextPresentation = true
+
     override var textInputMode: UITextInputMode? {
-        for mode in UITextInputMode.activeInputModes {
-            if mode.primaryLanguage == "emoji" {
-                return mode
+        if forceEmojiOnNextPresentation {
+            for mode in UITextInputMode.activeInputModes {
+                if mode.primaryLanguage == "emoji" {
+                    return mode
+                }
             }
         }
         return super.textInputMode
     }
-    
+
     override var textInputContextIdentifier: String? {
-        return "emoji"
+        return forceEmojiOnNextPresentation ? "emoji" : super.textInputContextIdentifier
     }
 }
 
 @objc(EmojiKeyboardPlugin)
-public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin {
+public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin, UITextFieldDelegate {
     public let identifier = "EmojiKeyboardPlugin"
     public let jsName = "EmojiKeyboardPlugin"
     public let pluginMethods: [CAPPluginMethod] = [
@@ -46,9 +55,11 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin {
     }
     
     @objc func inputModeDidChange() {
-        DispatchQueue.main.async { [weak self] in
-            self?.emojiTextField?.reloadInputViews()
-        }
+        // Once the keyboard is up, the user (or the emoji keyboard's search
+        // field) may switch to a text keyboard. Stop forcing emoji so that
+        // switch is allowed; do NOT reloadInputViews here or we'd yank the
+        // emoji picker back over the search keyboard.
+        emojiTextField?.forceEmojiOnNextPresentation = false
     }
     
     @objc func showEmojiKeyboard(_ call: CAPPluginCall) {
@@ -64,6 +75,7 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin {
                 textField.autocorrectionType = .no
                 textField.autocapitalizationType = .none
                 textField.spellCheckingType = .no
+                textField.delegate = self
                 textField.frame = CGRect(x: -1000, y: -1000, width: 1, height: 1)
                 
                 var window: UIWindow?
@@ -103,6 +115,9 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin {
                 self.currentText = initialText
             }
             
+            // Always (re)open on the emoji picker; mode is unlocked again as
+            // soon as iOS reports an input-mode change (e.g. search tapped).
+            textField.forceEmojiOnNextPresentation = true
             textField.becomeFirstResponder()
             textField.reloadInputViews()
             
@@ -139,6 +154,22 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
+    // Reject any insertion that isn't an emoji at the source, so a letter
+    // typed via the 🌐 globe key never even appears in the slot. Deletions
+    // (empty replacement) are always allowed.
+    public func textField(_ textField: UITextField,
+                          shouldChangeCharactersIn range: NSRange,
+                          replacementString string: String) -> Bool {
+        if string.isEmpty { return true }
+
+        let emojiRegex = try? NSRegularExpression(pattern: "\\p{Emoji}|\\p{Extended_Pictographic}", options: [])
+        let nsString = string as NSString
+        let fullRange = NSRange(location: 0, length: nsString.length)
+        // Allow only if the entire replacement string is emoji.
+        let matchRange = emojiRegex?.rangeOfFirstMatch(in: string, options: [], range: fullRange)
+        return matchRange == fullRange
+    }
+
     @objc func textDidChange(_ notification: Notification) {
         guard let textField = notification.object as? UITextField,
               textField == emojiTextField else {
