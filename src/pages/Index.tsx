@@ -204,6 +204,10 @@ export default function Index() {
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
   const hasPulledFromICloudRef = useRef(false);
+  // True once the first iCloud pull has completed. Until then we must NOT push
+  // an empty list — a fresh/empty device would otherwise stamp [] as the newest
+  // value and clobber another device's data (last-write-wins by timestamp).
+  const initialPullDoneRef = useRef(false);
   // Serialized events last reconciled with iCloud — set after both a push and
   // a pull so the push effect can skip no-op writes and break the ping-pong
   // loop where two devices keep re-pushing the same merged list.
@@ -472,6 +476,36 @@ export default function Index() {
       });
     };
 
+    const pullAndReconcile = async () => {
+      const { json, updatedAt } = await CountdownSyncPlugin.pullCountdowns();
+      reconcileWithRemote(json, updatedAt);
+    };
+
+    // Debug-only: show current sync state and offer a manual push+pull, so
+    // testing doesn't depend on iOS's opportunistic upload timing.
+    const showSyncStatusDialog = async (): Promise<void> => {
+      const status = await CountdownSyncPlugin.getStatus();
+      const local = JSON.parse(localStorage.getItem('countdowns') || '[]');
+      const { value } = await Dialog.confirm({
+        title: 'iCloud sync status',
+        message:
+          `iCloud has data: ${status.hasData} (${status.byteCount} bytes)\n` +
+          `iCloud updatedAt: ${status.updatedAt ?? '—'}\n` +
+          `Local countdowns: ${Array.isArray(local) ? local.length : 0}\n\n` +
+          `Tap "Sync now" to force a push + pull.`,
+        okButtonTitle: 'Sync now',
+        cancelButtonTitle: 'Close',
+      });
+      if (value) {
+        await CountdownSyncPlugin.pushCountdowns({
+          json: localStorage.getItem('countdowns') ?? '[]',
+          updatedAt: localStorage.getItem('countdownsLastUpdated') ?? new Date().toISOString(),
+        });
+        await pullAndReconcile();
+        await showSyncStatusDialog();
+      }
+    };
+
     let removeListener: (() => Promise<void>) | undefined;
 
     const initICloudSync = async () => {
@@ -487,24 +521,17 @@ export default function Index() {
 
         if (!hasPulledFromICloudRef.current) {
           hasPulledFromICloudRef.current = true;
-          const { json, updatedAt } = await CountdownSyncPlugin.pullCountdowns();
-          reconcileWithRemote(json, updatedAt);
+          await pullAndReconcile();
+          // Only now is it safe for the push effect to write (incl. empty lists).
+          initialPullDoneRef.current = true;
         }
 
         if (SYNC_DEBUG) {
-          const status = await CountdownSyncPlugin.getStatus();
-          const local = JSON.parse(localStorage.getItem('countdowns') || '[]');
-          await Dialog.alert({
-            title: 'iCloud sync status',
-            message:
-              `iCloud token present: ${status.ubiquityTokenPresent}\n` +
-              `iCloud has data: ${status.hasData} (${status.byteCount} bytes)\n` +
-              `iCloud updatedAt: ${status.updatedAt ?? '—'}\n` +
-              `Local countdowns: ${Array.isArray(local) ? local.length : 0}`,
-          });
+          await showSyncStatusDialog();
         }
       } catch (error) {
         console.warn('[iCloudSync] Failed to initialize iCloud sync:', error);
+        initialPullDoneRef.current = true; // don't wedge pushes if init failed
         if (SYNC_DEBUG) {
           await Dialog.alert({ title: 'iCloud sync error', message: String(error) });
         }
@@ -513,8 +540,20 @@ export default function Index() {
 
     initICloudSync();
 
+    // Re-pull whenever the app returns to the foreground — a device that was
+    // already open then picks up changes another device uploaded. (KVS tends to
+    // flush its own pending upload on backgrounding, so this also helps the
+    // sender propagate.)
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void pullAndReconcile();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
       void removeListener?.();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [isNative]);
 
@@ -725,6 +764,10 @@ export default function Index() {
   // breaks the ping-pong loop between devices re-pushing the same merged list.
   useEffect(() => {
     if (!isNative) return;
+
+    // Never push an empty list before the first pull has completed — a fresh
+    // device would otherwise overwrite another device's data with [].
+    if (events.length === 0 && !initialPullDoneRef.current) return;
 
     const serialized = JSON.stringify(events);
     if (serialized === lastSyncedICloudJsonRef.current) return;
