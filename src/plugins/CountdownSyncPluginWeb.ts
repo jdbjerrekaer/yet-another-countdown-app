@@ -5,6 +5,7 @@ import type {
   PushCountdownsResult,
   PullCountdownsResult,
   IsAvailableResult,
+  SyncStatusResult,
 } from './CountdownSyncPlugin';
 
 /**
@@ -25,5 +26,9 @@ export class CountdownSyncPluginWeb
 
   async isAvailable(): Promise<IsAvailableResult> {
     return { available: false };
+  }
+
+  async getStatus(): Promise<SyncStatusResult> {
+    return { ubiquityTokenPresent: false, hasData: false, byteCount: 0, updatedAt: null };
   }
 }

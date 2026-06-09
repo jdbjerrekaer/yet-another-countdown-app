@@ -41,6 +41,20 @@ export interface IsAvailableResult {
 }
 
 /**
+ * Diagnostic snapshot of the iCloud key-value store, for debugging sync.
+ */
+export interface SyncStatusResult {
+  /** iCloud Drive/document token present — informational, NOT required for KVS. */
+  ubiquityTokenPresent: boolean;
+  /** Whether the iCloud KVS currently holds a countdown blob. */
+  hasData: boolean;
+  /** Byte size of the stored blob. */
+  byteCount: number;
+  /** Timestamp stored alongside the blob, or null. */
+  updatedAt: string | null;
+}
+
+/**
  * Bridges the countdown list to iCloud key-value storage
  * (NSUbiquitousKeyValueStore) so it syncs across the user's Apple devices.
  *
@@ -57,6 +71,9 @@ export interface CountdownSyncPluginInterface {
 
   /** Whether iCloud key-value sync is available (user signed into iCloud). */
   isAvailable(): Promise<IsAvailableResult>;
+
+  /** Diagnostic snapshot of the iCloud KVS, for debugging sync. */
+  getStatus(): Promise<SyncStatusResult>;
 
   /** Fires when another device changes the iCloud countdown blob. */
   addListener(

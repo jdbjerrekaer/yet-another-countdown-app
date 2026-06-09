@@ -75,6 +75,10 @@ const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; labelKey: string }[] 
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+// TEMPORARY: shows an iCloud sync status dialog on launch during beta testing.
+// Set back to false (or remove) before the App Store release.
+const SYNC_DEBUG = true;
+
 // Triple Widget Preview Component
 function TripleWidgetPreview({ 
   events, 
@@ -472,12 +476,10 @@ export default function Index() {
 
     const initICloudSync = async () => {
       try {
-        const { available } = await CountdownSyncPlugin.isAvailable();
-        if (!available) {
-          console.log('[iCloudSync] Not signed into iCloud — skipping sync');
-          return;
-        }
-
+        // NOTE: do NOT gate on isAvailable()/ubiquityIdentityToken — that
+        // reflects iCloud Drive, not KVS, and is often nil for a KVS-only app
+        // even when signed in. KVS works regardless; if not signed into iCloud
+        // these calls simply no-op locally.
         const listener = await CountdownSyncPlugin.addListener('countdownsChanged', ({ json, updatedAt }) => {
           reconcileWithRemote(json, updatedAt || null);
         });
@@ -488,8 +490,24 @@ export default function Index() {
           const { json, updatedAt } = await CountdownSyncPlugin.pullCountdowns();
           reconcileWithRemote(json, updatedAt);
         }
+
+        if (SYNC_DEBUG) {
+          const status = await CountdownSyncPlugin.getStatus();
+          const local = JSON.parse(localStorage.getItem('countdowns') || '[]');
+          await Dialog.alert({
+            title: 'iCloud sync status',
+            message:
+              `iCloud token present: ${status.ubiquityTokenPresent}\n` +
+              `iCloud has data: ${status.hasData} (${status.byteCount} bytes)\n` +
+              `iCloud updatedAt: ${status.updatedAt ?? '—'}\n` +
+              `Local countdowns: ${Array.isArray(local) ? local.length : 0}`,
+          });
+        }
       } catch (error) {
         console.warn('[iCloudSync] Failed to initialize iCloud sync:', error);
+        if (SYNC_DEBUG) {
+          await Dialog.alert({ title: 'iCloud sync error', message: String(error) });
+        }
       }
     };
 
