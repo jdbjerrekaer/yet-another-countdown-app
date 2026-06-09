@@ -16,11 +16,18 @@ public class CountdownSyncPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "pushCountdowns", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "pullCountdowns", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isAvailable", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "getStatus", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "getStatus", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getRemoveAds", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setRemoveAds", returnType: CAPPluginReturnPromise)
     ]
 
     private let jsonKey = "countdownsJSON"
     private let updatedAtKey = "countdownsUpdatedAt"
+    /// Mirrors the validated "remove ads" entitlement across the user's devices.
+    /// Only ever set to true (a non-consumable purchase is permanent), so a
+    /// device where StoreKit can't reach the App Store (e.g. iOS-app-on-Mac)
+    /// still goes ad-free once any same-iCloud device validates the purchase.
+    private let removeAdsKey = "removeAds"
 
     /// NSUbiquitousKeyValueStore allows up to 1 MB total. Keep a margin so a
     /// single oversized blob can never wedge the whole store.
@@ -45,21 +52,21 @@ public class CountdownSyncPlugin: CAPPlugin, CAPBridgedPlugin {
 
     /// Fired when another device (or initial sync) changes the cloud store.
     @objc func storeDidChangeExternally(_ notification: Notification) {
-        // Only react to changes that actually touched our keys.
-        if let userInfo = notification.userInfo,
-           let changedKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String],
-           !changedKeys.contains(jsonKey) {
-            return
+        // Which keys changed? (nil userInfo = initial sync; treat as "all").
+        let changedKeys = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String]
+        let countdownsChanged = changedKeys == nil || changedKeys!.contains(jsonKey)
+        let removeAdsChanged = changedKeys == nil || changedKeys!.contains(removeAdsKey)
+
+        if countdownsChanged, let json = store.string(forKey: jsonKey) {
+            notifyListeners("countdownsChanged", data: [
+                "json": json,
+                "updatedAt": store.string(forKey: updatedAtKey) ?? ""
+            ])
         }
 
-        let json = store.string(forKey: jsonKey)
-        let updatedAt = store.string(forKey: updatedAtKey)
-        guard let json = json else { return }
-
-        notifyListeners("countdownsChanged", data: [
-            "json": json,
-            "updatedAt": updatedAt ?? ""
-        ])
+        if removeAdsChanged {
+            notifyListeners("removeAdsChanged", data: ["value": store.bool(forKey: removeAdsKey)])
+        }
     }
 
     /// Informational only — do NOT gate sync on this. `ubiquityIdentityToken`
@@ -83,6 +90,18 @@ public class CountdownSyncPlugin: CAPPlugin, CAPBridgedPlugin {
             "byteCount": json?.lengthOfBytes(using: .utf8) ?? 0,
             "updatedAt": store.string(forKey: updatedAtKey) as Any
         ])
+    }
+
+    @objc func getRemoveAds(_ call: CAPPluginCall) {
+        store.synchronize()
+        call.resolve(["value": store.bool(forKey: removeAdsKey)])
+    }
+
+    /// Only ever sets true — a non-consumable "remove ads" purchase is permanent.
+    @objc func setRemoveAds(_ call: CAPPluginCall) {
+        store.set(true, forKey: removeAdsKey)
+        let synced = store.synchronize()
+        call.resolve(["success": synced])
     }
 
     @objc func pushCountdowns(_ call: CAPPluginCall) {

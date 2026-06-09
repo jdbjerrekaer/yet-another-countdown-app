@@ -155,7 +155,10 @@
   top: 0;
   left: 0;
   right: 0;
-  height: var(--ion-safe-area-top, 0);
+  /* Use the notch inset where it exists (iPhone), but keep a real minimum so
+     the shadow is still visible on devices with no safe-area inset (e.g. Mac,
+     where --ion-safe-area-top resolves to 0). */
+  height: max(var(--ion-safe-area-top, 0px), 14px);
   z-index: 10;
   pointer-events: none;
   background: rgba(255, 255, 255, 0);

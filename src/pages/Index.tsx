@@ -580,6 +580,41 @@ export default function Index() {
     };
   }, []);
 
+  // Mirror the "remove ads" entitlement across the user's Apple devices via
+  // iCloud. StoreKit stays authoritative (we only push true once it validates
+  // the purchase); the mirror lets a device where StoreKit can't reach the App
+  // Store — e.g. an iPhone app running on Mac — still go ad-free.
+  useEffect(() => {
+    if (!isNative) return;
+
+    let removeListener: (() => Promise<void>) | undefined;
+
+    const initRemoveAdsSync = async () => {
+      try {
+        const { value } = await CountdownSyncPlugin.getRemoveAds();
+        if (value) await PurchasesManager.applyRemoteEntitlement(true);
+
+        const listener = await CountdownSyncPlugin.addListener('removeAdsChanged', ({ value }) => {
+          if (value) void PurchasesManager.applyRemoteEntitlement(true);
+        });
+        removeListener = listener.remove;
+      } catch (error) {
+        console.warn('[iCloudSync] remove-ads mirror init failed:', error);
+      }
+    };
+    initRemoveAdsSync();
+
+    // When StoreKit validates the purchase on this device, broadcast it.
+    const unsub = PurchasesManager.onEntitlementChange((owned) => {
+      if (owned) void CountdownSyncPlugin.setRemoveAds();
+    });
+
+    return () => {
+      void removeListener?.();
+      unsub?.();
+    };
+  }, [isNative]);
+
   useEffect(() => {
     const loadBuildInfo = async () => {
       try {

@@ -75,10 +75,22 @@ export interface CountdownSyncPluginInterface {
   /** Diagnostic snapshot of the iCloud KVS, for debugging sync. */
   getStatus(): Promise<SyncStatusResult>;
 
+  /** Whether the synced "remove ads" entitlement flag is set in iCloud. */
+  getRemoveAds(): Promise<{ value: boolean }>;
+
+  /** Mark the "remove ads" entitlement as owned in iCloud (only ever true). */
+  setRemoveAds(): Promise<{ success: boolean }>;
+
   /** Fires when another device changes the iCloud countdown blob. */
   addListener(
     eventName: 'countdownsChanged',
     listenerFunc: (data: { json: string; updatedAt: string }) => void
+  ): Promise<{ remove: () => Promise<void> }>;
+
+  /** Fires when another device sets the "remove ads" flag in iCloud. */
+  addListener(
+    eventName: 'removeAdsChanged',
+    listenerFunc: (data: { value: boolean }) => void
   ): Promise<{ remove: () => Promise<void> }>;
 }
 

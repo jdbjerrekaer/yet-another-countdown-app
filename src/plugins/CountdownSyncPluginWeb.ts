@@ -31,4 +31,12 @@ export class CountdownSyncPluginWeb
   async getStatus(): Promise<SyncStatusResult> {
     return { ubiquityTokenPresent: false, hasData: false, byteCount: 0, updatedAt: null };
   }
+
+  async getRemoveAds(): Promise<{ value: boolean }> {
+    return { value: false };
+  }
+
+  async setRemoveAds(): Promise<{ success: boolean }> {
+    return { success: false };
+  }
 }
