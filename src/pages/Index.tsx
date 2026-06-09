@@ -77,7 +77,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 // TEMPORARY: shows an iCloud sync status dialog on launch during beta testing.
 // Set back to false (or remove) before the App Store release.
-const SYNC_DEBUG = true;
+const SYNC_DEBUG = false;
 
 // Triple Widget Preview Component
 function TripleWidgetPreview({ 
