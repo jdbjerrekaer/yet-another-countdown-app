@@ -41,6 +41,7 @@ import { CalendarImportModal, CalendarImportModalRef } from '@/components/Calend
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
+import CountdownSyncPlugin from '@/plugins/CountdownSyncPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { IMPORT_EVENT_READY } from '@/pages/Import';
@@ -198,6 +199,11 @@ export default function Index() {
   const fabRef = useRef<MorphingFabHandle>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
+  const hasPulledFromICloudRef = useRef(false);
+  // Serialized events last reconciled with iCloud — set after both a push and
+  // a pull so the push effect can skip no-op writes and break the ping-pong
+  // loop where two devices keep re-pushing the same merged list.
+  const lastSyncedICloudJsonRef = useRef<string | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -424,6 +430,76 @@ export default function Index() {
     syncFromAppGroup();
   }, [isNative]);
 
+  // iCloud key-value sync: reconcile the local list with a remote blob from
+  // another Apple device. Per-id last-write-wins via mergeEventLists (the
+  // newer side becomes "primary" and wins on id conflicts; both sets are
+  // unioned so a countdown added offline on either device survives).
+  useEffect(() => {
+    if (!isNative) return;
+
+    const reconcileWithRemote = (remoteJson: string | null, remoteUpdated: string | null) => {
+      if (!remoteJson) return;
+      let remoteEvents: CountdownEvent[];
+      try {
+        const parsed = JSON.parse(remoteJson);
+        if (!Array.isArray(parsed)) return;
+        remoteEvents = parsed;
+      } catch {
+        return;
+      }
+
+      const localUpdated = localStorage.getItem('countdownsLastUpdated');
+      const remoteIsNewer = parseTimestamp(remoteUpdated) > parseTimestamp(localUpdated);
+
+      setEvents(localEvents => {
+        const preferRemote = remoteIsNewer || (localEvents.length === 0 && remoteEvents.length > 0);
+        const merged = preferRemote
+          ? mergeEventLists(remoteEvents, localEvents)
+          : mergeEventLists(localEvents, remoteEvents);
+
+        const mergedJson = JSON.stringify(merged);
+        // Record what we've reconciled so the push effect won't echo it back.
+        lastSyncedICloudJsonRef.current = mergedJson;
+
+        if (mergedJson === JSON.stringify(localEvents)) {
+          return localEvents; // No change — avoid a needless timestamp bump.
+        }
+        return merged;
+      });
+    };
+
+    let removeListener: (() => Promise<void>) | undefined;
+
+    const initICloudSync = async () => {
+      try {
+        const { available } = await CountdownSyncPlugin.isAvailable();
+        if (!available) {
+          console.log('[iCloudSync] Not signed into iCloud — skipping sync');
+          return;
+        }
+
+        const listener = await CountdownSyncPlugin.addListener('countdownsChanged', ({ json, updatedAt }) => {
+          reconcileWithRemote(json, updatedAt || null);
+        });
+        removeListener = listener.remove;
+
+        if (!hasPulledFromICloudRef.current) {
+          hasPulledFromICloudRef.current = true;
+          const { json, updatedAt } = await CountdownSyncPlugin.pullCountdowns();
+          reconcileWithRemote(json, updatedAt);
+        }
+      } catch (error) {
+        console.warn('[iCloudSync] Failed to initialize iCloud sync:', error);
+      }
+    };
+
+    initICloudSync();
+
+    return () => {
+      void removeListener?.();
+    };
+  }, [isNative]);
+
   useEffect(() => {
     if (!isNative) return;
     if (hasRemoveAds) {
@@ -625,6 +701,34 @@ export default function Index() {
     localStorage.setItem('countdowns', JSON.stringify(events));
     localStorage.setItem('countdownsLastUpdated', new Date().toISOString());
   }, [events]);
+
+  // Push the countdown list to iCloud whenever it changes. Skips writes that
+  // match what was last reconciled with iCloud (set on push AND on pull), which
+  // breaks the ping-pong loop between devices re-pushing the same merged list.
+  useEffect(() => {
+    if (!isNative) return;
+
+    const serialized = JSON.stringify(events);
+    if (serialized === lastSyncedICloudJsonRef.current) return;
+
+    const pushToICloud = async () => {
+      try {
+        const result = await CountdownSyncPlugin.pushCountdowns({
+          json: serialized,
+          updatedAt: localStorage.getItem('countdownsLastUpdated') ?? new Date().toISOString(),
+        });
+        if (result.success) {
+          lastSyncedICloudJsonRef.current = serialized;
+        } else if (result.reason === 'tooLarge') {
+          console.warn('[iCloudSync] Countdown blob too large for iCloud KVS:', result.byteCount);
+        }
+      } catch (error) {
+        console.warn('[iCloudSync] Failed to push countdowns to iCloud:', error);
+      }
+    };
+
+    pushToICloud();
+  }, [events, isNative]);
 
   // Persist appearance mode to localStorage
   useEffect(() => {
