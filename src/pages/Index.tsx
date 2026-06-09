@@ -208,6 +208,11 @@ export default function Index() {
   // a pull so the push effect can skip no-op writes and break the ping-pong
   // loop where two devices keep re-pushing the same merged list.
   const lastSyncedICloudJsonRef = useRef<string | null>(null);
+  // When set, the next persist of `events` keeps this timestamp instead of
+  // stamping now() — used when a change came from a sync merge (App Group or
+  // iCloud) so a device that merely *received* data doesn't mark itself as the
+  // newest writer and wrongly win later last-write-wins conflicts.
+  const syncAppliedTsRef = useRef<string | null>(null);
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -382,6 +387,22 @@ export default function Index() {
     return merged;
   };
 
+  // A content fingerprint of the list that's independent of object key order.
+  // mergeEventLists spreads objects, so two semantically-identical lists can
+  // serialize to different bytes; comparing fingerprints (array order kept,
+  // each object's keys sorted) keeps the echo-suppression guard from treating
+  // a re-ordered-but-equal merge as a change and ping-ponging pushes.
+  const eventsFingerprint = (list: CountdownEvent[]): string =>
+    JSON.stringify(
+      list.map(event => {
+        const sorted: Record<string, unknown> = {};
+        for (const key of Object.keys(event).sort()) {
+          sorted[key] = (event as Record<string, unknown>)[key];
+        }
+        return sorted;
+      })
+    );
+
   useEffect(() => {
     if (events.length > 0 && !selectedEventId) {
       setSelectedEventId(events[0].id);
@@ -414,6 +435,9 @@ export default function Index() {
           ? mergeEventLists(appGroupEvents, localEvents)
           : mergeEventLists(localEvents, appGroupEvents);
 
+        // This is received/merged data, not a fresh local edit — keep the newer
+        // of the two real edit times so the persist effect doesn't re-stamp now().
+        syncAppliedTsRef.current = appGroupIsNewer ? appGroupUpdated : (localUpdated ?? appGroupUpdated);
         setEvents(mergedEvents);
 
         if (preferAppGroup) {
@@ -461,13 +485,16 @@ export default function Index() {
           ? mergeEventLists(remoteEvents, localEvents)
           : mergeEventLists(localEvents, remoteEvents);
 
-        const mergedJson = JSON.stringify(merged);
+        const mergedFingerprint = eventsFingerprint(merged);
         // Record what we've reconciled so the push effect won't echo it back.
-        lastSyncedICloudJsonRef.current = mergedJson;
+        lastSyncedICloudJsonRef.current = mergedFingerprint;
 
-        if (mergedJson === JSON.stringify(localEvents)) {
+        if (mergedFingerprint === eventsFingerprint(localEvents)) {
           return localEvents; // No change — avoid a needless timestamp bump.
         }
+        // Received/merged data — keep the newer real edit time so the persist
+        // effect doesn't re-stamp now() and make this device wrongly "newest".
+        syncAppliedTsRef.current = remoteIsNewer ? (remoteUpdated ?? localUpdated) : (localUpdated ?? remoteUpdated);
         return merged;
       });
     };
@@ -755,7 +782,12 @@ export default function Index() {
 
   useEffect(() => {
     localStorage.setItem('countdowns', JSON.stringify(events));
-    localStorage.setItem('countdownsLastUpdated', new Date().toISOString());
+    // A genuine local edit stamps now(); a sync merge keeps the real edit time
+    // it carried (set by the App Group / iCloud reconcile paths) so receiving
+    // data doesn't make this device the newest writer. Consume the flag once.
+    const appliedTs = syncAppliedTsRef.current;
+    syncAppliedTsRef.current = null;
+    localStorage.setItem('countdownsLastUpdated', appliedTs ?? new Date().toISOString());
   }, [events]);
 
   // Push the countdown list to iCloud whenever it changes. Skips writes that
@@ -769,7 +801,10 @@ export default function Index() {
     if (events.length === 0 && !initialPullDoneRef.current) return;
 
     const serialized = JSON.stringify(events);
-    if (serialized === lastSyncedICloudJsonRef.current) return;
+    // Compare by order-independent fingerprint (the ref is also set to a
+    // fingerprint on pull) so a reordered-but-identical merge isn't re-pushed.
+    const fingerprint = eventsFingerprint(events);
+    if (fingerprint === lastSyncedICloudJsonRef.current) return;
 
     const pushToICloud = async () => {
       try {
@@ -778,7 +813,7 @@ export default function Index() {
           updatedAt: localStorage.getItem('countdownsLastUpdated') ?? new Date().toISOString(),
         });
         if (result.success) {
-          lastSyncedICloudJsonRef.current = serialized;
+          lastSyncedICloudJsonRef.current = fingerprint;
         } else if (result.reason === 'tooLarge') {
           console.warn('[iCloudSync] Countdown blob too large for iCloud KVS:', result.byteCount);
         }
