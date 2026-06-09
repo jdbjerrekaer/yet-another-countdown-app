@@ -15,8 +15,6 @@ public class CountdownSyncPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "pushCountdowns", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "pullCountdowns", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "isAvailable", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "getStatus", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getRemoveAds", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setRemoveAds", returnType: CAPPluginReturnPromise)
     ]
@@ -67,29 +65,6 @@ public class CountdownSyncPlugin: CAPPlugin, CAPBridgedPlugin {
         if removeAdsChanged {
             notifyListeners("removeAdsChanged", data: ["value": store.bool(forKey: removeAdsKey)])
         }
-    }
-
-    /// Informational only — do NOT gate sync on this. `ubiquityIdentityToken`
-    /// reflects iCloud Drive / document-container availability, which is a
-    /// DIFFERENT capability from key-value storage. A KVS-only app with no
-    /// iCloud container often gets nil here even when fully signed into iCloud,
-    /// so using it as a gate silently disables a working KVS sync.
-    @objc func isAvailable(_ call: CAPPluginCall) {
-        let available = FileManager.default.ubiquityIdentityToken != nil
-        call.resolve(["available": available])
-    }
-
-    /// Diagnostic snapshot for debugging sync during testing.
-    @objc func getStatus(_ call: CAPPluginCall) {
-        store.synchronize()
-        let json = store.string(forKey: jsonKey)
-        let hasUbiquityToken = FileManager.default.ubiquityIdentityToken != nil
-        call.resolve([
-            "ubiquityTokenPresent": hasUbiquityToken,
-            "hasData": json != nil,
-            "byteCount": json?.lengthOfBytes(using: .utf8) ?? 0,
-            "updatedAt": store.string(forKey: updatedAtKey) as Any
-        ])
     }
 
     @objc func getRemoveAds(_ call: CAPPluginCall) {

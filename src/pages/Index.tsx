@@ -75,10 +75,6 @@ const WIDGET_COUNTDOWN_STYLES: { id: WidgetCountdownStyle; labelKey: string }[] 
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-// TEMPORARY: shows an iCloud sync status dialog on launch during beta testing.
-// Set back to false (or remove) before the App Store release.
-const SYNC_DEBUG = false;
-
 // Triple Widget Preview Component
 function TripleWidgetPreview({ 
   events, 
@@ -481,31 +477,6 @@ export default function Index() {
       reconcileWithRemote(json, updatedAt);
     };
 
-    // Debug-only: show current sync state and offer a manual push+pull, so
-    // testing doesn't depend on iOS's opportunistic upload timing.
-    const showSyncStatusDialog = async (): Promise<void> => {
-      const status = await CountdownSyncPlugin.getStatus();
-      const local = JSON.parse(localStorage.getItem('countdowns') || '[]');
-      const { value } = await Dialog.confirm({
-        title: 'iCloud sync status',
-        message:
-          `iCloud has data: ${status.hasData} (${status.byteCount} bytes)\n` +
-          `iCloud updatedAt: ${status.updatedAt ?? '—'}\n` +
-          `Local countdowns: ${Array.isArray(local) ? local.length : 0}\n\n` +
-          `Tap "Sync now" to force a push + pull.`,
-        okButtonTitle: 'Sync now',
-        cancelButtonTitle: 'Close',
-      });
-      if (value) {
-        await CountdownSyncPlugin.pushCountdowns({
-          json: localStorage.getItem('countdowns') ?? '[]',
-          updatedAt: localStorage.getItem('countdownsLastUpdated') ?? new Date().toISOString(),
-        });
-        await pullAndReconcile();
-        await showSyncStatusDialog();
-      }
-    };
-
     let removeListener: (() => Promise<void>) | undefined;
 
     const initICloudSync = async () => {
@@ -525,16 +496,9 @@ export default function Index() {
           // Only now is it safe for the push effect to write (incl. empty lists).
           initialPullDoneRef.current = true;
         }
-
-        if (SYNC_DEBUG) {
-          await showSyncStatusDialog();
-        }
       } catch (error) {
         console.warn('[iCloudSync] Failed to initialize iCloud sync:', error);
         initialPullDoneRef.current = true; // don't wedge pushes if init failed
-        if (SYNC_DEBUG) {
-          await Dialog.alert({ title: 'iCloud sync error', message: String(error) });
-        }
       }
     };
 

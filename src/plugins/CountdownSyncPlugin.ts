@@ -33,28 +33,6 @@ export interface PullCountdownsResult {
 }
 
 /**
- * Whether iCloud key-value sync is usable on this device.
- */
-export interface IsAvailableResult {
-  /** False when the user is not signed into iCloud. */
-  available: boolean;
-}
-
-/**
- * Diagnostic snapshot of the iCloud key-value store, for debugging sync.
- */
-export interface SyncStatusResult {
-  /** iCloud Drive/document token present — informational, NOT required for KVS. */
-  ubiquityTokenPresent: boolean;
-  /** Whether the iCloud KVS currently holds a countdown blob. */
-  hasData: boolean;
-  /** Byte size of the stored blob. */
-  byteCount: number;
-  /** Timestamp stored alongside the blob, or null. */
-  updatedAt: string | null;
-}
-
-/**
  * Bridges the countdown list to iCloud key-value storage
  * (NSUbiquitousKeyValueStore) so it syncs across the user's Apple devices.
  *
@@ -68,12 +46,6 @@ export interface CountdownSyncPluginInterface {
 
   /** Read the current iCloud blob + timestamp. */
   pullCountdowns(): Promise<PullCountdownsResult>;
-
-  /** Whether iCloud key-value sync is available (user signed into iCloud). */
-  isAvailable(): Promise<IsAvailableResult>;
-
-  /** Diagnostic snapshot of the iCloud KVS, for debugging sync. */
-  getStatus(): Promise<SyncStatusResult>;
 
   /** Whether the synced "remove ads" entitlement flag is set in iCloud. */
   getRemoveAds(): Promise<{ value: boolean }>;

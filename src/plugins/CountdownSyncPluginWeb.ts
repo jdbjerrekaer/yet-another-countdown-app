@@ -4,8 +4,6 @@ import type {
   PushCountdownsOptions,
   PushCountdownsResult,
   PullCountdownsResult,
-  IsAvailableResult,
-  SyncStatusResult,
 } from './CountdownSyncPlugin';
 
 /**
@@ -22,14 +20,6 @@ export class CountdownSyncPluginWeb
 
   async pullCountdowns(): Promise<PullCountdownsResult> {
     return { json: null, updatedAt: null, hasData: false };
-  }
-
-  async isAvailable(): Promise<IsAvailableResult> {
-    return { available: false };
-  }
-
-  async getStatus(): Promise<SyncStatusResult> {
-    return { ubiquityTokenPresent: false, hasData: false, byteCount: 0, updatedAt: null };
   }
 
   async getRemoveAds(): Promise<{ value: boolean }> {
