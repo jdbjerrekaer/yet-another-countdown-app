@@ -146,36 +146,29 @@
   }
 }
 
-/* Top scroll-shadow overlay for the home page. Sits above ion-content,
-   reserved height matches the safe-area inset; fades a translucent blur
-   in when the page is scrolled past the top. Independent of Ionic's
-   IonHeader collapse machinery so it doesn't add empty layout space. */
+/* Top scroll-shadow overlay for the home page: a soft gradient shadow that
+   fades in when the page is scrolled, mirroring the bottom overflow shadow.
+   Fixed height (not tied to --ion-safe-area-top) so it renders identically on
+   iPhone and Mac — a hairline blur tied to the notch inset showed as a hard
+   header bar on Mac (no notch). Sits above ion-content; doesn't affect layout. */
 .home-scroll-shadow {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  /* Use the notch inset where it exists (iPhone), but keep a real minimum so
-     the shadow is still visible on devices with no safe-area inset (e.g. Mac,
-     where --ion-safe-area-top resolves to 0). */
-  height: max(var(--ion-safe-area-top, 0px), 14px);
+  height: 20px;
   z-index: 10;
   pointer-events: none;
-  background: rgba(255, 255, 255, 0);
-  backdrop-filter: blur(0);
-  -webkit-backdrop-filter: blur(0);
-  transition: background 200ms ease, backdrop-filter 200ms ease, -webkit-backdrop-filter 200ms ease, box-shadow 200ms ease;
+  opacity: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0));
+  transition: opacity 200ms ease;
 }
 
 .home-scroll-shadow.is-scrolled {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: 0 0.55px 0 0 rgba(0, 0, 0, 0.12);
+  opacity: 1;
 }
 
-.dark .home-scroll-shadow.is-scrolled,
-.ion-palette-dark .home-scroll-shadow.is-scrolled {
-  background: rgba(20, 20, 20, 0.72);
-  box-shadow: 0 0.55px 0 0 rgba(255, 255, 255, 0.12);
+.dark .home-scroll-shadow,
+.ion-palette-dark .home-scroll-shadow {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
 }
