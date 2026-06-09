@@ -156,11 +156,13 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 20px;
+  /* Match the app's shadow language (cards' .shadow-ios: soft, pure black,
+     low alpha) — a long, gentle falloff rather than a short hard band. */
+  height: 40px;
   z-index: 10;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0));
   transition: opacity 200ms ease;
 }
 
@@ -170,5 +172,5 @@
 
 .dark .home-scroll-shadow,
 .ion-palette-dark .home-scroll-shadow {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
 }
