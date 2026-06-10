@@ -213,6 +213,19 @@ export default function Index() {
   // iCloud) so a device that merely *received* data doesn't mark itself as the
   // newest writer and wrongly win later last-write-wins conflicts.
   const syncAppliedTsRef = useRef<string | null>(null);
+  // Deletion tombstones (id -> ISO time the countdown was deleted). Synced in
+  // the iCloud blob so a delete on one device removes the countdown on the
+  // others — the per-id union merge alone would re-add it from whichever device
+  // still has it. Loaded once from localStorage.
+  const deletedRef = useRef<Record<string, string>>((() => {
+    try {
+      const saved = localStorage.getItem('countdownsDeleted');
+      const parsed = saved ? JSON.parse(saved) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  })());
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -403,6 +416,62 @@ export default function Index() {
       })
     );
 
+  type DeletedMap = Record<string, string>;
+
+  // The iCloud blob is an envelope { events, deleted }. Older builds stored a
+  // bare array, so accept both shapes when parsing.
+  const parseCloudBlob = (raw: string): { events: CountdownEvent[]; deleted: DeletedMap } => {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return { events: parsed, deleted: {} };
+    const events = Array.isArray(parsed?.events) ? parsed.events : [];
+    const deleted = parsed?.deleted && typeof parsed.deleted === 'object' ? parsed.deleted : {};
+    return { events, deleted };
+  };
+
+  const serializeCloudBlob = (list: CountdownEvent[], deleted: DeletedMap): string =>
+    JSON.stringify({ events: list, deleted });
+
+  // Drop tombstones older than 60 days so the blob can't grow without bound.
+  const pruneTombstones = (deleted: DeletedMap): DeletedMap => {
+    const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
+    const out: DeletedMap = {};
+    for (const [id, ts] of Object.entries(deleted)) {
+      if (parseTimestamp(ts) >= cutoff) out[id] = ts;
+    }
+    return out;
+  };
+
+  // Union two tombstone maps, keeping the latest deletion time per id.
+  const mergeTombstones = (a: DeletedMap, b: DeletedMap): DeletedMap => {
+    const out: DeletedMap = { ...a };
+    for (const [id, ts] of Object.entries(b)) {
+      if (!out[id] || parseTimestamp(ts) > parseTimestamp(out[id])) out[id] = ts;
+    }
+    return pruneTombstones(out);
+  };
+
+  // Remove any event whose tombstone is at least as new as when it was created
+  // (i.e. it was deleted after it last appeared). An event re-created after its
+  // tombstone — createdAt newer than the deletion — survives.
+  const applyTombstones = (list: CountdownEvent[], deleted: DeletedMap): CountdownEvent[] =>
+    list.filter(event => {
+      const ts = deleted[event.id];
+      return !ts || parseTimestamp(event.createdAt) > parseTimestamp(ts);
+    });
+
+  // Fingerprint of the full cloud envelope (events + tombstones), order-stable,
+  // so the push effect pushes whenever either changes and skips no-op writes.
+  const cloudFingerprint = (list: CountdownEvent[], deleted: DeletedMap): string => {
+    const sortedDeleted: DeletedMap = {};
+    for (const id of Object.keys(deleted).sort()) sortedDeleted[id] = deleted[id];
+    return `${eventsFingerprint(list)}|${JSON.stringify(sortedDeleted)}`;
+  };
+
+  const persistTombstones = (map: DeletedMap) => {
+    deletedRef.current = map;
+    localStorage.setItem('countdownsDeleted', JSON.stringify(map));
+  };
+
   useEffect(() => {
     if (events.length > 0 && !selectedEventId) {
       setSelectedEventId(events[0].id);
@@ -468,29 +537,37 @@ export default function Index() {
     const reconcileWithRemote = (remoteJson: string | null, remoteUpdated: string | null) => {
       if (!remoteJson) return;
       let remoteEvents: CountdownEvent[];
+      let remoteDeleted: DeletedMap;
       try {
-        const parsed = JSON.parse(remoteJson);
-        if (!Array.isArray(parsed)) return;
-        remoteEvents = parsed;
+        ({ events: remoteEvents, deleted: remoteDeleted } = parseCloudBlob(remoteJson));
       } catch {
         return;
       }
 
+      // Track what the cloud currently holds (NOT the local merge result) so the
+      // push effect still fires when this device has events/tombstones the cloud
+      // is missing. Setting it to the merged-local fingerprint would wrongly
+      // suppress the upload of a just-created countdown.
+      lastSyncedICloudJsonRef.current = cloudFingerprint(remoteEvents, remoteDeleted);
+
       const localUpdated = localStorage.getItem('countdownsLastUpdated');
       const remoteIsNewer = parseTimestamp(remoteUpdated) > parseTimestamp(localUpdated);
 
+      const mergedDeleted = mergeTombstones(deletedRef.current, remoteDeleted);
+
       setEvents(localEvents => {
         const preferRemote = remoteIsNewer || (localEvents.length === 0 && remoteEvents.length > 0);
-        const merged = preferRemote
+        const unioned = preferRemote
           ? mergeEventLists(remoteEvents, localEvents)
           : mergeEventLists(localEvents, remoteEvents);
+        const merged = applyTombstones(unioned, mergedDeleted);
 
-        const mergedFingerprint = eventsFingerprint(merged);
-        // Record what we've reconciled so the push effect won't echo it back.
-        lastSyncedICloudJsonRef.current = mergedFingerprint;
+        const tombstonesChanged =
+          JSON.stringify(mergedDeleted) !== JSON.stringify(deletedRef.current);
+        if (tombstonesChanged) persistTombstones(mergedDeleted);
 
-        if (mergedFingerprint === eventsFingerprint(localEvents)) {
-          return localEvents; // No change — avoid a needless timestamp bump.
+        if (eventsFingerprint(merged) === eventsFingerprint(localEvents)) {
+          return localEvents; // No event change — avoid a needless timestamp bump.
         }
         // Received/merged data — keep the newer real edit time so the persist
         // effect doesn't re-stamp now() and make this device wrongly "newest".
@@ -800,10 +877,13 @@ export default function Index() {
     // device would otherwise overwrite another device's data with [].
     if (events.length === 0 && !initialPullDoneRef.current) return;
 
-    const serialized = JSON.stringify(events);
-    // Compare by order-independent fingerprint (the ref is also set to a
-    // fingerprint on pull) so a reordered-but-identical merge isn't re-pushed.
-    const fingerprint = eventsFingerprint(events);
+    const deleted = deletedRef.current;
+    const serialized = serializeCloudBlob(events, deleted);
+    // Compare by order-independent fingerprint over the whole envelope (events +
+    // tombstones). The ref tracks what the cloud holds (set on pull to the
+    // remote fingerprint, on push to what we uploaded), so this fires whenever
+    // this device has changes the cloud is missing and skips true no-ops.
+    const fingerprint = cloudFingerprint(events, deleted);
     if (fingerprint === lastSyncedICloudJsonRef.current) return;
 
     const pushToICloud = async () => {
@@ -1180,6 +1260,13 @@ export default function Index() {
     const event = pendingDeleteRef.current.get(eventId);
     if (!event) return;
     pendingDeleteRef.current.delete(eventId);
+    // Undo: drop the tombstone so the restored countdown isn't re-deleted on
+    // merge and so the restore propagates back out to the other devices.
+    if (deletedRef.current[eventId]) {
+      const rest = { ...deletedRef.current };
+      delete rest[eventId];
+      persistTombstones(rest);
+    }
     trigger('light');
     setEvents(prev =>
       [...prev, event].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -1195,6 +1282,12 @@ export default function Index() {
 
     const eventId = event.id;
     const wasSelected = selectedEventId === eventId;
+
+    // Record a tombstone so the deletion propagates across devices — the per-id
+    // union merge would otherwise re-add this countdown from whichever device
+    // still has it. Undo removes the tombstone. Set before setEvents so the
+    // push effect (fired by the events change) uploads it in the same blob.
+    persistTombstones(mergeTombstones(deletedRef.current, { [eventId]: new Date().toISOString() }));
 
     setEvents(prev => {
       const filtered = prev.filter(e => e.id !== eventId);
@@ -1341,6 +1434,12 @@ export default function Index() {
       t('feedback.eventImported', { count: newEvents.length }),
       {
         onUndo: () => {
+          // Tombstone the undone imports so the removal also propagates to other
+          // devices that may have already received them via sync.
+          const now = new Date().toISOString();
+          const undone: DeletedMap = {};
+          for (const id of importedIds) undone[id] = now;
+          persistTombstones(mergeTombstones(deletedRef.current, undone));
           setEvents(prev => prev.filter(e => !importedIds.has(e.id)));
           for (const id of importedIds) void cancelEventNotification(id);
           trigger('light');
