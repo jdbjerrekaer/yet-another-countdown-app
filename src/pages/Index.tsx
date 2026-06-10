@@ -450,14 +450,15 @@ export default function Index() {
     return pruneTombstones(out);
   };
 
-  // Remove any event whose tombstone is at least as new as when it was created
-  // (i.e. it was deleted after it last appeared). An event re-created after its
-  // tombstone — createdAt newer than the deletion — survives.
+  // Remove any event whose id has a tombstone. Purely id-based on purpose: do
+  // NOT compare against event.createdAt, because createdAt is stamped by the
+  // device that created the countdown while the tombstone is stamped by the
+  // device that deleted it — two different clocks. Even small skew would make a
+  // createdAt-vs-tombstone comparison drop the deletion. Re-creation always uses
+  // a fresh id (generateId), and undo explicitly clears the tombstone, so an id
+  // can never legitimately come back while tombstoned.
   const applyTombstones = (list: CountdownEvent[], deleted: DeletedMap): CountdownEvent[] =>
-    list.filter(event => {
-      const ts = deleted[event.id];
-      return !ts || parseTimestamp(event.createdAt) > parseTimestamp(ts);
-    });
+    list.filter(event => !deleted[event.id]);
 
   // Fingerprint of the full cloud envelope (events + tombstones), order-stable,
   // so the push effect pushes whenever either changes and skips no-op writes.
@@ -500,9 +501,14 @@ export default function Index() {
         const appGroupIsNewer = parseTimestamp(appGroupUpdated) > parseTimestamp(localUpdated);
         const preferAppGroup = appGroupIsNewer || (localEvents.length === 0 && appGroupEvents.length > 0);
 
-        const mergedEvents = preferAppGroup
-          ? mergeEventLists(appGroupEvents, localEvents)
-          : mergeEventLists(localEvents, appGroupEvents);
+        const mergedEvents = applyTombstones(
+          preferAppGroup
+            ? mergeEventLists(appGroupEvents, localEvents)
+            : mergeEventLists(localEvents, appGroupEvents),
+          // The widget App Group carries no tombstones, so a countdown deleted
+          // via iCloud would otherwise be re-added here from stale widget data.
+          deletedRef.current
+        );
 
         // This is received/merged data, not a fresh local edit — keep the newer
         // of the two real edit times so the persist effect doesn't re-stamp now().
