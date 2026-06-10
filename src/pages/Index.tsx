@@ -41,6 +41,7 @@ import { CalendarImportModal, CalendarImportModalRef } from '@/components/Calend
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
+import CountdownSyncPlugin from '@/plugins/CountdownSyncPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { IMPORT_EVENT_READY } from '@/pages/Import';
@@ -198,6 +199,33 @@ export default function Index() {
   const fabRef = useRef<MorphingFabHandle>(null);
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
+  const hasPulledFromICloudRef = useRef(false);
+  // True once the first iCloud pull has completed. Until then we must NOT push
+  // an empty list — a fresh/empty device would otherwise stamp [] as the newest
+  // value and clobber another device's data (last-write-wins by timestamp).
+  const initialPullDoneRef = useRef(false);
+  // Serialized events last reconciled with iCloud — set after both a push and
+  // a pull so the push effect can skip no-op writes and break the ping-pong
+  // loop where two devices keep re-pushing the same merged list.
+  const lastSyncedICloudJsonRef = useRef<string | null>(null);
+  // When set, the next persist of `events` keeps this timestamp instead of
+  // stamping now() — used when a change came from a sync merge (App Group or
+  // iCloud) so a device that merely *received* data doesn't mark itself as the
+  // newest writer and wrongly win later last-write-wins conflicts.
+  const syncAppliedTsRef = useRef<string | null>(null);
+  // Deletion tombstones (id -> ISO time the countdown was deleted). Synced in
+  // the iCloud blob so a delete on one device removes the countdown on the
+  // others — the per-id union merge alone would re-add it from whichever device
+  // still has it. Loaded once from localStorage.
+  const deletedRef = useRef<Record<string, string>>((() => {
+    try {
+      const saved = localStorage.getItem('countdownsDeleted');
+      const parsed = saved ? JSON.parse(saved) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  })());
   const { trigger } = useHaptic();
   const isNative = Capacitor.isNativePlatform();
   const isMobile = useIsMobile();
@@ -372,6 +400,79 @@ export default function Index() {
     return merged;
   };
 
+  // A content fingerprint of the list that's independent of object key order.
+  // mergeEventLists spreads objects, so two semantically-identical lists can
+  // serialize to different bytes; comparing fingerprints (array order kept,
+  // each object's keys sorted) keeps the echo-suppression guard from treating
+  // a re-ordered-but-equal merge as a change and ping-ponging pushes.
+  const eventsFingerprint = (list: CountdownEvent[]): string =>
+    JSON.stringify(
+      list.map(event => {
+        const sorted: Record<string, unknown> = {};
+        for (const key of Object.keys(event).sort()) {
+          sorted[key] = (event as Record<string, unknown>)[key];
+        }
+        return sorted;
+      })
+    );
+
+  type DeletedMap = Record<string, string>;
+
+  // The iCloud blob is an envelope { events, deleted }. Older builds stored a
+  // bare array, so accept both shapes when parsing.
+  const parseCloudBlob = (raw: string): { events: CountdownEvent[]; deleted: DeletedMap } => {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return { events: parsed, deleted: {} };
+    const events = Array.isArray(parsed?.events) ? parsed.events : [];
+    const deleted = parsed?.deleted && typeof parsed.deleted === 'object' ? parsed.deleted : {};
+    return { events, deleted };
+  };
+
+  const serializeCloudBlob = (list: CountdownEvent[], deleted: DeletedMap): string =>
+    JSON.stringify({ events: list, deleted });
+
+  // Drop tombstones older than 60 days so the blob can't grow without bound.
+  const pruneTombstones = (deleted: DeletedMap): DeletedMap => {
+    const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
+    const out: DeletedMap = {};
+    for (const [id, ts] of Object.entries(deleted)) {
+      if (parseTimestamp(ts) >= cutoff) out[id] = ts;
+    }
+    return out;
+  };
+
+  // Union two tombstone maps, keeping the latest deletion time per id.
+  const mergeTombstones = (a: DeletedMap, b: DeletedMap): DeletedMap => {
+    const out: DeletedMap = { ...a };
+    for (const [id, ts] of Object.entries(b)) {
+      if (!out[id] || parseTimestamp(ts) > parseTimestamp(out[id])) out[id] = ts;
+    }
+    return pruneTombstones(out);
+  };
+
+  // Remove any event whose id has a tombstone. Purely id-based on purpose: do
+  // NOT compare against event.createdAt, because createdAt is stamped by the
+  // device that created the countdown while the tombstone is stamped by the
+  // device that deleted it — two different clocks. Even small skew would make a
+  // createdAt-vs-tombstone comparison drop the deletion. Re-creation always uses
+  // a fresh id (generateId), and undo explicitly clears the tombstone, so an id
+  // can never legitimately come back while tombstoned.
+  const applyTombstones = (list: CountdownEvent[], deleted: DeletedMap): CountdownEvent[] =>
+    list.filter(event => !deleted[event.id]);
+
+  // Fingerprint of the full cloud envelope (events + tombstones), order-stable,
+  // so the push effect pushes whenever either changes and skips no-op writes.
+  const cloudFingerprint = (list: CountdownEvent[], deleted: DeletedMap): string => {
+    const sortedDeleted: DeletedMap = {};
+    for (const id of Object.keys(deleted).sort()) sortedDeleted[id] = deleted[id];
+    return `${eventsFingerprint(list)}|${JSON.stringify(sortedDeleted)}`;
+  };
+
+  const persistTombstones = (map: DeletedMap) => {
+    deletedRef.current = map;
+    localStorage.setItem('countdownsDeleted', JSON.stringify(map));
+  };
+
   useEffect(() => {
     if (events.length > 0 && !selectedEventId) {
       setSelectedEventId(events[0].id);
@@ -400,10 +501,18 @@ export default function Index() {
         const appGroupIsNewer = parseTimestamp(appGroupUpdated) > parseTimestamp(localUpdated);
         const preferAppGroup = appGroupIsNewer || (localEvents.length === 0 && appGroupEvents.length > 0);
 
-        const mergedEvents = preferAppGroup
-          ? mergeEventLists(appGroupEvents, localEvents)
-          : mergeEventLists(localEvents, appGroupEvents);
+        const mergedEvents = applyTombstones(
+          preferAppGroup
+            ? mergeEventLists(appGroupEvents, localEvents)
+            : mergeEventLists(localEvents, appGroupEvents),
+          // The widget App Group carries no tombstones, so a countdown deleted
+          // via iCloud would otherwise be re-added here from stale widget data.
+          deletedRef.current
+        );
 
+        // This is received/merged data, not a fresh local edit — keep the newer
+        // of the two real edit times so the persist effect doesn't re-stamp now().
+        syncAppliedTsRef.current = appGroupIsNewer ? appGroupUpdated : (localUpdated ?? appGroupUpdated);
         setEvents(mergedEvents);
 
         if (preferAppGroup) {
@@ -422,6 +531,104 @@ export default function Index() {
     };
 
     syncFromAppGroup();
+  }, [isNative]);
+
+  // iCloud key-value sync: reconcile the local list with a remote blob from
+  // another Apple device. Per-id last-write-wins via mergeEventLists (the
+  // newer side becomes "primary" and wins on id conflicts; both sets are
+  // unioned so a countdown added offline on either device survives).
+  useEffect(() => {
+    if (!isNative) return;
+
+    const reconcileWithRemote = (remoteJson: string | null, remoteUpdated: string | null) => {
+      if (!remoteJson) return;
+      let remoteEvents: CountdownEvent[];
+      let remoteDeleted: DeletedMap;
+      try {
+        ({ events: remoteEvents, deleted: remoteDeleted } = parseCloudBlob(remoteJson));
+      } catch {
+        return;
+      }
+
+      // Track what the cloud currently holds (NOT the local merge result) so the
+      // push effect still fires when this device has events/tombstones the cloud
+      // is missing. Setting it to the merged-local fingerprint would wrongly
+      // suppress the upload of a just-created countdown.
+      lastSyncedICloudJsonRef.current = cloudFingerprint(remoteEvents, remoteDeleted);
+
+      const localUpdated = localStorage.getItem('countdownsLastUpdated');
+      const remoteIsNewer = parseTimestamp(remoteUpdated) > parseTimestamp(localUpdated);
+
+      const mergedDeleted = mergeTombstones(deletedRef.current, remoteDeleted);
+
+      setEvents(localEvents => {
+        const preferRemote = remoteIsNewer || (localEvents.length === 0 && remoteEvents.length > 0);
+        const unioned = preferRemote
+          ? mergeEventLists(remoteEvents, localEvents)
+          : mergeEventLists(localEvents, remoteEvents);
+        const merged = applyTombstones(unioned, mergedDeleted);
+
+        const tombstonesChanged =
+          JSON.stringify(mergedDeleted) !== JSON.stringify(deletedRef.current);
+        if (tombstonesChanged) persistTombstones(mergedDeleted);
+
+        if (eventsFingerprint(merged) === eventsFingerprint(localEvents)) {
+          return localEvents; // No event change — avoid a needless timestamp bump.
+        }
+        // Received/merged data — keep the newer real edit time so the persist
+        // effect doesn't re-stamp now() and make this device wrongly "newest".
+        syncAppliedTsRef.current = remoteIsNewer ? (remoteUpdated ?? localUpdated) : (localUpdated ?? remoteUpdated);
+        return merged;
+      });
+    };
+
+    const pullAndReconcile = async () => {
+      const { json, updatedAt } = await CountdownSyncPlugin.pullCountdowns();
+      reconcileWithRemote(json, updatedAt);
+    };
+
+    let removeListener: (() => Promise<void>) | undefined;
+
+    const initICloudSync = async () => {
+      try {
+        // NOTE: do NOT gate on isAvailable()/ubiquityIdentityToken — that
+        // reflects iCloud Drive, not KVS, and is often nil for a KVS-only app
+        // even when signed in. KVS works regardless; if not signed into iCloud
+        // these calls simply no-op locally.
+        const listener = await CountdownSyncPlugin.addListener('countdownsChanged', ({ json, updatedAt }) => {
+          reconcileWithRemote(json, updatedAt || null);
+        });
+        removeListener = listener.remove;
+
+        if (!hasPulledFromICloudRef.current) {
+          hasPulledFromICloudRef.current = true;
+          await pullAndReconcile();
+          // Only now is it safe for the push effect to write (incl. empty lists).
+          initialPullDoneRef.current = true;
+        }
+      } catch (error) {
+        console.warn('[iCloudSync] Failed to initialize iCloud sync:', error);
+        initialPullDoneRef.current = true; // don't wedge pushes if init failed
+      }
+    };
+
+    initICloudSync();
+
+    // Re-pull whenever the app returns to the foreground — a device that was
+    // already open then picks up changes another device uploaded. (KVS tends to
+    // flush its own pending upload on backgrounding, so this also helps the
+    // sender propagate.)
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void pullAndReconcile();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      void removeListener?.();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [isNative]);
 
   useEffect(() => {
@@ -446,6 +653,41 @@ export default function Index() {
       unsubscribe?.();
     };
   }, []);
+
+  // Mirror the "remove ads" entitlement across the user's Apple devices via
+  // iCloud. StoreKit stays authoritative (we only push true once it validates
+  // the purchase); the mirror lets a device where StoreKit can't reach the App
+  // Store — e.g. an iPhone app running on Mac — still go ad-free.
+  useEffect(() => {
+    if (!isNative) return;
+
+    let removeListener: (() => Promise<void>) | undefined;
+
+    const initRemoveAdsSync = async () => {
+      try {
+        const { value } = await CountdownSyncPlugin.getRemoveAds();
+        if (value) await PurchasesManager.applyRemoteEntitlement(true);
+
+        const listener = await CountdownSyncPlugin.addListener('removeAdsChanged', ({ value }) => {
+          if (value) void PurchasesManager.applyRemoteEntitlement(true);
+        });
+        removeListener = listener.remove;
+      } catch (error) {
+        console.warn('[iCloudSync] remove-ads mirror init failed:', error);
+      }
+    };
+    initRemoveAdsSync();
+
+    // When StoreKit validates the purchase on this device, broadcast it.
+    const unsub = PurchasesManager.onEntitlementChange((owned) => {
+      if (owned) void CountdownSyncPlugin.setRemoveAds();
+    });
+
+    return () => {
+      void removeListener?.();
+      unsub?.();
+    };
+  }, [isNative]);
 
   useEffect(() => {
     const loadBuildInfo = async () => {
@@ -623,8 +865,51 @@ export default function Index() {
 
   useEffect(() => {
     localStorage.setItem('countdowns', JSON.stringify(events));
-    localStorage.setItem('countdownsLastUpdated', new Date().toISOString());
+    // A genuine local edit stamps now(); a sync merge keeps the real edit time
+    // it carried (set by the App Group / iCloud reconcile paths) so receiving
+    // data doesn't make this device the newest writer. Consume the flag once.
+    const appliedTs = syncAppliedTsRef.current;
+    syncAppliedTsRef.current = null;
+    localStorage.setItem('countdownsLastUpdated', appliedTs ?? new Date().toISOString());
   }, [events]);
+
+  // Push the countdown list to iCloud whenever it changes. Skips writes that
+  // match what was last reconciled with iCloud (set on push AND on pull), which
+  // breaks the ping-pong loop between devices re-pushing the same merged list.
+  useEffect(() => {
+    if (!isNative) return;
+
+    // Never push an empty list before the first pull has completed — a fresh
+    // device would otherwise overwrite another device's data with [].
+    if (events.length === 0 && !initialPullDoneRef.current) return;
+
+    const deleted = deletedRef.current;
+    const serialized = serializeCloudBlob(events, deleted);
+    // Compare by order-independent fingerprint over the whole envelope (events +
+    // tombstones). The ref tracks what the cloud holds (set on pull to the
+    // remote fingerprint, on push to what we uploaded), so this fires whenever
+    // this device has changes the cloud is missing and skips true no-ops.
+    const fingerprint = cloudFingerprint(events, deleted);
+    if (fingerprint === lastSyncedICloudJsonRef.current) return;
+
+    const pushToICloud = async () => {
+      try {
+        const result = await CountdownSyncPlugin.pushCountdowns({
+          json: serialized,
+          updatedAt: localStorage.getItem('countdownsLastUpdated') ?? new Date().toISOString(),
+        });
+        if (result.success) {
+          lastSyncedICloudJsonRef.current = fingerprint;
+        } else if (result.reason === 'tooLarge') {
+          console.warn('[iCloudSync] Countdown blob too large for iCloud KVS:', result.byteCount);
+        }
+      } catch (error) {
+        console.warn('[iCloudSync] Failed to push countdowns to iCloud:', error);
+      }
+    };
+
+    pushToICloud();
+  }, [events, isNative]);
 
   // Persist appearance mode to localStorage
   useEffect(() => {
@@ -981,6 +1266,13 @@ export default function Index() {
     const event = pendingDeleteRef.current.get(eventId);
     if (!event) return;
     pendingDeleteRef.current.delete(eventId);
+    // Undo: drop the tombstone so the restored countdown isn't re-deleted on
+    // merge and so the restore propagates back out to the other devices.
+    if (deletedRef.current[eventId]) {
+      const rest = { ...deletedRef.current };
+      delete rest[eventId];
+      persistTombstones(rest);
+    }
     trigger('light');
     setEvents(prev =>
       [...prev, event].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -996,6 +1288,12 @@ export default function Index() {
 
     const eventId = event.id;
     const wasSelected = selectedEventId === eventId;
+
+    // Record a tombstone so the deletion propagates across devices — the per-id
+    // union merge would otherwise re-add this countdown from whichever device
+    // still has it. Undo removes the tombstone. Set before setEvents so the
+    // push effect (fired by the events change) uploads it in the same blob.
+    persistTombstones(mergeTombstones(deletedRef.current, { [eventId]: new Date().toISOString() }));
 
     setEvents(prev => {
       const filtered = prev.filter(e => e.id !== eventId);
@@ -1142,6 +1440,12 @@ export default function Index() {
       t('feedback.eventImported', { count: newEvents.length }),
       {
         onUndo: () => {
+          // Tombstone the undone imports so the removal also propagates to other
+          // devices that may have already received them via sync.
+          const now = new Date().toISOString();
+          const undone: DeletedMap = {};
+          for (const id of importedIds) undone[id] = now;
+          persistTombstones(mergeTombstones(deletedRef.current, undone));
           setEvents(prev => prev.filter(e => !importedIds.has(e.id)));
           for (const id of importedIds) void cancelEventNotification(id);
           trigger('light');

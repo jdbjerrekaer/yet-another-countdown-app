@@ -1534,6 +1534,17 @@ export const PurchasesManager = {
   hasRemoveAdsEntitlement: () => hasRemoveAdsEntitlement,
   getRemoveAdsProducts: () => [...REMOVE_ADS_PRODUCTS],
 
+  // Apply a remove-ads entitlement mirrored from another device via iCloud.
+  // Only ever grants (never revokes) — "remove ads" is a permanent
+  // non-consumable purchase, and a device where StoreKit can't reach the App
+  // Store (e.g. iOS-app-on-Mac) relies on this to go ad-free. StoreKit remains
+  // authoritative on devices where it works.
+  applyRemoteEntitlement: async (value: boolean) => {
+    if (value && !hasRemoveAdsEntitlement) {
+      await setEntitlement(true);
+    }
+  },
+
   isStoreReady: async () => {
     if (!Capacitor.isNativePlatform()) {
       return false;
