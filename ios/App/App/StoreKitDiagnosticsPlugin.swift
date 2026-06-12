@@ -10,15 +10,49 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "collectSnapshot", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "fetchProducts", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "syncStore", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "syncStore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getEntitlements", returnType: CAPPluginReturnPromise)
     ]
-    
+
     private let snapshotFileName = "storekit_diagnostics_snapshot.json"
     private let productIds = [
         "com.jonatanbjerrekaer.countdown.remove_ads",
         "com.jonatanbjerrekaer.countdown.remove_ads_supporter"
     ]
-    
+    private var transactionUpdatesTask: Any?
+
+    public override func load() {
+        if #available(iOS 15.0, *) {
+            // Forward StoreKit 2 transaction updates to JS so entitlements land
+            // even when the Cordova payment-queue events never fire. Observation
+            // only — the Cordova plugin owns finishing transactions.
+            transactionUpdatesTask = Task.detached { [weak self] in
+                for await result in Transaction.updates {
+                    guard let self else { return }
+                    if case .verified(let transaction) = result,
+                       self.productIds.contains(transaction.productID) {
+                        var data: [String: Any] = [
+                            "productId": transaction.productID,
+                            "transactionId": String(transaction.id),
+                            "purchaseDate": ISO8601DateFormatter().string(from: transaction.purchaseDate),
+                            "transactionState": "verified"
+                        ]
+                        if let revocationDate = transaction.revocationDate {
+                            data["revocationDate"] = ISO8601DateFormatter().string(from: revocationDate)
+                        }
+                        self.notifyListeners("transactionUpdated", data: data)
+                    }
+                }
+            }
+        }
+    }
+
+    deinit {
+        if #available(iOS 15.0, *) {
+            (transactionUpdatesTask as? Task<Void, Never>)?.cancel()
+        }
+    }
+
     @objc func collectSnapshot(_ call: CAPPluginCall) {
         if #available(iOS 15.0, *) {
             Task {
@@ -83,6 +117,26 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
+    @objc func getEntitlements(_ call: CAPPluginCall) {
+        if #available(iOS 15.0, *) {
+            Task {
+                let entitlements = await currentEntitlementPayloads()
+                await MainActor.run {
+                    call.resolve([
+                        "timestamp": ISO8601DateFormatter().string(from: Date()),
+                        "entitlements": entitlements
+                    ])
+                }
+            }
+        } else {
+            call.resolve([
+                "timestamp": ISO8601DateFormatter().string(from: Date()),
+                "entitlements": [],
+                "error": "StoreKit 2 requires iOS 15.0+"
+            ])
+        }
+    }
+
     @objc func syncStore(_ call: CAPPluginCall) {
         if #available(iOS 15.0, *) {
             Task {
@@ -126,12 +180,7 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @available(iOS 15.0, *)
-    private func collectStoreKit2Snapshot() async throws -> [String: Any] {
-        var snapshot: [String: Any] = [:]
-        snapshot["timestamp"] = ISO8601DateFormatter().string(from: Date())
-        let iosVersion = await MainActor.run { UIDevice.current.systemVersion }
-        snapshot["iosVersion"] = iosVersion
-        
+    private func currentEntitlementPayloads() async -> [[String: Any]] {
         var entitlements: [[String: Any]] = []
         for await result in Transaction.currentEntitlements {
             switch result {
@@ -155,8 +204,18 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
                 entitlements.append(entitlement)
             }
         }
-        snapshot["currentEntitlements"] = entitlements
+        return entitlements
+    }
+
+    @available(iOS 15.0, *)
+    private func collectStoreKit2Snapshot() async throws -> [String: Any] {
+        var snapshot: [String: Any] = [:]
+        snapshot["timestamp"] = ISO8601DateFormatter().string(from: Date())
+        let iosVersion = await MainActor.run { UIDevice.current.systemVersion }
+        snapshot["iosVersion"] = iosVersion
         
+        snapshot["currentEntitlements"] = await currentEntitlementPayloads()
+
         var transactions: [[String: Any]] = []
         var transactionCount = 0
         for await result in Transaction.all {

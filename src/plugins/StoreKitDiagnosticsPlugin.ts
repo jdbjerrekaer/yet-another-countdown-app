@@ -1,4 +1,5 @@
 import { registerPlugin } from "@capacitor/core";
+import type { PluginListenerHandle } from "@capacitor/core";
 
 export interface StoreKitDiagnosticsSnapshot {
   timestamp: string;
@@ -66,10 +67,21 @@ export interface StoreKitProductFetchResult {
   error?: string;
 }
 
+export interface StoreKitEntitlementsResult {
+  timestamp: string;
+  entitlements: StoreKitEntitlement[];
+  error?: string;
+}
+
 export interface StoreKitDiagnosticsPlugin {
   collectSnapshot(): Promise<StoreKitDiagnosticsSnapshot>;
   fetchProducts(): Promise<StoreKitProductFetchResult>;
   syncStore(): Promise<{ success: boolean; error?: string }>;
+  getEntitlements(): Promise<StoreKitEntitlementsResult>;
+  addListener(
+    eventName: "transactionUpdated",
+    listenerFunc: (data: StoreKitEntitlement) => void,
+  ): Promise<PluginListenerHandle>;
 }
 
 const StoreKitDiagnostics = registerPlugin<StoreKitDiagnosticsPlugin>(
@@ -90,6 +102,12 @@ const StoreKitDiagnostics = registerPlugin<StoreKitDiagnosticsPlugin>(
         success: false,
         error: "StoreKit 2 sync only available on native iOS",
       }),
+      getEntitlements: async () => ({
+        timestamp: new Date().toISOString(),
+        entitlements: [],
+        error: "StoreKit 2 entitlements only available on native iOS",
+      }),
+      addListener: async () => ({ remove: async () => {} }),
     }),
   }
 );

@@ -637,7 +637,7 @@ export default function Index() {
       void AdsManager.hideBanner();
       return;
     }
-    if (isModalOpen || isCalendarImportOpen) {
+    if (hasRemoveAds || isModalOpen || isCalendarImportOpen) {
       void AdsManager.hideBanner();
     } else {
       void AdsManager.showBanner();

@@ -114,7 +114,15 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const { t } = useTranslation();
   
   const [title, setTitle] = useState(initialTitle);
-  const [date, setDate] = useState<Date | undefined>(initialDate);
+  // Initialize with a concrete date so IonDatetime never mounts with an
+  // undefined value — an undefined first render can leave the calendar empty.
+  const [date, setDate] = useState<Date | undefined>(() => {
+    const normalized = new Date(normalizeDate(initialDate, isEditing).getTime());
+    if (!isEditing) {
+      normalized.setHours(8, 0, 0, 0);
+    }
+    return normalized;
+  });
   const [emoji, setEmoji] = useState(initialEmoji);
   // Default to blue if no initial color provided
   const DEFAULT_COLOR = '#3b82f6';

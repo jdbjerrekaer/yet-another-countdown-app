@@ -137,6 +137,7 @@ const defaultProductDiagnostics = (): Record<string, CatalogProductDiagnostics> 
 
 let isInitialized = false;
 let listenersRegistered = false;
+let storeKitTransactionListenerRegistered = false;
 let productsRegistered = false;
 let baseStateLoaded = false;
 let isDevBuild = false;
@@ -289,6 +290,27 @@ const loadLocalEntitlement = async () => {
 
 const isRemoveAdsProduct = (productId?: string) =>
   Boolean(productId && PRODUCT_IDS.includes(productId));
+
+// Resolves true as soon as the remove-ads entitlement is set, false on
+// timeout. Used where entitlement events may land after the triggering
+// call returns (e.g. Cordova owned flags updating after a store refresh).
+const waitForEntitlement = (timeoutMs: number): Promise<boolean> => {
+  if (hasRemoveAdsEntitlement) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const listener: EntitlementListener = (entitled) => {
+      if (entitled) {
+        entitlementListeners.delete(listener);
+        clearTimeout(timer);
+        resolve(true);
+      }
+    };
+    const timer = setTimeout(() => {
+      entitlementListeners.delete(listener);
+      resolve(false);
+    }, timeoutMs);
+    entitlementListeners.add(listener);
+  });
+};
 
 const isIAPProduct = (value: unknown): value is IAPProduct =>
   Boolean(
@@ -853,7 +875,22 @@ const recordPassiveReceiptError = (code: number | null, message: string | null) 
 };
 
 const fetchCatalogFromStoreKit = async () => {
-  const result = await StoreKitDiagnostics.fetchProducts();
+  // Product.products(for:) can fail transiently (network, slow sandbox
+  // readiness, esp. iPad) — retry with backoff within the catalog stall
+  // timeout instead of surfacing an empty paywall on the first miss.
+  let result = await StoreKitDiagnostics.fetchProducts();
+  for (
+    let attempt = 1;
+    attempt < IAP_TIMING.productFetchMaxAttempts &&
+    (result.error || !result.products.some((product) => product.available)) &&
+    result.error !== "StoreKit 2 requires iOS 15.0+";
+    attempt += 1
+  ) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, IAP_TIMING.productFetchRetryBaseDelayMs * attempt),
+    );
+    result = await StoreKitDiagnostics.fetchProducts();
+  }
   catalogSource = "storekit2";
   storeKitProductFetchError = result.error ?? null;
   storeKitCatalogProducts = result.products
@@ -1145,6 +1182,17 @@ export const PurchasesManager = {
 
     if (!Capacitor.isNativePlatform()) {
       return;
+    }
+
+    if (!storeKitTransactionListenerRegistered) {
+      storeKitTransactionListenerRegistered = true;
+      // StoreKit 2 transaction updates from the native plugin — covers
+      // purchases/restores where the Cordova payment-queue events never fire.
+      void StoreKitDiagnostics.addListener("transactionUpdated", (data) => {
+        if (isRemoveAdsProduct(data.productId) && !data.revocationDate) {
+          void setEntitlement(true, true, data.productId);
+        }
+      });
     }
 
     if (isDevBuild) {
@@ -1458,12 +1506,37 @@ export const PurchasesManager = {
         operation: "restore",
       });
 
+      // Primary signal: StoreKit 2 current entitlements, fresh after the
+      // AppStore.sync() performed by the restore catalog load above.
+      try {
+        const { entitlements } = await StoreKitDiagnostics.getEntitlements();
+        const entitled = entitlements.find(
+          (entitlement) =>
+            !entitlement.verificationFailed &&
+            !entitlement.revocationDate &&
+            isRemoveAdsProduct(entitlement.productId),
+        );
+        if (entitled) {
+          await setEntitlement(true, true, entitled.productId);
+          void collectDiagnosticsSnapshot("restore-success");
+          return true;
+        }
+      } catch {
+        // Fall through to the Cordova-plugin signals below.
+      }
+
+      // Fallback: Cordova plugin owned flags. These update asynchronously
+      // after the store refresh, so wait for the entitlement listener
+      // instead of only sampling them immediately.
       const ownedProducts = PRODUCT_IDS.filter((productId) => {
         const product = InAppPurchase2.get(productId);
         return product?.owned === true;
       });
 
-      const restored = hasRemoveAdsEntitlement || ownedProducts.length > 0;
+      const restored =
+        hasRemoveAdsEntitlement ||
+        ownedProducts.length > 0 ||
+        (await waitForEntitlement(IAP_TIMING.restoreEntitlementWaitMs));
       void collectDiagnosticsSnapshot(
         `restore-${restored ? "success" : "none-found"}`,
       );
