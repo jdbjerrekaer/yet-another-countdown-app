@@ -5,16 +5,18 @@ interface IOSWheelPickerProps {
   items: { value: number; label: string }[];
   selectedValue: number;
   onSelect: (value: number) => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   itemHeight?: number;
+  showConfirm?: boolean;
 }
 
-export function IOSWheelPicker({ 
-  items, 
-  selectedValue, 
+export function IOSWheelPicker({
+  items,
+  selectedValue,
   onSelect,
   onConfirm,
-  itemHeight = 50
+  itemHeight = 50,
+  showConfirm = true
 }: IOSWheelPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { trigger } = useHaptic();
@@ -131,17 +133,19 @@ export function IOSWheelPicker({
       </div>
       
       {/* Confirm button */}
-      <div className="px-6 py-4 border-t border-border/50">
-        <button
-          onClick={() => {
-            trigger('medium');
-            onConfirm();
-          }}
-          className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-lg active:scale-[0.98] transition-transform"
-        >
-          Done
-        </button>
-      </div>
+      {showConfirm && (
+        <div className="px-6 py-4 border-t border-border/50">
+          <button
+            onClick={() => {
+              trigger('medium');
+              onConfirm?.();
+            }}
+            className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-lg active:scale-[0.98] transition-transform"
+          >
+            Done
+          </button>
+        </div>
+      )}
     </div>
   );
 }

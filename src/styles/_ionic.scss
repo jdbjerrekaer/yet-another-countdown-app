@@ -89,6 +89,7 @@
     --calendar-day-today-color: hsl(var(--foreground));
   }
 
+
   ion-datetime.datetime-fixed-width.month-year-picker-open {
     width: 100% !important;
     max-width: 350px;
@@ -483,5 +484,26 @@
   .ios ion-modal .calendar-filter-chips {
     gap: 0.5rem 0.25rem;
   }
+}
+
+/* Inline time wheel — unlayered so it overrides Ionic's shadow-DOM defaults.
+   No solid box fill or drop shadow (the "box in a box"), but the wheel's
+   top/bottom fade is a gradient that fades TO --background-rgb, so that must
+   stay set to the card colour (not transparent) or the fade disappears.
+   Card = bg-secondary/40: ~247 light, ~26 dark over the modal background. */
+ion-datetime.datetime-time-inline {
+  width: 100%;
+  max-width: none;
+  --background: transparent;
+  --background-rgb: 247, 247, 247;
+  background: transparent;
+  box-shadow: none !important;
+  border: none !important;
+  --ion-color-contrast: hsl(var(--foreground));
+}
+
+.dark ion-datetime.datetime-time-inline,
+.ion-palette-dark ion-datetime.datetime-time-inline {
+  --background-rgb: 26, 26, 26;
 }
 

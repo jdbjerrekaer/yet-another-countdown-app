@@ -151,6 +151,21 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const [isYearlySuggestionExiting, setIsYearlySuggestionExiting] = useState(false);
   const [datetimeKey, setDatetimeKey] = useState(0);
   const [hasSpecificTime, setHasSpecificTime] = useState(false);
+  // Animate the time wheel in/out: `mounted` keeps it in the tree through the
+  // collapse so hiding animates too; `open` flips a frame after mount so the
+  // grid-rows transition runs from 0fr → 1fr on show.
+  const [timeWheelMounted, setTimeWheelMounted] = useState(false);
+  const [timeWheelOpen, setTimeWheelOpen] = useState(false);
+  useEffect(() => {
+    if (hasSpecificTime) {
+      setTimeWheelMounted(true);
+      const raf = requestAnimationFrame(() => setTimeWheelOpen(true));
+      return () => cancelAnimationFrame(raf);
+    }
+    setTimeWheelOpen(false);
+    const t = window.setTimeout(() => setTimeWheelMounted(false), 320);
+    return () => window.clearTimeout(t);
+  }, [hasSpecificTime]);
 
   // Compute suggested emojis based on title input
   const suggestedEmojis = useMemo(() => {
@@ -997,15 +1012,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       className="datetime-fixed-width"
                     />
                   </div>
-                </div>
-                <p className="text-xs text-muted-foreground pl-4 pb-2">
-                  {t('modal.dateMaxHelper')}
-                </p>
-              </div>
-
-              {/* Specific time toggle */}
-              <div className="bg-secondary/40 rounded-2xl overflow-hidden">
-                <div className="p-4 flex items-center justify-between">
+                  {/* Specific time — same card as the date, collapsed until toggled on */}
+                  <div className="mx-4 border-t border-border/50" />
+                  <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                       <Clock className="w-5 h-5 text-primary" />
@@ -1020,20 +1029,54 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     onIonChange={(e) => handleSpecificTimeToggle(e.detail.checked)}
                   />
                 </div>
-                {hasSpecificTime && date && (
-                  <div className="overflow-hidden">
-                    <div className="mx-4 border-t border-border/50" />
-                    <div className="p-4 pl-[68px]">
-                      <input
-                        type="time"
-                        value={`${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`}
-                        onChange={(e) => handleTimeChange(e.target.value)}
-                        className="bg-background/60 border border-border/60 rounded-xl px-3 py-2 text-foreground text-base font-medium focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        style={{ colorScheme: 'inherit' }}
+                {timeWheelMounted && date && (
+                  <div
+                    className="grid transition-[grid-template-rows] duration-300 motion-reduce:transition-none"
+                    style={{
+                      gridTemplateRows: timeWheelOpen ? '1fr' : '0fr',
+                      transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                    }}
+                  >
+                    <div className="overflow-hidden">
+                      <div
+                        className="transition-[opacity,transform] duration-300 motion-reduce:transition-none"
+                        style={{
+                          opacity: timeWheelOpen ? 1 : 0,
+                          transform: timeWheelOpen ? 'translateY(0)' : 'translateY(-6px)',
+                          transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                        }}
+                      >
+                        <div className="mx-4 border-t border-border/50" />
+                        {/* Native Ionic iOS-style time wheel, inline — no popover */}
+                        <div className="py-1">
+                          <IonDatetime
+                            className="datetime-time-inline"
+                            presentation="time"
+                        value={`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:00`}
+                        onIonChange={(e) => {
+                          trigger('medium');
+                          const value = getDatetimeValue(e);
+                          if (value && value.includes('T')) {
+                            const [h, m] = value.split('T')[1].split(':').map(Number);
+                            if (!isNaN(h) && !isNaN(m)) {
+                              const updated = new Date(date);
+                              updated.setHours(h, m, 0, 0);
+                              setDate(updated);
+                            }
+                          }
+                        }}
+                        showDefaultTitle={false}
+                        showDefaultButtons={false}
                       />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
+                </div>
+                <p className="text-xs text-muted-foreground pl-4 pb-2">
+                  {t('modal.dateMaxHelper')}
+                </p>
               </div>
 
               {/* Recurring toggle with expandable suggestion */}

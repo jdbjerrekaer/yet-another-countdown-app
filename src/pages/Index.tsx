@@ -873,6 +873,36 @@ export default function Index() {
     localStorage.setItem('countdownsLastUpdated', appliedTs ?? new Date().toISOString());
   }, [events]);
 
+  // Auto-purge: events flagged autoDelete vanish 24h after their target time.
+  // Writes tombstones (same path as a manual delete) so the deletion propagates
+  // and the sync merge can't re-add them. Recurring events are never purged.
+  // ponytail: on-mount + hourly poll is plenty for a 24h-granularity cleanup.
+  useEffect(() => {
+    const GRACE_MS = 24 * 60 * 60 * 1000;
+    const purge = () => {
+      const now = Date.now();
+      setEvents(prev => {
+        const expired = prev.filter(e =>
+          e.autoDelete && !e.isRecurring &&
+          now > new Date(e.targetDate).getTime() + GRACE_MS
+        );
+        if (expired.length === 0) return prev;
+        const stamps: DeletedMap = {};
+        const ts = new Date().toISOString();
+        for (const e of expired) {
+          stamps[e.id] = ts;
+          void cancelEventNotification(e.id);
+        }
+        persistTombstones(mergeTombstones(deletedRef.current, stamps));
+        const expiredIds = new Set(expired.map(e => e.id));
+        return prev.filter(e => !expiredIds.has(e.id));
+      });
+    };
+    purge();
+    const interval = window.setInterval(purge, 60 * 60 * 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   // Push the countdown list to iCloud whenever it changes. Skips writes that
   // match what was last reconciled with iCloud (set on push AND on pull), which
   // breaks the ping-pong loop between devices re-pushing the same merged list.
@@ -1214,6 +1244,9 @@ export default function Index() {
         emojiColor,
         isRecurring,
         createdAt: new Date().toISOString(),
+        // Default-on auto-purge for events created more than 2 days out; never
+        // for recurring ones (they keep coming back). See the purge effect.
+        autoDelete: !isRecurring && date.getTime() - Date.now() > 2 * 24 * 60 * 60 * 1000,
       };
       setEvents(prev => [...prev, newEvent]);
       setSelectedEventId(newEvent.id);

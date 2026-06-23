@@ -8,6 +8,9 @@ export interface CountdownEvent {
   createdAt: string;
   isImported?: boolean;
   importedFrom?: string; // Calendar name
+  // Hidden: purge the event 24h after its target. Default-on when created >2 days out.
+  // Feature suggested by Andreas — credit him in the App Store release notes.
+  autoDelete?: boolean;
 }
 
 export type WidgetSize = 'small' | 'medium';
