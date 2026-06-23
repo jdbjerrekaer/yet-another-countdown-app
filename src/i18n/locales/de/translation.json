@@ -214,5 +214,21 @@
         "badge": "Unterstützer"
       }
     }
+  },
+  "relative": {
+    "year_one": "{{count}} Jahr",
+    "year_other": "{{count}} Jahre",
+    "month_one": "{{count}} Monat",
+    "month_other": "{{count}} Monate",
+    "week_one": "{{count}} Woche",
+    "week_other": "{{count}} Wochen",
+    "day_one": "{{count}} Tag",
+    "day_other": "{{count}} Tage",
+    "hour_one": "{{count}} Stunde",
+    "hour_other": "{{count}} Stunden",
+    "minute_one": "{{count}} Minute",
+    "minute_other": "{{count}} Minuten",
+    "ago": "vor {{parts}}",
+    "left": "noch {{parts}}"
   }
 }

@@ -11,6 +11,7 @@ export interface CountdownEvent {
   // Hidden: purge the event 24h after its target. Default-on when created >2 days out.
   // Feature suggested by Andreas — credit him in the App Store release notes.
   autoDelete?: boolean;
+  hasTime?: boolean; // User set a specific time → show hours/minutes in the elapsed display.
 }
 
 export type WidgetSize = 'small' | 'medium';

@@ -214,5 +214,21 @@
         "badge": "Supporter"
       }
     }
+  },
+  "relative": {
+    "year_one": "{{count}} an",
+    "year_other": "{{count}} ans",
+    "month_one": "{{count}} mois",
+    "month_other": "{{count}} mois",
+    "week_one": "{{count}} semaine",
+    "week_other": "{{count}} semaines",
+    "day_one": "{{count}} jour",
+    "day_other": "{{count}} jours",
+    "hour_one": "{{count}} heure",
+    "hour_other": "{{count}} heures",
+    "minute_one": "{{count}} minute",
+    "minute_other": "{{count}} minutes",
+    "ago": "il y a {{parts}}",
+    "left": "dans {{parts}}"
   }
 }

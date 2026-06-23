@@ -1211,7 +1211,7 @@ export default function Index() {
     }, 0);
   };
 
-  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => {
+  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string) => {
     const saveKind = editingEvent ? 'edit' : 'create';
 
     const hasPermission = await checkNotificationPermission();
@@ -1222,7 +1222,7 @@ export default function Index() {
       
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
-          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring }
+          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring, hasTime: hasSpecificTime }
           : e
       ));
       
@@ -1247,6 +1247,7 @@ export default function Index() {
         // Default-on auto-purge for events created more than 2 days out; never
         // for recurring ones (they keep coming back). See the purge effect.
         autoDelete: !isRecurring && date.getTime() - Date.now() > 2 * 24 * 60 * 60 * 1000,
+        hasTime: hasSpecificTime,
       };
       setEvents(prev => [...prev, newEvent]);
       setSelectedEventId(newEvent.id);

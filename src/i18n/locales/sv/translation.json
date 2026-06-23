@@ -214,5 +214,21 @@
         "badge": "Supporter"
       }
     }
+  },
+  "relative": {
+    "year_one": "{{count}} år",
+    "year_other": "{{count}} år",
+    "month_one": "{{count}} månad",
+    "month_other": "{{count}} månader",
+    "week_one": "{{count}} vecka",
+    "week_other": "{{count}} veckor",
+    "day_one": "{{count}} dag",
+    "day_other": "{{count}} dagar",
+    "hour_one": "{{count}} timme",
+    "hour_other": "{{count}} timmar",
+    "minute_one": "{{count}} minut",
+    "minute_other": "{{count}} minuter",
+    "ago": "{{parts}} sedan",
+    "left": "{{parts}} kvar"
   }
 }

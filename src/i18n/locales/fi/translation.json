@@ -214,5 +214,21 @@
         "badge": "Tukija"
       }
     }
+  },
+  "relative": {
+    "year_one": "{{count}} vuosi",
+    "year_other": "{{count}} vuotta",
+    "month_one": "{{count}} kuukausi",
+    "month_other": "{{count}} kuukautta",
+    "week_one": "{{count}} viikko",
+    "week_other": "{{count}} viikkoa",
+    "day_one": "{{count}} päivä",
+    "day_other": "{{count}} päivää",
+    "hour_one": "{{count}} tunti",
+    "hour_other": "{{count}} tuntia",
+    "minute_one": "{{count}} minuutti",
+    "minute_other": "{{count}} minuuttia",
+    "ago": "{{parts}} sitten",
+    "left": "{{parts}} jäljellä"
   }
 }

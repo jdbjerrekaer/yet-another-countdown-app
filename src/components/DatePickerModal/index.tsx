@@ -79,7 +79,7 @@ export interface DatePickerModalRef {
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, emojiColor?: string) => void | Promise<void>;
+  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string) => void | Promise<void>;
   initialTitle?: string;
   initialDate?: Date;
   initialEmoji?: string;
@@ -540,7 +540,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         }
       }
       
-      await onSave(title, date, emoji, isRecurring, emojiColor);
+      await onSave(title, date, emoji, isRecurring, hasSpecificTime, emojiColor);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
       onClose();

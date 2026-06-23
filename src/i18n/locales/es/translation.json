@@ -214,5 +214,21 @@
         "badge": "Colaborador"
       }
     }
+  },
+  "relative": {
+    "year_one": "{{count}} año",
+    "year_other": "{{count}} años",
+    "month_one": "{{count}} mes",
+    "month_other": "{{count}} meses",
+    "week_one": "{{count}} semana",
+    "week_other": "{{count}} semanas",
+    "day_one": "{{count}} día",
+    "day_other": "{{count}} días",
+    "hour_one": "{{count}} hora",
+    "hour_other": "{{count}} horas",
+    "minute_one": "{{count}} minuto",
+    "minute_other": "{{count}} minutos",
+    "ago": "hace {{parts}}",
+    "left": "en {{parts}}"
   }
 }

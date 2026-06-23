@@ -214,5 +214,21 @@
         "badge": "Sostenitore"
       }
     }
+  },
+  "relative": {
+    "year_one": "{{count}} anno",
+    "year_other": "{{count}} anni",
+    "month_one": "{{count}} mese",
+    "month_other": "{{count}} mesi",
+    "week_one": "{{count}} settimana",
+    "week_other": "{{count}} settimane",
+    "day_one": "{{count}} giorno",
+    "day_other": "{{count}} giorni",
+    "hour_one": "{{count}} ora",
+    "hour_other": "{{count}} ore",
+    "minute_one": "{{count}} minuto",
+    "minute_other": "{{count}} minuti",
+    "ago": "{{parts}} fa",
+    "left": "tra {{parts}}"
   }
 }

@@ -6,6 +6,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
+import { formatRelative } from '@/lib/relativeTime';
 import styles from './styles.module.scss';
 
 interface CountdownCardProps {
@@ -370,7 +371,7 @@ export function CountdownCard({
                 <div className="flex items-center gap-2 min-w-0">
                   <p className="text-sm text-muted-foreground flex-shrink-0">
                     {countdown.isPast
-                      ? t('countdown.daysAgo', { count: countdown.daysSince })
+                      ? formatRelative(t, targetDate, new Date(), event.hasTime ?? false)
                       : countdown.isComplete
                         ? t('countdown.today')
                         : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })

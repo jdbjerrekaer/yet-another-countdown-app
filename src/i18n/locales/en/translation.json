@@ -144,6 +144,22 @@
     "daysAgo_other": "{{count}} days ago",
     "format": "{{days}}d {{hours}}h {{minutes}}m"
   },
+  "relative": {
+    "year_one": "{{count}} year",
+    "year_other": "{{count}} years",
+    "month_one": "{{count}} month",
+    "month_other": "{{count}} months",
+    "week_one": "{{count}} week",
+    "week_other": "{{count}} weeks",
+    "day_one": "{{count}} day",
+    "day_other": "{{count}} days",
+    "hour_one": "{{count}} hour",
+    "hour_other": "{{count}} hours",
+    "minute_one": "{{count}} minute",
+    "minute_other": "{{count}} minutes",
+    "ago": "{{parts}} ago",
+    "left": "{{parts}} left"
+  },
   "notifications": {
     "reachedZero": "Your countdown has reached zero!",
     "enableTitle": "Enable Notifications?",
