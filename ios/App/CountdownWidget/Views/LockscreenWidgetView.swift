@@ -95,8 +95,9 @@ struct LockscreenRectangularView: View {
         if countdown.isComplete && !countdown.isPast {
             Text(RelativeTime.todayText(lang))
         } else if let target = targetDate {
-            // Semantic, localized phrase ("2 months, 3 weeks left").
-            Text(RelativeTime.phrase(
+            // Compact, single-letter units ("2w 6d left", "3mo 2w 1d ago") so it
+            // fits the tight rectangular accessory without truncating.
+            Text(RelativeTime.compactPhrase(
                 target: target,
                 includeTime: event.hasTime ?? false,
                 legacy: WidgetDataSync.shared.isLegacyTimeFormat(),

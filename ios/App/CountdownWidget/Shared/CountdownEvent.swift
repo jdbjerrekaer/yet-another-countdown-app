@@ -304,6 +304,45 @@ enum RelativeTime {
         return String(format: isPast ? t.ago : t.left, dur)
     }
 
+    /// Ultra-compact "2w 6d left" / "3mo 2w 1d ago" — single-letter units, capped
+    /// at 3, for the tight lock-screen rectangular accessory. Units (y/mo/w/d/h/m)
+    /// are kept universal; only the ago/left wrapper is localized.
+    static func compactPhrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool, lang: String) -> String {
+        let isPast = target <= now
+        let (a, b) = isPast ? (target, now) : (now, target)
+        let cal = Calendar.current
+        let from = includeTime ? a : cal.startOfDay(for: a)
+        let to = includeTime ? b : cal.startOfDay(for: b)
+        var pieces: [String] = []
+        if legacy {
+            let totalDays = cal.dateComponents([.day], from: from, to: to).day ?? 0
+            if totalDays > 0 { pieces.append("\(totalDays)d") }
+            if includeTime {
+                let after = cal.date(byAdding: .day, value: totalDays, to: from) ?? from
+                let t = cal.dateComponents([.hour, .minute], from: after, to: to)
+                if let h = t.hour, h > 0 { pieces.append("\(h)h") }
+                if let m = t.minute, m > 0 { pieces.append("\(m)m") }
+            }
+        } else {
+            let c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: from, to: to)
+            if let y = c.year, y > 0 { pieces.append("\(y)y") }
+            if let mo = c.month, mo > 0 { pieces.append("\(mo)mo") }
+            let totalDays = c.day ?? 0
+            let weeks = totalDays / 7
+            let days = totalDays % 7
+            if weeks > 0 { pieces.append("\(weeks)w") }
+            if days > 0 { pieces.append("\(days)d") }
+            if includeTime {
+                if let h = c.hour, h > 0 { pieces.append("\(h)h") }
+                if let m = c.minute, m > 0 { pieces.append("\(m)m") }
+            }
+        }
+        if pieces.isEmpty { pieces.append("0d") }
+        let joined = pieces.prefix(3).joined(separator: " ")
+        let t = tmpl(lang)
+        return String(format: isPast ? t.ago : t.left, joined)
+    }
+
     /// Compact single-unit "5d left" for the tiny lock-screen accessories.
     static func shortPhrase(target: Date, now: Date = Date(), lang: String) -> String {
         let isPast = target <= now
