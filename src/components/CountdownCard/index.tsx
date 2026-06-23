@@ -7,6 +7,7 @@ import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { formatRelative } from '@/lib/relativeTime';
+import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import styles from './styles.module.scss';
 
 interface CountdownCardProps {
@@ -34,6 +35,7 @@ export function CountdownCard({
 }: CountdownCardProps) {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
+  const legacyTimeFormat = useLegacyTimeFormat();
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
   const hapticTriggeredRef = useRef(false);
   const [isSliding, setIsSliding] = useState(false);
@@ -370,11 +372,9 @@ export function CountdownCard({
                 </div>
                 <div className="flex items-center gap-2 min-w-0">
                   <p className="text-sm text-muted-foreground flex-shrink-0">
-                    {countdown.isPast
-                      ? formatRelative(t, targetDate, new Date(), event.hasTime ?? false)
-                      : countdown.isComplete
-                        ? t('countdown.today')
-                        : t('countdown.format', { days: countdown.days, hours: countdown.hours, minutes: countdown.minutes })
+                    {countdown.isComplete && !countdown.isPast
+                      ? t('countdown.today')
+                      : formatRelative(t, targetDate, new Date(), event.hasTime ?? false, legacyTimeFormat)
                     }
                   </p>
                   {event.isImported && event.importedFrom && (

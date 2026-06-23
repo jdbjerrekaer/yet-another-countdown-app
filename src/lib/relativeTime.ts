@@ -13,9 +13,28 @@ export interface RelativePart {
 // year/month/day; weeks are derived from the day remainder.
 // When `includeTime` is false the time-of-day is stripped from both ends so a
 // date-only event reads in whole days (no partial-day rounding).
-export function relativeParts(from: Date, to: Date, includeTime: boolean): RelativePart[] {
+export function relativeParts(from: Date, to: Date, includeTime: boolean, legacy = false): RelativePart[] {
   const start = includeTime ? from : startOfDay(from);
   const end = includeTime ? to : startOfDay(to);
+
+  // Legacy mode: a single total-days count (no months/weeks/years), plus
+  // hours/minutes when a specific time is set. e.g. "5421 days" / "213 days,
+  // 22 hours, 43 minutes".
+  if (legacy) {
+    const ms = end.getTime() - start.getTime();
+    const totalDays = Math.floor(ms / 86_400_000);
+    const legacyParts: RelativePart[] = [];
+    if (totalDays > 0) legacyParts.push({ unit: 'day', count: totalDays });
+    if (includeTime) {
+      const rem = ms - totalDays * 86_400_000;
+      const hours = Math.floor(rem / 3_600_000);
+      const minutes = Math.floor((rem % 3_600_000) / 60_000);
+      if (hours > 0) legacyParts.push({ unit: 'hour', count: hours });
+      if (minutes > 0) legacyParts.push({ unit: 'minute', count: minutes });
+    }
+    if (legacyParts.length === 0) legacyParts.push({ unit: includeTime ? 'minute' : 'day', count: 0 });
+    return legacyParts;
+  }
 
   const d = intervalToDuration({ start, end });
   const totalDays = d.days ?? 0;
@@ -43,10 +62,10 @@ export function relativeParts(from: Date, to: Date, includeTime: boolean): Relat
 
 // Localised "2 months, 1 week, 3 days ago" / "... left". `target` is the event
 // time; direction is decided by whether it's before or after `now`.
-export function formatRelative(t: TFunction, target: Date, now: Date, includeTime: boolean): string {
+export function formatRelative(t: TFunction, target: Date, now: Date, includeTime: boolean, legacy = false): string {
   const isPast = target.getTime() <= now.getTime();
   const [from, to] = isPast ? [target, now] : [now, target];
-  const joined = relativeParts(from, to, includeTime)
+  const joined = relativeParts(from, to, includeTime, legacy)
     .map((p) => t(`relative.${p.unit}`, { count: p.count }))
     .join(', ');
   return t(isPast ? 'relative.ago' : 'relative.left', { parts: joined });

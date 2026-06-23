@@ -144,6 +144,12 @@
     "daysAgo_other": "{{count}} days ago",
     "format": "{{days}}d {{hours}}h {{minutes}}m"
   },
+  "trackingConsent": {
+    "title": "A quick note on ads",
+    "body": "This app is free thanks to ads. With your permission we can show ads that are more relevant to you instead of random ones.",
+    "reassurance": "We don't collect or send your personal data anywhere — the choice is entirely yours, and the app works the same either way.",
+    "continue": "OK, continue"
+  },
   "relative": {
     "year_one": "{{count}} year",
     "year_other": "{{count}} years",

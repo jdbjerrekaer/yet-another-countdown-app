@@ -231,17 +231,10 @@ export const AdsManager = {
     }
     
     initPromise = (async () => {
-      try {
-        const trackingInfo = await AdMob.trackingAuthorizationStatus();
-        
-        if (trackingInfo.status === "notDetermined") {
-          await AdMob.requestTrackingAuthorization();
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
-      } catch (error) {
-        console.warn("[Ads] ATT authorization failed", error);
-      }
-
+      // ATT + Google UMP consent are deferred to requestTrackingConsent(),
+      // fired only after the user creates their first event and confirms the
+      // custom pre-prompt modal. init() just sets up the SDK so (non-
+      // personalized) banners can show in the meantime.
       try {
         await AdMob.initialize();
         isInitialized = true;
@@ -328,6 +321,61 @@ export const AdsManager = {
     })();
 
     return initPromise;
+  },
+
+  // True only when we should surface the custom pre-prompt before the OS ATT
+  // sheet: native, not ad-free, and the user hasn't answered ATT yet.
+  shouldShowTrackingPrePrompt: async (): Promise<boolean> => {
+    if (!Capacitor.isNativePlatform()) return false;
+    if (!(await isAdsEnabled())) return false;
+    try {
+      const { status } = await AdMob.trackingAuthorizationStatus();
+      return status === "notDetermined";
+    } catch {
+      return false;
+    }
+  },
+
+  // Runs after the user confirms the pre-prompt modal: Apple ATT, then the
+  // Google UMP (EU) consent form, then refreshes personalization + banner.
+  requestTrackingConsent: async (): Promise<void> => {
+    if (!Capacitor.isNativePlatform()) return;
+    if (!(await isAdsEnabled())) return;
+
+    try {
+      const { status } = await AdMob.trackingAuthorizationStatus();
+      if (status === "notDetermined") {
+        await AdMob.requestTrackingAuthorization();
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+    } catch (error) {
+      console.warn("[Ads] ATT request failed", error);
+    }
+
+    try {
+      const info = await AdMob.requestConsentInfo();
+      if (info?.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
+        await AdMob.showConsentForm();
+      }
+    } catch (error) {
+      console.warn("[Ads] UMP consent failed", error);
+    }
+
+    try {
+      const { status } = await AdMob.trackingAuthorizationStatus();
+      allowPersonalizedAds = status === "authorized";
+    } catch {
+      allowPersonalizedAds = false;
+    }
+
+    // Make sure the SDK is up and re-show the banner so the new npa flag applies.
+    if (!isInitialized) {
+      await AdsManager.init();
+    }
+    if (bannerVisible) {
+      await AdsManager.hideBanner();
+    }
+    await AdsManager.showBanner();
   },
 
   showBanner: async () => {

@@ -54,6 +54,28 @@
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 			<key>Title</key>
+			<string>Display</string>
+			<key>FooterText</key>
+			<string>Show elapsed and remaining time in whole days only (e.g. “213 days, 22 hours”) instead of months, weeks and days.</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Days-only time format</string>
+			<key>Key</key>
+			<string>CapacitorStorage.legacy_time_format</string>
+			<key>DefaultValue</key>
+			<string>0</string>
+			<key>TrueValue</key>
+			<string>1</string>
+			<key>FalseValue</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
 			<string>Privacy &amp; Consent</string>
 		</dict>
 		<dict>

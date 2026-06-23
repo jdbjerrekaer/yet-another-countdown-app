@@ -39,6 +39,7 @@ import { checkNotificationPermission, requestNotificationPermission, scheduleEve
 import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal, CalendarImportModalRef } from '@/components/CalendarImportModal';
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
+import { TrackingConsentModal } from '@/components/TrackingConsentModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import CountdownSyncPlugin from '@/plugins/CountdownSyncPlugin';
@@ -234,6 +235,8 @@ export default function Index() {
   const [showAdPlaceholder, setShowAdPlaceholder] = useState(false);
   const placeholderHeight = 60; // Increased to match adaptive banners better
   const [hasRemoveAds, setHasRemoveAds] = useState(false);
+  const [isTrackingConsentOpen, setIsTrackingConsentOpen] = useState(false);
+  const trackingPrePromptShownRef = useRef(false);
   const [isRemoveAdsOpen, setIsRemoveAdsOpen] = useState(false);
   const pendingDeleteRef = useRef<Map<string, CountdownEvent>>(new Map());
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
@@ -646,6 +649,24 @@ export default function Index() {
       void AdsManager.hideBanner();
     };
   }, [isNative, isModalOpen, isCalendarImportOpen, hasRemoveAds]);
+
+  // After the user creates their first event, show the custom tracking
+  // pre-prompt (once per session) — but only on native, only for non ad-free
+  // users, and only while ATT is still unanswered. Confirming it fires the OS
+  // ATT sheet + Google UMP consent form.
+  useEffect(() => {
+    if (!isNative || hasRemoveAds || events.length === 0) return;
+    if (trackingPrePromptShownRef.current) return;
+    let cancelled = false;
+    void AdsManager.shouldShowTrackingPrePrompt().then((show) => {
+      if (cancelled || !show || trackingPrePromptShownRef.current) return;
+      trackingPrePromptShownRef.current = true;
+      setIsTrackingConsentOpen(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isNative, hasRemoveAds, events.length]);
 
   useEffect(() => {
     const unsubscribe = PurchasesManager.onEntitlementChange(setHasRemoveAds);
@@ -2020,6 +2041,13 @@ export default function Index() {
         isDevBuild={isDevBuild}
       />
 
+      <TrackingConsentModal
+        isOpen={isTrackingConsentOpen}
+        onContinue={() => {
+          setIsTrackingConsentOpen(false);
+          void AdsManager.requestTrackingConsent();
+        }}
+      />
 
     </IonPage>
   );
