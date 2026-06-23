@@ -170,7 +170,7 @@ function TripleWidgetPreview({
 }
 
 export default function Index() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isHomeScrolled, setIsHomeScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<WidgetSize>('medium');
@@ -1015,6 +1015,7 @@ export default function Index() {
           appearanceMode: selectedAppearanceMode,
           countdownStyle: selectedCountdownStyle,
           legacyTimeFormat,
+          appLanguage: i18n.language,
         };
         const serializedPayload = JSON.stringify(payload);
         const widgetEventIds = widgetEvents.map(event => event.id);
@@ -1037,7 +1038,7 @@ export default function Index() {
     };
 
     syncWidgetData();
-  }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative, legacyTimeFormat]);
+  }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative, legacyTimeFormat, i18n.language]);
 
   // Check scheduled notifications on app load (for web platform).
   // Only runs while the tab/app is visible — no point polling in background.

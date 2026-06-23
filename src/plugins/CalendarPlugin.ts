@@ -95,6 +95,7 @@ export interface WidgetData {
   appearanceMode: string;
   countdownStyle: string;
   legacyTimeFormat?: boolean;
+  appLanguage?: string;
   lastUpdated?: string;
 }
 
@@ -115,6 +116,8 @@ export interface UpdateWidgetDataOptions {
   events: WidgetCountdownEvent[];
   appearanceMode: string;
   countdownStyle: string;
+  legacyTimeFormat?: boolean;
+  appLanguage?: string;
 }
 
 /**

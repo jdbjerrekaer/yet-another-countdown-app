@@ -54,7 +54,7 @@ struct SmallWidgetView: View {
                 
                 // Countdown display
                 if countdown.isComplete && !countdown.isPast {
-                    Text("Today! 🎉")
+                    Text(RelativeTime.todayText(lang))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.blue)
                 } else if countdownStyle == .visual {
@@ -120,17 +120,19 @@ struct SmallWidgetView: View {
         }
     }
     
+    private var lang: String { WidgetDataSync.shared.appLanguage() }
+
     private var primaryUnit: String {
         if countdown.isPast {
-            return "days ago"
+            return RelativeTime.label("days", lang)
         } else if countdown.days > 0 {
-            return countdown.days == 1 ? "Day" : "Days"
+            return RelativeTime.label("days", lang)
         } else if countdown.hours > 0 {
-            return countdown.hours == 1 ? "Hour" : "Hours"
+            return RelativeTime.label("hours", lang)
         } else if countdown.minutes > 0 {
-            return "Min"
+            return RelativeTime.label("min", lang)
         } else {
-            return "Sec"
+            return RelativeTime.label("min", lang)
         }
     }
     

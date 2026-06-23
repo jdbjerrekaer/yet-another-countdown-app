@@ -57,7 +57,7 @@ struct MediumWidgetView: View {
             
             // Countdown display
             if countdown.isComplete && !countdown.isPast {
-                Text("Today! 🎉")
+                Text(RelativeTime.todayText(lang))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.blue)
             } else if countdownStyle == .visual {
@@ -71,68 +71,47 @@ struct MediumWidgetView: View {
                 )
                 .widgetAccentable(false)
             } else if countdownStyle == .classic {
-                // Classic mode - flip clock style
-                // In vibrant/accented modes, use simple text instead of flip digits
-                if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
-                    if countdown.isPast {
-                        HStack(spacing: 24) {
-                            TimeUnitView(value: countdown.daysSince, unit: "days", subtext: "ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                        }
-                    } else {
-                        HStack(spacing: 24) {
-                            TimeUnitView(value: countdown.days, unit: "Days", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                            TimeUnitView(value: countdown.hours, unit: "Hours", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                            TimeUnitView(value: countdown.minutes, unit: "Min", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                        }
+                // Classic mode - flip clock style. Past elapsed uses the semantic
+                // localized phrase (consistent with Focus) to avoid overflow.
+                if countdown.isPast {
+                    elapsedPhraseText
+                } else if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
+                    HStack(spacing: 24) {
+                        TimeUnitView(value: countdown.days, unit: RelativeTime.label("days", lang), foregroundColor: foregroundColor, mutedColor: mutedColor)
+                        TimeUnitView(value: countdown.hours, unit: RelativeTime.label("hours", lang), foregroundColor: foregroundColor, mutedColor: mutedColor)
+                        TimeUnitView(value: countdown.minutes, unit: RelativeTime.label("min", lang), foregroundColor: foregroundColor, mutedColor: mutedColor)
                     }
                 } else {
-                    if countdown.isPast {
-                        HStack(spacing: 24) {
-                            VStack(alignment: .center, spacing: 2) {
-                                FlipDigitView(value: countdown.daysSince, fontSize: 28, theme: flipDigitTheme)
-                                Text("days ago")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(mutedColor)
-                            }
+                    HStack(spacing: 24) {
+                        VStack(alignment: .center, spacing: 2) {
+                            FlipDigitView(value: countdown.days, fontSize: 28, theme: flipDigitTheme)
+                            Text(RelativeTime.label("days", lang))
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
                         }
-                    } else {
-                        HStack(spacing: 24) {
-                            VStack(alignment: .center, spacing: 2) {
-                                FlipDigitView(value: countdown.days, fontSize: 28, theme: flipDigitTheme)
-                                Text("Days")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(mutedColor)
-                            }
-                            VStack(alignment: .center, spacing: 2) {
-                                FlipDigitView(value: countdown.hours, fontSize: 28, theme: flipDigitTheme)
-                                Text("Hours")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(mutedColor)
-                            }
-                            VStack(alignment: .center, spacing: 2) {
-                                FlipDigitView(value: countdown.minutes, fontSize: 28, theme: flipDigitTheme)
-                                Text("Min")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(mutedColor)
-                            }
+                        VStack(alignment: .center, spacing: 2) {
+                            FlipDigitView(value: countdown.hours, fontSize: 28, theme: flipDigitTheme)
+                            Text(RelativeTime.label("hours", lang))
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
+                        }
+                        VStack(alignment: .center, spacing: 2) {
+                            FlipDigitView(value: countdown.minutes, fontSize: 28, theme: flipDigitTheme)
+                            Text(RelativeTime.label("min", lang))
+                                .font(.system(size: 11))
+                                .foregroundColor(mutedColor)
                         }
                     }
                 }
             } else {
                 // Focus mode - time breakdown
                 if countdown.isPast {
-                    // Semantic elapsed phrase ("1 year, 2 weeks, 3 days ago"),
-                    // or whole days when the legacy format is on.
-                    Text(elapsedPhrase)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(foregroundColor)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .lineLimit(2)
+                    elapsedPhraseText
                 } else {
                     HStack(spacing: 24) {
-                        TimeUnitView(value: countdown.days, unit: "Days", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                        TimeUnitView(value: countdown.hours, unit: "Hours", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                        TimeUnitView(value: countdown.minutes, unit: "Min", foregroundColor: foregroundColor, mutedColor: mutedColor)
+                        TimeUnitView(value: countdown.days, unit: RelativeTime.label("days", lang), foregroundColor: foregroundColor, mutedColor: mutedColor)
+                        TimeUnitView(value: countdown.hours, unit: RelativeTime.label("hours", lang), foregroundColor: foregroundColor, mutedColor: mutedColor)
+                        TimeUnitView(value: countdown.minutes, unit: RelativeTime.label("min", lang), foregroundColor: foregroundColor, mutedColor: mutedColor)
                     }
                 }
             }
@@ -142,13 +121,25 @@ struct MediumWidgetView: View {
 
     // MARK: - Computed Properties
 
+    private var lang: String { WidgetDataSync.shared.appLanguage() }
+
+    @ViewBuilder
+    private var elapsedPhraseText: some View {
+        Text(elapsedPhrase)
+            .font(.system(size: 22, weight: .bold))
+            .foregroundColor(foregroundColor)
+            .fixedSize(horizontal: false, vertical: true)
+            .lineLimit(2)
+    }
+
     /// "1 year, 2 weeks, 3 days ago" — mirrors the in-app card, days-only when legacy.
     private var elapsedPhrase: String {
         guard let target = targetDate else { return "" }
         return RelativeTime.phrase(
             target: target,
             includeTime: event.hasTime ?? false,
-            legacy: WidgetDataSync.shared.isLegacyTimeFormat()
+            legacy: WidgetDataSync.shared.isLegacyTimeFormat(),
+            lang: lang
         )
     }
 

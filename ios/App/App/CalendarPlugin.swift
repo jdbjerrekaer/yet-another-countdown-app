@@ -233,6 +233,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         let appearanceMode = call.getString("appearanceMode") ?? "light"
         let countdownStyle = call.getString("countdownStyle") ?? "focus"
         let legacyTimeFormat = call.getBool("legacyTimeFormat") ?? false
+        let appLanguage = call.getString("appLanguage") ?? "en"
 
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             call.reject("Failed to access App Group storage")
@@ -257,7 +258,8 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             "events": cleanedEvents,
             "appearanceMode": appearanceMode,
             "countdownStyle": countdownStyle,
-            "legacyTimeFormat": legacyTimeFormat
+            "legacyTimeFormat": legacyTimeFormat,
+            "appLanguage": appLanguage
         ]
         
         do {
@@ -269,7 +271,8 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
                     "events": existingObject["events"] as? [[String: Any]] ?? [],
                     "appearanceMode": existingObject["appearanceMode"] as? String ?? "light",
                     "countdownStyle": existingObject["countdownStyle"] as? String ?? "focus",
-                    "legacyTimeFormat": existingObject["legacyTimeFormat"] as? Bool ?? false
+                    "legacyTimeFormat": existingObject["legacyTimeFormat"] as? Bool ?? false,
+                    "appLanguage": existingObject["appLanguage"] as? String ?? "en"
                 ]
                 let existingStableJsonData = try JSONSerialization.data(withJSONObject: existingStableWidgetData, options: [.sortedKeys])
 
@@ -285,6 +288,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
                 "appearanceMode": appearanceMode,
                 "countdownStyle": countdownStyle,
                 "legacyTimeFormat": legacyTimeFormat,
+                "appLanguage": appLanguage,
                 "lastUpdated": ISO8601DateFormatter().string(from: Date())
             ]
             let jsonData = try JSONSerialization.data(withJSONObject: widgetData, options: [.prettyPrinted, .sortedKeys])

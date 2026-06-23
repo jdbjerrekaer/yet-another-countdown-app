@@ -35,6 +35,10 @@ final class WidgetDataSync {
         loadWidgetData()?.legacyTimeFormat ?? false
     }
 
+    func appLanguage() -> String {
+        loadWidgetData()?.appLanguage ?? "en"
+    }
+
     func calculateProgress(for event: CountdownEvent) -> Double {
         let target: Date?
         if event.isRecurring {

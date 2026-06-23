@@ -1,6 +1,11 @@
 import SwiftUI
 import WidgetKit
 
+// Shared helper: the event's effective target (next occurrence for recurring).
+private extension CountdownEvent {
+    var effectiveTarget: Date? { isRecurring ? getNextRecurringDate() : targetDateAsDate }
+}
+
 // MARK: - Accessory Inline View (single line of text)
 
 struct LockscreenInlineView: View {
@@ -8,30 +13,14 @@ struct LockscreenInlineView: View {
     let countdown: CountdownTime
 
     var body: some View {
-        let value = primaryValue
-        let unit = primaryUnit
+        let lang = WidgetDataSync.shared.appLanguage()
         if countdown.isComplete && !countdown.isPast {
-            Label("\(event.emoji) Today!", systemImage: "")
-                .labelStyle(.titleOnly)
+            Text("\(event.emoji) \(RelativeTime.todayText(lang))")
+        } else if let target = event.effectiveTarget {
+            Text("\(event.emoji) \(RelativeTime.shortPhrase(target: target, lang: lang))")
         } else {
-            Text("\(event.emoji) \(value.formattedWithoutSeparator) \(unit)")
+            Text(event.emoji)
         }
-    }
-
-    private var primaryValue: Int {
-        if countdown.isPast { return countdown.daysSince }
-        if countdown.days > 0 { return countdown.days }
-        if countdown.hours > 0 { return countdown.hours }
-        if countdown.minutes > 0 { return countdown.minutes }
-        return countdown.seconds
-    }
-
-    private var primaryUnit: String {
-        if countdown.isPast { return countdown.daysSince == 1 ? "day ago" : "days ago" }
-        if countdown.days > 0 { return countdown.days == 1 ? "day" : "days" }
-        if countdown.hours > 0 { return countdown.hours == 1 ? "hr" : "hrs" }
-        if countdown.minutes > 0 { return "min" }
-        return "sec"
     }
 }
 
@@ -44,41 +33,26 @@ struct LockscreenCircularView: View {
     @Environment(\.widgetRenderingMode) var widgetRenderingMode
 
     var body: some View {
+        let lang = WidgetDataSync.shared.appLanguage()
         ZStack {
-            if countdown.isComplete && !countdown.isPast {
-                VStack(spacing: 1) {
-                    Text(event.emoji).font(.system(size: 18))
-                    Text("Today").font(.system(size: 10, weight: .semibold))
-                }
-            } else {
-                VStack(spacing: 1) {
-                    Text(event.emoji).font(.system(size: 14))
-                    Text(primaryValue.formattedWithoutSeparator)
-                        .font(.system(size: primaryValue >= 100 ? 16 : 20, weight: .bold))
-                        .minimumScaleFactor(0.7)
-                    Text(primaryUnit)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(.secondary)
+            VStack(spacing: 1) {
+                Text(event.emoji).font(.system(size: 14))
+                if countdown.isComplete && !countdown.isPast {
+                    Text(RelativeTime.todayText(lang))
+                        .font(.system(size: 10, weight: .semibold))
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                } else if let target = event.effectiveTarget {
+                    Text(RelativeTime.shortPhrase(target: target, lang: lang))
+                        .font(.system(size: 13, weight: .bold))
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
                 }
             }
         }
         .widgetAccentable()
-    }
-
-    private var primaryValue: Int {
-        if countdown.isPast { return countdown.daysSince }
-        if countdown.days > 0 { return countdown.days }
-        if countdown.hours > 0 { return countdown.hours }
-        if countdown.minutes > 0 { return countdown.minutes }
-        return countdown.seconds
-    }
-
-    private var primaryUnit: String {
-        if countdown.isPast { return countdown.daysSince == 1 ? "day ago" : "days" }
-        if countdown.days > 0 { return countdown.days == 1 ? "day" : "days" }
-        if countdown.hours > 0 { return "hrs" }
-        if countdown.minutes > 0 { return "min" }
-        return "sec"
     }
 }
 
@@ -108,6 +82,7 @@ struct LockscreenRectangularView: View {
 
                 countdownLabel
                     .font(.system(size: 12, weight: .medium))
+                    .lineLimit(2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -116,18 +91,17 @@ struct LockscreenRectangularView: View {
 
     @ViewBuilder
     private var countdownLabel: some View {
+        let lang = WidgetDataSync.shared.appLanguage()
         if countdown.isComplete && !countdown.isPast {
-            Text("Today! 🎉")
-        } else if countdown.isPast {
-            Text("\(countdown.daysSince.formattedWithoutSeparator) \(countdown.daysSince == 1 ? "day ago" : "days ago")")
-        } else if countdown.days > 0 {
-            Text("\(countdown.days.formattedWithoutSeparator) \(countdown.days == 1 ? "day left" : "days left")")
-        } else if countdown.hours > 0 {
-            Text("\(countdown.hours.formattedWithoutSeparator) \(countdown.hours == 1 ? "hour left" : "hours left")")
-        } else if countdown.minutes > 0 {
-            Text("\(countdown.minutes.formattedWithoutSeparator) min left")
-        } else {
-            Text("\(countdown.seconds.formattedWithoutSeparator) sec left")
+            Text(RelativeTime.todayText(lang))
+        } else if let target = targetDate {
+            // Semantic, localized phrase ("2 months, 3 weeks left").
+            Text(RelativeTime.phrase(
+                target: target,
+                includeTime: event.hasTime ?? false,
+                legacy: WidgetDataSync.shared.isLegacyTimeFormat(),
+                lang: lang
+            ))
         }
     }
 
@@ -138,7 +112,7 @@ struct LockscreenRectangularView: View {
         let dateYear = calendar.component(.year, from: date)
         if event.isRecurring {
             formatter.dateFormat = "MMM d"
-            return "Next: \(formatter.string(from: date))"
+            return "\(RelativeTime.label("next", WidgetDataSync.shared.appLanguage())): \(formatter.string(from: date))"
         }
         formatter.dateFormat = dateYear == currentYear ? "MMM d" : "MMM d, yyyy"
         return formatter.string(from: date)

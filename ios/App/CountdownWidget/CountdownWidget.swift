@@ -805,8 +805,9 @@ struct EventRowView: View {
             } else {
                 // Focus mode - days countdown
                 VStack(alignment: .trailing, spacing: 2) {
+                    let lang = WidgetDataSync.shared.appLanguage()
                     if countdown.isComplete && !countdown.isPast {
-                        Text("Today!")
+                        Text(RelativeTime.todayText(lang))
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.blue)
                     } else if countdown.isPast {
@@ -816,7 +817,8 @@ struct EventRowView: View {
                             target: targetDate ?? now,
                             now: now,
                             includeTime: event.hasTime ?? false,
-                            legacy: WidgetDataSync.shared.isLegacyTimeFormat()
+                            legacy: WidgetDataSync.shared.isLegacyTimeFormat(),
+                            lang: lang
                         ))
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(foregroundColor)
@@ -828,7 +830,7 @@ struct EventRowView: View {
                         Text("\(countdown.days)")
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(foregroundColor)
-                        Text(countdown.days == 1 ? "day" : "days")
+                        Text(RelativeTime.label("days", lang))
                             .font(.system(size: 11))
                             .foregroundColor(mutedColor)
                     }

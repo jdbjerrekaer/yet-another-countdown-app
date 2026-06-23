@@ -131,6 +131,8 @@ struct WidgetData: Codable {
     let lastUpdated: String?
     /// Mirror of the app's "days-only" Settings toggle. Optional → defaults off.
     let legacyTimeFormat: Bool?
+    /// The app's chosen language (e.g. "da") so the widget localises to match.
+    let appLanguage: String?
 
     var appearanceModeEnum: WidgetAppearanceMode {
         WidgetAppearanceMode(rawValue: appearanceMode) ?? .light
@@ -223,54 +225,92 @@ struct CountdownTime {
 /// `legacy` collapses everything to whole days ("400 days ago"); `includeTime`
 /// appends hours/minutes when the event has a specific time set.
 enum RelativeTime {
-    private struct Part { let value: Int; let unit: String }
+    // "%@ ago" / "%@ left" / "Today" per language. Pulled from the app's own
+    // translations so the widget reads the same as the in-app cards. Word order
+    // (prefix vs suffix) is baked into each template.
+    private static let TEMPLATES: [String: (ago: String, left: String, today: String)] = [
+        "en": ("%@ ago", "%@ left", "Today! 🎉"),
+        "da": ("%@ siden", "%@ tilbage", "I dag! 🎉"),
+        "de": ("vor %@", "noch %@", "Heute! 🎉"),
+        "es": ("hace %@", "en %@", "¡Hoy! 🎉"),
+        "fi": ("%@ sitten", "%@ jäljellä", "Tänään! 🎉"),
+        "fr": ("il y a %@", "dans %@", "Aujourd'hui ! 🎉"),
+        "it": ("%@ fa", "tra %@", "Oggi! 🎉"),
+        "no": ("%@ siden", "%@ igjen", "I dag! 🎉"),
+        "pt": ("há %@", "em %@", "Hoje! 🎉"),
+        "ru": ("%@ назад", "через %@", "Сегодня! 🎉"),
+        "sv": ("%@ sedan", "%@ kvar", "Idag! 🎉"),
+    ]
 
-    private static func parts(from: Date, to: Date, includeTime: Bool, legacy: Bool) -> [Part] {
-        let cal = Calendar.current
-        let start = includeTime ? from : cal.startOfDay(for: from)
-        let end = includeTime ? to : cal.startOfDay(for: to)
+    // Short unit headers shown under the live-countdown numbers (focus/classic).
+    private static let LABELS: [String: [String: String]] = [
+        "en": ["days": "Days", "hours": "Hours", "min": "Min", "next": "Next"],
+        "da": ["days": "Dage", "hours": "Timer", "min": "Min", "next": "Næste"],
+        "de": ["days": "Tage", "hours": "Std", "min": "Min", "next": "Nächstes"],
+        "es": ["days": "Días", "hours": "Horas", "min": "Min", "next": "Próximo"],
+        "fi": ["days": "Päivää", "hours": "Tuntia", "min": "Min", "next": "Seuraava"],
+        "fr": ["days": "Jours", "hours": "Heures", "min": "Min", "next": "Prochain"],
+        "it": ["days": "Giorni", "hours": "Ore", "min": "Min", "next": "Prossimo"],
+        "no": ["days": "Dager", "hours": "Timer", "min": "Min", "next": "Neste"],
+        "pt": ["days": "Dias", "hours": "Horas", "min": "Min", "next": "Próximo"],
+        "ru": ["days": "Дней", "hours": "Часов", "min": "Мин", "next": "Следующее"],
+        "sv": ["days": "Dagar", "hours": "Tim", "min": "Min", "next": "Nästa"],
+    ]
 
-        if legacy {
-            let totalDays = cal.dateComponents([.day], from: start, to: end).day ?? 0
-            var result: [Part] = []
-            if totalDays > 0 { result.append(Part(value: totalDays, unit: "day")) }
-            if includeTime {
-                let afterDays = cal.date(byAdding: .day, value: totalDays, to: start) ?? start
-                let t = cal.dateComponents([.hour, .minute], from: afterDays, to: end)
-                if let h = t.hour, h > 0 { result.append(Part(value: h, unit: "hour")) }
-                if let m = t.minute, m > 0 { result.append(Part(value: m, unit: "minute")) }
-            }
-            if result.isEmpty { result.append(Part(value: 0, unit: includeTime ? "minute" : "day")) }
-            return result
-        }
-
-        let c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: start, to: end)
-        let totalDays = c.day ?? 0
-        var result: [Part] = []
-        if let y = c.year, y > 0 { result.append(Part(value: y, unit: "year")) }
-        if let mo = c.month, mo > 0 { result.append(Part(value: mo, unit: "month")) }
-        let weeks = totalDays / 7
-        let days = totalDays % 7
-        if weeks > 0 { result.append(Part(value: weeks, unit: "week")) }
-        if days > 0 { result.append(Part(value: days, unit: "day")) }
-        if includeTime {
-            if let h = c.hour, h > 0 { result.append(Part(value: h, unit: "hour")) }
-            if let m = c.minute, m > 0 { result.append(Part(value: m, unit: "minute")) }
-        }
-        if result.isEmpty { result.append(Part(value: 0, unit: includeTime ? "minute" : "day")) }
-        return result
+    private static func tmpl(_ lang: String) -> (ago: String, left: String, today: String) {
+        TEMPLATES[lang] ?? TEMPLATES[String(lang.prefix(2))] ?? TEMPLATES["en"]!
     }
 
-    /// Localised-ish "x, y, z ago" / "... left". English-only here, matching the
-    /// widget's existing hardcoded strings.
-    static func phrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool) -> String {
+    static func todayText(_ lang: String) -> String { tmpl(lang).today }
+
+    static func label(_ key: String, _ lang: String) -> String {
+        (LABELS[lang] ?? LABELS[String(lang.prefix(2))] ?? LABELS["en"]!)[key] ?? key
+    }
+
+    // DateComponentsFormatter gives correctly localised, correctly pluralised
+    // unit strings (incl. Russian's complex plurals) for free.
+    private static func durationString(from: Date, to: Date, units: NSCalendar.Unit,
+                                       style: DateComponentsFormatter.UnitsStyle,
+                                       maxUnits: Int, lang: String) -> String {
+        let f = DateComponentsFormatter()
+        f.unitsStyle = style
+        f.allowedUnits = units
+        f.maximumUnitCount = maxUnits
+        f.zeroFormattingBehavior = .dropAll
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: lang)
+        f.calendar = cal
+        let s = f.string(from: from, to: to) ?? ""
+        return s.isEmpty ? "0" : s
+    }
+
+    /// Full "2 years, 4 months, 3 weeks left" — localised, zero-suppressed,
+    /// capped at 3 units. `legacy` collapses to whole days; `includeTime` adds h/m.
+    static func phrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool, lang: String) -> String {
         let isPast = target <= now
-        let (from, to) = isPast ? (target, now) : (now, target)
-        // Cap at the 3 most significant units so distant events stay readable.
-        let joined = parts(from: from, to: to, includeTime: includeTime, legacy: legacy)
-            .prefix(3)
-            .map { "\($0.value) \($0.unit)\($0.value == 1 ? "" : "s")" }
-            .joined(separator: ", ")
-        return isPast ? "\(joined) ago" : "\(joined) left"
+        let (a, b) = isPast ? (target, now) : (now, target)
+        let cal = Calendar.current
+        let from = includeTime ? a : cal.startOfDay(for: a)
+        let to = includeTime ? b : cal.startOfDay(for: b)
+        let units: NSCalendar.Unit
+        if legacy {
+            units = includeTime ? [.day, .hour, .minute] : [.day]
+        } else {
+            units = includeTime ? [.year, .month, .weekOfMonth, .day, .hour, .minute]
+                                 : [.year, .month, .weekOfMonth, .day]
+        }
+        let dur = durationString(from: from, to: to, units: units, style: .full, maxUnits: 3, lang: lang)
+        let t = tmpl(lang)
+        return String(format: isPast ? t.ago : t.left, dur)
+    }
+
+    /// Compact single-unit "5d left" for the tiny lock-screen accessories.
+    static func shortPhrase(target: Date, now: Date = Date(), lang: String) -> String {
+        let isPast = target <= now
+        let (a, b) = isPast ? (target, now) : (now, target)
+        let dur = durationString(from: a, to: b, units: [.day, .hour, .minute],
+                                 style: .abbreviated, maxUnits: 1, lang: lang)
+        let t = tmpl(lang)
+        return String(format: isPast ? t.ago : t.left, dur)
     }
 }
