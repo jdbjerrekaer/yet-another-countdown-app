@@ -40,6 +40,7 @@ export function CountdownCard({
   const hapticTriggeredRef = useRef(false);
   const [isSliding, setIsSliding] = useState(false);
   const [swipeProgress, setSwipeProgress] = useState(0);
+  const [deletePressed, setDeletePressed] = useState(false);
   const [swipeAmount, setSwipeAmount] = useState(0);
   
   const targetDate = event.isRecurring 
@@ -79,7 +80,10 @@ export function CountdownCard({
   const handleDeletePress = () => {
     // Trigger medium haptic on press/touch for immediate feedback
     trigger('medium');
+    setDeletePressed(true);
   };
+
+  const handleDeleteRelease = () => setDeletePressed(false);
 
   const handleSwipe = async () => {
     trigger('heavy');
@@ -278,6 +282,10 @@ export function CountdownCard({
                   className={styles.deleteIconCircle}
                   onPointerDown={handleDeletePress}
                   onTouchStart={handleDeletePress}
+                  onPointerUp={handleDeleteRelease}
+                  onPointerLeave={handleDeleteRelease}
+                  onPointerCancel={handleDeleteRelease}
+                  onTouchEnd={handleDeleteRelease}
                   style={{
                     width: (() => {
                       const baseWidth = 40;
@@ -292,33 +300,25 @@ export function CountdownCard({
                       return `${currentWidth}px`;
                     })(),
                     borderRadius: '9999px',
-                    transform: `scale(${Math.min(swipeProgress / 0.5, 1)})`,
-                    opacity: (() => {
-                      const scaleProgress = Math.min(swipeProgress / 0.5, 1);
-                      return 0.3 + (scaleProgress * 0.7);
-                    })(),
-                    filter: (() => {
-                      const scaleProgress = Math.min(swipeProgress / 0.5, 1);
-                      const blurAmount = 2 * (1 - scaleProgress);
-                      return blurAmount > 0 ? `blur(${blurAmount}px)` : 'none';
-                    })(),
-                    transition: isSliding 
-                      ? 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)' 
-                      : 'width 0.15s ease-out, transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.12s ease-out, opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                    // Reveal-scale (swipe) composed with a press-scale so the
+                    // destructive target dips on touch — Emil-style tactile feedback.
+                    transform: `scale(${Math.min(swipeProgress / 0.5, 1) * (deletePressed ? 0.88 : 1)})`,
+                    opacity: 0.3 + Math.min(swipeProgress / 0.5, 1) * 0.7,
+                    transition: isSliding
+                      ? 'transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
+                      : 'width 0.15s ease-out, transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.12s ease-out, opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
-                  <Trash2 
-                    className={styles.deleteIcon}
-                    style={{
-                      filter: swipeProgress > 0.95 ? `blur(${Math.max(0, (1 - (swipeProgress - 0.90) / 0.10) * 4)}px)` : 'none',
-                    }}
-                  />
-                  <span 
+                  <Trash2 className={styles.deleteIcon} />
+                  <span
                     className={styles.deleteText}
                     style={{
-                      display: swipeProgress > 0.95 ? 'inline' : 'none',
-                      opacity: swipeProgress > 0.95 ? Math.min((swipeProgress - 0.90) / 0.10, 1) : 0,
-                      filter: swipeProgress > 0.95 ? `blur(${Math.max(0, (1 - (swipeProgress - 0.90) / 0.10) * 4)}px)` : 'none',
+                      // Clean fade + slide-in (no blur). Reveal once the row is
+                      // ~90% expanded; opacity/x driven by the expansion amount.
+                      display: swipeProgress > 0.90 ? 'inline-block' : 'none',
+                      opacity: Math.min(Math.max((swipeProgress - 0.90) / 0.08, 0), 1),
+                      transform: `translateX(${(1 - Math.min(Math.max((swipeProgress - 0.90) / 0.08, 0), 1)) * 6}px)`,
+                      transition: 'opacity 0.18s cubic-bezier(0.23, 1, 0.32, 1), transform 0.18s cubic-bezier(0.23, 1, 0.32, 1)',
                     }}
                   >
                     {t('events.delete')}

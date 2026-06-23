@@ -9,7 +9,11 @@ struct CountdownEvent: Codable, Identifiable, Hashable {
     let emojiColor: String?
     let isRecurring: Bool
     let createdAt: String
-    
+    /// Whether the user set a specific time → include hours/minutes in the
+    /// elapsed/remaining phrase. Optional + default so older synced payloads
+    /// decode and existing CountdownEvent(...) call sites don't need updating.
+    var hasTime: Bool? = nil
+
     /// Parse the targetDate string to a Date object
     var targetDateAsDate: Date? {
         let formatter = ISO8601DateFormatter()
@@ -125,7 +129,9 @@ struct WidgetData: Codable {
     let appearanceMode: String
     let countdownStyle: String
     let lastUpdated: String?
-    
+    /// Mirror of the app's "days-only" Settings toggle. Optional → defaults off.
+    let legacyTimeFormat: Bool?
+
     var appearanceModeEnum: WidgetAppearanceMode {
         WidgetAppearanceMode(rawValue: appearanceMode) ?? .light
     }
@@ -209,5 +215,60 @@ struct CountdownTime {
                 daysSince: 0
             )
         }
+    }
+}
+
+/// Semantic elapsed/remaining phrase — mirrors the web app's relativeTime.ts so
+/// the widget reads the same as the in-app cards ("1 year, 2 weeks, 3 days ago").
+/// `legacy` collapses everything to whole days ("400 days ago"); `includeTime`
+/// appends hours/minutes when the event has a specific time set.
+enum RelativeTime {
+    private struct Part { let value: Int; let unit: String }
+
+    private static func parts(from: Date, to: Date, includeTime: Bool, legacy: Bool) -> [Part] {
+        let cal = Calendar.current
+        let start = includeTime ? from : cal.startOfDay(for: from)
+        let end = includeTime ? to : cal.startOfDay(for: to)
+
+        if legacy {
+            let totalDays = cal.dateComponents([.day], from: start, to: end).day ?? 0
+            var result: [Part] = []
+            if totalDays > 0 { result.append(Part(value: totalDays, unit: "day")) }
+            if includeTime {
+                let afterDays = cal.date(byAdding: .day, value: totalDays, to: start) ?? start
+                let t = cal.dateComponents([.hour, .minute], from: afterDays, to: end)
+                if let h = t.hour, h > 0 { result.append(Part(value: h, unit: "hour")) }
+                if let m = t.minute, m > 0 { result.append(Part(value: m, unit: "minute")) }
+            }
+            if result.isEmpty { result.append(Part(value: 0, unit: includeTime ? "minute" : "day")) }
+            return result
+        }
+
+        let c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: start, to: end)
+        let totalDays = c.day ?? 0
+        var result: [Part] = []
+        if let y = c.year, y > 0 { result.append(Part(value: y, unit: "year")) }
+        if let mo = c.month, mo > 0 { result.append(Part(value: mo, unit: "month")) }
+        let weeks = totalDays / 7
+        let days = totalDays % 7
+        if weeks > 0 { result.append(Part(value: weeks, unit: "week")) }
+        if days > 0 { result.append(Part(value: days, unit: "day")) }
+        if includeTime {
+            if let h = c.hour, h > 0 { result.append(Part(value: h, unit: "hour")) }
+            if let m = c.minute, m > 0 { result.append(Part(value: m, unit: "minute")) }
+        }
+        if result.isEmpty { result.append(Part(value: 0, unit: includeTime ? "minute" : "day")) }
+        return result
+    }
+
+    /// Localised-ish "x, y, z ago" / "... left". English-only here, matching the
+    /// widget's existing hardcoded strings.
+    static func phrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool) -> String {
+        let isPast = target <= now
+        let (from, to) = isPast ? (target, now) : (now, target)
+        let joined = parts(from: from, to: to, includeTime: includeTime, legacy: legacy)
+            .map { "\($0.value) \($0.unit)\($0.value == 1 ? "" : "s")" }
+            .joined(separator: ", ")
+        return isPast ? "\(joined) ago" : "\(joined) left"
     }
 }

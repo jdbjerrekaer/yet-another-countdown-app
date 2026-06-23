@@ -121,9 +121,13 @@ struct MediumWidgetView: View {
             } else {
                 // Focus mode - time breakdown
                 if countdown.isPast {
-                    HStack(spacing: 24) {
-                        TimeUnitView(value: countdown.daysSince, unit: "days", subtext: "ago", foregroundColor: foregroundColor, mutedColor: mutedColor)
-                    }
+                    // Semantic elapsed phrase ("1 year, 2 weeks, 3 days ago"),
+                    // or whole days when the legacy format is on.
+                    Text(elapsedPhrase)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(foregroundColor)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
                 } else {
                     HStack(spacing: 24) {
                         TimeUnitView(value: countdown.days, unit: "Days", foregroundColor: foregroundColor, mutedColor: mutedColor)
@@ -135,9 +139,19 @@ struct MediumWidgetView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     // MARK: - Computed Properties
-    
+
+    /// "1 year, 2 weeks, 3 days ago" — mirrors the in-app card, days-only when legacy.
+    private var elapsedPhrase: String {
+        guard let target = targetDate else { return "" }
+        return RelativeTime.phrase(
+            target: target,
+            includeTime: event.hasTime ?? false,
+            legacy: WidgetDataSync.shared.isLegacyTimeFormat()
+        )
+    }
+
     private var foregroundColor: Color {
         switch appearanceMode {
         case .light:

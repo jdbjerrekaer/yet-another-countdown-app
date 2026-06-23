@@ -232,6 +232,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
 
         let appearanceMode = call.getString("appearanceMode") ?? "light"
         let countdownStyle = call.getString("countdownStyle") ?? "focus"
+        let legacyTimeFormat = call.getBool("legacyTimeFormat") ?? false
 
         guard let userDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
             call.reject("Failed to access App Group storage")
@@ -248,13 +249,15 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             cleanEvent["emojiColor"] = event["emojiColor"] as? String
             cleanEvent["isRecurring"] = event["isRecurring"] as? Bool ?? false
             cleanEvent["createdAt"] = event["createdAt"] as? String ?? ISO8601DateFormatter().string(from: Date())
+            cleanEvent["hasTime"] = event["hasTime"] as? Bool ?? false
             cleanedEvents.append(cleanEvent)
         }
-        
+
         let stableWidgetData: [String: Any] = [
             "events": cleanedEvents,
             "appearanceMode": appearanceMode,
-            "countdownStyle": countdownStyle
+            "countdownStyle": countdownStyle,
+            "legacyTimeFormat": legacyTimeFormat
         ]
         
         do {
@@ -265,7 +268,8 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
                 let existingStableWidgetData: [String: Any] = [
                     "events": existingObject["events"] as? [[String: Any]] ?? [],
                     "appearanceMode": existingObject["appearanceMode"] as? String ?? "light",
-                    "countdownStyle": existingObject["countdownStyle"] as? String ?? "focus"
+                    "countdownStyle": existingObject["countdownStyle"] as? String ?? "focus",
+                    "legacyTimeFormat": existingObject["legacyTimeFormat"] as? Bool ?? false
                 ]
                 let existingStableJsonData = try JSONSerialization.data(withJSONObject: existingStableWidgetData, options: [.sortedKeys])
 
@@ -280,6 +284,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
                 "events": cleanedEvents,
                 "appearanceMode": appearanceMode,
                 "countdownStyle": countdownStyle,
+                "legacyTimeFormat": legacyTimeFormat,
                 "lastUpdated": ISO8601DateFormatter().string(from: Date())
             ]
             let jsonData = try JSONSerialization.data(withJSONObject: widgetData, options: [.prettyPrinted, .sortedKeys])

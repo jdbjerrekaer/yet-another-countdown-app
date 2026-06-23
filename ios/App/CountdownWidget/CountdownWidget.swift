@@ -810,12 +810,20 @@ struct EventRowView: View {
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.blue)
                     } else if countdown.isPast {
-                        Text("\(countdown.daysSince)")
-                            .font(.system(size: 24, weight: .bold))
+                        // Semantic elapsed phrase ("1 year, 2 weeks ago"), or
+                        // whole days when the legacy format is on.
+                        Text(RelativeTime.phrase(
+                            target: targetDate ?? now,
+                            now: now,
+                            includeTime: event.hasTime ?? false,
+                            legacy: WidgetDataSync.shared.isLegacyTimeFormat()
+                        ))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(foregroundColor)
-                        Text(countdown.daysSince == 1 ? "day ago" : "days ago")
-                            .font(.system(size: 11))
-                            .foregroundColor(mutedColor)
+                            .multilineTextAlignment(.trailing)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(3)
+                            .frame(maxWidth: 150, alignment: .trailing)
                     } else {
                         Text("\(countdown.days)")
                             .font(.system(size: 24, weight: .bold))

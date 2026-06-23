@@ -38,9 +38,38 @@ const EXPAND_MS = 340;
 const DEFAULT_HOLD_MS = 1400;
 const COLLAPSE_MS = 280;
 
+// Stacked glyph layers for the icon cross-fade. Exactly one is "active" for any
+// given (confirming, hasUndo) combination; the others fade/scale out.
+const GLYPHS: {
+  key: string;
+  active: (confirming: boolean, hasUndo: boolean) => boolean;
+  render: (icon: string) => JSX.Element;
+}[] = [
+  {
+    key: 'idle',
+    active: (confirming) => !confirming,
+    render: (icon) => <IonIcon icon={icon} style={{ fontSize: 40 }} />,
+  },
+  {
+    key: 'check',
+    active: (confirming, hasUndo) => confirming && !hasUndo,
+    render: () => <IonIcon icon={checkmark} style={{ fontSize: 40 }} />,
+  },
+  {
+    key: 'undo',
+    active: (confirming, hasUndo) => confirming && hasUndo,
+    render: () => (
+      <svg aria-hidden="true" viewBox="0 0 19 19" width={30} height={30} fill="currentColor">
+        <path d="M0 6.57227C0 6.80664 0.0976562 7.03125 0.292969 7.2168L6.03516 12.8516C6.20117 13.0273 6.45508 13.125 6.66016 13.125C7.1875 13.125 7.5293 12.7734 7.5293 12.2656C7.5293 12.0117 7.44141 11.8262 7.29492 11.6699L4.47266 8.92578L1.71875 6.57227L4.47266 4.20898L7.29492 1.46484C7.44141 1.30859 7.5293 1.12305 7.5293 0.869141C7.5293 0.361328 7.1875 0.00976562 6.66016 0.00976562C6.45508 0.00976562 6.20117 0.107422 6.03516 0.283203L0.292969 5.91797C0.0976562 6.10352 0 6.32812 0 6.57227ZM8.48633 17.3633C8.48633 17.8418 8.83789 18.2324 9.375 18.2324H11.6309C15.9961 18.2324 18.457 15.7422 18.457 12.002C18.457 8.27148 15.9277 5.69336 11.4746 5.69336H4.91211L1.67969 5.83984C1.2793 5.85938 0.957031 6.16211 0.957031 6.57227C0.957031 6.97266 1.2793 7.27539 1.67969 7.29492L4.91211 7.44141H11.6211C14.9512 7.44141 16.709 9.27734 16.709 11.9043C16.709 14.541 14.9512 16.4941 11.6211 16.4941H9.375C8.83789 16.4941 8.48633 16.8848 8.48633 17.3633Z" />
+      </svg>
+    ),
+  },
+];
+
 export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
   ({ icon, onClick, ariaLabel, disabled }, ref) => {
     const [confirming, setConfirming] = useState(false);
+    const [pressed, setPressed] = useState(false);
     const [confirmText, setConfirmText] = useState('');
     const [expandedWidth, setExpandedWidth] = useState(MIN_EXPANDED_WIDTH);
     const measureRef = useRef<HTMLSpanElement>(null);
@@ -109,8 +138,8 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
     }, [confirmText]);
 
     const hasUndo = confirming && undoRef.current !== null;
-    const displayIcon = confirming ? checkmark : icon;
     const width = confirming ? expandedWidth : COLLAPSED_WIDTH;
+    const pressable = !(disabled && !confirming);
 
     const handleClick = () => {
       if (confirming) {
@@ -129,6 +158,10 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
       <button
         type="button"
         onClick={handleClick}
+        onPointerDown={() => pressable && setPressed(true)}
+        onPointerUp={() => setPressed(false)}
+        onPointerLeave={() => setPressed(false)}
+        onPointerCancel={() => setPressed(false)}
         aria-label={confirming ? (hasUndo ? `${confirmText}. Tap to undo.` : confirmText) : ariaLabel}
         disabled={disabled && !confirming}
         className="morphing-fab"
@@ -136,7 +169,9 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
           width,
           height: COLLAPSED_WIDTH,
           borderRadius: RADIUS,
-          transition: `width ${confirming ? EXPAND_MS : COLLAPSE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+          transform: pressed ? 'scale(0.92)' : 'scale(1)',
+          // ponytail: press uses a snappier ease-out for release; width keeps its own curve.
+          transition: `width ${confirming ? EXPAND_MS : COLLAPSE_MS}ms cubic-bezier(0.32, 0.72, 0, 1), transform ${pressed ? 120 : 260}ms cubic-bezier(0.23, 1, 0.32, 1)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
@@ -205,30 +240,32 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
             position: 'relative',
           }}
         >
-          {hasUndo ? (
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 19 19"
-              width={30}
-              height={30}
-              fill="currentColor"
-              style={{
-                transform: 'scale(1.05)',
-                transition: 'transform 240ms cubic-bezier(0.32, 0.72, 0, 1)',
-              }}
-            >
-              <path d="M0 6.57227C0 6.80664 0.0976562 7.03125 0.292969 7.2168L6.03516 12.8516C6.20117 13.0273 6.45508 13.125 6.66016 13.125C7.1875 13.125 7.5293 12.7734 7.5293 12.2656C7.5293 12.0117 7.44141 11.8262 7.29492 11.6699L4.47266 8.92578L1.71875 6.57227L4.47266 4.20898L7.29492 1.46484C7.44141 1.30859 7.5293 1.12305 7.5293 0.869141C7.5293 0.361328 7.1875 0.00976562 6.66016 0.00976562C6.45508 0.00976562 6.20117 0.107422 6.03516 0.283203L0.292969 5.91797C0.0976562 6.10352 0 6.32812 0 6.57227ZM8.48633 17.3633C8.48633 17.8418 8.83789 18.2324 9.375 18.2324H11.6309C15.9961 18.2324 18.457 15.7422 18.457 12.002C18.457 8.27148 15.9277 5.69336 11.4746 5.69336H4.91211L1.67969 5.83984C1.2793 5.85938 0.957031 6.16211 0.957031 6.57227C0.957031 6.97266 1.2793 7.27539 1.67969 7.29492L4.91211 7.44141H11.6211C14.9512 7.44141 16.709 9.27734 16.709 11.9043C16.709 14.541 14.9512 16.4941 11.6211 16.4941H9.375C8.83789 16.4941 8.48633 16.8848 8.48633 17.3633Z" />
-            </svg>
-          ) : (
-            <IonIcon
-              icon={displayIcon}
-              style={{
-                fontSize: 40,
-                transition: 'transform 240ms cubic-bezier(0.32, 0.72, 0, 1), opacity 180ms ease',
-                transform: confirming ? 'scale(1.05)' : 'scale(1)',
-              }}
-            />
-          )}
+          {/* Glyphs are stacked and cross-fade between states so the +/✓ morphs
+              rather than hard-cutting. Each layer counter-rotates + scales as it
+              swaps. ease-out so the incoming glyph lands with immediate presence. */}
+          {GLYPHS.map(({ key, active, render }) => {
+            const shown = active(confirming, hasUndo);
+            return (
+              <span
+                key={key}
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: shown ? 1 : 0,
+                  transform: shown ? 'scale(1) rotate(0deg)' : 'scale(0.6) rotate(-45deg)',
+                  transition:
+                    'opacity 200ms ease, transform 280ms cubic-bezier(0.23, 1, 0.32, 1)',
+                  pointerEvents: 'none',
+                }}
+              >
+                {render(icon)}
+              </span>
+            );
+          })}
         </span>
       </button>
     );

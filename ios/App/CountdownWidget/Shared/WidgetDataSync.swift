@@ -31,6 +31,10 @@ final class WidgetDataSync {
         loadWidgetData()?.countdownStyleEnum ?? .focus
     }
 
+    func isLegacyTimeFormat() -> Bool {
+        loadWidgetData()?.legacyTimeFormat ?? false
+    }
+
     func calculateProgress(for event: CountdownEvent) -> Double {
         let target: Date?
         if event.isRecurring {

@@ -26,6 +26,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { WidgetPreview } from '@/components/WidgetPreview';
 import { MorphingFab, MorphingFabHandle } from '@/components/MorphingFab';
+import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
 import { CountdownCard } from '@/components/CountdownCard';
@@ -198,6 +199,7 @@ export default function Index() {
   const titleTapCountRef = useRef<number>(0);
   const titleLastTapRef = useRef<number>(0);
   const fabRef = useRef<MorphingFabHandle>(null);
+  const legacyTimeFormat = useLegacyTimeFormat();
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
   const hasPulledFromICloudRef = useRef(false);
@@ -1005,12 +1007,14 @@ export default function Index() {
           emojiColor: event.emojiColor,
           isRecurring: event.isRecurring,
           createdAt: event.createdAt,
+          hasTime: event.hasTime ?? false,
         }));
 
         const payload = {
           events: widgetEvents,
           appearanceMode: selectedAppearanceMode,
           countdownStyle: selectedCountdownStyle,
+          legacyTimeFormat,
         };
         const serializedPayload = JSON.stringify(payload);
         const widgetEventIds = widgetEvents.map(event => event.id);
@@ -1033,7 +1037,7 @@ export default function Index() {
     };
 
     syncWidgetData();
-  }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative]);
+  }, [events, selectedAppearanceMode, selectedCountdownStyle, isNative, legacyTimeFormat]);
 
   // Check scheduled notifications on app load (for web platform).
   // Only runs while the tab/app is visible — no point polling in background.

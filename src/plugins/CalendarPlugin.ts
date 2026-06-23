@@ -84,6 +84,7 @@ export interface WidgetCountdownEvent {
   emojiColor?: string;
   isRecurring: boolean;
   createdAt: string;
+  hasTime?: boolean;
 }
 
 /**
@@ -93,6 +94,7 @@ export interface WidgetData {
   events: WidgetCountdownEvent[];
   appearanceMode: string;
   countdownStyle: string;
+  legacyTimeFormat?: boolean;
   lastUpdated?: string;
 }
 
