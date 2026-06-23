@@ -266,7 +266,9 @@ enum RelativeTime {
     static func phrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool) -> String {
         let isPast = target <= now
         let (from, to) = isPast ? (target, now) : (now, target)
+        // Cap at the 3 most significant units so distant events stay readable.
         let joined = parts(from: from, to: to, includeTime: includeTime, legacy: legacy)
+            .prefix(3)
             .map { "\($0.value) \($0.unit)\($0.value == 1 ? "" : "s")" }
             .joined(separator: ", ")
         return isPast ? "\(joined) ago" : "\(joined) left"

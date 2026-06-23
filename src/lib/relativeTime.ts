@@ -65,7 +65,10 @@ export function relativeParts(from: Date, to: Date, includeTime: boolean, legacy
 export function formatRelative(t: TFunction, target: Date, now: Date, includeTime: boolean, legacy = false): string {
   const isPast = target.getTime() <= now.getTime();
   const [from, to] = isPast ? [target, now] : [now, target];
+  // Cap at the 3 most significant units so distant events don't overflow the
+  // single-line card subtitle (e.g. "2 years, 4 months, 3 weeks left").
   const joined = relativeParts(from, to, includeTime, legacy)
+    .slice(0, 3)
     .map((p) => t(`relative.${p.unit}`, { count: p.count }))
     .join(', ');
   return t(isPast ? 'relative.ago' : 'relative.left', { parts: joined });
