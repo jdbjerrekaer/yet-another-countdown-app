@@ -339,17 +339,17 @@ enum RelativeTime {
         }
         if pieces.isEmpty { pieces.append("0d") }
         let joined = pieces.prefix(3).joined(separator: " ")
-        let t = tmpl(lang)
-        return String(format: isPast ? t.ago : t.left, joined)
+        // Lock screen stays terse: only the past gets an "ago" suffix; upcoming
+        // shows the bare duration (no "left") since the date line implies it.
+        return isPast ? String(format: tmpl(lang).ago, joined) : joined
     }
 
-    /// Compact single-unit "5d left" for the tiny lock-screen accessories.
+    /// Compact single-unit "5d" / "5d ago" for the tiny lock-screen accessories.
     static func shortPhrase(target: Date, now: Date = Date(), lang: String) -> String {
         let isPast = target <= now
         let (a, b) = isPast ? (target, now) : (now, target)
         let dur = durationString(from: a, to: b, units: [.day, .hour, .minute],
                                  style: .abbreviated, maxUnits: 1, lang: lang)
-        let t = tmpl(lang)
-        return String(format: isPast ? t.ago : t.left, dur)
+        return isPast ? String(format: tmpl(lang).ago, dur) : dur
     }
 }

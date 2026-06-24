@@ -810,9 +810,9 @@ struct EventRowView: View {
                         Text(RelativeTime.todayText(lang))
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.blue)
-                    } else if countdown.isPast {
-                        // Semantic elapsed phrase ("1 year, 2 weeks ago"), or
-                        // whole days when the legacy format is on.
+                    } else {
+                        // Semantic phrase for both past ("1 year, 2 weeks ago")
+                        // and future ("2 months, 3 weeks left"); days-only when legacy.
                         Text(RelativeTime.phrase(
                             target: targetDate ?? now,
                             now: now,
@@ -826,13 +826,6 @@ struct EventRowView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .lineLimit(3)
                             .frame(maxWidth: 150, alignment: .trailing)
-                    } else {
-                        Text("\(countdown.days)")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(foregroundColor)
-                        Text(RelativeTime.label("days", lang))
-                            .font(.system(size: 11))
-                            .foregroundColor(mutedColor)
                     }
                 }
             }
