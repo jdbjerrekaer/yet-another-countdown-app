@@ -813,13 +813,15 @@ struct EventRowView: View {
                     } else {
                         // Semantic phrase for both past ("1 year, 2 weeks ago")
                         // and future ("2 months, 3 weeks left"); days-only when legacy.
+                        // Each unit wraps to its own line here, so drop the
+                        // commas — the line breaks already separate the units.
                         Text(RelativeTime.phrase(
                             target: targetDate ?? now,
                             now: now,
                             includeTime: event.hasTime ?? false,
                             legacy: WidgetDataSync.shared.isLegacyTimeFormat(),
                             lang: lang
-                        ))
+                        ).replacingOccurrences(of: ", ", with: " "))
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(foregroundColor)
                             .multilineTextAlignment(.trailing)
