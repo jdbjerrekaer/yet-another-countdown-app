@@ -301,7 +301,12 @@ enum RelativeTime {
         }
         let dur = durationString(from: from, to: to, units: units, style: .full, maxUnits: 3, lang: lang)
         let t = tmpl(lang)
-        return String(format: isPast ? t.ago : t.left, dur)
+        let full = String(format: isPast ? t.ago : t.left, dur)
+        // Keep each "5 days"/"days left" pair on one line; only allow wrapping at
+        // the comma boundaries between units (DCF separates units with ", ").
+        let nbsp = "\u{00A0}"
+        return full.replacingOccurrences(of: " ", with: nbsp)
+                   .replacingOccurrences(of: ",\(nbsp)", with: ", ")
     }
 
     /// Ultra-compact "2w 6d left" / "3mo 2w 1d ago" — single-letter units, capped
@@ -338,10 +343,22 @@ enum RelativeTime {
             }
         }
         if pieces.isEmpty { pieces.append("0d") }
-        let joined = pieces.prefix(3).joined(separator: " ")
+        let count = min(pieces.count, 3)
+        // 1–2 units → room to spell it out ("1 week", "1 week, 3 days");
+        // 3 units → stay single-letter ("1mo 2w 5d") so it fits the accessory.
+        let body: String
+        if count <= 2 {
+            let units: NSCalendar.Unit = legacy
+                ? (includeTime ? [.day, .hour, .minute] : [.day])
+                : (includeTime ? [.year, .month, .weekOfMonth, .day, .hour, .minute]
+                               : [.year, .month, .weekOfMonth, .day])
+            body = durationString(from: from, to: to, units: units, style: .full, maxUnits: count, lang: lang)
+        } else {
+            body = pieces.prefix(3).joined(separator: " ")
+        }
         // Lock screen stays terse: only the past gets an "ago" suffix; upcoming
         // shows the bare duration (no "left") since the date line implies it.
-        return isPast ? String(format: tmpl(lang).ago, joined) : joined
+        return isPast ? String(format: tmpl(lang).ago, body) : body
     }
 
     /// Compact single-unit "5d" / "5d ago" for the tiny lock-screen accessories.
