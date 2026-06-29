@@ -117,6 +117,9 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, sel
     if (!dragRef.current) return;
     dragRef.current = false;
     removeDragListeners();
+    // Now that the gesture is over, selecting the emoji (which remounts the tile)
+    // is safe. Do it before applying the shape so both land on the same event.
+    if (!selected) onSelect?.();
     const idx = hoverRef.current;
     if (idx !== null) select(EMOJI_SHAPES[idx]);
     else close();
@@ -125,8 +128,10 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, sel
   const open = useCallback(
     (drag: boolean) => {
       if (!triggerRef.current) return;
-      // Long-pressing an unselected tile selects it first (same instance, no remount).
-      if (!selected) onSelect?.();
+      // NOTE: do NOT select the emoji here. Selecting swaps this tile's inner DOM
+      // (plain tile → colored container), which removes the node the finger is
+      // touching and makes iOS fire touchcancel — killing the drag. We defer the
+      // selection to drag release (dragEndImpl) so nothing remounts mid-gesture.
       const r = triggerRef.current.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
