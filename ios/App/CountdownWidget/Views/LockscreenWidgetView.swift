@@ -100,7 +100,7 @@ struct LockscreenRectangularView: View {
             Text(RelativeTime.compactPhrase(
                 target: target,
                 includeTime: event.hasTime ?? false,
-                legacy: WidgetDataSync.shared.isLegacyTimeFormat(),
+                legacy: event.resolveLegacy(globalLegacy: WidgetDataSync.shared.isLegacyTimeFormat()),
                 lang: lang
             ))
         }

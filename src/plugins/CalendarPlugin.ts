@@ -86,6 +86,7 @@ export interface WidgetCountdownEvent {
   isRecurring: boolean;
   createdAt: string;
   hasTime?: boolean;
+  invertTimeFormat?: boolean;
 }
 
 /**

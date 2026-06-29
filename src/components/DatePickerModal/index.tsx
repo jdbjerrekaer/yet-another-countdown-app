@@ -7,12 +7,13 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Share } from '@capacitor/share';
 import { Dialog } from '@capacitor/dialog';
 import EmojiKeyboardPlugin from '@/plugins/EmojiKeyboardPlugin';
-import { CalendarIcon, Clock, RefreshCw, Trash2, Plus, X } from 'lucide-react';
+import { CalendarIcon, Clock, RefreshCw, Trash2, Plus, X, Hourglass } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
+import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
 import { EmojiShape, normalizeShape } from '@/lib/emojiShapes';
 import { EmojiShapePicker } from '@/components/EmojiShapePicker';
@@ -81,12 +82,13 @@ export interface DatePickerModalRef {
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape) => void | Promise<void>;
+  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape, invertTimeFormat?: boolean) => void | Promise<void>;
   initialTitle?: string;
   initialDate?: Date;
   initialEmoji?: string;
   initialEmojiColor?: string;
   initialEmojiShape?: string;
+  initialInvertTimeFormat?: boolean;
   initialIsRecurring?: boolean;
   initialIsImported?: boolean;
   initialImportedFrom?: string;
@@ -107,6 +109,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   initialEmoji = '',
   initialEmojiColor,
   initialEmojiShape,
+  initialInvertTimeFormat = false,
   initialIsRecurring = false,
   initialIsImported = false,
   initialImportedFrom,
@@ -132,11 +135,13 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const DEFAULT_COLOR = '#3b82f6';
   const [emojiColor, setEmojiColor] = useState<string>(initialEmojiColor || DEFAULT_COLOR);
   const [emojiShape, setEmojiShape] = useState<EmojiShape>(normalizeShape(initialEmojiShape));
+  const [invertTimeFormat, setInvertTimeFormat] = useState<boolean>(initialInvertTimeFormat ?? false);
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const [showCustomEmojiInput, setShowCustomEmojiInput] = useState(false);
   const [customEmojiValue, setCustomEmojiValue] = useState('');
   const [isTitleFocused, setIsTitleFocused] = useState(false);
   const { trigger } = useHaptic();
+  const legacyTimeFormat = useLegacyTimeFormat();
   const prevIsOpenRef = useRef(false);
   const customEmojiInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -237,6 +242,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       setEmoji(initialEmoji ?? '');
       setEmojiColor(initialEmojiColor || DEFAULT_COLOR);
       setEmojiShape(normalizeShape(initialEmojiShape));
+      setInvertTimeFormat(initialInvertTimeFormat ?? false);
       setIsRecurring(initialIsRecurring ?? false);
       // Detect specific time: editing with non-default (non-8am) time
       const initTime = initialDate ?? normalizedDate;
@@ -546,7 +552,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         }
       }
       
-      await onSave(title, date, emoji, isRecurring, hasSpecificTime, emojiColor, emojiShape);
+      await onSave(title, date, emoji, isRecurring, hasSpecificTime, emojiColor, emojiShape, invertTimeFormat);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
       onClose();
@@ -1035,6 +1041,25 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   <IonToggle
                     checked={hasSpecificTime}
                     onIonChange={(e) => handleSpecificTimeToggle(e.detail.checked)}
+                  />
+                </div>
+                {/* Time-display override — off follows the global setting; on flips it */}
+                <div className="mx-4 border-t border-border/50" />
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Hourglass className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t('modal.timeFormatLabel')}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {legacyTimeFormat ? t('modal.timeFormatSublabelToSemantic') : t('modal.timeFormatSublabelToDays')}
+                      </p>
+                    </div>
+                  </div>
+                  <IonToggle
+                    checked={invertTimeFormat}
+                    onIonChange={(e) => { trigger('selection'); setInvertTimeFormat(e.detail.checked); }}
                   />
                 </div>
                 {timeWheelMounted && date && (

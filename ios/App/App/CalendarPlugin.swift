@@ -252,6 +252,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             cleanEvent["isRecurring"] = event["isRecurring"] as? Bool ?? false
             cleanEvent["createdAt"] = event["createdAt"] as? String ?? ISO8601DateFormatter().string(from: Date())
             cleanEvent["hasTime"] = event["hasTime"] as? Bool ?? false
+            cleanEvent["invertTimeFormat"] = event["invertTimeFormat"] as? Bool ?? false
             cleanedEvents.append(cleanEvent)
         }
 

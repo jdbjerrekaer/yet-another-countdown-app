@@ -103,7 +103,10 @@
     "enableYearly": "Enable",
     "dateMaxHelper": "Up to 5 years ahead",
     "setSpecificTimeLabel": "Set Specific Time",
-    "setSpecificTimeSublabel": "Countdown to a precise moment"
+    "setSpecificTimeSublabel": "Countdown to a precise moment",
+    "timeFormatLabel": "Custom Time Display",
+    "timeFormatSublabelToDays": "Show this countdown only in days",
+    "timeFormatSublabelToSemantic": "Show this countdown in months, weeks, and days"
   },
   "dialogs": {
     "dateChanged": {

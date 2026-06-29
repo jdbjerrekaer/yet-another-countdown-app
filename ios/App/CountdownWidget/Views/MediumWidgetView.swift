@@ -138,7 +138,7 @@ struct MediumWidgetView: View {
         return RelativeTime.phrase(
             target: target,
             includeTime: event.hasTime ?? false,
-            legacy: WidgetDataSync.shared.isLegacyTimeFormat(),
+            legacy: event.resolveLegacy(globalLegacy: WidgetDataSync.shared.isLegacyTimeFormat()),
             lang: lang
         )
     }

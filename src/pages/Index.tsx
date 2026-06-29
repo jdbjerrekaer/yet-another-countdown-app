@@ -1019,6 +1019,7 @@ export default function Index() {
           isRecurring: event.isRecurring,
           createdAt: event.createdAt,
           hasTime: event.hasTime ?? false,
+          invertTimeFormat: event.invertTimeFormat,
         }));
 
         const payload = {
@@ -1248,7 +1249,7 @@ export default function Index() {
     }, 0);
   };
 
-  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape) => {
+  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape, invertTimeFormat?: boolean) => {
     const saveKind = editingEvent ? 'edit' : 'create';
 
     const hasPermission = await checkNotificationPermission();
@@ -1259,7 +1260,7 @@ export default function Index() {
       
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
-          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, emojiShape, isRecurring, hasTime: hasSpecificTime }
+          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, emojiShape, isRecurring, hasTime: hasSpecificTime, invertTimeFormat }
           : e
       ));
       
@@ -1286,6 +1287,7 @@ export default function Index() {
         // for recurring ones (they keep coming back). See the purge effect.
         autoDelete: !isRecurring && date.getTime() - Date.now() > 2 * 24 * 60 * 60 * 1000,
         hasTime: hasSpecificTime,
+        invertTimeFormat,
       };
       setEvents(prev => [...prev, newEvent]);
       setSelectedEventId(newEvent.id);
@@ -2035,6 +2037,7 @@ export default function Index() {
         initialEmoji={editingEvent?.emoji ?? importPrefillData?.emoji}
         initialEmojiColor={editingEvent?.emojiColor ?? importPrefillData?.emojiColor}
         initialEmojiShape={editingEvent?.emojiShape}
+        initialInvertTimeFormat={editingEvent?.invertTimeFormat}
         initialIsRecurring={editingEvent?.isRecurring ?? importPrefillData?.isRecurring}
         initialIsImported={editingEvent?.isImported}
         initialImportedFrom={editingEvent?.importedFrom}

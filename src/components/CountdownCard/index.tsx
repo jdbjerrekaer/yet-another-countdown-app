@@ -4,7 +4,7 @@ import { IonItemSliding, IonItem, IonItemOptions, IonItemOption } from '@ionic/r
 import { RefreshCw, CalendarIcon, Trash2 } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
-import { CountdownEvent } from '@/types/countdown';
+import { CountdownEvent, resolveLegacy } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { formatRelative } from '@/lib/relativeTime';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
@@ -375,7 +375,7 @@ export function CountdownCard({
                   <p className="text-sm text-muted-foreground flex-shrink-0">
                     {countdown.isComplete && !countdown.isPast
                       ? t('countdown.today')
-                      : formatRelative(t, targetDate, new Date(), event.hasTime ?? false, legacyTimeFormat)
+                      : formatRelative(t, targetDate, new Date(), event.hasTime ?? false, resolveLegacy(event.invertTimeFormat, legacyTimeFormat))
                     }
                   </p>
                   {event.isImported && event.importedFrom && (

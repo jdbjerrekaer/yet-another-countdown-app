@@ -17,6 +17,16 @@ struct CountdownEvent: Codable, Identifiable, Hashable {
     /// elapsed/remaining phrase. Optional + default so older synced payloads
     /// decode and existing CountdownEvent(...) call sites don't need updating.
     var hasTime: Bool? = nil
+    /// Per-countdown override for the remaining-time wording: when true, this
+    /// countdown shows the OPPOSITE of the global legacyTimeFormat; when false/nil
+    /// it follows the global setting. Stored as a flip so it tracks the global
+    /// setting if that later changes. Optional + default for back-compat.
+    var invertTimeFormat: Bool? = nil
+
+    /// Resolve this event's override against the global legacy flag.
+    func resolveLegacy(globalLegacy: Bool) -> Bool {
+        return (invertTimeFormat ?? false) ? !globalLegacy : globalLegacy
+    }
 
     /// Parse the targetDate string to a Date object
     var targetDateAsDate: Date? {
