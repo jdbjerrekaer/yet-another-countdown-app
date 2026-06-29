@@ -36,15 +36,16 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, sel
   const centerRef = useRef<{ cx: number; cy: number } | null>(null);
   const pressTimer = useRef<number | null>(null);
   const pressStart = useRef<{ x: number; y: number } | null>(null);
-  const pressPointerId = useRef<number | null>(null);
-  const pressEl = useRef<HTMLElement | null>(null);
   const lastTap = useRef<number | null>(null);
-  // Swallow touchmove in the capture phase while dragging so iOS can't reinterpret
-  // the drag as a scroll (which kills pointermove delivery on a real device).
-  const blockTouch = useRef((e: TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
+  // Drag is driven by capture-phase touchmove (with preventDefault) so iOS doesn't
+  // scroll-cancel it; pointer events cover desktop mouse. Stable wrappers for
+  // add/removeEventListener; live logic in the *Impl refs, reassigned each render.
+  const dragTouchMoveImpl = useRef<(e: TouchEvent) => void>(() => {});
+  const dragPointerMoveImpl = useRef<(e: PointerEvent) => void>(() => {});
+  const dragEndImpl = useRef<() => void>(() => {});
+  const dragTouchMove = useRef((e: TouchEvent) => dragTouchMoveImpl.current(e)).current;
+  const dragPointerMove = useRef((e: PointerEvent) => dragPointerMoveImpl.current(e)).current;
+  const dragEnd = useRef(() => dragEndImpl.current()).current;
 
   const close = useCallback(() => {
     openRef.current = false;
@@ -81,30 +82,45 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, sel
     return best;
   }, []);
 
-  const onDragMove = useCallback(
-    (e: PointerEvent) => {
-      if (!dragRef.current) return;
-      const idx = hitTest(e.clientX, e.clientY);
-      if (idx !== hoverRef.current) {
-        hoverRef.current = idx;
-        setHover(idx);
-        if (idx !== null) trigger('selection');
-      }
-    },
-    [hitTest, trigger]
-  );
+  const updateHover = useCallback((clientX: number, clientY: number) => {
+    const idx = hitTest(clientX, clientY);
+    if (idx !== hoverRef.current) {
+      hoverRef.current = idx;
+      setHover(idx);
+      if (idx !== null) trigger('selection');
+    }
+  }, [hitTest, trigger]);
 
-  const onDragUp = useCallback(() => {
+  const removeDragListeners = useCallback(() => {
+    document.removeEventListener('touchmove', dragTouchMove, { capture: true } as EventListenerOptions);
+    document.removeEventListener('touchend', dragEnd, { capture: true } as EventListenerOptions);
+    document.removeEventListener('touchcancel', dragEnd, { capture: true } as EventListenerOptions);
+    window.removeEventListener('pointermove', dragPointerMove);
+    window.removeEventListener('pointerup', dragEnd);
+    window.removeEventListener('pointercancel', dragEnd);
+  }, [dragTouchMove, dragEnd, dragPointerMove]);
+
+  // Live drag logic, reassigned each render so the stable wrappers see fresh closures.
+  dragTouchMoveImpl.current = (e: TouchEvent) => {
+    if (!dragRef.current) return;
+    const t = e.touches[0] ?? e.changedTouches[0];
+    if (!t) return;
+    e.preventDefault();
+    e.stopPropagation();
+    updateHover(t.clientX, t.clientY);
+  };
+  dragPointerMoveImpl.current = (e: PointerEvent) => {
+    if (!dragRef.current) return;
+    updateHover(e.clientX, e.clientY);
+  };
+  dragEndImpl.current = () => {
     if (!dragRef.current) return;
     dragRef.current = false;
-    document.removeEventListener('touchmove', blockTouch.current, { capture: true } as EventListenerOptions);
-    window.removeEventListener('pointermove', onDragMove);
-    window.removeEventListener('pointerup', onDragUp);
-    window.removeEventListener('pointercancel', onDragUp);
+    removeDragListeners();
     const idx = hoverRef.current;
     if (idx !== null) select(EMOJI_SHAPES[idx]);
     else close();
-  }, [onDragMove, select, close]);
+  };
 
   const open = useCallback(
     (drag: boolean) => {
@@ -125,34 +141,24 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, sel
       requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
       trigger('selection');
       if (drag) {
-        const el = pressEl.current;
-        const pid = pressPointerId.current;
-        if (el && pid !== null) {
-          try { el.setPointerCapture(pid); } catch { /* pointer already released */ }
-        }
-        document.addEventListener('touchmove', blockTouch.current, { passive: false, capture: true });
-        window.addEventListener('pointermove', onDragMove);
-        window.addEventListener('pointerup', onDragUp);
-        window.addEventListener('pointercancel', onDragUp);
+        document.addEventListener('touchmove', dragTouchMove, { passive: false, capture: true });
+        document.addEventListener('touchend', dragEnd, { capture: true });
+        document.addEventListener('touchcancel', dragEnd, { capture: true });
+        window.addEventListener('pointermove', dragPointerMove);
+        window.addEventListener('pointerup', dragEnd);
+        window.addEventListener('pointercancel', dragEnd);
       }
     },
-    [active, selected, onSelect, onDragMove, onDragUp, trigger]
+    [active, selected, onSelect, dragTouchMove, dragEnd, dragPointerMove, trigger]
   );
 
   useEffect(() => {
-    return () => {
-      document.removeEventListener('touchmove', blockTouch.current, { capture: true } as EventListenerOptions);
-      window.removeEventListener('pointermove', onDragMove);
-      window.removeEventListener('pointerup', onDragUp);
-      window.removeEventListener('pointercancel', onDragUp);
-    };
-  }, [onDragMove, onDragUp]);
+    return () => removeDragListeners();
+  }, [removeDragListeners]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       pressStart.current = { x: e.clientX, y: e.clientY };
-      pressPointerId.current = e.pointerId;
-      pressEl.current = e.currentTarget as HTMLElement;
       if (pressTimer.current) clearTimeout(pressTimer.current);
       pressTimer.current = window.setTimeout(() => {
         pressTimer.current = null;
