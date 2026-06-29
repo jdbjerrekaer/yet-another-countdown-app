@@ -142,17 +142,17 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const shadeDataRef = useRef<{ shades: string[]; cx: number; cy: number } | null>(null);
   const pressTimerRef = useRef<number | null>(null);
   const pressStartRef = useRef<{ x: number; y: number } | null>(null);
-  // The active touch pointer + its element, so we can capture it when the long-press
-  // fires — without capture, iOS cancels the pointer the moment the finger slides.
-  const pressPointerIdRef = useRef<number | null>(null);
-  const pressElRef = useRef<HTMLElement | null>(null);
-  // While dragging the shade column, swallow touchmove in the capture phase so iOS
-  // can't reinterpret the drag as a scroll (which kills pointermove delivery) and
-  // the Embla carousel underneath never sees the move.
-  const blockTouchRef = useRef((e: TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
+  // Drag handlers. iOS WebView cancels pointer events when it decides a touch is a
+  // scroll, so the shade drag is driven by capture-phase touchmove (with
+  // preventDefault) instead; pointer events cover desktop mouse. Stable wrappers are
+  // used for add/removeEventListener; the live logic lives in the *Impl refs and is
+  // reassigned each render so it always sees the latest closures.
+  const dragTouchMoveImpl = useRef<(e: TouchEvent) => void>(() => {});
+  const dragPointerMoveImpl = useRef<(e: PointerEvent) => void>(() => {});
+  const dragEndImpl = useRef<() => void>(() => {});
+  const dragTouchMove = useRef((e: TouchEvent) => dragTouchMoveImpl.current(e)).current;
+  const dragPointerMove = useRef((e: PointerEvent) => dragPointerMoveImpl.current(e)).current;
+  const dragEnd = useRef(() => dragEndImpl.current()).current;
   const lastTapRef = useRef<{ t: number; i: number } | null>(null); // manual double-tap detection
   const openShadeMenuRef = useRef<((index: number, drag: boolean) => void) | null>(null);
   // The center ticker for the carousel is 56w x 72h; hue swatches are that, axes swapped.
@@ -569,26 +569,41 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     return best;
   }, [SHADE_H, SHADE_GAP, SHADE_STEP]);
 
-  const onDragMove = useCallback(
-    (e: PointerEvent) => {
-      if (!dragModeRef.current) return;
-      const idx = hitTestShade(e.clientX, e.clientY);
-      if (idx !== hoverIndexRef.current) {
-        hoverIndexRef.current = idx;
-        setHoverIndex(idx);
-        if (idx !== null) trigger('selection');
-      }
-    },
-    [hitTestShade, trigger]
-  );
+  const updateHover = useCallback((clientX: number, clientY: number) => {
+    const idx = hitTestShade(clientX, clientY);
+    if (idx !== hoverIndexRef.current) {
+      hoverIndexRef.current = idx;
+      setHoverIndex(idx);
+      if (idx !== null) trigger('selection');
+    }
+  }, [hitTestShade, trigger]);
 
-  const onDragUp = useCallback(() => {
+  const removeDragListeners = useCallback(() => {
+    document.removeEventListener('touchmove', dragTouchMove, { capture: true } as EventListenerOptions);
+    document.removeEventListener('touchend', dragEnd, { capture: true } as EventListenerOptions);
+    document.removeEventListener('touchcancel', dragEnd, { capture: true } as EventListenerOptions);
+    window.removeEventListener('pointermove', dragPointerMove);
+    window.removeEventListener('pointerup', dragEnd);
+    window.removeEventListener('pointercancel', dragEnd);
+  }, [dragTouchMove, dragEnd, dragPointerMove]);
+
+  // Live drag logic, reassigned each render so the stable wrappers see fresh closures.
+  dragTouchMoveImpl.current = (e: TouchEvent) => {
+    if (!dragModeRef.current) return;
+    const t = e.touches[0] ?? e.changedTouches[0];
+    if (!t) return;
+    e.preventDefault(); // stop the carousel/page from scrolling mid-drag
+    e.stopPropagation();
+    updateHover(t.clientX, t.clientY);
+  };
+  dragPointerMoveImpl.current = (e: PointerEvent) => {
+    if (!dragModeRef.current) return;
+    updateHover(e.clientX, e.clientY);
+  };
+  dragEndImpl.current = () => {
     if (!dragModeRef.current) return;
     dragModeRef.current = false;
-    document.removeEventListener('touchmove', blockTouchRef.current, { capture: true } as EventListenerOptions);
-    window.removeEventListener('pointermove', onDragMove);
-    window.removeEventListener('pointerup', onDragUp);
-    window.removeEventListener('pointercancel', onDragUp);
+    removeDragListeners();
     const idx = hoverIndexRef.current;
     const data = shadeDataRef.current;
     if (idx !== null && data) {
@@ -596,7 +611,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     } else {
       closeShadeMenu();
     }
-  }, [onDragMove, selectShade, closeShadeMenu]);
+  };
 
   const openShadeMenu = useCallback(
     (index: number, drag: boolean) => {
@@ -619,22 +634,18 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       requestAnimationFrame(() => requestAnimationFrame(() => setShadeShown(true)));
       trigger('selection');
       if (drag) {
-        // Capture the active touch pointer onto our swatch so the gesture keeps
-        // delivering pointermove (and isn't stolen/cancelled by the Embla carousel
-        // underneath or reinterpreted by iOS as a scroll). Without this the finger
-        // drag never registers on a real device.
-        const el = pressElRef.current;
-        const pid = pressPointerIdRef.current;
-        if (el && pid !== null) {
-          try { el.setPointerCapture(pid); } catch { /* pointer already released */ }
-        }
-        document.addEventListener('touchmove', blockTouchRef.current, { passive: false, capture: true });
-        window.addEventListener('pointermove', onDragMove);
-        window.addEventListener('pointerup', onDragUp);
-        window.addEventListener('pointercancel', onDragUp);
+        // Drive the drag from capture-phase touchmove (preventDefault stops the
+        // carousel/page scrolling and guarantees delivery on iOS); pointer events
+        // cover desktop mouse.
+        document.addEventListener('touchmove', dragTouchMove, { passive: false, capture: true });
+        document.addEventListener('touchend', dragEnd, { capture: true });
+        document.addEventListener('touchcancel', dragEnd, { capture: true });
+        window.addEventListener('pointermove', dragPointerMove);
+        window.addEventListener('pointerup', dragEnd);
+        window.addEventListener('pointercancel', dragEnd);
       }
     },
-    [emblaApi, getShades, trigger, onDragMove, onDragUp]
+    [emblaApi, getShades, trigger, dragTouchMove, dragEnd, dragPointerMove]
   );
   openShadeMenuRef.current = openShadeMenu; // called from handleColorClick (declared earlier)
 
@@ -642,8 +653,6 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const startPress = useCallback(
     (index: number, e: React.PointerEvent) => {
       pressStartRef.current = { x: e.clientX, y: e.clientY };
-      pressPointerIdRef.current = e.pointerId;
-      pressElRef.current = e.currentTarget as HTMLElement;
       if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
       pressTimerRef.current = window.setTimeout(() => {
         pressTimerRef.current = null;
@@ -676,12 +685,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
 
   // Clean up drag listeners if the component unmounts mid-drag
   useEffect(() => {
-    return () => {
-      window.removeEventListener('pointermove', onDragMove);
-      window.removeEventListener('pointerup', onDragUp);
-      window.removeEventListener('pointercancel', onDragUp);
-    };
-  }, [onDragMove, onDragUp]);
+    return () => removeDragListeners();
+  }, [removeDragListeners]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
