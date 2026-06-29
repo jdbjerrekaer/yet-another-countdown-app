@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useHaptic } from '@/hooks/useHaptic';
-import { COLOR_PALETTE } from '@/lib/colorPalette';
+import { COLOR_PALETTE, hexToHSL } from '@/lib/colorPalette';
 import { EMOJI_HUE_MAPPINGS } from '@/lib/emojiHueMappings';
 
 interface ColorWheelPickerProps {
@@ -123,7 +123,20 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const clickTriggeredRef = useRef(false); // Track if haptic was triggered by click
   const lastHapticIndexRef = useRef(selectedIndex); // Track index for haptic ticking
   const settleHapticTriggeredRef = useRef(false); // Prevent double haptics on settle
-  
+
+  // Fine hue control: long-press / double-tap a swatch to pick a lighter/darker shade.
+  // customColor is an off-palette hex the user fine-tuned; it overrides the palette swatch.
+  const [customColor, setCustomColor] = useState<string | null>(null);
+  const customColorRef = useRef<string | null>(null);
+  const setCustom = useCallback((hex: string | null) => {
+    customColorRef.current = hex;
+    setCustomColor(hex);
+  }, []);
+  const [shadeMenu, setShadeMenu] = useState<{ shades: string[]; activeHex: string } | null>(null);
+  const shadeMenuRef = useRef(false);
+  const pressTimerRef = useRef<number | null>(null);
+  const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+
   // Velocity tracking for transition timing
   const lastSlideIndexRef = useRef<number>(selectedIndex);
   const lastScrollTimeRef = useRef<number>(Date.now());
@@ -153,6 +166,12 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     const valueChanged = value !== lastValueRef.current;
     
     if (valueChanged) {
+      // If this change is the fine-tuned shade we just emitted, don't re-initialize
+      // (re-init would snap the marker back to the nearest palette swatch)
+      if (value === customColorRef.current) {
+        lastValueRef.current = value;
+        return;
+      }
       // Only reset initialization if we're already initialized
       // This prevents resetting during the initial mount
       if (isInitializedRef.current) {
@@ -254,7 +273,16 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       const initialIndex = findClosestColorIndex(initialColor);
       emblaApi.scrollTo(initialIndex, true); // instant scroll
       setSelectedIndex(initialIndex);
-      setPreviewColor(COLOR_PALETTE[initialIndex]);
+      // If the saved color isn't an exact palette swatch, it's a fine-tuned shade —
+      // keep it as the custom color so the marker shows the exact saved hue.
+      const closest = COLOR_PALETTE[initialIndex];
+      if (initialColor && initialColor.toLowerCase() !== closest.toLowerCase()) {
+        setCustom(initialColor);
+        setPreviewColor(initialColor);
+      } else {
+        setCustom(null);
+        setPreviewColor(closest);
+      }
       lastIndexRef.current = initialIndex;
       lastSlideIndexRef.current = initialIndex; // Initialize velocity tracking
       isInitializedRef.current = true;
@@ -284,7 +312,10 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   // Handle scroll events for real-time preview and velocity tracking
   const onScroll = useCallback(() => {
     if (!emblaApi) return;
-    
+
+    // Scrolling the carousel reverts any fine-tuned shade back to palette swatches
+    if (customColorRef.current) setCustom(null);
+
     // Track velocity based on slide indices
     const currentTime = Date.now();
     const slideIndex = emblaApi.selectedScrollSnap();
@@ -432,7 +463,11 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const handleColorClick = useCallback(
     (paletteIndex: number) => {
       if (!emblaApi) return;
-      
+      if (shadeMenuRef.current) return; // ignore the click that follows opening the shade menu
+
+      // A tap on a palette swatch reverts any fine-tuned shade back to the base hue
+      setCustom(null);
+
       // Mark as manually changed when user taps
       if (!hasManualChangeRef.current) {
         hasManualChangeRef.current = true;
@@ -446,8 +481,79 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       // Scroll to the selected color smoothly (onSelect callback will handle state updates)
       emblaApi.scrollTo(paletteIndex, false);
     },
-    [emblaApi, trigger, onManualChange]
+    [emblaApi, trigger, onManualChange, setCustom]
   );
+
+  // Build 7 lighter/darker shades of a hue (lightest first, base in the middle, darkest last)
+  const getShades = useCallback((hex: string): string[] => {
+    const { h, s, l } = hexToHSL(hex);
+    return [36, 24, 12, 0, -12, -24, -36].map((delta) =>
+      hslToHex(h, s, Math.max(12, Math.min(92, l + delta)))
+    );
+  }, []);
+
+  const openShadeMenu = useCallback(
+    (index: number) => {
+      if (!emblaApi) return;
+      emblaApi.scrollTo(index, false);
+      const base = COLOR_PALETTE[index];
+      shadeMenuRef.current = true;
+      setShadeMenu({ shades: getShades(base), activeHex: customColorRef.current ?? base });
+      trigger('selection');
+    },
+    [emblaApi, getShades, trigger]
+  );
+
+  const closeShadeMenu = useCallback(() => {
+    shadeMenuRef.current = false;
+    setShadeMenu(null);
+  }, []);
+
+  const selectShade = useCallback(
+    (hex: string) => {
+      if (!hasManualChangeRef.current) {
+        hasManualChangeRef.current = true;
+        onManualChange?.();
+      }
+      setCustom(hex);
+      setPreviewColor(hex);
+      lastValueRef.current = hex;
+      trigger('selection');
+      onChange(hex);
+      closeShadeMenu();
+    },
+    [onChange, onManualChange, trigger, setCustom, closeShadeMenu]
+  );
+
+  // Long-press detection (cancels if the finger moves — that's a carousel drag)
+  const startPress = useCallback(
+    (index: number, e: React.PointerEvent) => {
+      pressStartRef.current = { x: e.clientX, y: e.clientY };
+      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = window.setTimeout(() => {
+        pressTimerRef.current = null;
+        openShadeMenu(index);
+      }, 450);
+    },
+    [openShadeMenu]
+  );
+
+  const movePress = useCallback((e: React.PointerEvent) => {
+    if (!pressTimerRef.current || !pressStartRef.current) return;
+    const dx = Math.abs(e.clientX - pressStartRef.current.x);
+    const dy = Math.abs(e.clientY - pressStartRef.current.y);
+    if (dx > 8 || dy > 8) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  }, []);
+
+  const endPress = useCallback(() => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  }, []);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -471,7 +577,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     [emblaApi, onManualChange]
   );
 
-  const currentColor = previewColor || COLOR_PALETTE[selectedIndex] || value;
+  const currentColor = customColor || previewColor || COLOR_PALETTE[selectedIndex] || value;
 
   // Constants for hit area expansion
   const VISIBLE_HEIGHT = 48; // Original visible bar height
@@ -518,6 +624,12 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
                 height: TOTAL_HEIGHT,
               }}
               onClick={() => handleColorClick(i)}
+              onDoubleClick={() => openShadeMenu(i)}
+              onPointerDown={(e) => startPress(i, e)}
+              onPointerMove={movePress}
+              onPointerUp={endPress}
+              onPointerLeave={endPress}
+              onPointerCancel={endPress}
               role="button"
               aria-label={`Select color ${i + 1}`}
             >
@@ -561,6 +673,34 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
           }}
         />
       </div>
+
+      {/* Fine hue/shade menu: lighter shades on top, darker below; tap to pick */}
+      {shadeMenu && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={closeShadeMenu} />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 flex flex-col gap-1 p-1.5 rounded-2xl bg-popover border border-border shadow-xl">
+            {shadeMenu.shades.map((hex) => {
+              const active = hex.toLowerCase() === shadeMenu.activeHex.toLowerCase();
+              return (
+                <button
+                  key={hex}
+                  type="button"
+                  onClick={() => selectShade(hex)}
+                  className="rounded-lg transition-transform active:scale-90"
+                  style={{
+                    backgroundColor: hex,
+                    width: 48,
+                    height: 26,
+                    border: active ? '3px solid rgba(255,255,255,0.95)' : '2px solid rgba(0,0,0,0.08)',
+                    boxShadow: active ? '0 0 0 2px rgba(0,0,0,0.25)' : 'none',
+                  }}
+                  aria-label={`Shade ${hex}`}
+                />
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

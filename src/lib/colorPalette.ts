@@ -41,6 +41,7 @@ export const COLOR_PALETTE = [
   '#bf6040',
   // Reds
   '#bf4040',
+  '#dc143c', // Romantic red (crimson)
   '#bf4060',
   // Back to pinks
   '#bf4080',
