@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useHaptic } from '@/hooks/useHaptic';
 import { COLOR_PALETTE, hexToHSL } from '@/lib/colorPalette';
@@ -132,10 +133,16 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     customColorRef.current = hex;
     setCustomColor(hex);
   }, []);
-  const [shadeMenu, setShadeMenu] = useState<{ shades: string[]; activeHex: string } | null>(null);
+  const [shadeMenu, setShadeMenu] = useState<{ shades: string[]; activeHex: string; cx: number; cy: number } | null>(null);
+  const [shadeShown, setShadeShown] = useState(false); // drives the morph in/out transition
   const shadeMenuRef = useRef(false);
   const pressTimerRef = useRef<number | null>(null);
   const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+  // The center ticker for the carousel is 56w x 72h; hue swatches are that, axes swapped.
+  const SHADE_W = 72;
+  const SHADE_H = 56;
+  const SHADE_GAP = 6;
+  const SHADE_STEP = SHADE_H + SHADE_GAP;
 
   // Velocity tracking for transition timing
   const lastSlideIndexRef = useRef<number>(selectedIndex);
@@ -494,11 +501,21 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
 
   const openShadeMenu = useCallback(
     (index: number) => {
-      if (!emblaApi) return;
+      if (!emblaApi || !containerRef.current) return;
       emblaApi.scrollTo(index, false);
       const base = COLOR_PALETTE[index];
+      const rect = containerRef.current.getBoundingClientRect();
       shadeMenuRef.current = true;
-      setShadeMenu({ shades: getShades(base), activeHex: customColorRef.current ?? base });
+      // Anchor the morph on the center ticker (center of the picker band)
+      setShadeMenu({
+        shades: getShades(base),
+        activeHex: customColorRef.current ?? base,
+        cx: rect.left + rect.width / 2,
+        cy: rect.top + rect.height / 2,
+      });
+      setShadeShown(false);
+      // Next frame: flip to shown so the swatches morph out from the ticker
+      requestAnimationFrame(() => requestAnimationFrame(() => setShadeShown(true)));
       trigger('selection');
     },
     [emblaApi, getShades, trigger]
@@ -506,7 +523,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
 
   const closeShadeMenu = useCallback(() => {
     shadeMenuRef.current = false;
-    setShadeMenu(null);
+    setShadeShown(false);
+    window.setTimeout(() => setShadeMenu(null), 200); // let the collapse finish before unmount
   }, []);
 
   const selectShade = useCallback(
@@ -674,33 +692,56 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         />
       </div>
 
-      {/* Fine hue/shade menu: lighter shades on top, darker below; tap to pick */}
-      {shadeMenu && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={closeShadeMenu} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 flex flex-col gap-1 p-1.5 rounded-2xl bg-popover border border-border shadow-xl">
-            {shadeMenu.shades.map((hex) => {
-              const active = hex.toLowerCase() === shadeMenu.activeHex.toLowerCase();
-              return (
-                <button
-                  key={hex}
-                  type="button"
-                  onClick={() => selectShade(hex)}
-                  className="rounded-lg transition-transform active:scale-90"
-                  style={{
-                    backgroundColor: hex,
-                    width: 48,
-                    height: 26,
-                    border: active ? '3px solid rgba(255,255,255,0.95)' : '2px solid rgba(0,0,0,0.08)',
-                    boxShadow: active ? '0 0 0 2px rgba(0,0,0,0.25)' : 'none',
-                  }}
-                  aria-label={`Shade ${hex}`}
-                />
-              );
-            })}
-          </div>
-        </>
-      )}
+      {/* Fine hue/shade selector: vertical list of lighter→darker shades that morphs
+          out of the center ticker. Portaled to body so it floats above the calendar.
+          Each swatch is the ticker swap (72w x 56h); the active hue keeps the ticker border. */}
+      {shadeMenu && typeof document !== 'undefined' &&
+        createPortal(
+          <div className="fixed inset-0 z-[60]">
+            {/* Backdrop catches outside taps */}
+            <div className="absolute inset-0" onClick={closeShadeMenu} />
+            <div
+              className="absolute flex flex-col"
+              style={{
+                left: shadeMenu.cx,
+                top: shadeMenu.cy,
+                gap: SHADE_GAP,
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
+              {shadeMenu.shades.map((hex, i) => {
+                const active = hex.toLowerCase() === shadeMenu.activeHex.toLowerCase();
+                const fromCenter = i - 3; // index 3 is the base hue (the ticker)
+                const collapsed = `translateY(${-fromCenter * SHADE_STEP}px) scale(0.82)`;
+                return (
+                  <button
+                    key={hex}
+                    type="button"
+                    onClick={() => selectShade(hex)}
+                    aria-label={`Shade ${hex}`}
+                    style={{
+                      backgroundColor: hex,
+                      width: SHADE_W,
+                      height: SHADE_H,
+                      borderRadius: 16,
+                      border: active ? '3px solid rgba(255,255,255,0.92)' : '1px solid rgba(0,0,0,0.10)',
+                      boxShadow: active
+                        ? '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)'
+                        : '0 1px 4px rgba(0,0,0,0.18)',
+                      // Morph: collapse onto the ticker, then spring out; active stays put/visible
+                      transform: shadeShown ? 'translateY(0) scale(1)' : collapsed,
+                      opacity: shadeShown ? 1 : active ? 1 : 0,
+                      transition:
+                        'transform 300ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms cubic-bezier(0.23, 1, 0.32, 1)',
+                      transitionDelay: `${Math.abs(fromCenter) * 22}ms`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
