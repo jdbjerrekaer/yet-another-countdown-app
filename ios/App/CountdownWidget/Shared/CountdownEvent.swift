@@ -7,6 +7,10 @@ struct CountdownEvent: Codable, Identifiable, Hashable {
     let targetDate: String
     let emoji: String
     let emojiColor: String?
+    /// Shape of the colored emoji container ("squircle"/"heart"/"flower").
+    /// Optional + default so older synced payloads decode and existing
+    /// CountdownEvent(...) call sites don't need updating; missing → squircle.
+    var emojiShape: String? = nil
     let isRecurring: Bool
     let createdAt: String
     /// Whether the user set a specific time → include hours/minutes in the

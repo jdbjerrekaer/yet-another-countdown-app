@@ -879,7 +879,8 @@ struct EventRowView: View {
     private var emojiBadgeView: some View {
         ZStack {
             badgeBackgroundView
-            
+                .emojiContainerClip(EmojiShape(rawValueOrDefault: event.emojiShape))
+
             if let emojiImage = emojiToImage(event.emoji, size: 20) {
                 if #available(iOS 18.0, *) {
                     Image(uiImage: emojiImage)

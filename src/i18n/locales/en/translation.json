@@ -146,9 +146,14 @@
   },
   "trackingConsent": {
     "title": "A quick note on ads",
-    "body": "This app is free thanks to ads. With your permission we can show ads that are more relevant to you instead of random ones.",
-    "reassurance": "We don't collect or send your personal data anywhere — the choice is entirely yours, and the app works the same either way.",
-    "continue": "OK, continue"
+    "intro": "Ads keep the app free",
+    "pointsLabel": "What ad consent means",
+    "points": [
+      "Personalized ads can pay a little more than random ads",
+      "I do not collect, track, sell, or send your data anywhere",
+      "Google and Apple may ask about ad personalization next. The app works either way"
+    ],
+    "continue": "OK"
   },
   "relative": {
     "year_one": "{{count}} year",

@@ -4,6 +4,7 @@ export interface CountdownEvent {
   targetDate: string;
   emoji: string;
   emojiColor?: string;
+  emojiShape?: 'squircle' | 'circle' | 'heart' | 'flower' | 'hexagon'; // container shape; defaults to squircle
   isRecurring: boolean;
   createdAt: string;
   isImported?: boolean;

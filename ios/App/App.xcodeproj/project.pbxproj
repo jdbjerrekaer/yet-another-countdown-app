@@ -25,6 +25,7 @@
 		A63D32402F0BCF250063570B /* LockscreenWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */; };
 		A63D32352F0BCF250063570B /* WidgetDataSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32272F0BCF250063570B /* WidgetDataSync.swift */; };
 		A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32252F0BCF250063570B /* CountdownEvent.swift */; };
+		EEE1110000000000000000A2 /* EmojiContainerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE1110000000000000000A1 /* EmojiContainerShape.swift */; };
 		A63D32372F0BCF250063570B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A63D32242F0BCF250063570B /* Assets.xcassets */; };
 		A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */; };
 		A7B8C9D12F3E4A5600ABCDEF /* StoreKitDiagnosticsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D02F3E4A5600ABCDEF /* StoreKitDiagnosticsPlugin.swift */; };
@@ -98,6 +99,7 @@
 		A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoPlugin.swift; sourceTree = "<group>"; };
 		A63D32242F0BCF250063570B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A63D32252F0BCF250063570B /* CountdownEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEvent.swift; sourceTree = "<group>"; };
+		EEE1110000000000000000A1 /* EmojiContainerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiContainerShape.swift; sourceTree = "<group>"; };
 		A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountdownIntent.swift; sourceTree = "<group>"; };
 		A63D32272F0BCF250063570B /* WidgetDataSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSync.swift; sourceTree = "<group>"; };
 		A63D32292F0BCF250063570B /* EmptyWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyWidgetView.swift; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				A63D322E2F0BCF250063570B /* Views */,
 				00F122285137C3D8CBC5D174 /* Info.plist */,
 				23DE9C22ECC85FF6C0538F38 /* CountdownWidget.swift */,
+				EEE1110000000000000000A1 /* EmojiContainerShape.swift */,
 				E5F678901234567890ABCD /* PrivacyInfo.xcprivacy */,
 			);
 			path = CountdownWidget;
@@ -535,6 +538,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */,
+				EEE1110000000000000000A2 /* EmojiContainerShape.swift in Sources */,
 				FLIPDIG022F0BCF250063570B /* FlipDigitView.swift in Sources */,
 				A63D32302F0BCF250063570B /* SmallWidgetView.swift in Sources */,
 				A63D32352F0BCF250063570B /* WidgetDataSync.swift in Sources */,

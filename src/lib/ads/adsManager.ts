@@ -21,12 +21,15 @@ let allowPersonalizedAds = false;
 const PREF_HAS_CREATED_ONCE = "ads_hasCreatedOnce";
 const PREF_HAS_EDITED_ONCE = "ads_hasEditedOnce";
 const PREF_HAS_DELETED_ONCE = "ads_hasDeletedOnce";
+const PREF_CREATED_COUNT = "ads_createdCount";
 const PREF_LAST_INTERSTITIAL_AT = "ads_lastInterstitialAt";
 const PREF_SAVE_COUNT_SINCE_INTERSTITIAL = "ads_saveCountSinceLastInterstitial";
 const PREF_DEV_ADS_ENABLED = "ads_devEnabled";
+const MIN_CREATED_COUNT_FOR_INTERSTITIAL = 2;
 
 let isInitialized = false;
 let bannerVisible = false;
+let bannerSuppressed = false;
 let interstitialReady = false;
 let interstitialLoading = false;
 let interstitialLoadPromise: Promise<void> | null = null;
@@ -73,8 +76,8 @@ const setNumber = async (key: string, value: number) => {
 const getDevAdsEnabled = async () => {
   const { value } = await Preferences.get({ key: PREF_DEV_ADS_ENABLED });
   if (value === null) {
-    await Preferences.set({ key: PREF_DEV_ADS_ENABLED, value: "false" });
-    return false;
+    await Preferences.set({ key: PREF_DEV_ADS_ENABLED, value: "true" });
+    return true;
   }
   return value === "true";
 };
@@ -198,6 +201,12 @@ const incrementSaveCount = async () => {};
 
 const resetSaveCount = async () => {};
 
+const incrementCreatedCount = async () => {
+  const nextCount = (await getNumber(PREF_CREATED_COUNT)) + 1;
+  await setNumber(PREF_CREATED_COUNT, nextCount);
+  return nextCount;
+};
+
 const resetConsent = async () => {
   if (!Capacitor.isNativePlatform()) return;
 
@@ -279,6 +288,10 @@ export const AdsManager = {
       });
 
       AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+        if (bannerSuppressed) {
+          void AdsManager.hideBanner();
+          return;
+        }
         bannerVisible = true;
         notifyBannerStatus("visible");
       });
@@ -324,10 +337,13 @@ export const AdsManager = {
   },
 
   // True only when we should surface the custom pre-prompt before the OS ATT
-  // sheet: native, not ad-free, and the user hasn't answered ATT yet.
+  // sheet: native, not ad-free, and the user hasn't answered ATT yet. This is
+  // intentionally independent of the dev "test ads enabled" toggle so the
+  // consent flow can still be tested in Debug builds.
   shouldShowTrackingPrePrompt: async (): Promise<boolean> => {
     if (!Capacitor.isNativePlatform()) return false;
-    if (!(await isAdsEnabled())) return false;
+    await PurchasesManager.init();
+    if (PurchasesManager.hasRemoveAdsEntitlement()) return false;
     try {
       const { status } = await AdMob.trackingAuthorizationStatus();
       return status === "notDetermined";
@@ -340,7 +356,8 @@ export const AdsManager = {
   // Google UMP (EU) consent form, then refreshes personalization + banner.
   requestTrackingConsent: async (): Promise<void> => {
     if (!Capacitor.isNativePlatform()) return;
-    if (!(await isAdsEnabled())) return;
+    await PurchasesManager.init();
+    if (PurchasesManager.hasRemoveAdsEntitlement()) return;
 
     try {
       const { status } = await AdMob.trackingAuthorizationStatus();
@@ -369,6 +386,7 @@ export const AdsManager = {
     }
 
     // Make sure the SDK is up and re-show the banner so the new npa flag applies.
+    if (!(await isAdsEnabled())) return;
     if (!isInitialized) {
       await AdsManager.init();
     }
@@ -380,6 +398,7 @@ export const AdsManager = {
 
   showBanner: async () => {
     if (!Capacitor.isNativePlatform()) return;
+    if (bannerSuppressed) return;
     const enabled = await isAdsEnabled();
     if (!enabled) {
       await AdsManager.hideBanner();
@@ -410,11 +429,6 @@ export const AdsManager = {
 
   hideBanner: async () => {
     if (!Capacitor.isNativePlatform()) return;
-    if (!bannerVisible) {
-      notifyBannerStatus("hidden");
-      setBannerHeight(0);
-      return;
-    }
     bannerVisible = false;
     notifyBannerStatus("hidden");
     setBannerHeight(0);
@@ -426,8 +440,25 @@ export const AdsManager = {
     }
   },
 
+  setBannerSuppressed: async (suppressed: boolean) => {
+    bannerSuppressed = suppressed;
+    if (suppressed) {
+      await AdsManager.hideBanner();
+    }
+  },
+
   maybeShowInterstitialAfterSave: async ({ kind }: { kind: SaveKind }) => {
     if (!Capacitor.isNativePlatform()) return;
+
+    let createdCount = await getNumber(PREF_CREATED_COUNT);
+    if (kind === "create") {
+      createdCount = await incrementCreatedCount();
+    } else if (createdCount === 0 && (await getBool(PREF_HAS_CREATED_ONCE))) {
+      createdCount = 1;
+    }
+
+    if (createdCount < MIN_CREATED_COUNT_FOR_INTERSTITIAL) return;
+
     const enabled = await isAdsEnabled();
     if (!enabled) return;
 
@@ -515,6 +546,7 @@ export const AdsManager = {
     isInitialized = false;
     initPromise = null;
     bannerVisible = false;
+    bannerSuppressed = false;
     interstitialReady = false;
     interstitialLoading = false;
     interstitialLoadPromise = null;

@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
+import { EmojiShape, normalizeShape } from '@/lib/emojiShapes';
+import { EmojiShapePicker } from '@/components/EmojiShapePicker';
 import { isSafariMobile } from '@/lib/utils';
 import { encodeEventImportLink } from '@/lib/eventImportLink';
 import { toast } from '@/components/ui/sonner';
@@ -79,11 +81,12 @@ export interface DatePickerModalRef {
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string) => void | Promise<void>;
+  onSave: (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape) => void | Promise<void>;
   initialTitle?: string;
   initialDate?: Date;
   initialEmoji?: string;
   initialEmojiColor?: string;
+  initialEmojiShape?: string;
   initialIsRecurring?: boolean;
   initialIsImported?: boolean;
   initialImportedFrom?: string;
@@ -103,6 +106,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   initialDate,
   initialEmoji = '',
   initialEmojiColor,
+  initialEmojiShape,
   initialIsRecurring = false,
   initialIsImported = false,
   initialImportedFrom,
@@ -127,6 +131,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   // Default to blue if no initial color provided
   const DEFAULT_COLOR = '#3b82f6';
   const [emojiColor, setEmojiColor] = useState<string>(initialEmojiColor || DEFAULT_COLOR);
+  const [emojiShape, setEmojiShape] = useState<EmojiShape>(normalizeShape(initialEmojiShape));
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const [showCustomEmojiInput, setShowCustomEmojiInput] = useState(false);
   const [customEmojiValue, setCustomEmojiValue] = useState('');
@@ -231,6 +236,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       }
       setEmoji(initialEmoji ?? '');
       setEmojiColor(initialEmojiColor || DEFAULT_COLOR);
+      setEmojiShape(normalizeShape(initialEmojiShape));
       setIsRecurring(initialIsRecurring ?? false);
       // Detect specific time: editing with non-default (non-8am) time
       const initTime = initialDate ?? normalizedDate;
@@ -540,7 +546,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         }
       }
       
-      await onSave(title, date, emoji, isRecurring, hasSpecificTime, emojiColor);
+      await onSave(title, date, emoji, isRecurring, hasSpecificTime, emojiColor, emojiShape);
       // Trigger haptic feedback after successful save (for both creating and editing)
       trigger('medium');
       onClose();
@@ -833,45 +839,53 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                   const isCustomEmojiSelected = emoji !== '' && !suggestedEmojis.includes(emoji) && !EMOJI_OPTIONS.includes(emoji);
                   const isSelected = emoji === e && !isCustomEmojiSelected && !showCustomEmojiInput;
                   
+                  // Every tile is the same <div> element with the same key + enter
+                  // class so toggling selection reconciles in place (no remount, no
+                  // animation replay/flash). The selected tile hosts the shape picker.
                   return (
-                    <button
+                    <div
                       key={`${e}-${index}`}
+                      role="button"
+                      onClick={isSelected ? undefined : () => handleEmojiSelect(e)}
                       style={{
                         transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                        transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms ease, box-shadow 150ms ease',
+                        transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                         animationDelay: `${index * 30}ms`,
-                        ...(isSelected ? { 
-                          backgroundColor: emojiColor,
-                          boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                        } : {}),
                       }}
-                      onClick={() => handleEmojiSelect(e)}
-                      className={`w-14 h-14 rounded-xl flex items-center justify-center active:scale-90 emoji-suggestion-enter ${
+                      className={
                         isSelected
-                          ? 'border-[3px] border-white/90 text-xl'
-                          : 'bg-secondary/50 hover:bg-secondary text-2xl'
-                      }`}
+                          ? 'emoji-suggestion-enter w-14 h-14 flex items-center justify-center'
+                          : 'emoji-suggestion-enter w-14 h-14 rounded-xl flex items-center justify-center active:scale-90 bg-secondary/50 hover:bg-secondary text-2xl cursor-pointer'
+                      }
                     >
-                      {e}
-                    </button>
+                      {isSelected ? (
+                        <EmojiShapePicker
+                          shape={emojiShape}
+                          color={emojiColor}
+                          emoji={e}
+                          onChange={setEmojiShape}
+                          size={56}
+                        />
+                      ) : (
+                        e
+                      )}
+                    </div>
                   );
                 })}
                 {/* Custom emoji - show if a custom emoji is selected (not in suggestedEmojis and not in EMOJI_OPTIONS) and input is not showing */}
                 {emoji !== '' && !suggestedEmojis.includes(emoji) && !EMOJI_OPTIONS.includes(emoji) && !showCustomEmojiInput && (
-                  <button
-                    style={{
-                      transform: 'scale(1.1)',
-                      transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
-                      backgroundColor: emojiColor,
-                      boxShadow: '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)',
-                      animationDelay: `${suggestedEmojis.length * 30}ms`,
-                    }}
-                    onClick={() => {}}
-                    className="w-14 h-14 rounded-xl text-xl flex items-center justify-center border-[3px] border-white/90 emoji-suggestion-enter"
+                  <div
+                    style={{ transform: 'scale(1.1)' }}
                     aria-label={t('aria.selectedEmoji', { emoji })}
                   >
-                    {emoji}
-                  </button>
+                    <EmojiShapePicker
+                      shape={emojiShape}
+                      color={emojiColor}
+                      emoji={emoji}
+                      onChange={setEmojiShape}
+                      size={56}
+                    />
+                  </div>
                 )}
                 {/* Custom emoji input or button */}
                 {showCustomEmojiInput ? (

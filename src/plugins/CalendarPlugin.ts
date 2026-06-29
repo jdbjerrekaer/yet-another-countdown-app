@@ -82,6 +82,7 @@ export interface WidgetCountdownEvent {
   targetDate: string;
   emoji: string;
   emojiColor?: string;
+  emojiShape?: 'squircle' | 'circle' | 'heart' | 'flower' | 'hexagon';
   isRecurring: boolean;
   createdAt: string;
   hasTime?: boolean;

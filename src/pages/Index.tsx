@@ -35,6 +35,7 @@ import { TripleLargeWidget } from '@/components/widgets/TripleLargeWidget';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
+import { EmojiShape } from '@/lib/emojiShapes';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
@@ -638,19 +639,22 @@ export default function Index() {
 
   useEffect(() => {
     if (!isNative) return;
+    const shouldHideAds = hasRemoveAds || isModalOpen || isCalendarImportOpen || isTrackingConsentOpen;
+    void AdsManager.setBannerSuppressed(shouldHideAds);
     if (hasRemoveAds) {
       void AdsManager.hideBanner();
       return;
     }
-    if (hasRemoveAds || isModalOpen || isCalendarImportOpen) {
+    if (shouldHideAds) {
       void AdsManager.hideBanner();
     } else {
       void AdsManager.showBanner();
     }
     return () => {
+      void AdsManager.setBannerSuppressed(true);
       void AdsManager.hideBanner();
     };
-  }, [isNative, isModalOpen, isCalendarImportOpen, hasRemoveAds]);
+  }, [isNative, isModalOpen, isCalendarImportOpen, isTrackingConsentOpen, hasRemoveAds]);
 
   // After the user creates their first event, show the custom tracking
   // pre-prompt (once per session) — but only on native, only for non ad-free
@@ -738,7 +742,12 @@ export default function Index() {
   useEffect(() => {
     // On web, always show placeholder (ads don't load on web)
     if (!isNative) {
-      setShowAdPlaceholder(!hasRemoveAds);
+      setShowAdPlaceholder(!hasRemoveAds && !isTrackingConsentOpen);
+      return;
+    }
+
+    if (isTrackingConsentOpen) {
+      setShowAdPlaceholder(false);
       return;
     }
 
@@ -760,7 +769,7 @@ export default function Index() {
     return () => {
       unsubscribe?.();
     };
-  }, [isNative, isDevBuild, devAdsEnabled, hasRemoveAds]);
+  }, [isNative, isDevBuild, devAdsEnabled, hasRemoveAds, isTrackingConsentOpen]);
 
   useEffect(() => {
     if (!isDevBuild) return;
@@ -808,8 +817,9 @@ export default function Index() {
       } else {
         fabRef.current?.confirm('Ad-free disabled (dev build)');
         await AdsManager.setDevAdsEnabled(true);
-        AdsManager.resetInitialization();
-        await AdsManager.showBanner();
+        trackingPrePromptShownRef.current = false;
+        await AdsManager.resetConsent();
+        setIsTrackingConsentOpen(true);
       }
     }, 700);
   };
@@ -1005,6 +1015,7 @@ export default function Index() {
           targetDate: event.targetDate,
           emoji: event.emoji,
           emojiColor: event.emojiColor,
+          emojiShape: event.emojiShape,
           isRecurring: event.isRecurring,
           createdAt: event.createdAt,
           hasTime: event.hasTime ?? false,
@@ -1237,7 +1248,7 @@ export default function Index() {
     }, 0);
   };
 
-  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string) => {
+  const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape) => {
     const saveKind = editingEvent ? 'edit' : 'create';
 
     const hasPermission = await checkNotificationPermission();
@@ -1248,7 +1259,7 @@ export default function Index() {
       
       setEvents(prev => prev.map(e => 
         e.id === editingEvent.id 
-          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, isRecurring, hasTime: hasSpecificTime }
+          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, emojiShape, isRecurring, hasTime: hasSpecificTime }
           : e
       ));
       
@@ -1268,6 +1279,7 @@ export default function Index() {
         targetDate: date.toISOString(),
         emoji,
         emojiColor,
+        emojiShape,
         isRecurring,
         createdAt: new Date().toISOString(),
         // Default-on auto-purge for events created more than 2 days out; never
@@ -1666,7 +1678,7 @@ export default function Index() {
         right: 'calc(16px + env(safe-area-inset-left))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isAnyModalOpen ? 100000 : 50,
-        display: isRemoveAdsOpen ? 'none' : undefined,
+        display: isRemoveAdsOpen || isTrackingConsentOpen ? 'none' : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
@@ -1991,7 +2003,7 @@ export default function Index() {
       {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
 
       {/* Ad Integration Bar - Background for the ad area (only show when loading/placeholder is active) */}
-      {showAdPlaceholder && (
+      {showAdPlaceholder && !hasRemoveAds && !isTrackingConsentOpen && (
         <div 
           className="ad-container-bar"
           style={{ 
@@ -2022,6 +2034,7 @@ export default function Index() {
         }
         initialEmoji={editingEvent?.emoji ?? importPrefillData?.emoji}
         initialEmojiColor={editingEvent?.emojiColor ?? importPrefillData?.emojiColor}
+        initialEmojiShape={editingEvent?.emojiShape}
         initialIsRecurring={editingEvent?.isRecurring ?? importPrefillData?.isRecurring}
         initialIsImported={editingEvent?.isImported}
         initialImportedFrom={editingEvent?.importedFrom}

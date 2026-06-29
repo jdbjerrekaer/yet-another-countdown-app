@@ -186,7 +186,8 @@ struct MediumWidgetView: View {
     private var emojiBadgeView: some View {
         ZStack {
             badgeBackgroundView
-            
+                .emojiContainerClip(EmojiShape(rawValueOrDefault: event.emojiShape))
+
             // Render emoji as image to preserve colors in Clear/Tinted modes
             if let emojiImage = emojiToImage(event.emoji, size: 24) {
                 if #available(iOS 18.0, *) {

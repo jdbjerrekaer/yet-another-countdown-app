@@ -248,6 +248,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
             cleanEvent["targetDate"] = event["targetDate"] as? String ?? ""
             cleanEvent["emoji"] = event["emoji"] as? String ?? "📅"
             cleanEvent["emojiColor"] = event["emojiColor"] as? String
+            cleanEvent["emojiShape"] = event["emojiShape"] as? String ?? "squircle"
             cleanEvent["isRecurring"] = event["isRecurring"] as? Bool ?? false
             cleanEvent["createdAt"] = event["createdAt"] as? String ?? ISO8601DateFormatter().string(from: Date())
             cleanEvent["hasTime"] = event["hasTime"] as? Bool ?? false

@@ -8,6 +8,7 @@ import { CountdownEvent } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { formatRelative } from '@/lib/relativeTime';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
+import { EmojiContainer } from '@/components/EmojiContainer';
 import styles from './styles.module.scss';
 
 interface CountdownCardProps {
@@ -347,14 +348,14 @@ export function CountdownCard({
                 backgroundColor: 'hsl(var(--card))',
               }}
             >
-              <div 
-                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${!event.emojiColor ? 'gradient-accent' : ''}`}
-                style={event.emojiColor ? { 
-                  backgroundColor: event.emojiColor
-                } : undefined}
-              >
-                <span className="text-2xl">{event.emoji}</span>
-              </div>
+              <EmojiContainer
+                shape={event.emojiShape}
+                color={event.emojiColor}
+                emoji={event.emoji}
+                size={48}
+                radius={12}
+                emojiClassName="text-2xl"
+              />
               
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 min-w-0">
