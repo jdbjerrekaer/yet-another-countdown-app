@@ -13,13 +13,17 @@ interface Props {
   emoji: string;
   onChange: (shape: EmojiShape) => void;
   size?: number;
+  // When set true, open the popover automatically once (used after long-pressing an
+  // unselected emoji, which selects it and should then reveal the shape picker).
+  autoOpen?: boolean;
+  onAutoOpened?: () => void;
 }
 
 const ITEM = 56;
 const GAP = 16;
 const STEP = ITEM + GAP;
 
-export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56 }: Props) {
+export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, autoOpen, onAutoOpened }: Props) {
   const { trigger } = useHaptic();
   const active = normalizeShape(shape);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -126,6 +130,17 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56 }: P
       window.removeEventListener('pointercancel', onDragUp);
     };
   }, [onDragMove, onDragUp]);
+
+  // Auto-open once (persistent, tap-to-pick mode) after the trigger has mounted —
+  // used when an unselected emoji was long-pressed and just became selected.
+  useEffect(() => {
+    if (!autoOpen) return;
+    const id = requestAnimationFrame(() => {
+      open(false);
+      onAutoOpened?.();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [autoOpen, open, onAutoOpened]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {

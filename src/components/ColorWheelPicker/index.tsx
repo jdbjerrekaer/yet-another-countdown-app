@@ -142,6 +142,10 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const shadeDataRef = useRef<{ shades: string[]; cx: number; cy: number } | null>(null);
   const pressTimerRef = useRef<number | null>(null);
   const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+  // The active touch pointer + its element, so we can capture it when the long-press
+  // fires — without capture, iOS cancels the pointer the moment the finger slides.
+  const pressPointerIdRef = useRef<number | null>(null);
+  const pressElRef = useRef<HTMLElement | null>(null);
   const lastTapRef = useRef<{ t: number; i: number } | null>(null); // manual double-tap detection
   const openShadeMenuRef = useRef<((index: number, drag: boolean) => void) | null>(null);
   // The center ticker for the carousel is 56w x 72h; hue swatches are that, axes swapped.
@@ -607,6 +611,15 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       requestAnimationFrame(() => requestAnimationFrame(() => setShadeShown(true)));
       trigger('selection');
       if (drag) {
+        // Capture the active touch pointer onto our swatch so the gesture keeps
+        // delivering pointermove (and isn't stolen/cancelled by the Embla carousel
+        // underneath or reinterpreted by iOS as a scroll). Without this the finger
+        // drag never registers on a real device.
+        const el = pressElRef.current;
+        const pid = pressPointerIdRef.current;
+        if (el && pid !== null) {
+          try { el.setPointerCapture(pid); } catch { /* pointer already released */ }
+        }
         window.addEventListener('pointermove', onDragMove);
         window.addEventListener('pointerup', onDragUp);
         window.addEventListener('pointercancel', onDragUp);
@@ -620,6 +633,8 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const startPress = useCallback(
     (index: number, e: React.PointerEvent) => {
       pressStartRef.current = { x: e.clientX, y: e.clientY };
+      pressPointerIdRef.current = e.pointerId;
+      pressElRef.current = e.currentTarget as HTMLElement;
       if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
       pressTimerRef.current = window.setTimeout(() => {
         pressTimerRef.current = null;

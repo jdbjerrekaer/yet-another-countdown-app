@@ -132,6 +132,33 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const DEFAULT_COLOR = '#3b82f6';
   const [emojiColor, setEmojiColor] = useState<string>(initialEmojiColor || DEFAULT_COLOR);
   const [emojiShape, setEmojiShape] = useState<EmojiShape>(normalizeShape(initialEmojiShape));
+  // Emoji that should auto-open the shape picker after a long-press selected it.
+  const [pendingShapeOpen, setPendingShapeOpen] = useState<string | null>(null);
+  const tileLongPressTimer = useRef<number | null>(null);
+  const tileLongPressStart = useRef<{ x: number; y: number } | null>(null);
+  const startTileLongPress = (e: React.PointerEvent, em: string) => {
+    tileLongPressStart.current = { x: e.clientX, y: e.clientY };
+    if (tileLongPressTimer.current) clearTimeout(tileLongPressTimer.current);
+    tileLongPressTimer.current = window.setTimeout(() => {
+      tileLongPressTimer.current = null;
+      handleEmojiSelect(em); // select the pressed emoji…
+      setPendingShapeOpen(em); // …then auto-open its shape picker
+    }, 450);
+  };
+  const moveTileLongPress = (e: React.PointerEvent) => {
+    const s = tileLongPressStart.current;
+    if (!tileLongPressTimer.current || !s) return;
+    if (Math.abs(e.clientX - s.x) > 8 || Math.abs(e.clientY - s.y) > 8) {
+      clearTimeout(tileLongPressTimer.current);
+      tileLongPressTimer.current = null;
+    }
+  };
+  const endTileLongPress = () => {
+    if (tileLongPressTimer.current) {
+      clearTimeout(tileLongPressTimer.current);
+      tileLongPressTimer.current = null;
+    }
+  };
   const [isRecurring, setIsRecurring] = useState(initialIsRecurring ?? false);
   const [showCustomEmojiInput, setShowCustomEmojiInput] = useState(false);
   const [customEmojiValue, setCustomEmojiValue] = useState('');
@@ -847,10 +874,16 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                       key={`${e}-${index}`}
                       role="button"
                       onClick={isSelected ? undefined : () => handleEmojiSelect(e)}
+                      onPointerDown={isSelected ? undefined : (ev) => startTileLongPress(ev, e)}
+                      onPointerMove={isSelected ? undefined : moveTileLongPress}
+                      onPointerUp={isSelected ? undefined : endTileLongPress}
+                      onPointerLeave={isSelected ? undefined : endTileLongPress}
+                      onPointerCancel={isSelected ? undefined : endTileLongPress}
                       style={{
                         transform: isSelected ? 'scale(1.1)' : 'scale(1)',
                         transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1)',
                         animationDelay: `${index * 30}ms`,
+                        touchAction: isSelected ? undefined : 'none',
                       }}
                       className={
                         isSelected
@@ -865,6 +898,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           emoji={e}
                           onChange={setEmojiShape}
                           size={56}
+                          autoOpen={pendingShapeOpen === e}
+                          onAutoOpened={() => setPendingShapeOpen(null)}
                         />
                       ) : (
                         e
