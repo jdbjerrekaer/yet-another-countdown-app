@@ -4,26 +4,25 @@ import { EMOJI_SHAPES, EmojiShape, normalizeShape } from '@/lib/emojiShapes';
 import { EmojiContainer } from '@/components/EmojiContainer';
 import { useHaptic } from '@/hooks/useHaptic';
 
-// The selected-emoji tile; long-press (drag to highlight, release to select) or
-// double-tap opens a portal popover of container-shape previews — same feel as
-// the hue selector.
+// An emoji tile. Tapping an unselected tile selects it; long-pressing it selects
+// it AND opens the shape picker in one continuous gesture (drag to highlight,
+// release to pick). Rendering this on every tile — selected or not — means the
+// element never remounts on selection, so the long-press drag is never severed.
 interface Props {
   shape: EmojiShape | string;
   color: string;
   emoji: string;
   onChange: (shape: EmojiShape) => void;
   size?: number;
-  // When set true, open the popover automatically once (used after long-pressing an
-  // unselected emoji, which selects it and should then reveal the shape picker).
-  autoOpen?: boolean;
-  onAutoOpened?: () => void;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 const ITEM = 56;
 const GAP = 16;
 const STEP = ITEM + GAP;
 
-export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, autoOpen, onAutoOpened }: Props) {
+export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, selected = true, onSelect }: Props) {
   const { trigger } = useHaptic();
   const active = normalizeShape(shape);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +36,15 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
   const centerRef = useRef<{ cx: number; cy: number } | null>(null);
   const pressTimer = useRef<number | null>(null);
   const pressStart = useRef<{ x: number; y: number } | null>(null);
+  const pressPointerId = useRef<number | null>(null);
+  const pressEl = useRef<HTMLElement | null>(null);
   const lastTap = useRef<number | null>(null);
+  // Swallow touchmove in the capture phase while dragging so iOS can't reinterpret
+  // the drag as a scroll (which kills pointermove delivery on a real device).
+  const blockTouch = useRef((e: TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
 
   const close = useCallback(() => {
     openRef.current = false;
@@ -90,6 +97,7 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
   const onDragUp = useCallback(() => {
     if (!dragRef.current) return;
     dragRef.current = false;
+    document.removeEventListener('touchmove', blockTouch.current, { capture: true } as EventListenerOptions);
     window.removeEventListener('pointermove', onDragMove);
     window.removeEventListener('pointerup', onDragUp);
     window.removeEventListener('pointercancel', onDragUp);
@@ -101,6 +109,8 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
   const open = useCallback(
     (drag: boolean) => {
       if (!triggerRef.current) return;
+      // Long-pressing an unselected tile selects it first (same instance, no remount).
+      if (!selected) onSelect?.();
       const r = triggerRef.current.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
@@ -115,36 +125,34 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
       requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
       trigger('selection');
       if (drag) {
+        const el = pressEl.current;
+        const pid = pressPointerId.current;
+        if (el && pid !== null) {
+          try { el.setPointerCapture(pid); } catch { /* pointer already released */ }
+        }
+        document.addEventListener('touchmove', blockTouch.current, { passive: false, capture: true });
         window.addEventListener('pointermove', onDragMove);
         window.addEventListener('pointerup', onDragUp);
         window.addEventListener('pointercancel', onDragUp);
       }
     },
-    [active, onDragMove, onDragUp, trigger]
+    [active, selected, onSelect, onDragMove, onDragUp, trigger]
   );
 
   useEffect(() => {
     return () => {
+      document.removeEventListener('touchmove', blockTouch.current, { capture: true } as EventListenerOptions);
       window.removeEventListener('pointermove', onDragMove);
       window.removeEventListener('pointerup', onDragUp);
       window.removeEventListener('pointercancel', onDragUp);
     };
   }, [onDragMove, onDragUp]);
 
-  // Auto-open once (persistent, tap-to-pick mode) after the trigger has mounted —
-  // used when an unselected emoji was long-pressed and just became selected.
-  useEffect(() => {
-    if (!autoOpen) return;
-    const id = requestAnimationFrame(() => {
-      open(false);
-      onAutoOpened?.();
-    });
-    return () => cancelAnimationFrame(id);
-  }, [autoOpen, open, onAutoOpened]);
-
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       pressStart.current = { x: e.clientX, y: e.clientY };
+      pressPointerId.current = e.pointerId;
+      pressEl.current = e.currentTarget as HTMLElement;
       if (pressTimer.current) clearTimeout(pressTimer.current);
       pressTimer.current = window.setTimeout(() => {
         pressTimer.current = null;
@@ -165,6 +173,12 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
   }, []);
   const onClick = useCallback(() => {
     if (openRef.current) return;
+    // Unselected tile: a plain tap just selects this emoji.
+    if (!selected) {
+      onSelect?.();
+      return;
+    }
+    // Selected tile: double-tap opens the shape picker (persistent, tap-to-pick).
     const now = Date.now();
     if (lastTap.current && now - lastTap.current < 320) {
       lastTap.current = null;
@@ -172,7 +186,7 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
       return;
     }
     lastTap.current = now;
-  }, [open]);
+  }, [selected, onSelect, open]);
 
   return (
     <div
@@ -183,11 +197,16 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, aut
       onPointerLeave={endPress}
       onPointerCancel={endPress}
       onClick={onClick}
-      className="active:scale-[0.97] transition-transform"
-      style={{ touchAction: 'none' }}
-      aria-label="Change emoji container shape"
+      className="w-full h-full flex items-center justify-center active:scale-[0.97] transition-transform"
+      aria-label={selected ? 'Change emoji container shape' : `Select emoji ${emoji}`}
     >
-      <EmojiContainer shape={active} color={color} emoji={emoji} size={size} animateIn emojiClassName="text-xl" />
+      {selected ? (
+        <EmojiContainer shape={active} color={color} emoji={emoji} size={size} animateIn emojiClassName="text-xl" />
+      ) : (
+        <div className="w-full h-full rounded-xl flex items-center justify-center bg-secondary/50 text-2xl">
+          {emoji}
+        </div>
+      )}
 
       {menu && typeof document !== 'undefined' &&
         createPortal(

@@ -146,6 +146,13 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   // fires — without capture, iOS cancels the pointer the moment the finger slides.
   const pressPointerIdRef = useRef<number | null>(null);
   const pressElRef = useRef<HTMLElement | null>(null);
+  // While dragging the shade column, swallow touchmove in the capture phase so iOS
+  // can't reinterpret the drag as a scroll (which kills pointermove delivery) and
+  // the Embla carousel underneath never sees the move.
+  const blockTouchRef = useRef((e: TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
   const lastTapRef = useRef<{ t: number; i: number } | null>(null); // manual double-tap detection
   const openShadeMenuRef = useRef<((index: number, drag: boolean) => void) | null>(null);
   // The center ticker for the carousel is 56w x 72h; hue swatches are that, axes swapped.
@@ -578,6 +585,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const onDragUp = useCallback(() => {
     if (!dragModeRef.current) return;
     dragModeRef.current = false;
+    document.removeEventListener('touchmove', blockTouchRef.current, { capture: true } as EventListenerOptions);
     window.removeEventListener('pointermove', onDragMove);
     window.removeEventListener('pointerup', onDragUp);
     window.removeEventListener('pointercancel', onDragUp);
@@ -620,6 +628,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
         if (el && pid !== null) {
           try { el.setPointerCapture(pid); } catch { /* pointer already released */ }
         }
+        document.addEventListener('touchmove', blockTouchRef.current, { passive: false, capture: true });
         window.addEventListener('pointermove', onDragMove);
         window.addEventListener('pointerup', onDragUp);
         window.addEventListener('pointercancel', onDragUp);
@@ -661,11 +670,9 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     }
   }, []);
 
-  // Freeze the carousel's horizontal drag while the hue selector is open
-  useEffect(() => {
-    if (!emblaApi) return;
-    emblaApi.reInit({ watchDrag: !shadeMenu });
-  }, [emblaApi, shadeMenu]);
+  // (The carousel doesn't need an explicit drag-freeze while the menu is open: the
+  // portal backdrop covers it, and reInit'ing Embla here used to tear down the
+  // carousel mid-gesture and drop the pointer capture, breaking the shade drag.)
 
   // Clean up drag listeners if the component unmounts mid-drag
   useEffect(() => {
