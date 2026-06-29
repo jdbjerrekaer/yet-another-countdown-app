@@ -135,9 +135,15 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   }, []);
   const [shadeMenu, setShadeMenu] = useState<{ shades: string[]; activeHex: string; cx: number; cy: number } | null>(null);
   const [shadeShown, setShadeShown] = useState(false); // drives the morph in/out transition
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null); // hue under the finger during a press-drag
   const shadeMenuRef = useRef(false);
+  const dragModeRef = useRef(false); // true when opened by long-press (select on release)
+  const hoverIndexRef = useRef<number | null>(null);
+  const shadeDataRef = useRef<{ shades: string[]; cx: number; cy: number } | null>(null);
   const pressTimerRef = useRef<number | null>(null);
   const pressStartRef = useRef<{ x: number; y: number } | null>(null);
+  const lastTapRef = useRef<{ t: number; i: number } | null>(null); // manual double-tap detection
+  const openShadeMenuRef = useRef<((index: number, drag: boolean) => void) | null>(null);
   // The center ticker for the carousel is 56w x 72h; hue swatches are that, axes swapped.
   const SHADE_W = 72;
   const SHADE_H = 56;
@@ -472,6 +478,17 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       if (!emblaApi) return;
       if (shadeMenuRef.current) return; // ignore the click that follows opening the shade menu
 
+      // Manual double-tap detection (dblclick is unreliable in touch WebViews).
+      // Open shades for the centered hue — the first tap may have scrolled the carousel.
+      const now = Date.now();
+      const last = lastTapRef.current;
+      if (last && now - last.t < 320) {
+        lastTapRef.current = null;
+        openShadeMenuRef.current?.(lastIndexRef.current, false);
+        return;
+      }
+      lastTapRef.current = { t: now, i: paletteIndex };
+
       // A tap on a palette swatch reverts any fine-tuned shade back to the base hue
       setCustom(null);
 
@@ -499,30 +516,11 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     );
   }, []);
 
-  const openShadeMenu = useCallback(
-    (index: number) => {
-      if (!emblaApi || !containerRef.current) return;
-      emblaApi.scrollTo(index, false);
-      const base = COLOR_PALETTE[index];
-      const rect = containerRef.current.getBoundingClientRect();
-      shadeMenuRef.current = true;
-      // Anchor the morph on the center ticker (center of the picker band)
-      setShadeMenu({
-        shades: getShades(base),
-        activeHex: customColorRef.current ?? base,
-        cx: rect.left + rect.width / 2,
-        cy: rect.top + rect.height / 2,
-      });
-      setShadeShown(false);
-      // Next frame: flip to shown so the swatches morph out from the ticker
-      requestAnimationFrame(() => requestAnimationFrame(() => setShadeShown(true)));
-      trigger('selection');
-    },
-    [emblaApi, getShades, trigger]
-  );
-
   const closeShadeMenu = useCallback(() => {
     shadeMenuRef.current = false;
+    dragModeRef.current = false;
+    hoverIndexRef.current = null;
+    setHoverIndex(null);
     setShadeShown(false);
     window.setTimeout(() => setShadeMenu(null), 200); // let the collapse finish before unmount
   }, []);
@@ -543,6 +541,81 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
     [onChange, onManualChange, trigger, setCustom, closeShadeMenu]
   );
 
+  // Which shade is under the finger during a press-drag (null = off the column → cancel)
+  const hitTestShade = useCallback((clientX: number, clientY: number): number | null => {
+    const data = shadeDataRef.current;
+    if (!data) return null;
+    const half = (7 * SHADE_H + 6 * SHADE_GAP) / 2;
+    if (Math.abs(clientX - data.cx) > 120) return null;
+    if (clientY < data.cy - half - 44 || clientY > data.cy + half + 44) return null;
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < 7; i++) {
+      const c = data.cy + (i - 3) * SHADE_STEP;
+      const d = Math.abs(clientY - c);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+  }, [SHADE_H, SHADE_GAP, SHADE_STEP]);
+
+  const onDragMove = useCallback(
+    (e: PointerEvent) => {
+      if (!dragModeRef.current) return;
+      const idx = hitTestShade(e.clientX, e.clientY);
+      if (idx !== hoverIndexRef.current) {
+        hoverIndexRef.current = idx;
+        setHoverIndex(idx);
+        if (idx !== null) trigger('selection');
+      }
+    },
+    [hitTestShade, trigger]
+  );
+
+  const onDragUp = useCallback(() => {
+    if (!dragModeRef.current) return;
+    dragModeRef.current = false;
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragUp);
+    window.removeEventListener('pointercancel', onDragUp);
+    const idx = hoverIndexRef.current;
+    const data = shadeDataRef.current;
+    if (idx !== null && data) {
+      selectShade(data.shades[idx]);
+    } else {
+      closeShadeMenu();
+    }
+  }, [onDragMove, selectShade, closeShadeMenu]);
+
+  const openShadeMenu = useCallback(
+    (index: number, drag: boolean) => {
+      if (!emblaApi || !containerRef.current) return;
+      emblaApi.scrollTo(index, false);
+      const base = COLOR_PALETTE[index];
+      const rect = containerRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const shades = getShades(base);
+      const activeHex = customColorRef.current ?? base;
+      shadeMenuRef.current = true;
+      shadeDataRef.current = { shades, cx, cy };
+      dragModeRef.current = drag;
+      // In drag mode, start the highlight on the base hue under the finger
+      hoverIndexRef.current = drag ? 3 : null;
+      setHoverIndex(drag ? 3 : null);
+      setShadeMenu({ shades, activeHex, cx, cy });
+      setShadeShown(false);
+      requestAnimationFrame(() => requestAnimationFrame(() => setShadeShown(true)));
+      trigger('selection');
+      if (drag) {
+        window.addEventListener('pointermove', onDragMove);
+        window.addEventListener('pointerup', onDragUp);
+        window.addEventListener('pointercancel', onDragUp);
+      }
+    },
+    [emblaApi, getShades, trigger, onDragMove, onDragUp]
+  );
+  openShadeMenuRef.current = openShadeMenu; // called from handleColorClick (declared earlier)
+
   // Long-press detection (cancels if the finger moves — that's a carousel drag)
   const startPress = useCallback(
     (index: number, e: React.PointerEvent) => {
@@ -550,7 +623,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
       pressTimerRef.current = window.setTimeout(() => {
         pressTimerRef.current = null;
-        openShadeMenu(index);
+        openShadeMenu(index, true); // long-press: drag to highlight, release to select
       }, 450);
     },
     [openShadeMenu]
@@ -572,6 +645,21 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       pressTimerRef.current = null;
     }
   }, []);
+
+  // Freeze the carousel's horizontal drag while the hue selector is open
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.reInit({ watchDrag: !shadeMenu });
+  }, [emblaApi, shadeMenu]);
+
+  // Clean up drag listeners if the component unmounts mid-drag
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('pointermove', onDragMove);
+      window.removeEventListener('pointerup', onDragUp);
+      window.removeEventListener('pointercancel', onDragUp);
+    };
+  }, [onDragMove, onDragUp]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -642,7 +730,6 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
                 height: TOTAL_HEIGHT,
               }}
               onClick={() => handleColorClick(i)}
-              onDoubleClick={() => openShadeMenu(i)}
               onPointerDown={(e) => startPress(i, e)}
               onPointerMove={movePress}
               onPointerUp={endPress}
@@ -651,13 +738,15 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
               role="button"
               aria-label={`Select color ${i + 1}`}
             >
-              {/* The visible color bar */}
-              <div 
-                style={{ 
-                  backgroundColor: color, 
-                  height: VISIBLE_HEIGHT, 
-                  width: '100%', 
-                }} 
+              {/* The visible color bar — the centered swatch reflects a fine-tuned shade,
+                  reverting to the palette color once the carousel is scrolled. */}
+              <div
+                style={{
+                  backgroundColor: customColor && i === selectedIndex ? customColor : color,
+                  height: VISIBLE_HEIGHT,
+                  width: '100%',
+                  transition: 'background-color 200ms ease-out',
+                }}
               />
             </div>
           ))}
@@ -700,19 +789,31 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
           <div className="fixed inset-0 z-[60]">
             {/* Backdrop catches outside taps */}
             <div className="absolute inset-0" onClick={closeShadeMenu} />
+            {/* Background pill that holds the hues, centered on the ticker; morphs in */}
             <div
-              className="absolute flex flex-col"
+              className="absolute flex flex-col bg-popover border border-border"
               style={{
                 left: shadeMenu.cx,
                 top: shadeMenu.cy,
                 gap: SHADE_GAP,
-                transform: 'translate(-50%, -50%)',
+                padding: 12,
+                borderRadius: 30,
+                boxShadow: '0 12px 36px rgba(0,0,0,0.28)',
+                transformOrigin: 'center',
+                transform: `translate(-50%, -50%) scale(${shadeShown ? 1 : 0.9})`,
+                opacity: shadeShown ? 1 : 0,
+                transition:
+                  'transform 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 180ms cubic-bezier(0.23, 1, 0.32, 1)',
               }}
             >
               {shadeMenu.shades.map((hex, i) => {
-                const active = hex.toLowerCase() === shadeMenu.activeHex.toLowerCase();
+                const active =
+                  hoverIndex !== null
+                    ? hoverIndex === i
+                    : hex.toLowerCase() === shadeMenu.activeHex.toLowerCase();
                 const fromCenter = i - 3; // index 3 is the base hue (the ticker)
                 const collapsed = `translateY(${-fromCenter * SHADE_STEP}px) scale(0.82)`;
+                const expanded = `translateY(0) scale(${hoverIndex === i ? 1.06 : 1})`;
                 return (
                   <button
                     key={hex}
@@ -728,11 +829,11 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
                       boxShadow: active
                         ? '0 2px 10px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08)'
                         : '0 1px 4px rgba(0,0,0,0.18)',
-                      // Morph: collapse onto the ticker, then spring out; active stays put/visible
-                      transform: shadeShown ? 'translateY(0) scale(1)' : collapsed,
+                      // Morph: collapse onto the ticker, then spring out; hovered hue lifts slightly
+                      transform: shadeShown ? expanded : collapsed,
                       opacity: shadeShown ? 1 : active ? 1 : 0,
                       transition:
-                        'transform 300ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms cubic-bezier(0.23, 1, 0.32, 1)',
+                        'transform 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms cubic-bezier(0.23, 1, 0.32, 1)',
                       transitionDelay: `${Math.abs(fromCenter) * 22}ms`,
                     }}
                   />
