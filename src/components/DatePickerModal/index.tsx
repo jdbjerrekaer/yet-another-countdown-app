@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
+import { formatRelative } from '@/lib/relativeTime';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
 import { EmojiShape, normalizeShape } from '@/lib/emojiShapes';
 import { EmojiShapePicker } from '@/components/EmojiShapePicker';
@@ -1043,25 +1044,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                     onIonChange={(e) => handleSpecificTimeToggle(e.detail.checked)}
                   />
                 </div>
-                {/* Time-display override — off follows the global setting; on flips it */}
-                <div className="mx-4 border-t border-border/50" />
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Hourglass className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{t('modal.timeFormatLabel')}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {legacyTimeFormat ? t('modal.timeFormatSublabelToSemantic') : t('modal.timeFormatSublabelToDays')}
-                      </p>
-                    </div>
-                  </div>
-                  <IonToggle
-                    checked={invertTimeFormat}
-                    onIonChange={(e) => { trigger('selection'); setInvertTimeFormat(e.detail.checked); }}
-                  />
-                </div>
                 {timeWheelMounted && date && (
                   <div
                     className="grid transition-[grid-template-rows] duration-300 motion-reduce:transition-none"
@@ -1101,6 +1083,55 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                         showDefaultTitle={false}
                         showDefaultButtons={false}
                       />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Time-display override — off follows the global setting; on flips it */}
+                <div className="mx-4 border-t border-border/50" />
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Hourglass className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t('modal.timeFormatLabel')}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {legacyTimeFormat ? t('modal.timeFormatSublabelToSemantic') : t('modal.timeFormatSublabelToDays')}
+                      </p>
+                    </div>
+                  </div>
+                  <IonToggle
+                    checked={invertTimeFormat}
+                    onIonChange={(e) => { trigger('selection'); setInvertTimeFormat(e.detail.checked); }}
+                  />
+                </div>
+                {/* Live preview of the overridden format — expands when the toggle is on
+                    so the effect of the switch is visible immediately */}
+                {date && (
+                  <div
+                    className="grid transition-[grid-template-rows] duration-300 motion-reduce:transition-none"
+                    style={{
+                      gridTemplateRows: invertTimeFormat ? '1fr' : '0fr',
+                      transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                    }}
+                  >
+                    <div className="overflow-hidden">
+                      <div
+                        className="transition-[opacity,transform] duration-300 motion-reduce:transition-none"
+                        style={{
+                          opacity: invertTimeFormat ? 1 : 0,
+                          transform: invertTimeFormat ? 'translateY(0)' : 'translateY(-6px)',
+                          transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                        }}
+                      >
+                        <div className="pb-4 pl-[68px] pr-4">
+                          <p className="text-sm font-medium text-primary">
+                            {/* Always the flipped format — deriving it from invertTimeFormat
+                                would flash back to the default mid-collapse */}
+                            {emoji || '🎯'} {formatRelative(t, date, new Date(), hasSpecificTime, !legacyTimeFormat)}
+                          </p>
                         </div>
                       </div>
                     </div>
