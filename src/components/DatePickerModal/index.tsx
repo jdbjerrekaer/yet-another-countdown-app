@@ -593,13 +593,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         const listener = await EmojiKeyboardPlugin.addListener('emojiTextChanged', (data) => {
           const emojiText = data.text || '';
           if (emojiText) {
-            const emojiMatch = emojiText.match(/[\p{Emoji}\p{Extended_Pictographic}]/u);
-            if (emojiMatch) {
-              setCustomEmojiValue(emojiMatch[0]);
-              setTimeout(() => {
-                handleEmojiSelect(emojiMatch[0]);
-              }, 100);
-            }
+            setCustomEmojiValue(emojiText);
+            setTimeout(() => {
+              handleEmojiSelect(emojiText);
+            }, 100);
           }
         });
         emojiKeyboardListenerRef.current = listener;

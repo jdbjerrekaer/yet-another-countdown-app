@@ -162,12 +162,7 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin, UITextFieldDelega
                           replacementString string: String) -> Bool {
         if string.isEmpty { return true }
 
-        let emojiRegex = try? NSRegularExpression(pattern: "\\p{Emoji}|\\p{Extended_Pictographic}", options: [])
-        let nsString = string as NSString
-        let fullRange = NSRange(location: 0, length: nsString.length)
-        // Allow only if the entire replacement string is emoji.
-        let matchRange = emojiRegex?.rangeOfFirstMatch(in: string, options: [], range: fullRange)
-        return matchRange == fullRange
+        return EmojiParser.isIncompleteFlag(string) || EmojiParser.containsOnlyEmoji(string)
     }
 
     @objc func textDidChange(_ notification: Notification) {
@@ -177,16 +172,12 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin, UITextFieldDelega
         }
         
         let newText = textField.text ?? ""
+
+        // UIKit can deliver a flag as two separate regional-indicator changes.
+        // Keep the first half in the field and wait for the completed flag.
+        if EmojiParser.isIncompleteFlag(newText) { return }
         
-        let emojiRegex = try? NSRegularExpression(pattern: "\\p{Emoji}|\\p{Extended_Pictographic}", options: [])
-        let nsString = newText as NSString
-        let matches = emojiRegex?.matches(in: newText, options: [], range: NSRange(location: 0, length: nsString.length))
-        
-        var filteredText = ""
-        if let matches = matches, !matches.isEmpty {
-            let firstMatch = matches[0]
-            filteredText = nsString.substring(with: firstMatch.range)
-        }
+        let filteredText = EmojiParser.firstEmoji(in: newText) ?? ""
         
         if filteredText != newText {
             textField.text = filteredText

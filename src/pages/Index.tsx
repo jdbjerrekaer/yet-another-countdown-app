@@ -50,6 +50,7 @@ import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/Deep
 import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
+import { createCountdownEvent, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
@@ -1258,11 +1259,16 @@ export default function Index() {
       // Cancel old notification and schedule new one
       await cancelEventNotification(editingEvent.id);
       
-      setEvents(prev => prev.map(e => 
-        e.id === editingEvent.id 
-          ? { ...e, title, targetDate: date.toISOString(), emoji, emojiColor, emojiShape, isRecurring, hasTime: hasSpecificTime, invertTimeFormat }
-          : e
-      ));
+      setEvents(prev => updateCountdownEvent(prev, editingEvent.id, {
+        title,
+        targetDate: date.toISOString(),
+        emoji,
+        emojiColor,
+        emojiShape,
+        isRecurring,
+        hasTime: hasSpecificTime,
+        invertTimeFormat,
+      }));
       
       // Schedule notification for the updated event
       const targetDateForNotification = isRecurring 
@@ -1274,21 +1280,16 @@ export default function Index() {
         offerNotificationPermissionAfterSave(editingEvent.id, title, targetDateForNotification, emoji);
       }
     } else {
-      const newEvent: CountdownEvent = {
-        id: generateId(),
+      const newEvent = createCountdownEvent({
         title,
         targetDate: date.toISOString(),
         emoji,
         emojiColor,
         emojiShape,
         isRecurring,
-        createdAt: new Date().toISOString(),
-        // Default-on auto-purge for events created more than 2 days out; never
-        // for recurring ones (they keep coming back). See the purge effect.
-        autoDelete: !isRecurring && date.getTime() - Date.now() > 2 * 24 * 60 * 60 * 1000,
         hasTime: hasSpecificTime,
         invertTimeFormat,
-      };
+      }, generateId());
       setEvents(prev => [...prev, newEvent]);
       setSelectedEventId(newEvent.id);
       
@@ -1370,7 +1371,7 @@ export default function Index() {
     persistTombstones(mergeTombstones(deletedRef.current, { [eventId]: new Date().toISOString() }));
 
     setEvents(prev => {
-      const filtered = prev.filter(e => e.id !== eventId);
+      const filtered = removeCountdownEvent(prev, eventId);
       if (wasSelected) {
         setSelectedEventId(filtered.length > 0 ? filtered[0].id : null);
       }
