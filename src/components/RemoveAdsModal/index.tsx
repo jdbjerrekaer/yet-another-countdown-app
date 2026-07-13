@@ -139,6 +139,7 @@ export const RemoveAdsModal = ({
 }: RemoveAdsModalProps) => {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
+  const contentRef = useRef<HTMLIonContentElement | null>(null);
   const confettiShownRef = useRef(false);
   const closeTriggeredRef = useRef(false);
   const lastLoggedCatalogErrorRef = useRef<string | null>(null);
@@ -428,8 +429,19 @@ export const RemoveAdsModal = ({
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose} aria-labelledby="iap-modal-title">
-      <IonHeader>
+    <IonModal
+      isOpen={isOpen}
+      onDidDismiss={onClose}
+      onDidPresent={() => {
+        requestAnimationFrame(() => {
+          const content = contentRef.current as unknown as { recalculateDimensions?: () => void } | null;
+          content?.recalculateDimensions?.();
+          window.dispatchEvent(new Event('resize'));
+        });
+      }}
+      aria-labelledby="iap-modal-title"
+    >
+      <IonHeader translucent className="modal-header-transparent">
         <IonToolbar>
           <IonButtons slot="start">
             <IonButton onClick={handleCloseClick} className="text-primary font-medium">{t("modal.close")}</IonButton>
@@ -437,7 +449,12 @@ export const RemoveAdsModal = ({
           <IonTitle id="iap-modal-title" className="font-semibold">{t("iap.title")}</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding" style={{ "--padding-bottom": "var(--ad-banner-height, 0px)" } as React.CSSProperties}>
+      <IonContent
+        ref={contentRef}
+        fullscreen
+        className="ion-padding"
+        style={{ "--padding-bottom": "var(--ad-banner-height, 0px)" } as React.CSSProperties}
+      >
         <div className="max-w-md mx-auto space-y-8 pb-8">
           <div className="flex flex-col gap-2 text-center pt-4">
             <div className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-1">
