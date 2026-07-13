@@ -486,6 +486,33 @@
   }
 }
 
+/* Inline date calendar — blend into the surrounding settings card instead of
+   rendering Ionic's default white box. The month/year wheel fades to the
+   card colour, not a separate white surface. */
+ion-datetime.datetime-fixed-width {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+ion-datetime.datetime-fixed-width:not(.month-year-picker-open) {
+  --background: transparent;
+  background: transparent;
+}
+
+ion-datetime.datetime-fixed-width.month-year-picker-open {
+  --background: transparent;
+  --background-rgb: 247, 247, 247;
+  --wheel-fade-background-rgb: 247, 247, 247;
+  background: transparent;
+}
+
+.dark ion-datetime.datetime-fixed-width.month-year-picker-open,
+.ion-palette-dark ion-datetime.datetime-fixed-width.month-year-picker-open {
+  --background-rgb: 26, 26, 26;
+  --wheel-fade-background-rgb: 26, 26, 26;
+}
+
 /* Inline time wheel — unlayered so it overrides Ionic's shadow-DOM defaults.
    No solid box fill or drop shadow (the "box in a box"), but the wheel's
    top/bottom fade is a gradient that fades TO --background-rgb, so that must
@@ -506,4 +533,3 @@ ion-datetime.datetime-time-inline {
 .ion-palette-dark ion-datetime.datetime-time-inline {
   --background-rgb: 26, 26, 26;
 }
-
