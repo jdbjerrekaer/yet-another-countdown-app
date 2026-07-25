@@ -10,6 +10,23 @@
     color: hsl(0 0% 9%);
   }
 
+  /* Same silhouette as the FAB, deliberately not the same surface: muted and
+     unelevated so it reads as a readout, not a second button.
+     No backdrop-filter — the pill animates its transform on entry, and a
+     backdrop-filtered element that is being transformed paints its raw fill
+     for the first compositing frames in WebKit, which flashes black. A flat
+     opaque surface gets the same visual separation with no such risk. */
+  .countdown-pill {
+    background: hsl(0 0% 32%);
+    color: hsl(0 0% 100% / 0.92);
+  }
+
+  .dark .countdown-pill,
+  .ion-palette-dark .countdown-pill {
+    background: hsl(0 0% 82%);
+    color: hsl(0 0% 9% / 0.9);
+  }
+
   .gradient-sky {
     background: var(--gradient-sky);
   }

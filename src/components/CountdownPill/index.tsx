@@ -118,11 +118,19 @@ export function CountdownPill({ target, includeTime, legacy }: Props) {
         borderRadius: RADIUS,
         display: 'flex',
         alignItems: 'center',
-        fontSize: 16,
-        fontWeight: 600,
+        fontSize: 15,
+        fontWeight: 500,
         overflow: 'hidden',
-        pointerEvents: 'none',
-        boxShadow: '0 4px 16px -4px hsl(0 0% 0% / 0.2), 0 2px 8px -2px hsl(0 0% 0% / 0.15)',
+        // Swallows taps rather than letting them through to the sheet
+        // underneath — nothing behind a 72pt block should be hit by accident.
+        // No handler, so it stays inert.
+        pointerEvents: shown && target ? 'auto' : 'none',
+        cursor: 'default',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        // Deliberately unelevated: the FAB casts a shadow because it's
+        // pressable, this sits flat on the surface because it isn't.
         opacity: shown && target ? 1 : 0,
         transform: shown && target ? 'translateX(0)' : 'translateX(calc(-100% - 24px))',
         transition:
@@ -130,7 +138,7 @@ export function CountdownPill({ target, includeTime, legacy }: Props) {
           `, opacity ${ENTER_MS}ms ease` +
           `, width ${SWAP_MS}ms ${SWAP_EASE}`,
       }}
-      className="morphing-fab"
+      className="countdown-pill"
     >
       {/* Keyed so each new value mounts fresh and replays its enter animation. */}
       <span key={swapId} className="countdown-pill-in" style={layerStyle}>
