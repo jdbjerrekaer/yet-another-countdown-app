@@ -50,7 +50,7 @@ import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/Deep
 import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
-import { createCountdownEvent, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
+import { createCountdownEvent, hasEventChanged, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
@@ -1252,6 +1252,21 @@ export default function Index() {
 
   const handleSave = async (title: string, date: Date, emoji: string, isRecurring: boolean, hasSpecificTime: boolean, emojiColor?: string, emojiShape?: EmojiShape, invertTimeFormat?: boolean) => {
     const saveKind = editingEvent ? 'edit' : 'create';
+
+    // ponytail: unchanged edit = same as cancel, no rescheduling and no "changes saved" toast
+    if (editingEvent && !hasEventChanged(editingEvent, {
+      title,
+      targetDate: date.toISOString(),
+      emoji,
+      emojiColor,
+      emojiShape,
+      isRecurring,
+      hasTime: hasSpecificTime,
+      invertTimeFormat,
+    })) {
+      setEditingEvent(null);
+      return;
+    }
 
     const hasPermission = await checkNotificationPermission();
 

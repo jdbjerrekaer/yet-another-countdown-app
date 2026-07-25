@@ -28,6 +28,20 @@ export function updateCountdownEvent(
   return events.map((event) => event.id === id ? { ...event, ...changes } : event);
 }
 
+/** True when `changes` would actually alter the event (undefined/'' treated as equal). */
+export function hasEventChanged(event: CountdownEvent, changes: CountdownEventInput): boolean {
+  return (
+    event.title !== changes.title ||
+    new Date(event.targetDate).getTime() !== new Date(changes.targetDate).getTime() ||
+    event.emoji !== changes.emoji ||
+    (event.emojiColor ?? '') !== (changes.emojiColor ?? '') ||
+    (event.emojiShape ?? 'squircle') !== (changes.emojiShape ?? 'squircle') ||
+    !!event.isRecurring !== !!changes.isRecurring ||
+    !!event.hasTime !== !!changes.hasTime ||
+    !!event.invertTimeFormat !== !!changes.invertTimeFormat
+  );
+}
+
 export function removeCountdownEvent(events: CountdownEvent[], id: string): CountdownEvent[] {
   return events.filter((event) => event.id !== id);
 }

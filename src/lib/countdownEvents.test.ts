@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createCountdownEvent, removeCountdownEvent, updateCountdownEvent } from './countdownEvents';
+import { createCountdownEvent, hasEventChanged, removeCountdownEvent, updateCountdownEvent } from './countdownEvents';
 import { CountdownEvent } from '@/types/countdown';
 
 const now = new Date('2026-07-13T10:00:00.000Z');
@@ -101,5 +101,44 @@ describe('countdown event CRUD', () => {
 
     expect(removeCountdownEvent(events, 'first')).toEqual([second]);
     expect(events).toHaveLength(2);
+  });
+});
+
+describe('hasEventChanged', () => {
+  const base = createCountdownEvent({
+    title: 'Roskilde 🎪',
+    targetDate: '2026-08-01T12:30:00.000Z',
+    emoji: '🎪',
+    emojiColor: '#dc143c',
+    emojiShape: 'heart',
+    isRecurring: false,
+    hasTime: true,
+    invertTimeFormat: true,
+  }, 'event-1', now);
+
+  const input = {
+    title: base.title,
+    targetDate: base.targetDate,
+    emoji: base.emoji,
+    emojiColor: base.emojiColor,
+    emojiShape: base.emojiShape,
+    isRecurring: base.isRecurring,
+    hasTime: base.hasTime,
+    invertTimeFormat: base.invertTimeFormat,
+  };
+
+  it('is false when nothing was edited', () => {
+    expect(hasEventChanged(base, input)).toBe(false);
+  });
+
+  it('treats undefined and false optionals as equal', () => {
+    const sparse: CountdownEvent = { ...base, emojiColor: undefined, emojiShape: undefined, invertTimeFormat: undefined };
+    expect(hasEventChanged(sparse, { ...input, emojiColor: '', emojiShape: 'squircle', invertTimeFormat: false })).toBe(false);
+  });
+
+  it('is true when a field actually changed', () => {
+    expect(hasEventChanged(base, { ...input, title: 'Sommerferie ✈️' })).toBe(true);
+    expect(hasEventChanged(base, { ...input, targetDate: '2026-08-02T12:30:00.000Z' })).toBe(true);
+    expect(hasEventChanged(base, { ...input, isRecurring: true })).toBe(true);
   });
 });
