@@ -97,6 +97,8 @@ interface DatePickerModalProps {
   onDelete?: () => Promise<boolean> | boolean;
   onConfirmDateChange?: (title: string, oldDate: Date, newDate: Date) => Promise<boolean>;
   onCanSaveChange?: (canSave: boolean) => void;
+  /** Live draft (date + format flags) while editing, or null when there's no usable date. */
+  onDraftChange?: (draft: { date: Date; hasTime: boolean; invertTimeFormat: boolean; isRecurring: boolean } | null) => void;
 }
 
 const EMOJI_OPTIONS = ['🎯', '🎉', '✈️', '💍', '🎂', '🎄', '🌟', '🏆', '💪', '🎓', '🏠', '👶'];
@@ -118,6 +120,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   onDelete,
   onConfirmDateChange,
   onCanSaveChange,
+  onDraftChange,
 }: DatePickerModalProps, ref) {
   const { t } = useTranslation();
   
@@ -380,6 +383,12 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   useEffect(() => {
     onCanSaveChange?.(Boolean(title && date && emoji));
   }, [title, date, emoji, onCanSaveChange]);
+
+  // Report the live draft so the page can preview it (the countdown pill) while
+  // the user is still editing — before anything is saved.
+  useEffect(() => {
+    onDraftChange?.(date ? { date, hasTime: hasSpecificTime, invertTimeFormat, isRecurring } : null);
+  }, [date, hasSpecificTime, invertTimeFormat, isRecurring, onDraftChange]);
 
   useImperativeHandle(ref, () => ({
     save: handleSave,

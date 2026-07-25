@@ -73,3 +73,26 @@ export function formatRelative(t: TFunction, target: Date, now: Date, includeTim
     .join(', ');
   return t(isPast ? 'relative.ago' : 'relative.left', { parts: joined });
 }
+
+// Same phrase, narrow units — "4mo 4w left" / "213d 22h ago". Mirrors the
+// lock-screen accessory's abbreviated form. Intl gives localised narrow unit
+// labels (en "4w", da "4 u", fi "4 vk"), so this needs no extra translations.
+export function formatRelativeShort(
+  t: TFunction,
+  target: Date,
+  now: Date,
+  includeTime: boolean,
+  legacy = false,
+  locale = 'en',
+): string {
+  const isPast = target.getTime() <= now.getTime();
+  const [from, to] = isPast ? [target, now] : [now, target];
+  const joined = relativeParts(from, to, includeTime, legacy)
+    .slice(0, 3)
+    .map((p) =>
+      new Intl.NumberFormat(locale, { style: 'unit', unit: p.unit, unitDisplay: 'narrow' })
+        .format(p.count),
+    )
+    .join(' ');
+  return t(isPast ? 'relative.ago' : 'relative.left', { parts: joined });
+}

@@ -6,7 +6,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { useHaptic } from '@/hooks/useHaptic';
 import { CountdownEvent, resolveLegacy } from '@/types/countdown';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
-import { formatRelative } from '@/lib/relativeTime';
+import { RelativePhrase } from '@/components/RelativePhrase';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import { EmojiContainer } from '@/components/EmojiContainer';
 import styles from './styles.module.scss';
@@ -372,12 +372,19 @@ export function CountdownCard({
                   )}
                 </div>
                 <div className="flex items-center gap-2 min-w-0">
-                  <p className="text-sm text-muted-foreground flex-shrink-0">
-                    {countdown.isComplete && !countdown.isPast
-                      ? t('countdown.today')
-                      : formatRelative(t, targetDate, new Date(), event.hasTime ?? false, resolveLegacy(event.invertTimeFormat, legacyTimeFormat))
-                    }
-                  </p>
+                  {/* RelativePhrase is the flex child itself so it can manage
+                      its own shrink: shrinkable while a shorter form is still
+                      available, rigid once it's short. */}
+                  {countdown.isComplete && !countdown.isPast ? (
+                    <p className="text-sm text-muted-foreground flex-shrink-0">{t('countdown.today')}</p>
+                  ) : (
+                    <RelativePhrase
+                      className="text-sm text-muted-foreground"
+                      target={targetDate}
+                      includeTime={event.hasTime ?? false}
+                      legacy={resolveLegacy(event.invertTimeFormat, legacyTimeFormat)}
+                    />
+                  )}
                   {event.isImported && event.importedFrom && (
                     <span className="text-xs text-muted-foreground/70 flex items-center gap-1 min-w-0 truncate">
                       <CalendarIcon className="w-3 h-3 flex-shrink-0" />

@@ -26,6 +26,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { WidgetPreview } from '@/components/WidgetPreview';
 import { MorphingFab, MorphingFabHandle } from '@/components/MorphingFab';
+import { CountdownPill } from '@/components/CountdownPill';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import { DatePickerModal, DatePickerModalRef } from '@/components/DatePickerModal';
 import { SortableCountdownCard } from '@/components/SortableCountdownCard';
@@ -34,7 +35,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { TripleLargeWidget } from '@/components/widgets/TripleLargeWidget';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle } from '@/types/countdown';
+import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle, resolveLegacy } from '@/types/countdown';
 import { EmojiShape } from '@/lib/emojiShapes';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
 import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
@@ -201,6 +202,9 @@ export default function Index() {
   const titleTapCountRef = useRef<number>(0);
   const titleLastTapRef = useRef<number>(0);
   const fabRef = useRef<MorphingFabHandle>(null);
+  // Live draft reported by the edit sheet, so the countdown pill previews
+  // unsaved changes (date, specific time, days-only override).
+  const [draft, setDraft] = useState<{ date: Date; hasTime: boolean; invertTimeFormat: boolean; isRecurring: boolean } | null>(null);
   const legacyTimeFormat = useLegacyTimeFormat();
   const hasSyncedFromAppGroupRef = useRef(false);
   const lastSyncedWidgetPayloadRef = useRef<string | null>(null);
@@ -1688,6 +1692,22 @@ export default function Index() {
       ? t('aria.saveEvent')
       : t('aria.addEvent');
 
+  // Read-only mirror of the edit FAB: how long is left / how long ago, pinned
+  // opposite it while an existing countdown is being edited. Driven by the
+  // modal's live draft, not the saved event, so date/time/format toggles are
+  // reflected as you change them.
+  const pillSource = editingEvent && isModalOpen
+    ? (draft ?? {
+        date: new Date(editingEvent.targetDate),
+        hasTime: editingEvent.hasTime ?? false,
+        invertTimeFormat: editingEvent.invertTimeFormat ?? false,
+        isRecurring: editingEvent.isRecurring,
+      })
+    : null;
+  const pillTarget = pillSource
+    ? (pillSource.isRecurring ? getNextRecurringDate(pillSource.date) : pillSource.date)
+    : null;
+
   const fabPortal = (
     <div
       className={`fab-portal${isAnyModalOpen ? ' fab-portal--above-modal' : ''} transition-all duration-300`}
@@ -1709,6 +1729,14 @@ export default function Index() {
         />
       </div>
     </div>
+  );
+
+  const countdownPill = (
+    <CountdownPill
+      target={pillTarget}
+      includeTime={pillSource?.hasTime ?? false}
+      legacy={resolveLegacy(pillSource?.invertTimeFormat, legacyTimeFormat)}
+    />
   );
 
   return (
@@ -2019,6 +2047,7 @@ export default function Index() {
       </IonContent>
 
       {typeof document !== 'undefined' ? createPortal(fabPortal, document.body) : null}
+      {typeof document !== 'undefined' ? createPortal(countdownPill, document.body) : null}
 
       {/* Ad Integration Bar - Background for the ad area (only show when loading/placeholder is active) */}
       {showAdPlaceholder && !hasRemoveAds && !isTrackingConsentOpen && (
@@ -2042,6 +2071,7 @@ export default function Index() {
         onClose={handleCloseModal}
         onSave={handleSave}
         onCanSaveChange={setCanSaveForm}
+        onDraftChange={setDraft}
         initialTitle={editingEvent?.title ?? importPrefillData?.title}
         initialDate={
           editingEvent
