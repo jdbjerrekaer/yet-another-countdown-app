@@ -194,16 +194,23 @@
   width: 100%;
 }
 
+// Sized and rounded like the FAB (18px radius) instead of a pill — the
+// destructive target should read as the same family of control.
 .deleteIconCircle {
-  height: 2.5rem;
-  min-width: 2.5rem;
-  border-radius: 9999px;
+  height: 3.25rem;
+  min-width: 3.25rem;
+  border-radius: 18px;
   background-color: hsl(var(--destructive));
   display: flex;
   align-items: center;
-  justify-content: center;
+  // Left-anchored, not centred: centring re-lays the row out on every frame as
+  // the box widens, so the icon drifts under the label.
+  justify-content: flex-start;
   gap: 0.5rem;
-  padding: 0 0.75rem;
+  padding: 0 1rem;
+  // The label is revealed by the box's own left edge sweeping past it, so it
+  // must never paint outside the red shape.
+  overflow: hidden;
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
@@ -243,7 +250,8 @@
   font-weight: 500;
   color: hsl(var(--destructive-foreground));
   white-space: nowrap;
-  transition: opacity 0.15s ease-out, filter 0.15s ease-out;
+  flex-shrink: 0;
+  transition: opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 // Dark mode: white text

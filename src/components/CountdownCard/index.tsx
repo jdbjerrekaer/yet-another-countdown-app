@@ -289,18 +289,18 @@ export function CountdownCard({
                   onTouchEnd={handleDeleteRelease}
                   style={{
                     width: (() => {
-                      const baseWidth = 40;
+                      const baseWidth = 52;
                       const expandedWidth = Math.max(swipeAmount - 16, baseWidth);
-                      
+
                       if (swipeProgress <= 0.90) {
-                        return '2.5rem';
+                        return '3.25rem';
                       }
                       
                       const expansionProgress = Math.min((swipeProgress - 0.90) / 0.10, 1);
                       const currentWidth = baseWidth + (expandedWidth - baseWidth) * expansionProgress;
                       return `${currentWidth}px`;
                     })(),
-                    borderRadius: '9999px',
+                    borderRadius: '18px',
                     // Reveal-scale (swipe) composed with a press-scale so the
                     // destructive target dips on touch — Emil-style tactile feedback.
                     transform: `scale(${Math.min(swipeProgress / 0.5, 1) * (deletePressed ? 0.88 : 1)})`,
@@ -314,12 +314,13 @@ export function CountdownCard({
                   <span
                     className={styles.deleteText}
                     style={{
-                      // Clean fade + slide-in (no blur). Reveal once the row is
-                      // ~90% expanded; opacity/x driven by the expansion amount.
-                      display: swipeProgress > 0.90 ? 'inline-block' : 'none',
-                      opacity: Math.min(Math.max((swipeProgress - 0.90) / 0.08, 0), 1),
-                      transform: `translateX(${(1 - Math.min(Math.max((swipeProgress - 0.90) / 0.08, 0), 1)) * 6}px)`,
-                      transition: 'opacity 0.18s cubic-bezier(0.23, 1, 0.32, 1), transform 0.18s cubic-bezier(0.23, 1, 0.32, 1)',
+                      // Always in the layout — `display` can't transition, and
+                      // popping it in mid-expansion is what made the label spill
+                      // out of a box that hadn't finished widening. The box's own
+                      // edge does the revealing (overflow: hidden); this fade
+                      // just softens the wipe.
+                      opacity: swipeProgress > 0.92 ? 1 : 0,
+                      transition: 'opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1)',
                     }}
                   >
                     {t('events.delete')}
