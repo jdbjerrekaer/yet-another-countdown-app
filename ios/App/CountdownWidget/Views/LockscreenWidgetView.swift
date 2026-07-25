@@ -82,7 +82,6 @@ struct LockscreenRectangularView: View {
 
                 countdownLabel
                     .font(.system(size: 12, weight: .medium))
-                    .lineLimit(2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,14 +94,20 @@ struct LockscreenRectangularView: View {
         if countdown.isComplete && !countdown.isPast {
             Text(RelativeTime.todayText(lang))
         } else if let target = targetDate {
-            // Compact, single-letter units ("2w 6d left", "3mo 2w 1d ago") so it
-            // fits the tight rectangular accessory without truncating.
-            Text(RelativeTime.compactPhrase(
-                target: target,
-                includeTime: event.hasTime ?? false,
-                legacy: event.resolveLegacy(globalLegacy: WidgetDataSync.shared.isLegacyTimeFormat()),
-                lang: lang
-            ))
+            let legacy = event.resolveLegacy(globalLegacy: WidgetDataSync.shared.isLegacyTimeFormat())
+            let includeTime = event.hasTime ?? false
+            // Spelled-out units read better ("2 weeks, 4 days"), but the accessory
+            // is narrow — fall back to single-letter units ("4mo 4w") whenever the
+            // words don't fit, rather than guessing from the unit count.
+            let spelled = RelativeTime.compactPhrase(target: target, includeTime: includeTime,
+                                                     legacy: legacy, lang: lang, abbreviated: false)
+            let short = RelativeTime.compactPhrase(target: target, includeTime: includeTime,
+                                                   legacy: legacy, lang: lang, abbreviated: true)
+            ViewThatFits(in: .horizontal) {
+                Text(spelled).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                Text(short).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                Text(short).lineLimit(1)
+            }
         }
     }
 

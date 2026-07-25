@@ -323,53 +323,26 @@ enum RelativeTime {
                    .replacingOccurrences(of: ",\(nbsp)", with: ", ")
     }
 
-    /// Ultra-compact "2w 6d left" / "3mo 2w 1d ago" — single-letter units, capped
-    /// at 3, for the tight lock-screen rectangular accessory. Units (y/mo/w/d/h/m)
-    /// are kept universal; only the ago/left wrapper is localized.
-    static func compactPhrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool, lang: String) -> String {
+    /// Lock-screen duration, capped at 3 units. `abbreviated: false` spells the
+    /// units out ("4 months, 4 weeks"); `true` uses the locale's short units
+    /// ("4mo 4w" in English, "4 m 4 u" in Danish, "4 kk 4 vk" in Finnish).
+    /// The rectangular accessory renders the spelled form and falls back to the
+    /// abbreviated one via ViewThatFits — how wide a phrase renders depends on
+    /// the words, not the unit count.
+    static func compactPhrase(target: Date, now: Date = Date(), includeTime: Bool, legacy: Bool, lang: String,
+                              abbreviated: Bool) -> String {
         let isPast = target <= now
         let (a, b) = isPast ? (target, now) : (now, target)
         let cal = Calendar.current
         let from = includeTime ? a : cal.startOfDay(for: a)
         let to = includeTime ? b : cal.startOfDay(for: b)
-        var pieces: [String] = []
-        if legacy {
-            let totalDays = cal.dateComponents([.day], from: from, to: to).day ?? 0
-            if totalDays > 0 { pieces.append("\(totalDays)d") }
-            if includeTime {
-                let after = cal.date(byAdding: .day, value: totalDays, to: from) ?? from
-                let t = cal.dateComponents([.hour, .minute], from: after, to: to)
-                if let h = t.hour, h > 0 { pieces.append("\(h)h") }
-                if let m = t.minute, m > 0 { pieces.append("\(m)m") }
-            }
-        } else {
-            let c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: from, to: to)
-            if let y = c.year, y > 0 { pieces.append("\(y)y") }
-            if let mo = c.month, mo > 0 { pieces.append("\(mo)mo") }
-            let totalDays = c.day ?? 0
-            let weeks = totalDays / 7
-            let days = totalDays % 7
-            if weeks > 0 { pieces.append("\(weeks)w") }
-            if days > 0 { pieces.append("\(days)d") }
-            if includeTime {
-                if let h = c.hour, h > 0 { pieces.append("\(h)h") }
-                if let m = c.minute, m > 0 { pieces.append("\(m)m") }
-            }
-        }
-        if pieces.isEmpty { pieces.append("0d") }
-        let count = min(pieces.count, 3)
-        // 1–2 units → room to spell it out ("1 week", "1 week, 3 days");
-        // 3 units → stay single-letter ("1mo 2w 5d") so it fits the accessory.
-        let body: String
-        if count <= 2 {
-            let units: NSCalendar.Unit = legacy
-                ? (includeTime ? [.day, .hour, .minute] : [.day])
-                : (includeTime ? [.year, .month, .weekOfMonth, .day, .hour, .minute]
-                               : [.year, .month, .weekOfMonth, .day])
-            body = durationString(from: from, to: to, units: units, style: .full, maxUnits: count, lang: lang)
-        } else {
-            body = pieces.prefix(3).joined(separator: " ")
-        }
+        let units: NSCalendar.Unit = legacy
+            ? (includeTime ? [.day, .hour, .minute] : [.day])
+            : (includeTime ? [.year, .month, .weekOfMonth, .day, .hour, .minute]
+                           : [.year, .month, .weekOfMonth, .day])
+        let body = durationString(from: from, to: to, units: units,
+                                  style: abbreviated ? .abbreviated : .full,
+                                  maxUnits: 3, lang: lang)
         // Lock screen stays terse: only the past gets an "ago" suffix; upcoming
         // shows the bare duration (no "left") since the date line implies it.
         return isPast ? String(format: tmpl(lang).ago, body) : body
