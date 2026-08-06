@@ -71,6 +71,23 @@
       "dark": "Dunkel",
       "transparent": "Glas",
       "tinted": "Getönt"
+    },
+    "onboarding": {
+      "title": "Hab ihn auf dem Home-Bildschirm",
+      "subtitle": "Füge das Widget hinzu, dann siehst du den Countdown, ohne die App zu öffnen.",
+      "cta": "Widget hinzufügen",
+      "dismiss": "Jetzt nicht",
+      "step1": "Halte eine leere Stelle auf dem Home-Bildschirm gedrückt, bis die Symbole wackeln.",
+      "step2Plus": "Tippe oben links auf +.",
+      "step2Edit": "Tippe oben links auf Bearbeiten und dann auf Widget hinzufügen.",
+      "step3": "Suche nach Yet Another Countdown.",
+      "step4": "Wähle eine Größe und tippe auf Widget hinzufügen.",
+      "next": "Weiter",
+      "done": "Fertig",
+      "back": "Vorheriger Schritt",
+      "close": "Schließen",
+      "successTitle": "Da ist er",
+      "successSubtitle": "Dein Countdown ist auf dem Home-Bildschirm."
     }
   },
   "modal": {

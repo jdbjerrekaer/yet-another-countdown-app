@@ -71,6 +71,23 @@
       "dark": "Mørk",
       "transparent": "Glass",
       "tinted": "Tonet"
+    },
+    "onboarding": {
+      "title": "Ha den på hjemskjermen",
+      "subtitle": "Legg til widgeten, så ser du nedtellingen uten å åpne appen.",
+      "cta": "Legg til widgeten",
+      "dismiss": "Ikke nå",
+      "step1": "Trykk og hold på et tomt sted på hjemskjermen til ikonene rister.",
+      "step2Plus": "Trykk på + øverst til venstre.",
+      "step2Edit": "Trykk på Rediger øverst til venstre, og deretter Legg til widget.",
+      "step3": "Søk etter Yet Another Countdown.",
+      "step4": "Velg en størrelse og trykk på Legg til widget.",
+      "next": "Neste",
+      "done": "Ferdig",
+      "back": "Forrige steg",
+      "close": "Lukk",
+      "successTitle": "Der er den",
+      "successSubtitle": "Nedtellingen din er på hjemskjermen."
     }
   },
   "modal": {

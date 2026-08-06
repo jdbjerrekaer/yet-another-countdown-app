@@ -15,6 +15,7 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getCalendars", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getWidgetData", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateWidgetData", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getInstalledWidgets", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise)
     ]
     
@@ -56,6 +57,28 @@ public class CalendarPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
+    /// Widgets the user has actually placed (Home Screen, Lock Screen, StandBy).
+    /// Snapshot, not a subscription — call it on foreground, since the widget is
+    /// added while the app is in the background.
+    ///
+    /// Note: unreliable in the Simulator, which often reports an empty list even
+    /// with a widget placed. Verify on device.
+    @objc func getInstalledWidgets(_ call: CAPPluginCall) {
+        WidgetCenter.shared.getCurrentConfigurations { result in
+            switch result {
+            case .success(let widgets):
+                call.resolve([
+                    "count": widgets.count,
+                    "families": widgets.map { String(describing: $0.family) }
+                ])
+            case .failure:
+                // "Can't tell" behaves as "none" — the caller only ever uses this
+                // to celebrate a success, never to block anything.
+                call.resolve(["count": 0, "families": []])
+            }
+        }
+    }
+
     @objc func openSettings(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {

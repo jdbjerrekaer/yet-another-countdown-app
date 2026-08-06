@@ -1,0 +1,120 @@
+/* Motion for the widget-onboarding flow.
+   Seen once per user, so it can afford a little delight — but it still stays
+   under 300ms and uses ease-out so it reads as responsive, not decorative. */
+
+.wo-root {
+  --wo-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --wo-dur: 280ms;
+}
+
+/* Same surface as the FAB, deliberately hard-coded to match
+   `.morphing-fab` in _components.scss rather than a theme token — the two must
+   never drift apart. */
+.wo-primary {
+  background: hsl(0 0% 9%);
+  color: #fff;
+}
+
+.wo-dot.is-on {
+  background: hsl(0 0% 9%);
+}
+
+.wo-dot:not(.is-on) {
+  background: hsl(0 0% 9% / 0.18);
+}
+
+.dark .wo-primary,
+.ion-palette-dark .wo-primary {
+  background: hsl(0 0% 98%);
+  color: hsl(0 0% 9%);
+}
+
+.dark .wo-dot.is-on,
+.ion-palette-dark .wo-dot.is-on {
+  background: hsl(0 0% 98%);
+}
+
+.dark .wo-dot:not(.is-on),
+.ion-palette-dark .wo-dot:not(.is-on) {
+  background: hsl(0 0% 98% / 0.24);
+}
+
+/* ---- intro <-> steps morph ----
+   Both layers stay mounted and cross-fade with opposing scale, so the hero
+   image appears to push through into the first step rather than being
+   replaced. The blur bridges the two images: without it the eye reads two
+   overlapping pictures instead of one transforming. */
+
+.wo-layer {
+  transition:
+    opacity var(--wo-dur) var(--wo-ease),
+    transform var(--wo-dur) var(--wo-ease),
+    filter var(--wo-dur) var(--wo-ease);
+}
+
+.wo-layer[data-hidden='true'] {
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(4px);
+}
+
+/* the intro pushes away from the viewer, the steps arrive from behind it */
+.wo-layer--intro[data-hidden='true'] {
+  transform: scale(1.04);
+}
+
+.wo-layer--steps[data-hidden='true'] {
+  transform: scale(0.96);
+}
+
+/* ---- step to step ----
+   The track keeps native scroll-snap (so swiping still works); off-screen
+   slides sit back in depth and resolve to a clean blur(0) when they land. */
+
+.wo-slide {
+  transition:
+    opacity var(--wo-dur) var(--wo-ease),
+    transform var(--wo-dur) var(--wo-ease),
+    filter var(--wo-dur) var(--wo-ease);
+}
+
+.wo-slide[data-active='false'] {
+  opacity: 0.4;
+  transform: scale(0.88);
+  filter: blur(3px);
+}
+
+.wo-slide[data-active='true'] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Caption swaps outright between steps, so a keyed enter is fine here. */
+.wo-caption {
+  animation: wo-caption-in 240ms var(--wo-ease) both;
+}
+
+@keyframes wo-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wo-layer,
+  .wo-slide {
+    transition-property: opacity;
+  }
+
+  .wo-layer[data-hidden='true'],
+  .wo-slide[data-active='false'] {
+    transform: none;
+    filter: none;
+  }
+
+  .wo-caption {
+    animation-name: none;
+  }
+}

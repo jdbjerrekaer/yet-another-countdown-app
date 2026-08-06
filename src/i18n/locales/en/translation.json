@@ -73,6 +73,23 @@
       "dark": "Dark",
       "transparent": "Glass",
       "tinted": "Tinted"
+    },
+    "onboarding": {
+      "title": "Keep it on your Home Screen",
+      "subtitle": "Add the widget and you can check the countdown without opening the app.",
+      "cta": "Add the widget",
+      "dismiss": "Not right now",
+      "step1": "Touch and hold an empty spot on your Home Screen until the apps jiggle.",
+      "step2Plus": "Tap + in the top-left corner.",
+      "step2Edit": "Tap Edit in the top-left corner, then Add Widget.",
+      "step3": "Search for Yet Another Countdown.",
+      "step4": "Pick a size, then tap Add Widget.",
+      "next": "Next",
+      "done": "Done",
+      "back": "Previous step",
+      "close": "Close",
+      "successTitle": "There it is",
+      "successSubtitle": "Your countdown is on the Home Screen."
     }
   },
   "modal": {

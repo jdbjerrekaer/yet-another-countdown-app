@@ -71,6 +71,23 @@
       "dark": "Oscuro",
       "transparent": "Cristal",
       "tinted": "Teñido"
+    },
+    "onboarding": {
+      "title": "Tenlo en la pantalla de inicio",
+      "subtitle": "Añade el widget y verás la cuenta atrás sin abrir la app.",
+      "cta": "Añadir el widget",
+      "dismiss": "Ahora no",
+      "step1": "Mantén pulsado un espacio vacío de la pantalla de inicio hasta que los iconos se muevan.",
+      "step2Plus": "Toca + en la esquina superior izquierda.",
+      "step2Edit": "Toca Editar en la esquina superior izquierda y luego Añadir widget.",
+      "step3": "Busca Yet Another Countdown.",
+      "step4": "Elige un tamaño y toca Añadir widget.",
+      "next": "Siguiente",
+      "done": "Listo",
+      "back": "Paso anterior",
+      "close": "Cerrar",
+      "successTitle": "Ahí está",
+      "successSubtitle": "Tu cuenta atrás está en la pantalla de inicio."
     }
   },
   "modal": {

@@ -137,6 +137,16 @@ export interface OpenSettingsResult {
 }
 
 /**
+ * Result from getInstalledWidgets
+ */
+export interface InstalledWidgetsResult {
+  /** Widgets the user has placed. 0 also means "couldn't tell". */
+  count: number;
+  /** WidgetFamily names, e.g. systemSmall, accessoryRectangular. */
+  families: string[];
+}
+
+/**
  * CalendarPlugin interface for accessing iOS Calendar via EventKit
  */
 export interface CalendarPluginInterface {
@@ -176,6 +186,13 @@ export interface CalendarPluginInterface {
    * This syncs countdown events and widget settings to be accessible by iOS widgets
    */
   updateWidgetData(options: UpdateWidgetDataOptions): Promise<UpdateWidgetDataResult>;
+
+  /**
+   * Widgets the user has actually placed, via WidgetCenter. A snapshot, so call
+   * it on foreground — the widget gets added while the app is backgrounded.
+   * Resolves with 0 when it cannot tell (including on web).
+   */
+  getInstalledWidgets(): Promise<InstalledWidgetsResult>;
 
   /**
    * Open the iOS Settings app to allow the user to change permissions

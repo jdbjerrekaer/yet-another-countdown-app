@@ -71,6 +71,23 @@
       "dark": "Sombre",
       "transparent": "Verre",
       "tinted": "Teinté"
+    },
+    "onboarding": {
+      "title": "Gardez-le sur l'écran d'accueil",
+      "subtitle": "Ajoutez le widget et vous verrez le compte à rebours sans ouvrir l'app.",
+      "cta": "Ajouter le widget",
+      "dismiss": "Pas maintenant",
+      "step1": "Touchez et maintenez un espace vide de l'écran d'accueil jusqu'à ce que les icônes bougent.",
+      "step2Plus": "Touchez + en haut à gauche.",
+      "step2Edit": "Touchez Modifier en haut à gauche, puis Ajouter un widget.",
+      "step3": "Recherchez Yet Another Countdown.",
+      "step4": "Choisissez une taille, puis touchez Ajouter un widget.",
+      "next": "Suivant",
+      "done": "Terminé",
+      "back": "Étape précédente",
+      "close": "Fermer",
+      "successTitle": "Le voilà",
+      "successSubtitle": "Votre compte à rebours est sur l'écran d'accueil."
     }
   },
   "modal": {

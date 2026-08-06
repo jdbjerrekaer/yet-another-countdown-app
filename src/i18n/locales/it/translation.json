@@ -71,6 +71,23 @@
       "dark": "Scuro",
       "transparent": "Vetro",
       "tinted": "Colorato"
+    },
+    "onboarding": {
+      "title": "Tienilo nella schermata Home",
+      "subtitle": "Aggiungi il widget e vedrai il conto alla rovescia senza aprire l'app.",
+      "cta": "Aggiungi il widget",
+      "dismiss": "Non ora",
+      "step1": "Tieni premuto uno spazio vuoto della schermata Home finché le icone non tremano.",
+      "step2Plus": "Tocca + in alto a sinistra.",
+      "step2Edit": "Tocca Modifica in alto a sinistra, poi Aggiungi widget.",
+      "step3": "Cerca Yet Another Countdown.",
+      "step4": "Scegli una dimensione, poi tocca Aggiungi widget.",
+      "next": "Avanti",
+      "done": "Fatto",
+      "back": "Passaggio precedente",
+      "close": "Chiudi",
+      "successTitle": "Eccolo",
+      "successSubtitle": "Il tuo conto alla rovescia è nella schermata Home."
     }
   },
   "modal": {

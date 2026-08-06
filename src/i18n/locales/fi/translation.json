@@ -71,6 +71,23 @@
       "dark": "Tumma",
       "transparent": "Lasi",
       "tinted": "Värjätty"
+    },
+    "onboarding": {
+      "title": "Pidä se aloitusnäytöllä",
+      "subtitle": "Lisää widget, niin näet laskurin avaamatta sovellusta.",
+      "cta": "Lisää widget",
+      "dismiss": "Ei nyt",
+      "step1": "Kosketa ja pidä aloitusnäytön tyhjää kohtaa, kunnes kuvakkeet tärisevät.",
+      "step2Plus": "Napauta + vasemmassa yläkulmassa.",
+      "step2Edit": "Napauta Muokkaa vasemmassa yläkulmassa ja sitten Lisää widget.",
+      "step3": "Hae Yet Another Countdown.",
+      "step4": "Valitse koko ja napauta Lisää widget.",
+      "next": "Seuraava",
+      "done": "Valmis",
+      "back": "Edellinen vaihe",
+      "close": "Sulje",
+      "successTitle": "Siinä se on",
+      "successSubtitle": "Laskurisi on aloitusnäytöllä."
     }
   },
   "modal": {

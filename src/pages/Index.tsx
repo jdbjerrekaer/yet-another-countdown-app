@@ -43,7 +43,9 @@ import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal, CalendarImportModalRef } from '@/components/CalendarImportModal';
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { TrackingConsentModal } from '@/components/TrackingConsentModal';
+import { WidgetOnboardingModal } from '@/components/WidgetOnboardingModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
+import { App as CapacitorApp } from '@capacitor/app';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
 import CountdownSyncPlugin from '@/plugins/CountdownSyncPlugin';
 import { SharedSelection } from '@/lib/sharedSelection';
@@ -244,6 +246,45 @@ export default function Index() {
   const placeholderHeight = 60; // Increased to match adaptive banners better
   const [hasRemoveAds, setHasRemoveAds] = useState(false);
   const [isTrackingConsentOpen, setIsTrackingConsentOpen] = useState(false);
+  const [isWidgetOnboardingOpen, setIsWidgetOnboardingOpen] = useState(false);
+
+  // Opens the flow on its confirmation screen rather than at the pitch.
+  const [widgetConfirmOnOpen, setWidgetConfirmOnOpen] = useState(false);
+
+  // Dev builds always show the widget flow on launch so it can be worked on
+  // without wiping storage to re-arm the one-shot flag. Never in Release.
+  useEffect(() => {
+    if (isDevBuild) setIsWidgetOnboardingOpen(true);
+  }, [isDevBuild]);
+
+  // Did the widget actually land? It gets added outside the app, and the user
+  // may well have quit us entirely while doing it — so the check lives here,
+  // not in the modal, and runs on launch as well as on every foreground.
+  // Fires the confirmation once.
+  useEffect(() => {
+    if (!isNative) return;
+
+    const check = async () => {
+      // Dev ignores both flags: the auto-open above never sets `widgetTipShown`,
+      // and re-running the confirmation is the whole point while working on it.
+      if (!isDevBuild) {
+        if (localStorage.getItem('widgetConfirmed')) return;
+        if (!localStorage.getItem('widgetTipShown')) return;
+      }
+      const { count } = await CalendarPlugin.getInstalledWidgets();
+      if (count === 0) return;
+      localStorage.setItem('widgetConfirmed', '1');
+      setWidgetConfirmOnOpen(true);
+      setIsWidgetOnboardingOpen(true);
+    };
+
+    const handle = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void check();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, [isNative, isDevBuild]);
   const trackingPrePromptShownRef = useRef(false);
   const [isRemoveAdsOpen, setIsRemoveAdsOpen] = useState(false);
   const pendingDeleteRef = useRef<Map<string, CountdownEvent>>(new Map());
@@ -1336,9 +1377,8 @@ export default function Index() {
 
     if (shouldShowWidgetTip) {
       localStorage.setItem('widgetTipShown', '1');
-      setTimeout(() => {
-        fabRef.current?.confirm(t('widget.homeScreenTip'), { holdMs: 4500 });
-      }, 2200);
+      // Let the "event created" confirmation land before taking over the screen.
+      setTimeout(() => setIsWidgetOnboardingOpen(true), 2200);
     }
 
     void AdsManager.maybeShowInterstitialAfterSave({ kind: saveKind });
@@ -1716,7 +1756,8 @@ export default function Index() {
         right: 'calc(16px + env(safe-area-inset-left))',
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isAnyModalOpen ? 100000 : 50,
-        display: isRemoveAdsOpen || isTrackingConsentOpen ? 'none' : undefined,
+        display:
+          isRemoveAdsOpen || isTrackingConsentOpen || isWidgetOnboardingOpen ? 'none' : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
@@ -2114,6 +2155,15 @@ export default function Index() {
           setIsTrackingConsentOpen(false);
           void AdsManager.requestTrackingConsent();
         }}
+      />
+
+      <WidgetOnboardingModal
+        isOpen={isWidgetOnboardingOpen}
+        onDismiss={() => {
+          setIsWidgetOnboardingOpen(false);
+          setWidgetConfirmOnOpen(false);
+        }}
+        startOnSuccess={widgetConfirmOnOpen}
       />
 
     </IonPage>

@@ -71,6 +71,23 @@
       "dark": "Escuro",
       "transparent": "Cristal",
       "tinted": "Colorido"
+    },
+    "onboarding": {
+      "title": "Tenha-o no ecrã principal",
+      "subtitle": "Adicione o widget e vê a contagem sem abrir a app.",
+      "cta": "Adicionar o widget",
+      "dismiss": "Agora não",
+      "step1": "Toque sem soltar num espaço vazio do ecrã principal até os ícones tremerem.",
+      "step2Plus": "Toque em + no canto superior esquerdo.",
+      "step2Edit": "Toque em Editar no canto superior esquerdo e depois em Adicionar widget.",
+      "step3": "Procure Yet Another Countdown.",
+      "step4": "Escolha um tamanho e toque em Adicionar widget.",
+      "next": "Seguinte",
+      "done": "Concluído",
+      "back": "Passo anterior",
+      "close": "Fechar",
+      "successTitle": "Aí está",
+      "successSubtitle": "A tua contagem está no ecrã principal."
     }
   },
   "modal": {

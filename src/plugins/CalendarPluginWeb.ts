@@ -11,6 +11,7 @@ import type {
   UpdateWidgetDataOptions,
   UpdateWidgetDataResult,
   OpenSettingsResult,
+  InstalledWidgetsResult,
 } from './CalendarPlugin';
 
 /**
@@ -53,6 +54,11 @@ export class CalendarPluginWeb extends WebPlugin implements CalendarPluginInterf
 
   async getWidgetData(): Promise<GetWidgetDataResult> {
     return { widgetData: null };
+  }
+
+  async getInstalledWidgets(): Promise<InstalledWidgetsResult> {
+    // No widgets on web; 0 reads as "none", which is the safe default.
+    return { count: 0, families: [] };
   }
 
   async openSettings(): Promise<OpenSettingsResult> {
