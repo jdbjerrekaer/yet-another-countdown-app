@@ -247,5 +247,60 @@
     "minute_other": "{{count}} minutes",
     "ago": "il y a {{parts}}",
     "left": "dans {{parts}}"
+  },
+  "firstRun": {
+    "title": "C’est quoi ton premier compte à rebours ?",
+    "subtitle": "Tu comptes jusqu’à, ou depuis ?",
+    "direction": {
+      "future": {
+        "title": "Ça arrive bientôt",
+        "examples": "Un concert, un anniversaire, les vacances d’été",
+        "sample": "Dans 12 jours"
+      },
+      "past": {
+        "title": "Ça a déjà commencé",
+        "examples": "Votre anniversaire, sans tabac, une série que tu tiens",
+        "sample": "47 jours jusqu’ici"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "Tu attends quoi ?",
+        "past": "Tu comptes depuis quoi ?"
+      },
+      "emoji": "Choisis un emoji",
+      "shape": "Tu veux une autre forme ?",
+      "color": "Choisis une couleur",
+      "date": {
+        "future": "C’est quand ?",
+        "past": "Ça a commencé quand ?"
+      }
+    },
+    "placeholder": {
+      "future": "Vacances d’été",
+      "past": "Sans tabac"
+    },
+    "suggest": {
+      "birthday": "Anniversaire",
+      "concert": "Concert",
+      "trip": "Voyage",
+      "holiday": "Vacances",
+      "anniversary": "Anniversaire de couple",
+      "together": "Ensemble depuis",
+      "quitSmoking": "Arrêt du tabac",
+      "newJob": "Nouveau travail"
+    },
+    "previewPlaceholder": "Ton compte à rebours",
+    "create": "Créer",
+    "daysAway_one": "Dans {{count}} jour",
+    "daysAway_other": "Dans {{count}} jours",
+    "daysSince_one": "{{count}} jour jusqu’ici",
+    "daysSince_other": "{{count}} jours jusqu’ici",
+    "emptyCta": "Créer mon premier compte à rebours",
+    "hint": {
+      "shape": "Reste appuyé et glisse. Ou laisse comme ça.",
+      "color": "Reste appuyé ou touche deux fois une couleur pour des nuances plus claires ou plus foncées."
+    },
+    "clear": "Effacer"
   }
 }

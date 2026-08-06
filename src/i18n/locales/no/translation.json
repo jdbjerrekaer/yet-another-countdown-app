@@ -247,5 +247,60 @@
     "minute_other": "{{count}} minutter",
     "ago": "{{parts}} siden",
     "left": "{{parts}} igjen"
+  },
+  "firstRun": {
+    "title": "Hva er din første nedtelling?",
+    "subtitle": "Teller du ned til det, eller opp fra det?",
+    "direction": {
+      "future": {
+        "title": "Det kommer snart",
+        "examples": "En konsert, en bursdag, sommerferien",
+        "sample": "12 dager igjen"
+      },
+      "past": {
+        "title": "Det har allerede startet",
+        "examples": "Årsdagen deres, snusfri, en rekke du holder",
+        "sample": "47 dager så langt"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "Hva gleder du deg til?",
+        "past": "Hva teller du fra?"
+      },
+      "emoji": "Velg en emoji",
+      "shape": "Vil du ha en annen form?",
+      "color": "Velg en farge",
+      "date": {
+        "future": "Når er det?",
+        "past": "Når startet det?"
+      }
+    },
+    "placeholder": {
+      "future": "Sommerferie",
+      "past": "Snusfri"
+    },
+    "suggest": {
+      "birthday": "Bursdag",
+      "concert": "Konsert",
+      "trip": "Reise",
+      "holiday": "Ferie",
+      "anniversary": "Årsdag",
+      "together": "Sammen siden",
+      "quitSmoking": "Sluttet å røyke",
+      "newJob": "Ny jobb"
+    },
+    "previewPlaceholder": "Nedtellingen din",
+    "create": "Opprett",
+    "daysAway_one": "{{count}} dag igjen",
+    "daysAway_other": "{{count}} dager igjen",
+    "daysSince_one": "{{count}} dag så langt",
+    "daysSince_other": "{{count}} dager så langt",
+    "emptyCta": "Lag min første nedtelling",
+    "hint": {
+      "shape": "Hold inne og dra. Eller la den være.",
+      "color": "Hold inne eller dobbelttrykk på en farge for lysere og mørkere nyanser."
+    },
+    "clear": "Tøm"
   }
 }

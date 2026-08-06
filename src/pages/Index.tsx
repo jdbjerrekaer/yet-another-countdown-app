@@ -44,6 +44,7 @@ import { CalendarImportModal, CalendarImportModalRef } from '@/components/Calend
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
 import { TrackingConsentModal } from '@/components/TrackingConsentModal';
 import { WidgetOnboardingModal } from '@/components/WidgetOnboardingModal';
+import { FirstRunOnboardingModal } from '@/components/FirstRunOnboardingModal';
 import { ImportableEvent, convertToCountdownEvent, deduplicateEvents } from '@/lib/calendarImport';
 import { App as CapacitorApp } from '@capacitor/app';
 import CalendarPlugin, { WidgetCountdownEvent } from '@/plugins/CalendarPlugin';
@@ -251,11 +252,8 @@ export default function Index() {
   // Opens the flow on its confirmation screen rather than at the pitch.
   const [widgetConfirmOnOpen, setWidgetConfirmOnOpen] = useState(false);
 
-  // Dev builds always show the widget flow on launch so it can be worked on
-  // without wiping storage to re-arm the one-shot flag. Never in Release.
-  useEffect(() => {
-    if (isDevBuild) setIsWidgetOnboardingOpen(true);
-  }, [isDevBuild]);
+  const [isFirstRunOpen, setIsFirstRunOpen] = useState(false);
+  const firstRunDecidedRef = useRef(false);
 
   // Did the widget actually land? It gets added outside the app, and the user
   // may well have quit us entirely while doing it — so the check lives here,
@@ -682,6 +680,42 @@ export default function Index() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [isNative]);
+
+  // Dev builds always show one of the onboarding flows on launch so they can be
+  // worked on without wiping storage to re-arm the one-shot flags. Never in
+  // Release. With nothing on the list the first-run flow wins, otherwise the
+  // widget one — which is also the order a real user meets them in.
+  useEffect(() => {
+    if (!isDevBuild) return;
+    if (events.length === 0) setIsFirstRunOpen(true);
+    else setIsWidgetOnboardingOpen(true);
+    // Launch-only: re-running this on every add or delete would hijack the app.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDevBuild]);
+
+  // Nothing on the list on a first launch: offer to build one together rather
+  // than leaving them on an empty screen. Decided once ever, so someone who
+  // already has countdowns is never asked.
+  useEffect(() => {
+    if (isDevBuild || firstRunDecidedRef.current) return;
+
+    const settle = (open: boolean) => {
+      firstRunDecidedRef.current = true;
+      localStorage.setItem('firstRunShown', '1');
+      if (open) setIsFirstRunOpen(true);
+    };
+
+    if (localStorage.getItem('firstRunShown')) {
+      firstRunDecidedRef.current = true;
+      return;
+    }
+    if (events.length > 0) return settle(false);
+
+    // Give the iCloud pull a beat: someone restoring on a new device starts
+    // with an empty list and should not be onboarded again.
+    const timer = window.setTimeout(() => settle(true), 1500);
+    return () => window.clearTimeout(timer);
+  }, [isDevBuild, events.length]);
 
   useEffect(() => {
     if (!isNative) return;
@@ -1757,7 +1791,9 @@ export default function Index() {
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isAnyModalOpen ? 100000 : 50,
         display:
-          isRemoveAdsOpen || isTrackingConsentOpen || isWidgetOnboardingOpen ? 'none' : undefined,
+          isRemoveAdsOpen || isTrackingConsentOpen || isWidgetOnboardingOpen || isFirstRunOpen
+            ? 'none'
+            : undefined,
       }}
     >
       <div className="active:scale-90 transition-transform duration-150">
@@ -1866,6 +1902,14 @@ export default function Index() {
               <p className="text-muted-foreground text-center max-w-xs mb-8">
                 {t('app.createFirst')}
               </p>
+              {/* The guided flow opens itself on a first launch; this is how
+                  you get back to it after dismissing it. */}
+              <button
+                onClick={() => setIsFirstRunOpen(true)}
+                className="wo-primary mb-4 rounded-2xl px-6 py-3 text-base font-semibold transition-transform duration-150 active:scale-[0.97]"
+              >
+                {t('firstRun.emptyCta')}
+              </button>
               <button
                 onClick={handleOpenCalendarImport}
                 className="text-sm text-primary underline underline-offset-2 active:opacity-70 transition-opacity"
@@ -2164,6 +2208,18 @@ export default function Index() {
           setWidgetConfirmOnOpen(false);
         }}
         startOnSuccess={widgetConfirmOnOpen}
+      />
+
+      {/* Hands its answers to the same save path as the + sheet, so the new
+          countdown gets notifications, the confirmation toast and the widget
+          pitch that follows a first creation. */}
+      <FirstRunOnboardingModal
+        isOpen={isFirstRunOpen}
+        onDismiss={() => setIsFirstRunOpen(false)}
+        onCreate={async (...args) => {
+          setIsFirstRunOpen(false);
+          await handleSave(...args);
+        }}
       />
 
     </IonPage>

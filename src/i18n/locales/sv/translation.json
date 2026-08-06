@@ -247,5 +247,60 @@
     "minute_other": "{{count}} minuter",
     "ago": "{{parts}} sedan",
     "left": "{{parts}} kvar"
+  },
+  "firstRun": {
+    "title": "Vad är din första nedräkning?",
+    "subtitle": "Räknar du ner till det, eller upp från det?",
+    "direction": {
+      "future": {
+        "title": "Det är på väg",
+        "examples": "En konsert, en födelsedag, sommarlovet",
+        "sample": "12 dagar kvar"
+      },
+      "past": {
+        "title": "Det har redan börjat",
+        "examples": "Er årsdag, snusfri, en svit du håller igång",
+        "sample": "47 dagar hittills"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "Vad ser du fram emot?",
+        "past": "Vad räknar du från?"
+      },
+      "emoji": "Välj en emoji",
+      "shape": "Vill du ha en annan form?",
+      "color": "Välj en färg",
+      "date": {
+        "future": "När är det?",
+        "past": "När började det?"
+      }
+    },
+    "placeholder": {
+      "future": "Sommarlov",
+      "past": "Snusfri"
+    },
+    "suggest": {
+      "birthday": "Födelsedag",
+      "concert": "Konsert",
+      "trip": "Resa",
+      "holiday": "Semester",
+      "anniversary": "Årsdag",
+      "together": "Tillsammans sedan",
+      "quitSmoking": "Sluta röka",
+      "newJob": "Nytt jobb"
+    },
+    "previewPlaceholder": "Din nedräkning",
+    "create": "Skapa",
+    "daysAway_one": "{{count}} dag kvar",
+    "daysAway_other": "{{count}} dagar kvar",
+    "daysSince_one": "{{count}} dag hittills",
+    "daysSince_other": "{{count}} dagar hittills",
+    "emptyCta": "Bygg min första nedräkning",
+    "hint": {
+      "shape": "Håll in och dra. Eller låt den vara.",
+      "color": "Håll in eller dubbeltryck på en färg för ljusare och mörkare nyanser."
+    },
+    "clear": "Rensa"
   }
 }

@@ -247,5 +247,60 @@
     "minute_other": "{{count}} minuti",
     "ago": "{{parts}} fa",
     "left": "tra {{parts}}"
+  },
+  "firstRun": {
+    "title": "Qual è il tuo primo conto alla rovescia?",
+    "subtitle": "Conti verso o conti da?",
+    "direction": {
+      "future": {
+        "title": "Sta arrivando",
+        "examples": "Un concerto, un compleanno, le vacanze estive",
+        "sample": "Mancano 12 giorni"
+      },
+      "past": {
+        "title": "È già iniziato",
+        "examples": "Il vostro anniversario, senza fumo, una serie che stai tenendo",
+        "sample": "47 giorni finora"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "Cosa stai aspettando?",
+        "past": "Da cosa stai contando?"
+      },
+      "emoji": "Scegli un’emoji",
+      "shape": "Vuoi un'altra forma?",
+      "color": "Scegli un colore",
+      "date": {
+        "future": "Quando è?",
+        "past": "Quando è iniziato?"
+      }
+    },
+    "placeholder": {
+      "future": "Vacanze estive",
+      "past": "Senza fumo"
+    },
+    "suggest": {
+      "birthday": "Compleanno",
+      "concert": "Concerto",
+      "trip": "Viaggio",
+      "holiday": "Vacanza",
+      "anniversary": "Anniversario",
+      "together": "Insieme da",
+      "quitSmoking": "Smettere di fumare",
+      "newJob": "Nuovo lavoro"
+    },
+    "previewPlaceholder": "Il tuo conto alla rovescia",
+    "create": "Crea",
+    "daysAway_one": "Manca {{count}} giorno",
+    "daysAway_other": "Mancano {{count}} giorni",
+    "daysSince_one": "{{count}} giorno finora",
+    "daysSince_other": "{{count}} giorni finora",
+    "emptyCta": "Crea il mio primo conto alla rovescia",
+    "hint": {
+      "shape": "Tieni premuto e trascina. O lasciala così.",
+      "color": "Tieni premuto o tocca due volte un colore per tonalità più chiare e più scure."
+    },
+    "clear": "Cancella"
   }
 }

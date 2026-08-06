@@ -10,6 +10,11 @@ interface ColorWheelPickerProps {
   onChange: (hex: string) => void;
   emoji?: string;
   onManualChange?: () => void; // Called when user manually changes color
+  /**
+   * Scroll one swatch across and back shortly after mount, so it's obvious the
+   * strip moves. Only for onboarding — it ends on the colour it started on.
+   */
+  peekOnMount?: boolean;
 }
 
 // Convert emoji to hex color based on semantic meaning
@@ -109,7 +114,7 @@ function findClosestColorIndex(hex: string): number {
   return closestIndex;
 }
 
-export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: ColorWheelPickerProps) {
+export function ColorWheelPicker({ value, onChange, emoji, onManualChange, peekOnMount = false }: ColorWheelPickerProps) {
   const { trigger } = useHaptic();
   const [selectedIndex, setSelectedIndex] = useState(() => findClosestColorIndex(value));
   const [previewColor, setPreviewColor] = useState<string>(value);
@@ -141,6 +146,7 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
   const hoverIndexRef = useRef<number | null>(null);
   const shadeDataRef = useRef<{ shades: string[]; cx: number; cy: number } | null>(null);
   const pressTimerRef = useRef<number | null>(null);
+  const peekedRef = useRef(false); // the onboarding peek fires at most once
   const pressStartRef = useRef<{ x: number; y: number } | null>(null);
   // Drag handlers. iOS WebView cancels pointer events when it decides a touch is a
   // scroll, so the shade drag is driven by capture-phase touchmove (with
@@ -312,6 +318,23 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange }: Col
       isInitializedRef.current = true;
     }
   }, [emblaApi, value]);
+
+  // Onboarding affordance: nudge one swatch over and come straight back, using
+  // the carousel's own scrolling so it looks exactly like a real swipe. Runs
+  // once and lands where it started, so the chosen colour is unchanged.
+  useEffect(() => {
+    if (!peekOnMount || !emblaApi || peekedRef.current) return;
+    peekedRef.current = true;
+    const home = emblaApi.selectedScrollSnap();
+    const away = Math.min(home + 1, COLOR_PALETTE.length - 1);
+    if (away === home) return;
+    const out = window.setTimeout(() => emblaApi.scrollTo(away), 450);
+    const back = window.setTimeout(() => emblaApi.scrollTo(home), 1150);
+    return () => {
+      window.clearTimeout(out);
+      window.clearTimeout(back);
+    };
+  }, [peekOnMount, emblaApi]);
 
   // Calculate transition duration based on scroll velocity
   const calculateTransitionDuration = useCallback((velocity: number): number => {

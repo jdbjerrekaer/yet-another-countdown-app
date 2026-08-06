@@ -247,5 +247,60 @@
     "minute_other": "{{count}} Minuten",
     "ago": "vor {{parts}}",
     "left": "noch {{parts}}"
+  },
+  "firstRun": {
+    "title": "Was ist dein erster Countdown?",
+    "subtitle": "Zählst du darauf hin oder davon weg?",
+    "direction": {
+      "future": {
+        "title": "Es steht bevor",
+        "examples": "Ein Konzert, ein Geburtstag, die Sommerferien",
+        "sample": "Noch 12 Tage"
+      },
+      "past": {
+        "title": "Es hat schon angefangen",
+        "examples": "Euer Jahrestag, rauchfrei, eine Serie, die läuft",
+        "sample": "47 Tage bisher"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "Worauf freust du dich?",
+        "past": "Wovon zählst du?"
+      },
+      "emoji": "Wähle ein Emoji",
+      "shape": "Willst du eine andere Form?",
+      "color": "Wähle eine Farbe",
+      "date": {
+        "future": "Wann ist es?",
+        "past": "Wann hat es angefangen?"
+      }
+    },
+    "placeholder": {
+      "future": "Sommerurlaub",
+      "past": "Rauchfrei"
+    },
+    "suggest": {
+      "birthday": "Geburtstag",
+      "concert": "Konzert",
+      "trip": "Reise",
+      "holiday": "Urlaub",
+      "anniversary": "Jahrestag",
+      "together": "Zusammen seit",
+      "quitSmoking": "Rauchstopp",
+      "newJob": "Neuer Job"
+    },
+    "previewPlaceholder": "Dein Countdown",
+    "create": "Erstellen",
+    "daysAway_one": "Noch {{count}} Tag",
+    "daysAway_other": "Noch {{count}} Tage",
+    "daysSince_one": "{{count}} Tag bisher",
+    "daysSince_other": "{{count}} Tage bisher",
+    "emptyCta": "Meinen ersten Countdown bauen",
+    "hint": {
+      "shape": "Halte sie gedrückt und zieh. Oder lass sie so.",
+      "color": "Halte eine Farbe gedrückt oder tippe doppelt für hellere und dunklere Töne."
+    },
+    "clear": "Löschen"
   }
 }

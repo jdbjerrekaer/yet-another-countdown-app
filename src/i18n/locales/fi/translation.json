@@ -247,5 +247,60 @@
     "minute_other": "{{count}} minuuttia",
     "ago": "{{parts}} sitten",
     "left": "{{parts}} jäljellä"
+  },
+  "firstRun": {
+    "title": "Mikä on ensimmäinen laskurisi?",
+    "subtitle": "Lasketko siihen vai siitä?",
+    "direction": {
+      "future": {
+        "title": "Se on tulossa",
+        "examples": "Konsertti, syntymäpäivä, kesäloma",
+        "sample": "12 päivää jäljellä"
+      },
+      "past": {
+        "title": "Se on jo alkanut",
+        "examples": "Vuosipäivänne, nuuskattomuus, putki jota pidät yllä",
+        "sample": "47 päivää tähän mennessä"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "Mitä odotat?",
+        "past": "Mistä lasket?"
+      },
+      "emoji": "Valitse emoji",
+      "shape": "Haluatko toisen muodon?",
+      "color": "Valitse väri",
+      "date": {
+        "future": "Milloin se on?",
+        "past": "Milloin se alkoi?"
+      }
+    },
+    "placeholder": {
+      "future": "Kesäloma",
+      "past": "Nuuskaton"
+    },
+    "suggest": {
+      "birthday": "Syntymäpäivä",
+      "concert": "Konsertti",
+      "trip": "Matka",
+      "holiday": "Loma",
+      "anniversary": "Vuosipäivä",
+      "together": "Yhdessä alkaen",
+      "quitSmoking": "Tupakoinnin lopetus",
+      "newJob": "Uusi työ"
+    },
+    "previewPlaceholder": "Laskurisi",
+    "create": "Luo",
+    "daysAway_one": "{{count}} päivä jäljellä",
+    "daysAway_other": "{{count}} päivää jäljellä",
+    "daysSince_one": "{{count}} päivä tähän mennessä",
+    "daysSince_other": "{{count}} päivää tähän mennessä",
+    "emptyCta": "Tee ensimmäinen laskurini",
+    "hint": {
+      "shape": "Pidä pohjassa ja vedä. Tai jätä se ennalleen.",
+      "color": "Pidä pohjassa tai kaksoisnapauta väriä saadaksesi vaaleampia ja tummempia sävyjä."
+    },
+    "clear": "Tyhjennä"
   }
 }

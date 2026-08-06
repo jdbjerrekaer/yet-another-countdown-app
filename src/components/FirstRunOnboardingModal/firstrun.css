@@ -1,0 +1,145 @@
+/* Motion + surfaces for the first-run flow. Shares the widget flow's tokens
+   (see WidgetOnboardingModal/onboarding.css, imported alongside this file) so
+   the two onboarding experiences feel like one. */
+
+.fr-root {
+  --fr-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --fr-dur: 260ms;
+}
+
+/* ---- step to step ----
+   Steps hold live controls (a text input, a calendar), so a scroll-snap track
+   would fight their own gestures. Each step is mounted alone and keyed, which
+   makes a plain enter animation the honest choice here. Blur resolves to 0 so
+   the text never lands soft. */
+
+.fr-step {
+  animation: fr-step-in var(--fr-dur) var(--fr-ease) both;
+}
+
+@keyframes fr-step-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px) scale(0.98);
+    filter: blur(3px);
+  }
+}
+
+/* Going back should read as going back. */
+.fr-step[data-back='true'] {
+  animation-name: fr-step-in-back;
+}
+
+@keyframes fr-step-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) scale(0.98);
+    filter: blur(3px);
+  }
+}
+
+/* ---- direction cards ----
+   The one screen that carries the whole framing, so it gets the most weight. */
+
+.fr-card {
+  background: hsl(var(--secondary));
+  transition:
+    transform 160ms var(--fr-ease),
+    opacity 160ms var(--fr-ease);
+}
+
+.fr-card:active {
+  transform: scale(0.97);
+}
+
+/* ---- selectable tiles (emoji, shape, colour) ---- */
+
+.fr-tile {
+  transition:
+    transform 160ms var(--fr-ease),
+    opacity 160ms var(--fr-ease);
+}
+
+.fr-tile:active {
+  transform: scale(0.92);
+}
+
+.fr-tile[data-selected='false'] {
+  opacity: 0.55;
+}
+
+/* Emoji tiles, blown up from the 56px the picker is built for so the emoji
+   scales with the container instead of sitting small in the middle. */
+.fr-tile-scale {
+  transform: scale(1.25);
+  transform-origin: center;
+}
+
+/* The scaled hero overflows its box visually; without this the step scrolls
+   sideways. */
+.fr-step {
+  overflow-x: hidden;
+}
+
+/* The shape step's single tile, blown up from the 56px the picker is built for.
+   A slow breath marks it as the thing to press without spelling it out twice. */
+.fr-hero > * {
+  transform: scale(1.7);
+  transform-origin: center;
+  animation: fr-breathe 2.4s var(--fr-ease) infinite;
+}
+
+@keyframes fr-breathe {
+  0%,
+  100% {
+    transform: scale(1.7);
+  }
+  50% {
+    transform: scale(1.78);
+  }
+}
+
+/* The assembling preview. Emoji/shape/colour changes swap the container's
+   contents outright, so a short pop reads as "that took effect". */
+.fr-preview-pop {
+  animation: fr-pop 200ms var(--fr-ease);
+}
+
+@keyframes fr-pop {
+  from {
+    transform: scale(0.94);
+  }
+}
+
+.fr-chip {
+  background: hsl(var(--secondary));
+  transition: transform 160ms var(--fr-ease);
+}
+
+.fr-chip:active {
+  transform: scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fr-step,
+  .fr-step[data-back='true'],
+  .fr-preview-pop {
+    animation-name: fr-fade;
+  }
+
+  @keyframes fr-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .fr-card:active,
+  .fr-tile:active,
+  .fr-chip:active {
+    transform: none;
+  }
+
+  .fr-hero > * {
+    animation: none;
+  }
+}

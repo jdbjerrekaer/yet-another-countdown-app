@@ -269,5 +269,60 @@
         "badge": "Supporter"
       }
     }
+  },
+  "firstRun": {
+    "title": "What's your first countdown?",
+    "subtitle": "Counting down to it, or counting up since it?",
+    "direction": {
+      "future": {
+        "title": "It's coming up",
+        "examples": "A concert, a birthday, summer break",
+        "sample": "12 days to go"
+      },
+      "past": {
+        "title": "It already started",
+        "examples": "Your anniversary, snus-free, a streak you're on",
+        "sample": "47 days so far"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "What are you waiting for?",
+        "past": "What are you counting from?"
+      },
+      "emoji": "Pick an emoji",
+      "shape": "Want a different shape?",
+      "color": "Pick a colour",
+      "date": {
+        "future": "When is it?",
+        "past": "When did it start?"
+      }
+    },
+    "placeholder": {
+      "future": "Summer holiday",
+      "past": "Snus-free"
+    },
+    "suggest": {
+      "birthday": "Birthday",
+      "concert": "Concert",
+      "trip": "Trip",
+      "holiday": "Holiday",
+      "anniversary": "Anniversary",
+      "together": "Together since",
+      "quitSmoking": "Quit smoking",
+      "newJob": "New job"
+    },
+    "previewPlaceholder": "Your countdown",
+    "create": "Create it",
+    "daysAway_one": "{{count}} day to go",
+    "daysAway_other": "{{count}} days to go",
+    "daysSince_one": "{{count}} day so far",
+    "daysSince_other": "{{count}} days so far",
+    "emptyCta": "Build my first countdown",
+    "hint": {
+      "shape": "Hold it down and drag. Or leave it as it is.",
+      "color": "Hold or double-tap a colour for lighter and darker shades."
+    },
+    "clear": "Clear"
   }
 }

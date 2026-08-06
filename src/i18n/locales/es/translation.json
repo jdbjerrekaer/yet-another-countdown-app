@@ -247,5 +247,60 @@
     "minute_other": "{{count}} minutos",
     "ago": "hace {{parts}}",
     "left": "en {{parts}}"
+  },
+  "firstRun": {
+    "title": "¿Cuál es tu primera cuenta atrás?",
+    "subtitle": "¿Cuentas hacia ello o desde ello?",
+    "direction": {
+      "future": {
+        "title": "Está por llegar",
+        "examples": "Un concierto, un cumpleaños, las vacaciones",
+        "sample": "Faltan 12 días"
+      },
+      "past": {
+        "title": "Ya ha empezado",
+        "examples": "Vuestro aniversario, sin fumar, una racha que llevas",
+        "sample": "47 días hasta ahora"
+      }
+    },
+    "step": {
+      "title": {
+        "future": "¿Qué estás esperando?",
+        "past": "¿Desde qué cuentas?"
+      },
+      "emoji": "Elige un emoji",
+      "shape": "¿Quieres otra forma?",
+      "color": "Elige un color",
+      "date": {
+        "future": "¿Cuándo es?",
+        "past": "¿Cuándo empezó?"
+      }
+    },
+    "placeholder": {
+      "future": "Vacaciones de verano",
+      "past": "Sin fumar"
+    },
+    "suggest": {
+      "birthday": "Cumpleaños",
+      "concert": "Concierto",
+      "trip": "Viaje",
+      "holiday": "Vacaciones",
+      "anniversary": "Aniversario",
+      "together": "Juntos desde",
+      "quitSmoking": "Dejar de fumar",
+      "newJob": "Nuevo trabajo"
+    },
+    "previewPlaceholder": "Tu cuenta atrás",
+    "create": "Crear",
+    "daysAway_one": "Falta {{count}} día",
+    "daysAway_other": "Faltan {{count}} días",
+    "daysSince_one": "{{count}} día hasta ahora",
+    "daysSince_other": "{{count}} días hasta ahora",
+    "emptyCta": "Crear mi primera cuenta atrás",
+    "hint": {
+      "shape": "Mantén pulsado y arrastra. O déjala así.",
+      "color": "Mantén pulsado o toca dos veces un color para tonos más claros y oscuros."
+    },
+    "clear": "Borrar"
   }
 }
