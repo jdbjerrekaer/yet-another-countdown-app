@@ -16,6 +16,8 @@ import { useHaptic } from '@/hooks/useHaptic';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import { formatRelative } from '@/lib/relativeTime';
 import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
+import { getNextRecurringDate } from '@/lib/recurring';
+import './edgeswipe.css';
 import { EmojiShape, normalizeShape } from '@/lib/emojiShapes';
 import { EmojiShapePicker } from '@/components/EmojiShapePicker';
 import { isSafariMobile } from '@/lib/utils';
@@ -157,6 +159,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const prevSuggestedEmojisRef = useRef<string[]>([]);
   const yearlySuggestionBannerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLIonContentElement | null>(null);
+  const modalRef = useRef<HTMLIonModalElement | null>(null);
   const datetimeRef = useRef<HTMLIonDatetimeElement | null>(null);
   const isInitialOpenRef = useRef(false);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -316,6 +319,55 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     trigger('light');
     onClose();
   };
+
+  // Edge-swipe back, iOS style. Ionic's built-in swipe gesture only exists for
+  // card/sheet modals, so this drives ::part(content) directly (see edgeswipe.css).
+  useEffect(() => {
+    const el = modalRef.current;
+    if (!el || !isOpen) return;
+    const EDGE = 24;
+    let startX = 0;
+    let dx = 0;
+    let dragging = false;
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || e.touches[0].clientX > EDGE) return;
+      dragging = true;
+      startX = e.touches[0].clientX;
+      dx = 0;
+      el.classList.add('edge-swipe-dragging');
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!dragging) return;
+      dx = Math.max(0, e.touches[0].clientX - startX);
+      el.style.setProperty('--edge-swipe-x', `${dx}px`);
+    };
+    const onEnd = () => {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('edge-swipe-dragging');
+      el.style.removeProperty('--edge-swipe-x');
+      if (dx > window.innerWidth * 0.3) {
+        el.classList.add('edge-swipe-out');
+        trigger('light');
+        setTimeout(() => { el.classList.remove('edge-swipe-out'); onClose(); }, 280);
+      }
+    };
+
+    el.classList.add('edge-swipe');
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: true });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    return () => {
+      el.classList.remove('edge-swipe', 'edge-swipe-dragging', 'edge-swipe-out');
+      el.style.removeProperty('--edge-swipe-x');
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+    };
+  }, [isOpen, onClose, trigger]);
 
   const handleDismiss = () => {
     onClose();
@@ -758,6 +810,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   return (
     <IonModal
+      ref={modalRef}
       isOpen={isOpen}
       onDidDismiss={handleDismiss}
       onDidPresent={handleModalPresent}
@@ -1136,7 +1189,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
                           <p className="text-sm font-medium text-primary">
                             {/* Always the flipped format — deriving it from invertTimeFormat
                                 would flash back to the default mid-collapse */}
-                            {emoji || '🎯'} {formatRelative(t, date, new Date(), hasSpecificTime, !legacyTimeFormat)}
+                            {/* Recurring events count to the next occurrence, not the original date */}
+                            {emoji || '🎯'} {formatRelative(t, isRecurring ? getNextRecurringDate(date) : date, new Date(), hasSpecificTime, !legacyTimeFormat)}
                           </p>
                         </div>
                       </div>
