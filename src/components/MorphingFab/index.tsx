@@ -37,7 +37,6 @@ const RADIUS = 18;
 const EXPAND_MS = 340;
 const DEFAULT_HOLD_MS = 1400;
 const COLLAPSE_MS = 280;
-const GLYPH_MORPH_MS = 300;
 
 // Stacked glyph layers for the icon cross-fade. Exactly one is "active" for any
 // given (confirming, hasUndo) combination; the others fade/scale out. The idle
@@ -137,12 +136,20 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
 
     // Keep the outgoing icon mounted for the length of the cross-fade so the
     // + ↔ ✓ swap morphs. Dropped back to a single layer once it has faded.
-    const [prevIcon, setPrevIcon] = useState(icon);
+    const [mountedIcons, setMountedIcons] = useState<string[]>([icon]);
+    const [activeIcon, setActiveIcon] = useState(icon);
     useEffect(() => {
-      if (icon === prevIcon) return;
-      const id = window.setTimeout(() => setPrevIcon(icon), GLYPH_MORPH_MS);
-      return () => window.clearTimeout(id);
-    }, [icon, prevIcon]);
+      if (icon === activeIcon) return;
+      // Mount the incoming glyph hidden first. Flipping it active in the same
+      // commit gives the browser no start state to interpolate from, so the swap
+      // hard-cuts; two frames later it has painted at opacity 0 and transitions.
+      setMountedIcons((m) => (m.includes(icon) ? m : [...m, icon]));
+      let inner = 0;
+      const outer = requestAnimationFrame(() => {
+        inner = requestAnimationFrame(() => setActiveIcon(icon));
+      });
+      return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner); };
+    }, [icon, activeIcon]);
 
     const hasUndo = confirming && undoRef.current !== null;
     const width = confirming ? expandedWidth : COLLAPSED_WIDTH;
@@ -251,9 +258,9 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
               rather than hard-cutting. Each layer counter-rotates + scales as it
               swaps. ease-out so the incoming glyph lands with immediate presence. */}
           {[
-            ...(prevIcon === icon ? [icon] : [prevIcon, icon]).map((ic) => ({
+            ...mountedIcons.map((ic) => ({
               key: `idle:${ic}`,
-              active: (c: boolean) => !c && ic === icon,
+              active: (c: boolean) => !c && ic === activeIcon,
               render: () => <IonIcon icon={ic} style={{ fontSize: 40 }} />,
             })),
             ...GLYPHS,
@@ -272,7 +279,7 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
                   opacity: shown ? 1 : 0,
                   transform: shown ? 'scale(1) rotate(0deg)' : 'scale(0.6) rotate(-45deg)',
                   transition:
-                    'opacity 200ms ease, transform 280ms cubic-bezier(0.23, 1, 0.32, 1)',
+                    'opacity 240ms ease, transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
                   pointerEvents: 'none',
                 }}
               >
