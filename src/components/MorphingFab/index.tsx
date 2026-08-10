@@ -37,19 +37,17 @@ const RADIUS = 18;
 const EXPAND_MS = 340;
 const DEFAULT_HOLD_MS = 1400;
 const COLLAPSE_MS = 280;
+const GLYPH_MORPH_MS = 300;
 
 // Stacked glyph layers for the icon cross-fade. Exactly one is "active" for any
-// given (confirming, hasUndo) combination; the others fade/scale out.
+// given (confirming, hasUndo) combination; the others fade/scale out. The idle
+// glyph is not listed here — it is composed per render so a change of the `icon`
+// prop (+ ↔ ✓) cross-fades through the same stack instead of hard-cutting.
 const GLYPHS: {
   key: string;
   active: (confirming: boolean, hasUndo: boolean) => boolean;
   render: (icon: string) => JSX.Element;
 }[] = [
-  {
-    key: 'idle',
-    active: (confirming) => !confirming,
-    render: (icon) => <IonIcon icon={icon} style={{ fontSize: 40 }} />,
-  },
   {
     key: 'check',
     active: (confirming, hasUndo) => confirming && !hasUndo,
@@ -136,6 +134,15 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
       const cap = (typeof window !== 'undefined' ? window.innerWidth : 360) - VIEWPORT_MARGIN * 2;
       setExpandedWidth(Math.min(cap, Math.max(MIN_EXPANDED_WIDTH, Math.ceil(required))));
     }, [confirmText]);
+
+    // Keep the outgoing icon mounted for the length of the cross-fade so the
+    // + ↔ ✓ swap morphs. Dropped back to a single layer once it has faded.
+    const [prevIcon, setPrevIcon] = useState(icon);
+    useEffect(() => {
+      if (icon === prevIcon) return;
+      const id = window.setTimeout(() => setPrevIcon(icon), GLYPH_MORPH_MS);
+      return () => window.clearTimeout(id);
+    }, [icon, prevIcon]);
 
     const hasUndo = confirming && undoRef.current !== null;
     const width = confirming ? expandedWidth : COLLAPSED_WIDTH;
@@ -243,7 +250,14 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
           {/* Glyphs are stacked and cross-fade between states so the +/✓ morphs
               rather than hard-cutting. Each layer counter-rotates + scales as it
               swaps. ease-out so the incoming glyph lands with immediate presence. */}
-          {GLYPHS.map(({ key, active, render }) => {
+          {[
+            ...(prevIcon === icon ? [icon] : [prevIcon, icon]).map((ic) => ({
+              key: `idle:${ic}`,
+              active: (c: boolean) => !c && ic === icon,
+              render: () => <IonIcon icon={ic} style={{ fontSize: 40 }} />,
+            })),
+            ...GLYPHS,
+          ].map(({ key, active, render }) => {
             const shown = active(confirming, hasUndo);
             return (
               <span

@@ -345,11 +345,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // entirely (the page goes blank white).
     const page = () => document.querySelector('ion-router-outlet > .ion-page') as HTMLElement | null;
     const scrim = () => scrimRef.current;
-    // The save button rides the sheet out to the right. Target the container:
-    // MorphingFab writes its own inline transform (press scale) every render and
-    // would clobber ours.
-    const chrome = () =>
-      Array.from(document.querySelectorAll('.fab-portal')) as HTMLElement[];
+    // The save button stays put through the whole gesture — it morphs ✓ → + in
+    // place instead of travelling, so onClose fires as the settle starts rather
+    // than after it, letting the glyph cross-fade run alongside the slide.
     // The pill exits LEFT — that is its own close animation, so during the drag
     // it mirrors the sheet rather than following it. Its transform is React-owned
     // (translateX(calc(-100% - 24px)) on close), so never clear it while that
@@ -361,7 +359,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     const paint = (dx: number) => {
       const progress = Math.min(1, dx / window.innerWidth);
       el.style.transform = `translateX(${dx}px)`;
-      chrome().forEach((c) => { c.style.transform = `translateX(${dx}px)`; });
       const pl = pill();
       if (pl) pl.style.transform = `translateX(${-dx}px)`;
       const pg = page();
@@ -377,7 +374,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       if (pg) { pg.style.transform = ''; pg.classList.remove('edge-swipe-settling'); }
       const sc = scrim();
       if (sc) { sc.style.opacity = ''; sc.classList.remove('edge-swipe-settling'); }
-      chrome().forEach((c) => { c.style.transform = ''; c.classList.remove('edge-swipe-settling'); });
       // Deliberately NOT clearing the pill's transform here. On dismissal React
       // is mid-exit (translateX(calc(-100% - 24px))) and wiping the inline value
       // drops it back to 0, killing the fly-out. It is cleared only on the cancel
@@ -399,7 +395,6 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         el.classList.remove('edge-swipe-settling');
         page()?.classList.remove('edge-swipe-settling');
         scrim()?.classList.remove('edge-swipe-settling');
-        chrome().forEach((c) => c.classList.remove('edge-swipe-settling'));
         pill()?.classList.remove('edge-swipe-settling');
         paint(0);
       },
@@ -411,12 +406,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         el.classList.add('edge-swipe-settling');
         page()?.classList.add('edge-swipe-settling');
         scrim()?.classList.add('edge-swipe-settling');
-        chrome().forEach((c) => c.classList.add('edge-swipe-settling'));
         pill()?.classList.add('edge-swipe-settling');
         if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
           trigger('light');
           paint(window.innerWidth);
-          setTimeout(() => { reset(); onClose(); }, 320);
+          // Close up front so the FAB's ✓ → + cross-fade runs while the sheet is
+          // still sliding; reset only tidies the inline styles afterwards.
+          onClose();
+          setTimeout(reset, 320);
         } else {
           paint(0);
         }
