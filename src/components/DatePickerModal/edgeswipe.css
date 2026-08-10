@@ -25,12 +25,19 @@
   inset: 0;
   z-index: 20000;
   pointer-events: none;
+  /* visibility is a discrete property: without a transition it flips the
+     instant [data-open] goes away, blanking the sheet before it can slide
+     anywhere — the close looked like the header just vanished. Delaying it by
+     the slide duration keeps the sheet on screen for its exit, then hides it so
+     it stops catching taps. Opening flips it back with no delay. */
   visibility: hidden;
+  transition: visibility 0s linear 0.4s;
 }
 
 .edge-swipe-root[data-open] {
   pointer-events: auto;
   visibility: visible;
+  transition: visibility 0s linear 0s;
 }
 
 /* Dim over the page being returned to. Fades out as the sheet is pulled away. */
