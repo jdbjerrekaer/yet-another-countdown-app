@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { format, differenceInYears } from 'date-fns';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon } from '@ionic/react';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon, createGesture } from '@ionic/react';
 import { shareOutline } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
@@ -320,52 +320,62 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     onClose();
   };
 
-  // Edge-swipe back, iOS style. Ionic's built-in swipe gesture only exists for
-  // card/sheet modals, so this drives ::part(content) directly (see edgeswipe.css).
+  // Edge-swipe back, iOS style: the whole sheet tracks the finger and the dim
+  // over the page underneath lifts with it. Ionic ships this gesture only for
+  // card/sheet modals, so build it on Ionic's own gesture controller — it wins
+  // over the scroll and the inner pickers, which swallow raw touch events.
+  // The transform goes on the ion-modal host as an inline style; Ionic's present
+  // animation writes to the shadow wrapper and would outrank a ::part() rule.
   useEffect(() => {
     const el = modalRef.current;
     if (!el || !isOpen) return;
-    const EDGE = 24;
-    let startX = 0;
-    let dx = 0;
-    let dragging = false;
+    const EDGE = 28;
 
-    const onStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1 || e.touches[0].clientX > EDGE) return;
-      dragging = true;
-      startX = e.touches[0].clientX;
-      dx = 0;
-      el.classList.add('edge-swipe-dragging');
+    // The sheet itself is the .ion-page Ionic slots into the modal — a plain
+    // light-DOM element, so it takes a transform. The shadow ::part(content)
+    // does not, and the host moves the backdrop along with it.
+    const pane = () => el.querySelector('.ion-page') as HTMLElement | null;
+
+    const paint = (dx: number) => {
+      const p = pane();
+      if (p) p.style.transform = `translateX(${dx}px)`;
+      el.style.setProperty('--backdrop-opacity', `${0.32 * (1 - dx / window.innerWidth)}`);
     };
-    const onMove = (e: TouchEvent) => {
-      if (!dragging) return;
-      dx = Math.max(0, e.touches[0].clientX - startX);
-      el.style.setProperty('--edge-swipe-x', `${dx}px`);
-    };
-    const onEnd = () => {
-      if (!dragging) return;
-      dragging = false;
-      el.classList.remove('edge-swipe-dragging');
-      el.style.removeProperty('--edge-swipe-x');
-      if (dx > window.innerWidth * 0.3) {
-        el.classList.add('edge-swipe-out');
-        trigger('light');
-        setTimeout(() => { el.classList.remove('edge-swipe-out'); onClose(); }, 280);
-      }
+    const reset = () => {
+      const p = pane();
+      if (p) { p.style.transform = ''; p.classList.remove('edge-swipe-settling'); }
+      el.classList.remove('edge-swipe-active');
+      el.style.removeProperty('--backdrop-opacity');
     };
 
-    el.classList.add('edge-swipe');
-    el.addEventListener('touchstart', onStart, { passive: true });
-    el.addEventListener('touchmove', onMove, { passive: true });
-    el.addEventListener('touchend', onEnd);
-    el.addEventListener('touchcancel', onEnd);
+    const gesture = createGesture({
+      el,
+      gestureName: 'edge-swipe-back',
+      gesturePriority: 40, // above ion-content scrolling
+      direction: 'x',
+      threshold: 0,
+      canStart: (d) => d.startX <= EDGE,
+      onStart: () => {
+        pane()?.classList.remove('edge-swipe-settling');
+        el.classList.add('edge-swipe-active');
+      },
+      onMove: (d) => paint(Math.max(0, d.deltaX)),
+      onEnd: (d) => {
+        pane()?.classList.add('edge-swipe-settling');
+        if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
+          trigger('light');
+          paint(window.innerWidth);
+          setTimeout(() => { reset(); onClose(); }, 320);
+        } else {
+          paint(0);
+        }
+      },
+    });
+    gesture.enable(true);
+
     return () => {
-      el.classList.remove('edge-swipe', 'edge-swipe-dragging', 'edge-swipe-out');
-      el.style.removeProperty('--edge-swipe-x');
-      el.removeEventListener('touchstart', onStart);
-      el.removeEventListener('touchmove', onMove);
-      el.removeEventListener('touchend', onEnd);
-      el.removeEventListener('touchcancel', onEnd);
+      gesture.destroy();
+      reset();
     };
   }, [isOpen, onClose, trigger]);
 

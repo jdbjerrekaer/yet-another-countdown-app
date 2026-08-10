@@ -1,22 +1,18 @@
 /* iOS-style edge-swipe back. Ionic only ships a dismiss gesture for card/sheet
-   modals, so the full-screen modal drives ::part(content) itself. */
-ion-modal.edge-swipe::part(content) {
-  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+   modals, so the full-screen modal drives its own. Only the sheet (.ion-page)
+   moves — the backdrop stays put over the page underneath and fades, which is
+   what reads as depth. */
+ion-modal.edge-swipe-active .ion-page {
+  box-shadow: -12px 0 32px rgb(0 0 0 / 0.28);
 }
 
-/* Finger down: follow it 1:1, no transition. */
-ion-modal.edge-swipe-dragging::part(content) {
-  transform: translateX(var(--edge-swipe-x, 0px));
-  transition: none;
-}
-
-/* Released past the threshold: slide the rest of the way out, then dismiss. */
-ion-modal.edge-swipe-out::part(content) {
-  transform: translateX(100%);
+/* Only on release — during the drag the sheet tracks the finger 1:1. */
+ion-modal .ion-page.edge-swipe-settling {
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ion-modal.edge-swipe::part(content) {
+  ion-modal .ion-page.edge-swipe-settling {
     transition: none;
   }
 }
