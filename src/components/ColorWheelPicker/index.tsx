@@ -836,7 +836,9 @@ export function ColorWheelPicker({ value, onChange, emoji, onManualChange, peekO
           Each swatch is the ticker swap (72w x 56h); the active hue keeps the ticker border. */}
       {shadeMenu && typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed inset-0 z-[60]">
+          // Above the editor sheet (z 20000) and its FAB (z 100000) — the sheet
+          // stopped being an ion-modal, so the old z-60 lands underneath it.
+          <div className="fixed inset-0 z-[100001]">
             {/* Backdrop catches outside taps */}
             <div className="absolute inset-0" onClick={closeShadeMenu} />
             {/* Background pill that holds the hues, centered on the ticker; morphs in */}

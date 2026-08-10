@@ -221,7 +221,9 @@ export function EmojiShapePicker({ shape, color, emoji, onChange, size = 56, sel
 
       {menu && typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed inset-0 z-[60]">
+          // Above the editor sheet (z 20000) and its FAB (z 100000) — the sheet
+          // stopped being an ion-modal, so the old z-60 lands underneath it.
+          <div className="fixed inset-0 z-[100001]">
             <div className="absolute inset-0" onClick={close} />
             <div
               className="absolute flex flex-col items-center bg-popover border border-border"

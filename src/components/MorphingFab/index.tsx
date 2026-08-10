@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import { IonIcon } from '@ionic/react';
-import { checkmark } from 'ionicons/icons';
+import { add, checkmark } from 'ionicons/icons';
 
 export interface MorphingFabConfirmOptions {
   onUndo?: () => void;
@@ -38,10 +38,27 @@ const EXPAND_MS = 340;
 const DEFAULT_HOLD_MS = 1400;
 const COLLAPSE_MS = 280;
 
+// The idle glyph is drawn as two bars rather than an icon font, so + and ✓ are
+// the same two strokes in different places. Swapping the prop animates each bar's
+// length, angle and offset, so the lines physically swing and stretch into the
+// other shape — a real morph, not a cross-fade between two finished glyphs.
+// Geometry is in px around the centre of the 72px button.
+const BAR_THICKNESS = 3.4;
+const BAR_MORPH_MS = 220;
+type Bar = { len: number; x: number; y: number; rot: number };
+const PLUS_BARS: Bar[] = [
+  { len: 22, x: 0, y: 0, rot: 0 },
+  { len: 22, x: 0, y: 0, rot: 90 },
+];
+// Short stroke and long stroke of a ✓, meeting at (-4.3, 6.7).
+const CHECK_BARS: Bar[] = [
+  { len: 9, x: -7.5, y: 3.5, rot: 45 },
+  { len: 19.8, x: 2.4, y: -0.6, rot: -47 },
+];
+
 // Stacked glyph layers for the icon cross-fade. Exactly one is "active" for any
 // given (confirming, hasUndo) combination; the others fade/scale out. The idle
-// glyph is not listed here — it is composed per render so a change of the `icon`
-// prop (+ ↔ ✓) cross-fades through the same stack instead of hard-cutting.
+// glyph is not listed here — it is the morphing bar pair above.
 const GLYPHS: {
   key: string;
   active: (confirming: boolean, hasUndo: boolean) => boolean;
@@ -136,20 +153,9 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
 
     // Keep the outgoing icon mounted for the length of the cross-fade so the
     // + ↔ ✓ swap morphs. Dropped back to a single layer once it has faded.
-    const [mountedIcons, setMountedIcons] = useState<string[]>([icon]);
-    const [activeIcon, setActiveIcon] = useState(icon);
-    useEffect(() => {
-      if (icon === activeIcon) return;
-      // Mount the incoming glyph hidden first. Flipping it active in the same
-      // commit gives the browser no start state to interpolate from, so the swap
-      // hard-cuts; two frames later it has painted at opacity 0 and transitions.
-      setMountedIcons((m) => (m.includes(icon) ? m : [...m, icon]));
-      let inner = 0;
-      const outer = requestAnimationFrame(() => {
-        inner = requestAnimationFrame(() => setActiveIcon(icon));
-      });
-      return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner); };
-    }, [icon, activeIcon]);
+    // Only + and ✓ are expressible as two bars; anything else falls back to the
+    // icon font (no morph, but the FAB is only ever given those two today).
+    const morphBars = icon === add ? PLUS_BARS : icon === checkmark ? CHECK_BARS : null;
 
     const hasUndo = confirming && undoRef.current !== null;
     const width = confirming ? expandedWidth : COLLAPSED_WIDTH;
@@ -254,17 +260,45 @@ export const MorphingFab = forwardRef<MorphingFabHandle, Props>(
             position: 'relative',
           }}
         >
-          {/* Glyphs are stacked and cross-fade between states so the +/✓ morphs
-              rather than hard-cutting. Each layer counter-rotates + scales as it
-              swaps. ease-out so the incoming glyph lands with immediate presence. */}
-          {[
-            ...mountedIcons.map((ic) => ({
-              key: `idle:${ic}`,
-              active: (c: boolean) => !c && ic === activeIcon,
-              render: () => <IonIcon icon={ic} style={{ fontSize: 40 }} />,
-            })),
-            ...GLYPHS,
-          ].map(({ key, active, render }) => {
+          {/* Idle glyph: two bars that swing and stretch from + into ✓. The same
+              two elements persist across the swap, so the browser interpolates
+              their length and angle rather than fading one shape into another. */}
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              opacity: confirming ? 0 : 1,
+              transition: `opacity ${BAR_MORPH_MS}ms ease`,
+              pointerEvents: 'none',
+            }}
+          >
+            {(morphBars ?? PLUS_BARS).map((bar, i) => (
+              <span
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  width: bar.len,
+                  height: BAR_THICKNESS,
+                  borderRadius: BAR_THICKNESS / 2,
+                  background: 'currentColor',
+                  transform: `translate(-50%, -50%) translate(${bar.x}px, ${bar.y}px) rotate(${bar.rot}deg)`,
+                  transition: `width ${BAR_MORPH_MS}ms cubic-bezier(0.32, 0.72, 0, 1), transform ${BAR_MORPH_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+                  opacity: morphBars ? 1 : 0,
+                }}
+              />
+            ))}
+            {!morphBars && (
+              <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IonIcon icon={icon} style={{ fontSize: 40 }} />
+              </span>
+            )}
+          </span>
+
+          {/* Confirm/undo glyphs still cross-fade — they are unrelated shapes. */}
+          {GLYPHS.map(({ key, active, render }) => {
             const shown = active(confirming, hasUndo);
             return (
               <span
