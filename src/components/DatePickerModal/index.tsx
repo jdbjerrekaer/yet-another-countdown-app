@@ -32,6 +32,11 @@ import { toast } from '@/components/ui/sonner';
 // interpolation cannot drift apart. See the writer table in edgeswipe.css.
 const PAGE_DEPTH_SCALE = 0.92;
 
+// How long the sheet stays on screen after closing. Must match the visibility
+// delay on .edge-swipe-root in edgeswipe.css — that is the moment the sheet
+// stops being visible, and so the earliest it is safe to drop inline styles.
+const SHEET_HIDE_MS = 400;
+
 // Helper to get gradient from a hex color
 const getGradientFromColor = (hex: string): string => {
   return `linear-gradient(135deg, ${hex} 0%, ${adjustColorBrightness(hex, 20)} 100%)`;
@@ -402,6 +407,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         // diagonal swipe scrolls the form while it slides.
         if (contentRef.current) contentRef.current.scrollY = false;
         el.classList.remove('edge-swipe-settling');
+        el.classList.remove('edge-swipe-exit-x');
         page()?.classList.add('edge-swipe-page-dragging');
         scrim()?.classList.remove('edge-swipe-settling');
         pill()?.classList.remove('edge-swipe-settling');
@@ -419,11 +425,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         pill()?.classList.add('edge-swipe-settling');
         if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
           trigger('light');
+          // Pin the closed state to the axis the swipe chose, so clearing the
+          // inline transform below has nowhere to drift to.
+          el.classList.add('edge-swipe-exit-x');
           paint(window.innerWidth);
           // Close up front so the FAB's ✓ → + cross-fade runs while the sheet is
           // still sliding; reset only tidies the inline styles afterwards.
           onClose();
-          setTimeout(reset, 320);
+          setTimeout(reset, SHEET_HIDE_MS);
         } else {
           paint(0);
         }
@@ -458,6 +467,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   // ourselves once it has been laid out.
   useEffect(() => {
     if (!isOpen) return;
+    // Drop any axis pin left by a previous swipe so this present rises from the
+    // bottom. Harmless if absent — the open rule outranks it either way.
+    modalRef.current?.classList.remove('edge-swipe-exit-x');
     const id = requestAnimationFrame(() => { void handleModalPresent(); });
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps

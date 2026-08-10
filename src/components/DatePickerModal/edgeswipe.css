@@ -29,7 +29,9 @@
      instant [data-open] goes away, blanking the sheet before it can slide
      anywhere — the close looked like the header just vanished. Delaying it by
      the slide duration keeps the sheet on screen for its exit, then hides it so
-     it stops catching taps. Opening flips it back with no delay. */
+     it stops catching taps. Opening flips it back with no delay.
+     The delay is mirrored as SHEET_HIDE_MS in DatePickerModal — the swipe path
+     waits for it before dropping its inline transform. */
   visibility: hidden;
   transition: visibility 0s linear 0.4s;
 }
@@ -66,6 +68,15 @@
 
 .edge-swipe-root[data-open] .edge-swipe-sheet {
   transform: translateY(0);
+}
+
+/* A swipe throws the sheet out sideways, but the closed base state above is the
+   bottom-sheet position. Clearing the drag's inline transform would therefore
+   walk the sheet from one to the other — it flew right and then slid down, both
+   exits at once. This pins the axis the swipe chose, so there is nowhere left to
+   drift to. Outranked by the [data-open] rule above, so reopening is unaffected. */
+.edge-swipe-sheet.edge-swipe-exit-x {
+  transform: translateX(100%);
 }
 
 /* Resting depth of the page behind while the sheet is up.
