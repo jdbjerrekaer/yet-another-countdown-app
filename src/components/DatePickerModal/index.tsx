@@ -345,18 +345,25 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // entirely (the page goes blank white).
     const page = () => document.querySelector('ion-router-outlet > .ion-page') as HTMLElement | null;
     const scrim = () => scrimRef.current;
-    // The save button and the duration pill are fixed elements outside the sheet,
-    // but they belong to the editor — they have to travel with it, not hang in
-    // place. Target their containers: MorphingFab writes its own inline transform
-    // (press scale) on every render and would clobber ours.
+    // The save button rides the sheet out to the right. Target the container:
+    // MorphingFab writes its own inline transform (press scale) every render and
+    // would clobber ours.
     const chrome = () =>
-      Array.from(document.querySelectorAll('.fab-portal, .countdown-pill')) as HTMLElement[];
+      Array.from(document.querySelectorAll('.fab-portal')) as HTMLElement[];
+    // The pill exits LEFT — that is its own close animation, so during the drag
+    // it mirrors the sheet rather than following it. Its transform is React-owned
+    // (translateX(calc(-100% - 24px)) on close), so never clear it while that
+    // exit is running: wiping the inline value drops the fly-out and leaves only
+    // the opacity fade.
+    const pill = () => document.querySelector('.countdown-pill') as HTMLElement | null;
     const PAGE_MIN_SCALE = 0.92;
 
     const paint = (dx: number) => {
       const progress = Math.min(1, dx / window.innerWidth);
       el.style.transform = `translateX(${dx}px)`;
       chrome().forEach((c) => { c.style.transform = `translateX(${dx}px)`; });
+      const pl = pill();
+      if (pl) pl.style.transform = `translateX(${-dx}px)`;
       const pg = page();
       if (pg) pg.style.transform = `scale(${PAGE_MIN_SCALE + (1 - PAGE_MIN_SCALE) * progress})`;
       const sc = scrim();
@@ -371,6 +378,11 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       const sc = scrim();
       if (sc) { sc.style.opacity = ''; sc.classList.remove('edge-swipe-settling'); }
       chrome().forEach((c) => { c.style.transform = ''; c.classList.remove('edge-swipe-settling'); });
+      // Deliberately NOT clearing the pill's transform here. On dismissal React
+      // is mid-exit (translateX(calc(-100% - 24px))) and wiping the inline value
+      // drops it back to 0, killing the fly-out. It is cleared only on the cancel
+      // path, where React's value is translateX(0) and clearing is a no-op.
+      pill()?.classList.remove('edge-swipe-settling');
     };
 
     const gesture = createGesture({
@@ -388,6 +400,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         page()?.classList.remove('edge-swipe-settling');
         scrim()?.classList.remove('edge-swipe-settling');
         chrome().forEach((c) => c.classList.remove('edge-swipe-settling'));
+        pill()?.classList.remove('edge-swipe-settling');
         paint(0);
       },
       onMove: (d) => paint(Math.max(0, d.deltaX)),
@@ -399,6 +412,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         page()?.classList.add('edge-swipe-settling');
         scrim()?.classList.add('edge-swipe-settling');
         chrome().forEach((c) => c.classList.add('edge-swipe-settling'));
+        pill()?.classList.add('edge-swipe-settling');
         if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
           trigger('light');
           paint(window.innerWidth);
