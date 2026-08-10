@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { format, differenceInYears } from 'date-fns';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon, createGesture } from '@ionic/react';
+import { IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonToggle, IonDatetime, IonIcon, createGesture } from '@ionic/react';
+import { createPortal } from 'react-dom';
 import { shareOutline } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
@@ -159,7 +160,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   const prevSuggestedEmojisRef = useRef<string[]>([]);
   const yearlySuggestionBannerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLIonContentElement | null>(null);
-  const modalRef = useRef<HTMLIonModalElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const scrimRef = useRef<HTMLDivElement | null>(null);
   const datetimeRef = useRef<HTMLIonDatetimeElement | null>(null);
   const isInitialOpenRef = useRef(false);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -334,18 +336,32 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // The sheet itself is the .ion-page Ionic slots into the modal — a plain
     // light-DOM element, so it takes a transform. The shadow ::part(content)
     // does not, and the host moves the backdrop along with it.
-    const pane = () => el.querySelector('.ion-page') as HTMLElement | null;
+    const pane = () => el;
+    // The page being returned to. It sits behind the modal and scales up into
+    // place as the sheet slides off, so the return reads as depth rather than
+    // a flat slide.
+    // Scale the outlet's page, NOT ion-router-outlet itself — the outlet carries
+    // `contain: layout size style`, and transforming it stops it rendering
+    // entirely (the page goes blank white).
+    const page = () => document.querySelector('ion-router-outlet > .ion-page') as HTMLElement | null;
+    const scrim = () => scrimRef.current;
+    const PAGE_MIN_SCALE = 0.92;
 
     const paint = (dx: number) => {
-      const p = pane();
-      if (p) p.style.transform = `translateX(${dx}px)`;
-      el.style.setProperty('--backdrop-opacity', `${0.32 * (1 - dx / window.innerWidth)}`);
+      const progress = Math.min(1, dx / window.innerWidth);
+      el.style.transform = `translateX(${dx}px)`;
+      const pg = page();
+      if (pg) pg.style.transform = `scale(${PAGE_MIN_SCALE + (1 - PAGE_MIN_SCALE) * progress})`;
+      const sc = scrim();
+      if (sc) sc.style.opacity = `${1 - progress}`;
     };
     const reset = () => {
-      const p = pane();
-      if (p) { p.style.transform = ''; p.classList.remove('edge-swipe-settling'); }
-      el.classList.remove('edge-swipe-active');
-      el.style.removeProperty('--backdrop-opacity');
+      el.style.transform = '';
+      el.classList.remove('edge-swipe-settling');
+      const pg = page();
+      if (pg) { pg.style.transform = ''; pg.classList.remove('edge-swipe-settling'); }
+      const sc = scrim();
+      if (sc) { sc.style.opacity = ''; sc.classList.remove('edge-swipe-settling'); }
     };
 
     const gesture = createGesture({
@@ -356,12 +372,16 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       threshold: 0,
       canStart: (d) => d.startX <= EDGE,
       onStart: () => {
-        pane()?.classList.remove('edge-swipe-settling');
-        el.classList.add('edge-swipe-active');
+        el.classList.remove('edge-swipe-settling');
+        page()?.classList.remove('edge-swipe-settling');
+        scrim()?.classList.remove('edge-swipe-settling');
+        paint(0);
       },
       onMove: (d) => paint(Math.max(0, d.deltaX)),
       onEnd: (d) => {
-        pane()?.classList.add('edge-swipe-settling');
+        el.classList.add('edge-swipe-settling');
+        page()?.classList.add('edge-swipe-settling');
+        scrim()?.classList.add('edge-swipe-settling');
         if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
           trigger('light');
           paint(window.innerWidth);
@@ -379,9 +399,14 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     };
   }, [isOpen, onClose, trigger]);
 
-  const handleDismiss = () => {
-    onClose();
-  };
+  // Was IonModal's onDidPresent. The sheet is a plain element now, so fire it
+  // ourselves once it has been laid out.
+  useEffect(() => {
+    if (!isOpen) return;
+    const id = requestAnimationFrame(() => { void handleModalPresent(); });
+    return () => cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Handle modal presentation - focus input after modal is fully presented
   const handleModalPresent = async () => {
@@ -819,13 +844,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   };
 
   return (
-    <IonModal
-      ref={modalRef}
-      isOpen={isOpen}
-      onDidDismiss={handleDismiss}
-      onDidPresent={handleModalPresent}
-      aria-labelledby="modal-title"
-    >
+    createPortal(
+      <div className="edge-swipe-root" data-open={isOpen || undefined} aria-hidden={!isOpen}>
+      {/* Dim over the page being returned to. A real element we own, so it can
+          actually be seen through — an ion-modal backdrop cannot. */}
+      <div className="edge-swipe-scrim" ref={scrimRef} />
+      <div
+        className="ion-page edge-swipe-sheet"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
       <IonHeader translucent className="modal-header-transparent">
         <IonToolbar>
           <IonButtons slot="start">
@@ -1294,6 +1324,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
             <div className="h-24" aria-hidden="true" />
           </div>
       </IonContent>
-    </IonModal>
+      </div>
+      </div>,
+      document.body
+    )
   );
 });
