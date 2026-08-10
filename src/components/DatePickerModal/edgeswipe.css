@@ -30,17 +30,19 @@
   opacity: 1;
 }
 
+/* Presents upward from the bottom; the edge-swipe then takes it out sideways,
+   so the shadow has to read on both the top and the left edge. */
 .edge-swipe-sheet {
   position: absolute;
   inset: 0;
   background: var(--ion-background-color, #fff);
-  box-shadow: -12px 0 32px rgb(0 0 0 / 0.28);
-  transform: translateX(100%);
-  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -10px 30px rgb(0 0 0 / 0.24), -12px 0 32px rgb(0 0 0 / 0.2);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .edge-swipe-root[data-open] .edge-swipe-sheet {
-  transform: translateX(0);
+  transform: translateY(0);
 }
 
 /* During a drag the sheet, page and scrim track the finger 1:1; this class is

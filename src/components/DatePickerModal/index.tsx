@@ -25,6 +25,11 @@ import { isSafariMobile } from '@/lib/utils';
 import { encodeEventImportLink } from '@/lib/eventImportLink';
 import { toast } from '@/components/ui/sonner';
 
+// How far back the page behind sits while the sheet is up. Presenting animates
+// the page to this depth; the edge-swipe then brings it forward to 1 as the
+// sheet is pulled away, so opening is the same movement played in reverse.
+const PAGE_DEPTH_SCALE = 0.92;
+
 // Helper to get gradient from a hex color
 const getGradientFromColor = (hex: string): string => {
   return `linear-gradient(135deg, ${hex} 0%, ${adjustColorBrightness(hex, 20)} 100%)`;
@@ -354,7 +359,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // exit is running: wiping the inline value drops the fly-out and leaves only
     // the opacity fade.
     const pill = () => document.querySelector('.countdown-pill') as HTMLElement | null;
-    const PAGE_MIN_SCALE = 0.92;
+    const PAGE_MIN_SCALE = PAGE_DEPTH_SCALE;
 
     const paint = (dx: number) => {
       const progress = Math.min(1, dx / window.innerWidth);
@@ -426,6 +431,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       reset();
     };
   }, [isOpen, onClose, trigger]);
+
+  // Push the page behind back while the sheet is up. It lands exactly where the
+  // edge-swipe starts from, so presenting reads as the first half of the same
+  // movement. Runs after the gesture effect so its write wins on re-open — React
+  // fires every cleanup before any effect, and the gesture's reset clears this.
+  useEffect(() => {
+    const pg = document.querySelector('ion-router-outlet > .ion-page') as HTMLElement | null;
+    if (!pg) return;
+    pg.classList.add('edge-swipe-settling');
+    pg.style.transform = isOpen ? `scale(${PAGE_DEPTH_SCALE})` : '';
+    return () => { pg.style.transform = ''; };
+  }, [isOpen]);
 
   // Was IonModal's onDidPresent. The sheet is a plain element now, so fire it
   // ourselves once it has been laid out.
