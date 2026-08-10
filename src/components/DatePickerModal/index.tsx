@@ -356,6 +356,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       if (sc) sc.style.opacity = `${1 - progress}`;
     };
     const reset = () => {
+      if (contentRef.current) contentRef.current.scrollY = true;
       el.style.transform = '';
       el.classList.remove('edge-swipe-settling');
       const pg = page();
@@ -372,6 +373,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       threshold: 0,
       canStart: (d) => d.startX <= EDGE,
       onStart: () => {
+        // Lock the sheet's own scroll for the duration of the drag, or a slightly
+        // diagonal swipe scrolls the form while it slides.
+        if (contentRef.current) contentRef.current.scrollY = false;
         el.classList.remove('edge-swipe-settling');
         page()?.classList.remove('edge-swipe-settling');
         scrim()?.classList.remove('edge-swipe-settling');
@@ -379,6 +383,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       },
       onMove: (d) => paint(Math.max(0, d.deltaX)),
       onEnd: (d) => {
+        // Release the scroll lock on every path — a cancelled drag must leave the
+        // form scrollable again, not just a dismissal.
+        if (contentRef.current) contentRef.current.scrollY = true;
         el.classList.add('edge-swipe-settling');
         page()?.classList.add('edge-swipe-settling');
         scrim()?.classList.add('edge-swipe-settling');
