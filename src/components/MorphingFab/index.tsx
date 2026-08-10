@@ -43,16 +43,18 @@ const COLLAPSE_MS = 280;
 // length, angle and offset, so the lines physically swing and stretch into the
 // other shape — a real morph, not a cross-fade between two finished glyphs.
 // Geometry is in px around the centre of the 72px button.
-const BAR_THICKNESS = 3.4;
+const BAR_THICKNESS = 3;
 const BAR_MORPH_MS = 220;
 type Bar = { len: number; x: number; y: number; rot: number };
 const PLUS_BARS: Bar[] = [
   { len: 22, x: 0, y: 0, rot: 0 },
   { len: 22, x: 0, y: 0, rot: 90 },
 ];
-// Short stroke and long stroke of a ✓, meeting at (-4.3, 6.7).
+// Short stroke and long stroke of a ✓, meeting at (-4.3, 6.6). The short one
+// runs ~1.2px past the joint so its round cap alone forms the bottom point —
+// two caps ending exactly at the vertex read as a flat, clipped-looking edge.
 const CHECK_BARS: Bar[] = [
-  { len: 9, x: -7.5, y: 3.5, rot: 45 },
+  { len: 10.2, x: -7.07, y: 3.92, rot: 45 },
   { len: 19.8, x: 2.4, y: -0.6, rot: -47 },
 ];
 
