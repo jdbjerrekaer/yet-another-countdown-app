@@ -345,11 +345,18 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // entirely (the page goes blank white).
     const page = () => document.querySelector('ion-router-outlet > .ion-page') as HTMLElement | null;
     const scrim = () => scrimRef.current;
+    // The save button and the duration pill are fixed elements outside the sheet,
+    // but they belong to the editor — they have to travel with it, not hang in
+    // place. Target their containers: MorphingFab writes its own inline transform
+    // (press scale) on every render and would clobber ours.
+    const chrome = () =>
+      Array.from(document.querySelectorAll('.fab-portal, .countdown-pill')) as HTMLElement[];
     const PAGE_MIN_SCALE = 0.92;
 
     const paint = (dx: number) => {
       const progress = Math.min(1, dx / window.innerWidth);
       el.style.transform = `translateX(${dx}px)`;
+      chrome().forEach((c) => { c.style.transform = `translateX(${dx}px)`; });
       const pg = page();
       if (pg) pg.style.transform = `scale(${PAGE_MIN_SCALE + (1 - PAGE_MIN_SCALE) * progress})`;
       const sc = scrim();
@@ -363,6 +370,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       if (pg) { pg.style.transform = ''; pg.classList.remove('edge-swipe-settling'); }
       const sc = scrim();
       if (sc) { sc.style.opacity = ''; sc.classList.remove('edge-swipe-settling'); }
+      chrome().forEach((c) => { c.style.transform = ''; c.classList.remove('edge-swipe-settling'); });
     };
 
     const gesture = createGesture({
@@ -379,6 +387,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         el.classList.remove('edge-swipe-settling');
         page()?.classList.remove('edge-swipe-settling');
         scrim()?.classList.remove('edge-swipe-settling');
+        chrome().forEach((c) => c.classList.remove('edge-swipe-settling'));
         paint(0);
       },
       onMove: (d) => paint(Math.max(0, d.deltaX)),
@@ -389,6 +398,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         el.classList.add('edge-swipe-settling');
         page()?.classList.add('edge-swipe-settling');
         scrim()?.classList.add('edge-swipe-settling');
+        chrome().forEach((c) => c.classList.add('edge-swipe-settling'));
         if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
           trigger('light');
           paint(window.innerWidth);
