@@ -2,7 +2,23 @@
    Ionic's overlay is composited as an opaque layer by the iOS WebView — no
    amount of transparent children, --ion-backdrop-color, ::part() or `contain`
    relaxation lets the page behind show through. A normal element has none of
-   that, so translate / scale / dim all behave exactly as written. */
+   that, so translate / scale / dim all behave exactly as written.
+
+   Who writes what — keep these lanes separate and nothing has to run in order:
+
+     element        open/close state          the drag gesture
+     ------------------------------------------------------------------
+     sheet          [data-open] class         inline transform
+     scrim          [data-open] class         inline opacity
+     page behind    .edge-swipe-page-back     inline transform
+     pill / FAB     React                     inline transform (pill only)
+
+   The gesture only ever writes inline styles and clears them on release; the
+   resting state is always a class. Inline beats a class, so the drag wins while
+   it lasts and the class takes over the instant it lets go. Put both writers on
+   the same channel and you get an ordering bug that only shows on reopen.
+
+   z-index contract: this sheet 20000, FAB 100000, emoji/hue pickers 100001. */
 
 .edge-swipe-root {
   position: fixed;
@@ -45,7 +61,27 @@
   transform: translateY(0);
 }
 
-/* During a drag the sheet, page and scrim track the finger 1:1; this class is
+/* Resting depth of the page behind while the sheet is up.
+   Two things move this page: the open/close state (this class) and the drag
+   (an inline transform). They deliberately use different CSS channels — inline
+   always beats a class, so the drag wins while it lasts, and the moment the
+   gesture clears its inline value the page falls back to whatever this class
+   says. Neither writer has to run in a particular order, and neither has to
+   know the other's value. --edge-swipe-page-scale is set from PAGE_DEPTH_SCALE
+   in DatePickerModal so the number lives in exactly one place. */
+.edge-swipe-page-back {
+  transform: scale(var(--edge-swipe-page-scale, 0.92));
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ...except during a drag, where the page must track the finger exactly.
+   Must stay below .edge-swipe-page-back: equal specificity, so source order
+   decides which transition wins. */
+.edge-swipe-page-dragging {
+  transition: none;
+}
+
+/* During a drag the sheet and scrim track the finger 1:1; this class is
    added only on release so the settle animates. */
 .edge-swipe-settling {
   transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
@@ -55,7 +91,8 @@
 @media (prefers-reduced-motion: reduce) {
   .edge-swipe-sheet,
   .edge-swipe-scrim,
-  .edge-swipe-settling {
+  .edge-swipe-settling,
+  .edge-swipe-page-back {
     transition: none;
   }
 }

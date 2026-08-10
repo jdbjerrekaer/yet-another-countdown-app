@@ -28,6 +28,8 @@ import { toast } from '@/components/ui/sonner';
 // How far back the page behind sits while the sheet is up. Presenting animates
 // the page to this depth; the edge-swipe then brings it forward to 1 as the
 // sheet is pulled away, so opening is the same movement played in reverse.
+// Fed to CSS as --edge-swipe-page-scale so the resting depth and the drag
+// interpolation cannot drift apart. See the writer table in edgeswipe.css.
 const PAGE_DEPTH_SCALE = 0.92;
 
 // Helper to get gradient from a hex color
@@ -375,8 +377,10 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       if (contentRef.current) contentRef.current.scrollY = true;
       el.style.transform = '';
       el.classList.remove('edge-swipe-settling');
+      // Clearing the inline value hands the page back to .edge-swipe-page-back,
+      // which holds whichever depth the open/close state calls for.
       const pg = page();
-      if (pg) { pg.style.transform = ''; pg.classList.remove('edge-swipe-settling'); }
+      if (pg) { pg.style.transform = ''; pg.classList.remove('edge-swipe-page-dragging'); }
       const sc = scrim();
       if (sc) { sc.style.opacity = ''; sc.classList.remove('edge-swipe-settling'); }
       // Deliberately NOT clearing the pill's transform here. On dismissal React
@@ -398,7 +402,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         // diagonal swipe scrolls the form while it slides.
         if (contentRef.current) contentRef.current.scrollY = false;
         el.classList.remove('edge-swipe-settling');
-        page()?.classList.remove('edge-swipe-settling');
+        page()?.classList.add('edge-swipe-page-dragging');
         scrim()?.classList.remove('edge-swipe-settling');
         pill()?.classList.remove('edge-swipe-settling');
         paint(0);
@@ -409,7 +413,8 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         // form scrollable again, not just a dismissal.
         if (contentRef.current) contentRef.current.scrollY = true;
         el.classList.add('edge-swipe-settling');
-        page()?.classList.add('edge-swipe-settling');
+        // Hand the page its transition back so the last paint() below animates.
+        page()?.classList.remove('edge-swipe-page-dragging');
         scrim()?.classList.add('edge-swipe-settling');
         pill()?.classList.add('edge-swipe-settling');
         if (d.deltaX > window.innerWidth * 0.3 || d.velocityX > 0.5) {
@@ -434,14 +439,19 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
 
   // Push the page behind back while the sheet is up. It lands exactly where the
   // edge-swipe starts from, so presenting reads as the first half of the same
-  // movement. Runs after the gesture effect so its write wins on re-open — React
-  // fires every cleanup before any effect, and the gesture's reset clears this.
+  // movement.
+  //
+  // This owns the *class* only; the gesture owns the *inline* transform. Inline
+  // beats a class, so the drag wins while it runs and the page falls back here
+  // the moment the gesture clears it — no matter which of the two runs last.
+  // Don't be tempted to set the transform inline here: that puts both writers on
+  // one channel and reintroduces an effect-ordering dependency.
   useEffect(() => {
     const pg = document.querySelector('ion-router-outlet > .ion-page') as HTMLElement | null;
     if (!pg) return;
-    pg.classList.add('edge-swipe-settling');
-    pg.style.transform = isOpen ? `scale(${PAGE_DEPTH_SCALE})` : '';
-    return () => { pg.style.transform = ''; };
+    pg.style.setProperty('--edge-swipe-page-scale', String(PAGE_DEPTH_SCALE));
+    pg.classList.toggle('edge-swipe-page-back', isOpen);
+    return () => pg.classList.remove('edge-swipe-page-back');
   }, [isOpen]);
 
   // Was IonModal's onDidPresent. The sheet is a plain element now, so fire it
