@@ -79,6 +79,15 @@
   transform: translateX(100%);
 }
 
+/* Scaling the page to 0.92 uncovers a band around it. ion-router-outlet and
+   ion-app both paint nothing, so that band fell through to whatever is behind
+   the web view — which reads as a black frame, most visible along the top once
+   the sheet slides down. Painting ion-app with the app surface makes the gap
+   continuous with the page instead of a hole. */
+ion-app {
+  background: var(--ion-background-color);
+}
+
 /* Resting depth of the page behind while the sheet is up.
    Two things move this page: the open/close state (this class) and the drag
    (an inline transform). They deliberately use different CSS channels — inline
@@ -87,15 +96,25 @@
    says. Neither writer has to run in a particular order, and neither has to
    know the other's value. --edge-swipe-page-scale is set from PAGE_DEPTH_SCALE
    in DatePickerModal so the number lives in exactly one place. */
-.edge-swipe-page-back {
-  transform: scale(var(--edge-swipe-page-scale, 0.92));
+/* The transition lives on the page itself, NOT on the class below. A class that
+   carries both the transition and the target value gives the browser no prior
+   state to interpolate from — the property only becomes transitionable at the
+   same instant it changes, so the page snapped to depth instead of easing there.
+   Same trap as animating a freshly mounted element. */
+ion-router-outlet > .ion-page {
   transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Same element prefix as the transition rule: a bare .edge-swipe-page-back
+   loses to Ionic's own `ion-router-outlet > .ion-page` transform and the scale
+   silently never applies. */
+ion-router-outlet > .ion-page.edge-swipe-page-back {
+  transform: scale(var(--edge-swipe-page-scale, 0.92));
+}
+
 /* ...except during a drag, where the page must track the finger exactly.
-   Must stay below .edge-swipe-page-back: equal specificity, so source order
-   decides which transition wins. */
-.edge-swipe-page-dragging {
+   Needs to outrank the rule above, hence the same element prefix. */
+ion-router-outlet > .ion-page.edge-swipe-page-dragging {
   transition: none;
 }
 
