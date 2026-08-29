@@ -23,9 +23,12 @@ interface Props {
 // each copy on its own let the two disagree — the list card read "1mo 2w 1d
 // left" while the lifted preview snapped back to the spelled-out form. Sharing
 // the verdict keeps every copy of the same phrase in step.
+// Keyed by phrase alone: every card in the list is the same width, and keying
+// on the measured width let the lifted copy land in a different bucket, miss the
+// verdict and re-measure itself back to the spelled-out form — the exact
+// mismatch this is here to prevent.
 const tooWide = new Set<string>();
-const verdictKey = (lang: string, phrase: string, width: number) =>
-  `${lang}|${phrase}|${Math.round(width / 8)}`;
+const verdictKey = (lang: string, phrase: string) => `${lang}|${phrase}`;
 
 export function RelativePhrase({ target, includeTime, legacy, className }: Props) {
   const { t, i18n } = useTranslation();
@@ -39,8 +42,7 @@ export function RelativePhrase({ target, includeTime, legacy, className }: Props
   // New text (or language) — start from whatever a same-width sibling already
   // settled on, and only re-measure when this phrase hasn't been judged yet.
   useLayoutEffect(() => {
-    const el = ref.current;
-    setShort(!!el && tooWide.has(verdictKey(i18n.language, long, el.clientWidth)));
+    setShort(tooWide.has(verdictKey(i18n.language, long)));
   }, [long, i18n.language]);
 
   // ponytail: plain overflow test, no width arithmetic. Runs pre-paint, so the
@@ -51,7 +53,7 @@ export function RelativePhrase({ target, includeTime, legacy, className }: Props
     if (el.scrollWidth > el.clientWidth + 1) {
       // ponytail: unbounded set would creep — the text changes every minute.
       if (tooWide.size > 200) tooWide.clear();
-      tooWide.add(verdictKey(i18n.language, long, el.clientWidth));
+      tooWide.add(verdictKey(i18n.language, long));
       setShort(true);
     }
   });
