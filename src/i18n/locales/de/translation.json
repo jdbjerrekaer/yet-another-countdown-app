@@ -302,5 +302,11 @@
       "color": "Halte eine Farbe gedrückt oder tippe doppelt für hellere und dunklere Töne."
     },
     "clear": "Löschen"
+  },
+  "settings": {
+    "recentlyDeleted": {
+      "empty": "Leer",
+      "daysLeft": "noch {{count}} Tage"
+    }
   }
 }

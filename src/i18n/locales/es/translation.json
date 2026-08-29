@@ -302,5 +302,11 @@
       "color": "Mantén pulsado o toca dos veces un color para tonos más claros y oscuros."
     },
     "clear": "Borrar"
+  },
+  "settings": {
+    "recentlyDeleted": {
+      "empty": "Vacío",
+      "daysLeft": "{{count}} días restantes"
+    }
   }
 }

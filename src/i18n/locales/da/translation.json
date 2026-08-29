@@ -302,5 +302,11 @@
       "color": "Hold inde eller dobbelttryk på en farve for lysere og mørkere nuancer."
     },
     "clear": "Ryd"
+  },
+  "settings": {
+    "recentlyDeleted": {
+      "empty": "Tom",
+      "daysLeft": "{{count}} dage tilbage"
+    }
   }
 }

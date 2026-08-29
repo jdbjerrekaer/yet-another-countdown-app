@@ -80,11 +80,11 @@
 		</dict>
 		<dict>
 			<key>DefaultValue</key>
-			<string>—</string>
+			<string>Empty</string>
 			<key>Key</key>
 			<string>CapacitorStorage.recently_deleted_1</string>
 			<key>Title</key>
-			<string>Deleted</string>
+			<string></string>
 			<key>Type</key>
 			<string>PSTitleValueSpecifier</string>
 		</dict>
@@ -104,11 +104,11 @@
 		</dict>
 		<dict>
 			<key>DefaultValue</key>
-			<string>—</string>
+			<string>Empty</string>
 			<key>Key</key>
 			<string>CapacitorStorage.recently_deleted_2</string>
 			<key>Title</key>
-			<string>Deleted</string>
+			<string></string>
 			<key>Type</key>
 			<string>PSTitleValueSpecifier</string>
 		</dict>
@@ -128,11 +128,11 @@
 		</dict>
 		<dict>
 			<key>DefaultValue</key>
-			<string>—</string>
+			<string>Empty</string>
 			<key>Key</key>
 			<string>CapacitorStorage.recently_deleted_3</string>
 			<key>Title</key>
-			<string>Deleted</string>
+			<string></string>
 			<key>Type</key>
 			<string>PSTitleValueSpecifier</string>
 		</dict>
@@ -152,11 +152,11 @@
 		</dict>
 		<dict>
 			<key>DefaultValue</key>
-			<string>—</string>
+			<string>Empty</string>
 			<key>Key</key>
 			<string>CapacitorStorage.recently_deleted_4</string>
 			<key>Title</key>
-			<string>Deleted</string>
+			<string></string>
 			<key>Type</key>
 			<string>PSTitleValueSpecifier</string>
 		</dict>
@@ -176,11 +176,11 @@
 		</dict>
 		<dict>
 			<key>DefaultValue</key>
-			<string>—</string>
+			<string>Empty</string>
 			<key>Key</key>
 			<string>CapacitorStorage.recently_deleted_5</string>
 			<key>Title</key>
-			<string>Deleted</string>
+			<string></string>
 			<key>Type</key>
 			<string>PSTitleValueSpecifier</string>
 		</dict>

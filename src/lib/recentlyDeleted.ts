@@ -12,7 +12,21 @@ import { CountdownEvent } from '@/types/countdown';
 const KEY = 'countdownsRecentlyDeleted';
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 export const SLOTS = 5;
-const EMPTY_LABEL = '—';
+
+/** Localised text for the Settings rows — passed in so this module stays pure. */
+export interface SlotLabels {
+  locale: string;
+  /** Shown in a slot that holds nothing. */
+  empty: string;
+  /** e.g. "18 days left" — how long before the copy is dropped for good. */
+  daysLeft: (days: number) => string;
+}
+
+const EN: SlotLabels = {
+  locale: 'en',
+  empty: 'Empty',
+  daysLeft: (d) => `${d} days left`,
+};
 
 export interface DeletedEntry {
   event: CountdownEvent;
@@ -34,46 +48,48 @@ export function loadRecentlyDeleted(): DeletedEntry[] {
 
 const save = (list: DeletedEntry[]) => localStorage.setItem(KEY, JSON.stringify(list));
 
-const label = (entry: DeletedEntry, locale: string) => {
-  const when = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(
-    new Date(entry.deletedAt),
-  );
-  return `${entry.event.emoji ?? ''} ${entry.event.title} · ${when}`.trim();
+const label = (entry: DeletedEntry, labels: SlotLabels) => {
+  const deletedAt = new Date(entry.deletedAt);
+  const when = new Intl.DateTimeFormat(labels.locale, { day: 'numeric', month: 'short' }).format(deletedAt);
+  const remaining = Math.max(1, Math.ceil((deletedAt.getTime() + RETENTION_MS - Date.now()) / 86400000));
+  // Everything the row can say has to fit in this one string — Settings owns
+  // the title, and only the value is ours to write.
+  return `${entry.event.emoji ?? ''} ${entry.event.title} · ${when} · ${labels.daysLeft(remaining)}`.trim();
 };
 
 /** Mirror the (pruned) list into the fixed Settings.bundle slots. */
-export async function publishRecentlyDeleted(locale = 'en'): Promise<DeletedEntry[]> {
+export async function publishRecentlyDeleted(labels: SlotLabels = EN): Promise<DeletedEntry[]> {
   const list = loadRecentlyDeleted();
   save(list);
   for (let i = 0; i < SLOTS; i++) {
     const entry = list[i];
     await Preferences.set({
       key: `recently_deleted_${i + 1}`,
-      value: entry ? label(entry, locale) : EMPTY_LABEL,
+      value: entry ? label(entry, labels) : labels.empty,
     });
   }
   return list;
 }
 
-export async function rememberDeleted(event: CountdownEvent, locale = 'en'): Promise<void> {
+export async function rememberDeleted(event: CountdownEvent, labels: SlotLabels = EN): Promise<void> {
   const list = [
     { event, deletedAt: new Date().toISOString() },
     ...loadRecentlyDeleted().filter(e => e.event.id !== event.id),
   ];
   save(list);
-  await publishRecentlyDeleted(locale);
+  await publishRecentlyDeleted(labels);
 }
 
-export async function forgetDeleted(ids: string[], locale = 'en'): Promise<void> {
+export async function forgetDeleted(ids: string[], labels: SlotLabels = EN): Promise<void> {
   save(loadRecentlyDeleted().filter(e => !ids.includes(e.event.id)));
-  await publishRecentlyDeleted(locale);
+  await publishRecentlyDeleted(labels);
 }
 
 /**
  * Read the per-slot "Recover" switches, clear them, and return the countdowns
  * they point at (dropping those from the recently-deleted list).
  */
-export async function takeRecoverRequests(locale = 'en'): Promise<CountdownEvent[]> {
+export async function takeRecoverRequests(labels: SlotLabels = EN): Promise<CountdownEvent[]> {
   const list = loadRecentlyDeleted();
   const recovered: CountdownEvent[] = [];
   for (let i = 0; i < SLOTS; i++) {
@@ -83,7 +99,7 @@ export async function takeRecoverRequests(locale = 'en'): Promise<CountdownEvent
     await Preferences.set({ key, value: '0' });
     if (list[i]) recovered.push(list[i].event);
   }
-  if (recovered.length) await forgetDeleted(recovered.map(e => e.id), locale);
-  else await publishRecentlyDeleted(locale);
+  if (recovered.length) await forgetDeleted(recovered.map(e => e.id), labels);
+  else await publishRecentlyDeleted(labels);
   return recovered;
 }

@@ -64,7 +64,8 @@ describe('recently deleted', () => {
 
     expect(store.get('recently_deleted_1')).toContain('Exam');
     expect(store.get('recently_deleted_2')).toContain('Trip');
-    expect(store.get('recently_deleted_3')).toBe('—');
+    expect(store.get('recently_deleted_1')).toContain('days left');
+    expect(store.get('recently_deleted_3')).toBe('Empty');
 
     await Preferences.set({ key: 'recover_2', value: '1' });
     const recovered = await takeRecoverRequests();
@@ -72,6 +73,6 @@ describe('recently deleted', () => {
     expect(recovered.map(e => e.id)).toEqual(['a']);
     expect(store.get('recover_2')).toBe('0');
     expect(loadRecentlyDeleted().map(e => e.event.id)).toEqual(['b']);
-    expect(store.get('recently_deleted_2')).toBe('—');
+    expect(store.get('recently_deleted_2')).toBe('Empty');
   });
 });
