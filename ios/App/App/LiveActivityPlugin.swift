@@ -61,7 +61,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             if wantedIds.contains(activity.attributes.eventId) {
                 live.insert(activity.attributes.eventId)
             } else {
-                Task { await activity.end(nil, dismissalPolicy: .immediate) }
+                Task { await Self.end(activity) }
             }
         }
 
@@ -101,11 +101,23 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         #endif
     }
 
+    #if canImport(ActivityKit)
+    /// `end(_:dismissalPolicy:)` arrived in 16.2; 16.1 only has the short form.
+    @available(iOS 16.1, *)
+    private static func end(_ activity: Activity<CountdownActivityAttributes>) async {
+        if #available(iOS 16.2, *) {
+            await activity.end(nil, dismissalPolicy: .immediate)
+        } else {
+            await activity.end(dismissalPolicy: .immediate)
+        }
+    }
+    #endif
+
     @objc func endAll(_ call: CAPPluginCall) {
         #if canImport(ActivityKit)
         if #available(iOS 16.1, *) {
             for activity in Activity<CountdownActivityAttributes>.activities {
-                Task { await activity.end(nil, dismissalPolicy: .immediate) }
+                Task { await Self.end(activity) }
             }
         }
         #endif
