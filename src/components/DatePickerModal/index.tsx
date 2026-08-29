@@ -489,6 +489,9 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
     // Drop any axis pin left by a previous swipe so this present rises from the
     // bottom. Harmless if absent — the open rule outranks it either way.
     modalRef.current?.classList.remove('edge-swipe-exit-x');
+    // The sheet stays mounted between opens, so its ion-content keeps whatever
+    // scroll the last session left behind. Every open starts at the top.
+    void contentRef.current?.scrollToTop(0);
     const id = requestAnimationFrame(() => { void handleModalPresent(); });
     return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -73,7 +73,7 @@ struct SmallWidgetView: View {
                     // In vibrant/accented modes, use simple text instead of flip digits
                     if widgetRenderingMode == .vibrant || widgetRenderingMode == .accented {
                         HStack(alignment: .lastTextBaseline, spacing: 2) {
-                            Text(primaryValue.formattedWithoutSeparator)
+                            Text(primaryText)
                                 .font(.system(size: primaryValue.scaledFontSize(baseSize: 28), weight: .bold))
                                 .foregroundColor(foregroundColor)
                             Text(primaryUnit)
@@ -82,7 +82,13 @@ struct SmallWidgetView: View {
                         }
                     } else {
                         HStack(alignment: .lastTextBaseline, spacing: 8) {
-                            FlipDigitView(value: primaryValue, fontSize: primaryValue.scaledFontSize(baseSize: 28), theme: flipDigitTheme)
+                            if isSubMinute {
+                                Text(primaryText)
+                                    .font(.system(size: primaryValue.scaledFontSize(baseSize: 28), weight: .bold))
+                                    .foregroundColor(foregroundColor)
+                            } else {
+                                FlipDigitView(value: primaryValue, fontSize: primaryValue.scaledFontSize(baseSize: 28), theme: flipDigitTheme)
+                            }
                             Text(primaryUnit)
                                 .font(.system(size: primaryValue.scaledUnitFontSize(baseSize: 14), weight: .medium))
                                 .foregroundColor(mutedColor)
@@ -91,7 +97,7 @@ struct SmallWidgetView: View {
                 } else {
                     // Focus mode - number display
                     HStack(alignment: .lastTextBaseline, spacing: 2) {
-                        Text(primaryValue.formattedWithoutSeparator)
+                        Text(primaryText)
                             .font(.system(size: primaryValue.scaledFontSize(baseSize: 28), weight: .bold))
                             .foregroundColor(foregroundColor)
                         Text(primaryUnit)
@@ -116,8 +122,21 @@ struct SmallWidgetView: View {
         } else if countdown.minutes > 0 {
             return countdown.minutes
         } else {
-            return countdown.seconds
+            return 0
         }
+    }
+
+    /// Under a minute out. The timeline only ticks once a minute — and in
+    /// Always-On Display the screen refreshes even less often — so a seconds
+    /// figure is stale the instant it is drawn (it was also rendered under a
+    /// "min" label, reading 40 seconds as "40 min"). Show a dash instead.
+    private var isSubMinute: Bool {
+        !countdown.isPast && !countdown.isComplete
+            && countdown.days == 0 && countdown.hours == 0 && countdown.minutes == 0
+    }
+
+    private var primaryText: String {
+        isSubMinute ? "—" : primaryValue.formattedWithoutSeparator
     }
     
     private var lang: String { WidgetDataSync.shared.appLanguage() }

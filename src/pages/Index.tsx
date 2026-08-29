@@ -197,6 +197,10 @@ export default function Index() {
   const lastDragEndTs = useRef<number>(0);
   const previousDragYRef = useRef<number | null>(null);
   const previousDragXRef = useRef<number | null>(null);
+  // Where along the card's width the drag was started, -1 (left edge) to
+  // +1 (right edge). The lifted card pivots around that point, so grabbing the
+  // right side tilts the opposite way to grabbing the left.
+  const dragGrabOffsetRef = useRef<number>(-1);
   const targetDragRotationRef = useRef<number>(0);
   const displayedDragRotationRef = useRef<number>(0);
   const dragAnimationFrameRef = useRef<number | null>(null);
@@ -1667,6 +1671,17 @@ export default function Index() {
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = event.active.id as string;
 
+    // Read the grab point now, synchronously — the first drag move can land
+    // before the width measurement below gets its frame.
+    const activator = event.activatorEvent as PointerEvent & { touches?: TouchList };
+    const grabX = activator?.touches?.[0]?.clientX ?? activator?.clientX;
+    const grabbedCard = document.querySelector(`[data-sortable-id="${activeId}"]`) as HTMLElement | null;
+    const grabbedRect = grabbedCard?.getBoundingClientRect();
+    dragGrabOffsetRef.current =
+      typeof grabX === 'number' && grabbedRect && grabbedRect.width > 0
+        ? Math.max(-1, Math.min(1, (grabX - (grabbedRect.left + grabbedRect.width / 2)) / (grabbedRect.width / 2)))
+        : -1;
+
     setActiveDragId(activeId);
     targetDragRotationRef.current = 0;
     displayedDragRotationRef.current = 0;
@@ -1738,10 +1753,12 @@ export default function Index() {
       const deltaX = currentX - previousX;
       
       // Calculate rotation angle based on movement direction
-      // Vertical movement: highly reactive
-      // Moving down (positive deltaY) = positive tilt, moving up (negative deltaY) = negative tilt
+      // Vertical movement: highly reactive, and pivoted around the grab point.
+      // Held by the left edge, dragging down drops that edge and the far side
+      // lags up; held by the right edge it mirrors; held dead centre the card
+      // stays level, the way a real card would.
       const verticalTiltMultiplier = 0.08;
-      const verticalRotationDelta = -deltaY * verticalTiltMultiplier;
+      const verticalRotationDelta = deltaY * verticalTiltMultiplier * dragGrabOffsetRef.current;
 
       // Horizontal movement: noticeable tilt
       // Moving right (positive deltaX) = positive tilt, moving left (negative deltaX) = negative tilt
