@@ -55,6 +55,7 @@ import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { createCountdownEvent, hasEventChanged, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
+import { rememberDeleted, takeRecoverRequests } from '@/lib/recentlyDeleted';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
@@ -288,6 +289,9 @@ export default function Index() {
   const pendingDeleteRef = useRef<Map<string, CountdownEvent>>(new Map());
   const [isDragDisabledByDeleteButton, setIsDragDisabledByDeleteButton] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  // Cards being restored (undo, or recovered from the iOS Settings app) —
+  // they grow back in instead of popping into the list fully formed.
+  const [restoringIds, setRestoringIds] = useState<string[]>([]);
   const [importPrefillData, setImportPrefillData] = useState<EventImportPayload | null>(null);
   const [canSaveForm, setCanSaveForm] = useState(false);
   const [canImportCalendar, setCanImportCalendar] = useState(false);
@@ -1424,27 +1428,40 @@ export default function Index() {
   };
 
   const commitDelete = (eventId: string) => {
-    if (!pendingDeleteRef.current.has(eventId)) return;
+    const event = pendingDeleteRef.current.get(eventId);
+    if (!event) return;
     pendingDeleteRef.current.delete(eventId);
+    // Past the undo window: keep a copy for 30 days so it can be recovered from
+    // the iOS Settings app (Settings > Yet Another Countdown > Recently Deleted).
+    void rememberDeleted(event, i18n.language);
     void cancelEventNotification(eventId);
     void AdsManager.maybeShowInterstitialAfterSave({ kind: 'delete' });
+  };
+
+  const restoreEvents = (restored: CountdownEvent[]) => {
+    const ids = restored.map(e => e.id);
+    // Drop the tombstones so the restored countdowns aren't re-deleted on merge
+    // and so the restore propagates back out to the other devices.
+    if (ids.some(id => deletedRef.current[id])) {
+      const rest = { ...deletedRef.current };
+      for (const id of ids) delete rest[id];
+      persistTombstones(rest);
+    }
+    setEvents(prev =>
+      [...prev.filter(e => !ids.includes(e.id)), ...restored].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      ),
+    );
+    setRestoringIds(ids);
+    window.setTimeout(() => setRestoringIds([]), 450);
   };
 
   const handleUndoDelete = (eventId: string) => {
     const event = pendingDeleteRef.current.get(eventId);
     if (!event) return;
     pendingDeleteRef.current.delete(eventId);
-    // Undo: drop the tombstone so the restored countdown isn't re-deleted on
-    // merge and so the restore propagates back out to the other devices.
-    if (deletedRef.current[eventId]) {
-      const rest = { ...deletedRef.current };
-      delete rest[eventId];
-      persistTombstones(rest);
-    }
     trigger('light');
-    setEvents(prev =>
-      [...prev, event].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-    );
+    restoreEvents([event]);
   };
 
   const handleDeleteRequest = async (event: CountdownEvent): Promise<boolean> => {
@@ -1472,7 +1489,9 @@ export default function Index() {
     });
     setDeletingEventId(null);
 
-    fabRef.current?.confirm(t('feedback.eventDeleted'), {
+    // The FAB shows an undo arrow in this state, so the label is the action —
+    // "Undo", not "Deleted".
+    fabRef.current?.confirm(t('feedback.undoDelete'), {
       onUndo: () => handleUndoDelete(eventId),
       holdMs: 3500,
       onDismiss: () => commitDelete(eventId),
@@ -1480,6 +1499,26 @@ export default function Index() {
 
     return true;
   };
+
+  // Countdowns the user asked back from the iOS Settings app. Settings can only
+  // flip a switch; the recovery itself happens the next time the app is open.
+  useEffect(() => {
+    const check = async () => {
+      const recovered = await takeRecoverRequests(i18n.language);
+      if (!recovered.length) return;
+      trigger('light');
+      restoreEvents(recovered);
+    };
+    void check();
+    if (!isNative) return;
+    const handle = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void check();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNative, i18n.language]);
 
   const handleAddNew = async () => {
     console.log('handleAddNew called');
@@ -1948,6 +1987,7 @@ export default function Index() {
                             isNative={isNative}
                             isMobile={isMobile}
                             isDeleting={deletingEventId === event.id}
+                            isRestoring={restoringIds.includes(event.id)}
                             onSelect={() => {
                               if (shouldIgnoreTap()) return;
                               trigger('light');

@@ -395,12 +395,20 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       pill()?.classList.remove('edge-swipe-settling');
     };
 
+    // Cleared on every new drag: the keyboard is dismissed once, on the first
+    // real movement, not on a stray tap near the edge.
+    let blurred = false;
+
     const gesture = createGesture({
       el,
       gestureName: 'edge-swipe-back',
       gesturePriority: 40, // above ion-content scrolling
       direction: 'x',
       threshold: 0,
+      // Non-passive so onMove can preventDefault. A slow drag otherwise hands
+      // the touch to native scrolling, which fires touchcancel — the sheet
+      // snapped back to place with the finger still on the screen.
+      passive: false,
       canStart: (d) => d.startX <= EDGE,
       onStart: () => {
         // Lock the sheet's own scroll for the duration of the drag, or a slightly
@@ -411,9 +419,20 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
         page()?.classList.add('edge-swipe-page-dragging');
         scrim()?.classList.remove('edge-swipe-settling');
         pill()?.classList.remove('edge-swipe-settling');
+        blurred = false;
         paint(0);
       },
-      onMove: (d) => paint(Math.max(0, d.deltaX)),
+      onMove: (d) => {
+        d.event.preventDefault();
+        // Swiping away means leaving the form — take the keyboard with it, so
+        // the title (or custom-emoji) field doesn't keep focus behind the sheet.
+        if (!blurred && d.deltaX > 4) {
+          blurred = true;
+          (document.activeElement as HTMLElement | null)?.blur?.();
+          if (Capacitor.isNativePlatform()) Keyboard.hide().catch(() => {});
+        }
+        paint(Math.max(0, d.deltaX));
+      },
       onEnd: (d) => {
         // Release the scroll lock on every path — a cancelled drag must leave the
         // form scrollable again, not just a dismissal.

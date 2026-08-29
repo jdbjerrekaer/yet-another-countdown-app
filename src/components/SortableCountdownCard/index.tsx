@@ -15,6 +15,7 @@ interface SortableCountdownCardProps {
   isNative?: boolean;
   isMobile?: boolean;
   isDeleting?: boolean;
+  isRestoring?: boolean;
 }
 
 export function SortableCountdownCard({
@@ -28,6 +29,7 @@ export function SortableCountdownCard({
   isNative = false,
   isMobile = false,
   isDeleting = false,
+  isRestoring = false,
 }: SortableCountdownCardProps) {
   const {
     attributes,
@@ -93,6 +95,7 @@ export function SortableCountdownCard({
         isDragging={isDragging}
         isNative={isNative}
         isDeleting={isDeleting}
+        isRestoring={isRestoring}
       />
     </div>
   );

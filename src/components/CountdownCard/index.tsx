@@ -21,6 +21,7 @@ interface CountdownCardProps {
   isDragging?: boolean;
   isNative?: boolean;
   isDeleting?: boolean;
+  isRestoring?: boolean;
 }
 
 export function CountdownCard({ 
@@ -33,6 +34,7 @@ export function CountdownCard({
   isDragging = false,
   isNative = false,
   isDeleting = false,
+  isRestoring = false,
 }: CountdownCardProps) {
   const { t } = useTranslation();
   const { trigger } = useHaptic();
@@ -187,6 +189,7 @@ export function CountdownCard({
     isDragging && 'countdown-card-dragging',
     isSliding && styles.wrapperSwiping,
     isDeleting && 'animate-collapse',
+    isRestoring && 'animate-expand',
     !isReordering && !isDragging && 'active:scale-[0.98]',
     'transition-transform duration-150',
   ].filter(Boolean).join(' ');
