@@ -302,5 +302,8 @@
       "color": "Segure ou toque duas vezes numa cor para tons mais claros e escuros."
     },
     "clear": "Limpar"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} anos hoje"
   }
 }

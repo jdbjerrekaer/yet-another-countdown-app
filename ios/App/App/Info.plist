@@ -38,7 +38,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>76</string>
+	<string>77</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-2483551077156189~6298238394</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -51,6 +51,8 @@
 	<string>Import birthdays and anniversaries from your calendar to create countdowns. Your data stays on your device – we never send it anywhere. Works completely offline.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Import birthdays and anniversaries from your calendar to create countdowns. Your data stays on your device – we never send it anywhere.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This identifier will be used to deliver relevant ads and measure ad performance.</string>
 	<key>SKAdNetworkItems</key>

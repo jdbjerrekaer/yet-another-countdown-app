@@ -302,5 +302,8 @@
       "color": "Pidä pohjassa tai kaksoisnapauta väriä saadaksesi vaaleampia ja tummempia sävyjä."
     },
     "clear": "Tyhjennä"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} vuotta tänään"
   }
 }

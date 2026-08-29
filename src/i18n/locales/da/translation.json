@@ -302,5 +302,8 @@
       "color": "Hold inde eller dobbelttryk på en farve for lysere og mørkere nuancer."
     },
     "clear": "Ryd"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} år i dag"
   }
 }

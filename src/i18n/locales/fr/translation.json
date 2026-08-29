@@ -302,5 +302,8 @@
       "color": "Reste appuyé ou touche deux fois une couleur pour des nuances plus claires ou plus foncées."
     },
     "clear": "Effacer"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} ans aujourd'hui"
   }
 }

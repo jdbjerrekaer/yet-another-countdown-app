@@ -302,5 +302,8 @@
       "color": "Hold inne eller dobbelttrykk på en farge for lysere og mørkere nyanser."
     },
     "clear": "Tøm"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} år i dag"
   }
 }

@@ -302,5 +302,8 @@
       "color": "Halte eine Farbe gedrückt oder tippe doppelt für hellere und dunklere Töne."
     },
     "clear": "Löschen"
+  },
+  "liveActivity": {
+    "yearsToday": "heute vor {{count}} Jahren"
   }
 }

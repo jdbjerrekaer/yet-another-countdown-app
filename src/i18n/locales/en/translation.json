@@ -324,5 +324,8 @@
       "color": "Hold or double-tap a colour for lighter and darker shades."
     },
     "clear": "Clear"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} years today"
   }
 }

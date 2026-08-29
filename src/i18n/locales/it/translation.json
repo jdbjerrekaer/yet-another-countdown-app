@@ -302,5 +302,8 @@
       "color": "Tieni premuto o tocca due volte un colore per tonalità più chiare e più scure."
     },
     "clear": "Cancella"
+  },
+  "liveActivity": {
+    "yearsToday": "{{count}} anni oggi"
   }
 }

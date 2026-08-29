@@ -1086,6 +1086,9 @@ struct CountdownWidgetBundle: WidgetBundle {
         CountdownVisualTripleWidget() // Visual/Progress bars style widget (triple event)
         CountdownClassicWidget()      // Classic/Flip digit style widget
         CountdownLockscreenWidget()   // Lock screen widget (inline, circular, rectangular)
+        if #available(iOS 16.1, *) {
+            CountdownLiveActivity()   // Lock screen Live Activity + Dynamic Island
+        }
     }
 }
 

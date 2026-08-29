@@ -55,6 +55,7 @@ import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { createCountdownEvent, hasEventChanged, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
+import { syncLiveActivities } from '@/lib/liveActivities';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
@@ -1499,6 +1500,26 @@ export default function Index() {
 
     return true;
   };
+
+  // Lock-screen Live Activities for whatever lands today. ActivityKit only
+  // hands out activities while the app is in the foreground, so this runs on
+  // launch, on every return to the foreground, and whenever the list changes.
+  useEffect(() => {
+    if (!isNative) return;
+    const strings = {
+      today: t('countdown.today'),
+      yearsToday: (years: number) => t('liveActivity.yearsToday', { count: years }),
+    };
+    const push = () => void syncLiveActivities(events, strings);
+    push();
+    const handle = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) push();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNative, events, i18n.language]);
 
   const handleAddNew = async () => {
     console.log('handleAddNew called');

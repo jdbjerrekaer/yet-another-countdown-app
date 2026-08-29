@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		05F7351D5B30880E49CA3FC8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D23AAB07AF3F35C72DCC581 /* Foundation.framework */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		37DA2252F9FDAFA58C7365A9 /* CountdownActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD3C8D722B06DE5F80B3258 /* CountdownActivityAttributes.swift */; };
 		40897DB8D698C96CB8C49D92 /* Pods_CountdownWidget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
@@ -16,27 +17,29 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		5861E4EE7E80CC5B0C6A45F0 /* LiveActivityPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573DA744621DE2255E48BDA6 /* LiveActivityPlugin.swift */; };
+		78B521133F9FACFEBE11E459 /* CountdownLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE967CB720A5BEBB206A4681 /* CountdownLiveActivity.swift */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		A60AD3392F1A581900BDE34B /* BuildInfoPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */; };
 		A63D32302F0BCF250063570B /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322D2F0BCF250063570B /* SmallWidgetView.swift */; };
 		A63D32312F0BCF250063570B /* SelectCountdownIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */; };
 		A63D32332F0BCF250063570B /* EmptyWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32292F0BCF250063570B /* EmptyWidgetView.swift */; };
 		A63D32342F0BCF250063570B /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D322C2F0BCF250063570B /* MediumWidgetView.swift */; };
-		A63D32402F0BCF250063570B /* LockscreenWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */; };
 		A63D32352F0BCF250063570B /* WidgetDataSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32272F0BCF250063570B /* WidgetDataSync.swift */; };
 		A63D32362F0BCF250063570B /* CountdownEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D32252F0BCF250063570B /* CountdownEvent.swift */; };
-		EEE1110000000000000000A2 /* EmojiContainerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE1110000000000000000A1 /* EmojiContainerShape.swift */; };
 		A63D32372F0BCF250063570B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A63D32242F0BCF250063570B /* Assets.xcassets */; };
+		A63D32402F0BCF250063570B /* LockscreenWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */; };
 		A6D2DE2A2F0BE052001A82F2 /* CalendarPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */; };
 		A7B8C9D12F3E4A5600ABCDEF /* StoreKitDiagnosticsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D02F3E4A5600ABCDEF /* StoreKitDiagnosticsPlugin.swift */; };
+		B09EC5D8BA5D3B2FFFE5D630 /* CountdownActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD3C8D722B06DE5F80B3258 /* CountdownActivityAttributes.swift */; };
 		B1C2D3E4F5A6B7C8D9E0F1A2 /* CountdownIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */; };
 		B2C3D4E5F678901234567890A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */; };
 		B6174CD4190B08F557A8B211 /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23DE9C22ECC85FF6C0538F38 /* CountdownWidget.swift */; };
+		D1E2F3A42F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3A32F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift */; };
 		D4E5F678901234567890ABCD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E5F678901234567890ABCD /* PrivacyInfo.xcprivacy */; };
 		E5DB9B45E898B0A532022637 /* CountdownWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0D1F3BFBDCF22C9A502EB8FD /* CountdownWidget.appex */; };
 		E7F8A9B12F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */; };
 		E7F8A9B22F2C3D4E5F6A7B8C9 /* EmojiParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B32F2C3D4E5F6A7B8C9 /* EmojiParser.swift */; };
-		D1E2F3A42F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3A32F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift */; };
 		E8A1B2C3D4E5F67890123456 /* EmojiSuggestionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A1B2C3D4E5F67890123457 /* EmojiSuggestionEngine.swift */; };
 		E90200000000000000000001 /* AppIntents.strings in Resources */ = {isa = PBXBuildFile; fileRef = E90100000000000000000001 /* AppIntents.strings */; };
 		E90200000000000000000002 /* AppIntents.strings in Resources */ = {isa = PBXBuildFile; fileRef = E90100000000000000000002 /* AppIntents.strings */; };
@@ -49,6 +52,7 @@
 		E90200000000000000000009 /* AppIntents.strings in Resources */ = {isa = PBXBuildFile; fileRef = E90100000000000000000009 /* AppIntents.strings */; };
 		E9020000000000000000000A /* AppIntents.strings in Resources */ = {isa = PBXBuildFile; fileRef = E9010000000000000000000A /* AppIntents.strings */; };
 		E9020000000000000000000B /* AppIntents.strings in Resources */ = {isa = PBXBuildFile; fileRef = E9010000000000000000000B /* AppIntents.strings */; };
+		EEE1110000000000000000A2 /* EmojiContainerShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE1110000000000000000A1 /* EmojiContainerShape.swift */; };
 		F1F2F3F4F5F6789012345678 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */; };
 		FLIPDIG022F0BCF250063570B /* FlipDigitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */; };
 		MYVC00001FED79650016851F /* MyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = MYVC00002FED79650016851F /* MyViewController.swift */; };
@@ -95,32 +99,34 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		573DA744621DE2255E48BDA6 /* LiveActivityPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveActivityPlugin.swift; sourceTree = "<group>"; };
 		584FD88E694BC60AF20B3F93 /* Pods_CountdownWidget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CountdownWidget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6CD3C8D722B06DE5F80B3258 /* CountdownActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CountdownActivityAttributes.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A60AD3382F1A581900BDE34B /* BuildInfoPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoPlugin.swift; sourceTree = "<group>"; };
 		A63D32242F0BCF250063570B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A63D32252F0BCF250063570B /* CountdownEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownEvent.swift; sourceTree = "<group>"; };
-		EEE1110000000000000000A1 /* EmojiContainerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiContainerShape.swift; sourceTree = "<group>"; };
 		A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountdownIntent.swift; sourceTree = "<group>"; };
 		A63D32272F0BCF250063570B /* WidgetDataSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSync.swift; sourceTree = "<group>"; };
 		A63D32292F0BCF250063570B /* EmptyWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyWidgetView.swift; sourceTree = "<group>"; };
 		A63D322C2F0BCF250063570B /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
 		A63D322D2F0BCF250063570B /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
-		A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockscreenWidgetView.swift; sourceTree = "<group>"; };
 		A63D32382F0BD8350063570B /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		A63D32392F0BD9030063570B /* CountdownWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CountdownWidget.entitlements; sourceTree = "<group>"; };
+		A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockscreenWidgetView.swift; sourceTree = "<group>"; };
 		A6A592E82F2D2EDC000F4200 /* StoreKit.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = StoreKit.storekit; sourceTree = "<group>"; };
 		A6D2DE282F0BE052001A82F2 /* CalendarPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarPlugin.swift; sourceTree = "<group>"; };
 		A6D2DE2B2F0BE0B2001A82F2 /* CalendarPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarPlugin.m; sourceTree = "<group>"; };
 		A7B8C9D02F3E4A5600ABCDEF /* StoreKitDiagnosticsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitDiagnosticsPlugin.swift; sourceTree = "<group>"; };
+		AE967CB720A5BEBB206A4681 /* CountdownLiveActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CountdownLiveActivity.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		B1C2D3E4F5A6B7C8D9E0F1A3 /* CountdownIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownIntents.swift; sourceTree = "<group>"; };
+		D1E2F3A32F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSyncPlugin.swift; sourceTree = "<group>"; };
 		E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		E5F678901234567890ABCD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E7F8A9B02F2C3D4E5F6A7B8C9 /* EmojiKeyboardPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardPlugin.swift; sourceTree = "<group>"; };
 		E7F8A9B32F2C3D4E5F6A7B8C9 /* EmojiParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiParser.swift; sourceTree = "<group>"; };
-		D1E2F3A32F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSyncPlugin.swift; sourceTree = "<group>"; };
 		E8A1B2C3D4E5F67890123457 /* EmojiSuggestionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiSuggestionEngine.swift; sourceTree = "<group>"; };
 		E90100000000000000000001 /* AppIntents.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = en.lproj/AppIntents.strings; sourceTree = "<group>"; };
 		E90100000000000000000002 /* AppIntents.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = es.lproj/AppIntents.strings; sourceTree = "<group>"; };
@@ -133,6 +139,7 @@
 		E90100000000000000000009 /* AppIntents.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = sv.lproj/AppIntents.strings; sourceTree = "<group>"; };
 		E9010000000000000000000A /* AppIntents.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = no.lproj/AppIntents.strings; sourceTree = "<group>"; };
 		E9010000000000000000000B /* AppIntents.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = fi.lproj/AppIntents.strings; sourceTree = "<group>"; };
+		EEE1110000000000000000A1 /* EmojiContainerShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiContainerShape.swift; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 		FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipDigitView.swift; sourceTree = "<group>"; };
 		MYVC00002FED79650016851F /* MyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyViewController.swift; sourceTree = "<group>"; };
@@ -227,6 +234,7 @@
 				D1E2F3A32F2C3D4E5F6A7B8C9 /* CountdownSyncPlugin.swift */,
 				E8A1B2C3D4E5F67890123457 /* EmojiSuggestionEngine.swift */,
 				E1E2E3E4E5F6789012345678 /* SceneDelegate.swift */,
+				573DA744621DE2255E48BDA6 /* LiveActivityPlugin.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -264,6 +272,7 @@
 				FLIPDIG012F0BCF250063570B /* FlipDigitView.swift */,
 				A63D32262F0BCF250063570B /* SelectCountdownIntent.swift */,
 				A63D32272F0BCF250063570B /* WidgetDataSync.swift */,
+				6CD3C8D722B06DE5F80B3258 /* CountdownActivityAttributes.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -275,6 +284,7 @@
 				A63D323F2F0BCF250063570B /* LockscreenWidgetView.swift */,
 				A63D322C2F0BCF250063570B /* MediumWidgetView.swift */,
 				A63D322D2F0BCF250063570B /* SmallWidgetView.swift */,
+				AE967CB720A5BEBB206A4681 /* CountdownLiveActivity.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -534,6 +544,8 @@
 				E8A1B2C3D4E5F67890123456 /* EmojiSuggestionEngine.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				F1F2F3F4F5F6789012345678 /* SceneDelegate.swift in Sources */,
+				37DA2252F9FDAFA58C7365A9 /* CountdownActivityAttributes.swift in Sources */,
+				5861E4EE7E80CC5B0C6A45F0 /* LiveActivityPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -551,6 +563,8 @@
 				A63D32402F0BCF250063570B /* LockscreenWidgetView.swift in Sources */,
 				A63D32312F0BCF250063570B /* SelectCountdownIntent.swift in Sources */,
 				B6174CD4190B08F557A8B211 /* CountdownWidget.swift in Sources */,
+				B09EC5D8BA5D3B2FFFE5D630 /* CountdownActivityAttributes.swift in Sources */,
+				78B521133F9FACFEBE11E459 /* CountdownLiveActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
