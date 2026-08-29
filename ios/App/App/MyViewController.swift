@@ -12,6 +12,7 @@ class MyViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(EmojiKeyboardPlugin())
         bridge?.registerPluginInstance(StoreKitDiagnosticsPlugin())
         bridge?.registerPluginInstance(CountdownSyncPlugin())
+        bridge?.registerPluginInstance(LiveActivityPlugin())
 
         // Persist cold-launch URL to UserDefaults (timing-immune). JS reads it via
         // @capacitor/preferences in DeepLinkHandler — avoids the capacitorOpenURL

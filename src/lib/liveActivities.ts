@@ -67,9 +67,12 @@ export async function syncLiveActivities(
   strings: ActivityStrings,
 ): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
+  const activities = selectTodaysActivities(events, new Date(), strings);
   try {
-    await LiveActivity.sync({ activities: selectTodaysActivities(events, new Date(), strings) });
+    await LiveActivity.sync({ activities });
   } catch {
-    // Older iOS, or activities switched off for the app. Nothing to show.
+    // Older iOS, or activities switched off for the app. The plugin logs the
+    // detail under subsystem com.jonatanbjerrekaer.countdown, category
+    // "liveactivity" — read it with `log show --info`.
   }
 }

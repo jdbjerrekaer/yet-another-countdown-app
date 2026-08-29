@@ -1,5 +1,6 @@
 import Foundation
 import Capacitor
+import os.log
 
 #if canImport(ActivityKit)
 import ActivityKit
@@ -21,6 +22,8 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "endAll", returnType: CAPPluginReturnPromise)
     ]
 
+    private static let logger = OSLog(subsystem: "com.jonatanbjerrekaer.countdown", category: "liveactivity")
+
     private let iso: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -30,6 +33,10 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     private func date(from value: String?) -> Date? {
         guard let value else { return nil }
         return iso.date(from: value) ?? ISO8601DateFormatter().date(from: value)
+    }
+
+    override public func load() {
+        os_log("[YAC-LA] plugin loaded", log: Self.logger, type: .info)
     }
 
     @objc func isSupported(_ call: CAPPluginCall) {
@@ -54,6 +61,8 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         let wanted = call.getArray("activities", JSObject.self) ?? []
+        os_log("[YAC-LA] sync called, wanted=%{public}d enabled=%{public}@", log: Self.logger, type: .info,
+               wanted.count, String(describing: ActivityAuthorizationInfo().areActivitiesEnabled))
         let wantedIds = Set(wanted.compactMap { $0["eventId"] as? String })
         var live = Set<String>()
 
@@ -66,6 +75,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         var started: [String] = []
+        var failures: [String] = []
         for item in wanted {
             guard let eventId = item["eventId"] as? String, !live.contains(eventId) else { continue }
             let attributes = CountdownActivityAttributes(
@@ -89,13 +99,17 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
                     _ = try Activity.request(attributes: attributes, contentState: state, pushType: nil)
                 }
                 started.append(eventId)
+                os_log("[YAC-LA] started %{public}@", log: Self.logger, type: .info, eventId)
             } catch {
                 // Out of activity slots, or the user turned them off for this
-                // app between the check above and here. Nothing to recover.
+                // app between the check above and here. Reported back rather
+                // than swallowed — a silent no-show is impossible to diagnose.
+                os_log("[YAC-LA] request failed: %{public}@", log: Self.logger, type: .error, String(describing: error))
+                failures.append("\(eventId): \(error)")
                 continue
             }
         }
-        call.resolve(["started": started, "supported": true])
+        call.resolve(["started": started, "failed": failures, "requested": wanted.count, "supported": true])
         #else
         call.resolve(["started": [], "supported": false])
         #endif
