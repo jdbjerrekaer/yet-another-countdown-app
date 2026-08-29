@@ -55,7 +55,6 @@ import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { createCountdownEvent, hasEventChanged, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
-import { rememberDeleted, SlotLabels, takeRecoverRequests } from '@/lib/recentlyDeleted';
 import BuildInfo from '@/plugins/BuildInfoPlugin';
 
 const WIDGET_SIZES: { id: WidgetSize; labelKey: string }[] = [
@@ -1431,21 +1430,10 @@ export default function Index() {
     setIsModalOpen(true);
   };
 
-  // Text for the iOS Settings rows. Built here because only the app knows the
-  // active language — Settings itself can only render what we store.
-  const slotLabels = (): SlotLabels => ({
-    locale: i18n.language,
-    empty: t('settings.recentlyDeleted.empty'),
-    daysLeft: (days: number) => t('settings.recentlyDeleted.daysLeft', { count: days }),
-  });
-
   const commitDelete = (eventId: string) => {
     const event = pendingDeleteRef.current.get(eventId);
     if (!event) return;
     pendingDeleteRef.current.delete(eventId);
-    // Past the undo window: keep a copy for 30 days so it can be recovered from
-    // the iOS Settings app (Settings > Yet Another Countdown > Recently Deleted).
-    void rememberDeleted(event, slotLabels());
     void cancelEventNotification(eventId);
     void AdsManager.maybeShowInterstitialAfterSave({ kind: 'delete' });
   };
@@ -1511,26 +1499,6 @@ export default function Index() {
 
     return true;
   };
-
-  // Countdowns the user asked back from the iOS Settings app. Settings can only
-  // flip a switch; the recovery itself happens the next time the app is open.
-  useEffect(() => {
-    const check = async () => {
-      const recovered = await takeRecoverRequests(slotLabels());
-      if (!recovered.length) return;
-      trigger('light');
-      restoreEvents(recovered);
-    };
-    void check();
-    if (!isNative) return;
-    const handle = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) void check();
-    });
-    return () => {
-      void handle.then((h) => h.remove());
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNative, i18n.language]);
 
   const handleAddNew = async () => {
     console.log('handleAddNew called');

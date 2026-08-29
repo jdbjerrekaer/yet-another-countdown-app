@@ -302,11 +302,5 @@
       "color": "Reste appuyé ou touche deux fois une couleur pour des nuances plus claires ou plus foncées."
     },
     "clear": "Effacer"
-  },
-  "settings": {
-    "recentlyDeleted": {
-      "empty": "Vide",
-      "daysLeft": "{{count}} jours restants"
-    }
   }
 }

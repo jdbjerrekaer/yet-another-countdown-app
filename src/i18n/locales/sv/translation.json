@@ -302,11 +302,5 @@
       "color": "Håll in eller dubbeltryck på en färg för ljusare och mörkare nyanser."
     },
     "clear": "Rensa"
-  },
-  "settings": {
-    "recentlyDeleted": {
-      "empty": "Tom",
-      "daysLeft": "{{count}} dagar kvar"
-    }
   }
 }

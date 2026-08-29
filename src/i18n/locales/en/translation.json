@@ -324,11 +324,5 @@
       "color": "Hold or double-tap a colour for lighter and darker shades."
     },
     "clear": "Clear"
-  },
-  "settings": {
-    "recentlyDeleted": {
-      "empty": "Empty",
-      "daysLeft": "{{count}} days left"
-    }
   }
 }

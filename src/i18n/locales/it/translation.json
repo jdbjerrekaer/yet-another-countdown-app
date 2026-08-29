@@ -302,11 +302,5 @@
       "color": "Tieni premuto o tocca due volte un colore per tonalità più chiare e più scure."
     },
     "clear": "Cancella"
-  },
-  "settings": {
-    "recentlyDeleted": {
-      "empty": "Vuoto",
-      "daysLeft": "{{count}} giorni rimasti"
-    }
   }
 }

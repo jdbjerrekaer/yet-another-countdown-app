@@ -302,11 +302,5 @@
       "color": "Segure ou toque duas vezes numa cor para tons mais claros e escuros."
     },
     "clear": "Limpar"
-  },
-  "settings": {
-    "recentlyDeleted": {
-      "empty": "Vazio",
-      "daysLeft": "{{count}} dias restantes"
-    }
   }
 }

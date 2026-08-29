@@ -302,11 +302,5 @@
       "color": "Pidä pohjassa tai kaksoisnapauta väriä saadaksesi vaaleampia ja tummempia sävyjä."
     },
     "clear": "Tyhjennä"
-  },
-  "settings": {
-    "recentlyDeleted": {
-      "empty": "Tyhjä",
-      "daysLeft": "{{count}} päivää jäljellä"
-    }
   }
 }
