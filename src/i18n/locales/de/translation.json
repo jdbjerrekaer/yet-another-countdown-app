@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Keine Countdowns",
-    "createFirst": "Tippe auf das + Symbol, um deinen ersten Countdown zu erstellen"
+    "createFirst": "Tippe auf das + Symbol, um deinen ersten Countdown zu erstellen",
+    "orImportFromCalendar": "Oder aus dem Kalender importieren"
   },
   "feedback": {
     "eventCreated": "Ereignis erstellt",
@@ -53,6 +54,7 @@
       "secondsShort_one": "Sek",
       "secondsShort_other": "Sek"
     },
+    "homeScreenTip": "Widget zum Home-Bildschirm hinzufügen 📱",
     "daysAgoText": "vor",
     "daysAgoTextUpper_one": "Tag zuvor",
     "daysAgoTextUpper_other": "Tage zuvor",
@@ -116,8 +118,12 @@
     "yearlySuggestionHint": "Soll dies jährlich wiederholt werden?",
     "yearlySuggestionReason": "Dieses Datum liegt über ein Jahr zurück",
     "enableYearly": "Aktivieren",
+    "dateMaxHelper": "Bis zu 5 Jahre im Voraus",
     "setSpecificTimeLabel": "Genaue Uhrzeit festlegen",
-    "setSpecificTimeSublabel": "Countdown bis zu einem genauen Moment"
+    "setSpecificTimeSublabel": "Countdown bis zu einem genauen Moment",
+    "timeFormatLabel": "Eigene Zeitanzeige",
+    "timeFormatSublabelToDays": "Diesen Countdown nur in Tagen anzeigen",
+    "timeFormatSublabelToSemantic": "Diesen Countdown in Monaten, Wochen und Tagen anzeigen"
   },
   "dialogs": {
     "dateChanged": {
@@ -158,8 +164,39 @@
     "daysAgo_other": "vor {{count}} Tagen",
     "format": "{{days}}T {{hours}}Std {{minutes}}Min"
   },
+  "trackingConsent": {
+    "title": "Kurz zu den Anzeigen",
+    "intro": "Anzeigen halten die App kostenlos",
+    "pointsLabel": "Was die Einwilligung bedeutet",
+    "points": [
+      "Personalisierte Anzeigen bringen etwas mehr ein als zufällige",
+      "Ich sammle, verfolge, verkaufe oder versende deine Daten nicht",
+      "Google und Apple fragen dich danach vielleicht zur Anzeigenpersonalisierung. Die App funktioniert so oder so"
+    ],
+    "continue": "OK"
+  },
+  "relative": {
+    "year_one": "{{count}} Jahr",
+    "year_other": "{{count}} Jahre",
+    "month_one": "{{count}} Monat",
+    "month_other": "{{count}} Monate",
+    "week_one": "{{count}} Woche",
+    "week_other": "{{count}} Wochen",
+    "day_one": "{{count}} Tag",
+    "day_other": "{{count}} Tage",
+    "hour_one": "{{count}} Stunde",
+    "hour_other": "{{count}} Stunden",
+    "minute_one": "{{count}} Minute",
+    "minute_other": "{{count}} Minuten",
+    "ago": "vor {{parts}}",
+    "left": "noch {{parts}}"
+  },
   "notifications": {
-    "reachedZero": "Dein Countdown ist abgelaufen!"
+    "reachedZero": "Dein Countdown ist abgelaufen!",
+    "enableTitle": "Mitteilungen aktivieren?",
+    "enableMessage": "Möchtest du erinnert werden, wenn dieser Countdown null erreicht?",
+    "enable": "Aktivieren",
+    "notNow": "Jetzt nicht"
   },
   "calendar": {
     "importTitle": "Aus Kalender importieren",
@@ -216,6 +253,7 @@
     "purchaseSuccess": "Werbung wurde erfolgreich entfernt.",
     "purchaseError": "Kauf fehlgeschlagen. Bitte erneut versuchen.",
     "loadError": "Produkte können derzeit nicht geladen werden.",
+    "retry": "Erneut versuchen",
     "loadingProducts": "Wird geladen...",
     "webUnavailable": "Käufe sind in der iOS-App verfügbar.",
     "disclaimer": "Einmaliger Kauf. Kann jederzeit wiederhergestellt werden.",
@@ -231,22 +269,6 @@
         "badge": "Unterstützer"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} Jahr",
-    "year_other": "{{count}} Jahre",
-    "month_one": "{{count}} Monat",
-    "month_other": "{{count}} Monate",
-    "week_one": "{{count}} Woche",
-    "week_other": "{{count}} Wochen",
-    "day_one": "{{count}} Tag",
-    "day_other": "{{count}} Tage",
-    "hour_one": "{{count}} Stunde",
-    "hour_other": "{{count}} Stunden",
-    "minute_one": "{{count}} Minute",
-    "minute_other": "{{count}} Minuten",
-    "ago": "vor {{parts}}",
-    "left": "noch {{parts}}"
   },
   "firstRun": {
     "title": "Was ist dein erster Countdown?",

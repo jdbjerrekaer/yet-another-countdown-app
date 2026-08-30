@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Inga nedräkningar",
-    "createFirst": "Tryck på + knappen för att skapa din första nedräkning"
+    "createFirst": "Tryck på + knappen för att skapa din första nedräkning",
+    "orImportFromCalendar": "Eller importera från Kalender"
   },
   "feedback": {
     "eventCreated": "Händelse skapad",
@@ -53,6 +54,7 @@
       "secondsShort_one": "Sek",
       "secondsShort_other": "Sek"
     },
+    "homeScreenTip": "Lägg till en widget på hemskärmen 📱",
     "daysAgoText": "sedan",
     "daysAgoTextUpper_one": "dag sedan",
     "daysAgoTextUpper_other": "dagar sedan",
@@ -116,8 +118,12 @@
     "yearlySuggestionHint": "Ska denna upprepas varje år?",
     "yearlySuggestionReason": "Detta datum inträffade för över ett år sedan",
     "enableYearly": "Aktivera",
+    "dateMaxHelper": "Upp till 5 år framåt",
     "setSpecificTimeLabel": "Ange specifik tid",
-    "setSpecificTimeSublabel": "Nedräkning till ett exakt ögonblick"
+    "setSpecificTimeSublabel": "Nedräkning till ett exakt ögonblick",
+    "timeFormatLabel": "Anpassad visning",
+    "timeFormatSublabelToDays": "Visa den här nedräkningen bara i dagar",
+    "timeFormatSublabelToSemantic": "Visa den här nedräkningen i månader, veckor och dagar"
   },
   "dialogs": {
     "dateChanged": {
@@ -158,8 +164,39 @@
     "daysAgo_other": "{{count}} dagar sedan",
     "format": "{{days}}d {{hours}}t {{minutes}}m"
   },
+  "trackingConsent": {
+    "title": "Kort om annonser",
+    "intro": "Annonser håller appen gratis",
+    "pointsLabel": "Vad samtycket betyder",
+    "points": [
+      "Personliga annonser ger lite mer än slumpmässiga annonser",
+      "Jag samlar inte in, spårar, säljer eller skickar dina data någonstans",
+      "Google och Apple kan fråga om annonspersonalisering härnäst. Appen fungerar ändå"
+    ],
+    "continue": "OK"
+  },
+  "relative": {
+    "year_one": "{{count}} år",
+    "year_other": "{{count}} år",
+    "month_one": "{{count}} månad",
+    "month_other": "{{count}} månader",
+    "week_one": "{{count}} vecka",
+    "week_other": "{{count}} veckor",
+    "day_one": "{{count}} dag",
+    "day_other": "{{count}} dagar",
+    "hour_one": "{{count}} timme",
+    "hour_other": "{{count}} timmar",
+    "minute_one": "{{count}} minut",
+    "minute_other": "{{count}} minuter",
+    "ago": "{{parts}} sedan",
+    "left": "{{parts}} kvar"
+  },
   "notifications": {
-    "reachedZero": "Din nedräkning är slut!"
+    "reachedZero": "Din nedräkning är slut!",
+    "enableTitle": "Slå på notiser?",
+    "enableMessage": "Vill du ha en påminnelse när den här nedräkningen når noll?",
+    "enable": "Slå på",
+    "notNow": "Inte nu"
   },
   "calendar": {
     "importTitle": "Importera från kalender",
@@ -216,6 +253,7 @@
     "purchaseSuccess": "Annonserna har tagits bort.",
     "purchaseError": "Köp misslyckades. Försök igen.",
     "loadError": "Kunde inte ladda produkter just nu.",
+    "retry": "Försök igen",
     "loadingProducts": "Hämtar priser...",
     "webUnavailable": "Köp är tillgängliga i iOS-appen.",
     "disclaimer": "Engångsköp. Kan alltid återställas.",
@@ -231,22 +269,6 @@
         "badge": "Supporter"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} år",
-    "year_other": "{{count}} år",
-    "month_one": "{{count}} månad",
-    "month_other": "{{count}} månader",
-    "week_one": "{{count}} vecka",
-    "week_other": "{{count}} veckor",
-    "day_one": "{{count}} dag",
-    "day_other": "{{count}} dagar",
-    "hour_one": "{{count}} timme",
-    "hour_other": "{{count}} timmar",
-    "minute_one": "{{count}} minut",
-    "minute_other": "{{count}} minuter",
-    "ago": "{{parts}} sedan",
-    "left": "{{parts}} kvar"
   },
   "firstRun": {
     "title": "Vad är din första nedräkning?",

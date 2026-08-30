@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Ei laskureita",
-    "createFirst": "Napauta + painiketta luodaksesi ensimmäisen laskurisi"
+    "createFirst": "Napauta + painiketta luodaksesi ensimmäisen laskurisi",
+    "orImportFromCalendar": "Tai tuo Kalenterista"
   },
   "feedback": {
     "eventCreated": "Tapahtuma luotu",
@@ -53,6 +54,7 @@
       "secondsShort_one": "Sek",
       "secondsShort_other": "Sek"
     },
+    "homeScreenTip": "Lisää widget aloitusnäytölle 📱",
     "daysAgoText": "sitten",
     "daysAgoTextUpper_one": "päivä sitten",
     "daysAgoTextUpper_other": "päivää sitten",
@@ -116,8 +118,12 @@
     "yearlySuggestionHint": "Toistetaanko tämä joka vuosi?",
     "yearlySuggestionReason": "Tämä päivämäärä oli yli vuosi sitten",
     "enableYearly": "Ota käyttöön",
+    "dateMaxHelper": "Enintään 5 vuotta eteenpäin",
     "setSpecificTimeLabel": "Aseta tarkka aika",
-    "setSpecificTimeSublabel": "Lähtölaskenta tiettyyn hetkeen"
+    "setSpecificTimeSublabel": "Lähtölaskenta tiettyyn hetkeen",
+    "timeFormatLabel": "Mukautettu aikanäyttö",
+    "timeFormatSublabelToDays": "Näytä tämä laskuri vain päivinä",
+    "timeFormatSublabelToSemantic": "Näytä tämä laskuri kuukausina, viikkoina ja päivinä"
   },
   "dialogs": {
     "dateChanged": {
@@ -158,8 +164,39 @@
     "daysAgo_other": "{{count}} päivää sitten",
     "format": "{{days}}pv {{hours}}t {{minutes}}min"
   },
+  "trackingConsent": {
+    "title": "Lyhyesti mainoksista",
+    "intro": "Mainokset pitävät sovelluksen ilmaisena",
+    "pointsLabel": "Mitä suostumus tarkoittaa",
+    "points": [
+      "Personoidut mainokset tuottavat hieman enemmän kuin satunnaiset",
+      "En kerää, seuraa, myy enkä lähetä tietojasi minnekään",
+      "Google ja Apple saattavat seuraavaksi kysyä mainosten personoinnista. Sovellus toimii joka tapauksessa"
+    ],
+    "continue": "OK"
+  },
+  "relative": {
+    "year_one": "{{count}} vuosi",
+    "year_other": "{{count}} vuotta",
+    "month_one": "{{count}} kuukausi",
+    "month_other": "{{count}} kuukautta",
+    "week_one": "{{count}} viikko",
+    "week_other": "{{count}} viikkoa",
+    "day_one": "{{count}} päivä",
+    "day_other": "{{count}} päivää",
+    "hour_one": "{{count}} tunti",
+    "hour_other": "{{count}} tuntia",
+    "minute_one": "{{count}} minuutti",
+    "minute_other": "{{count}} minuuttia",
+    "ago": "{{parts}} sitten",
+    "left": "{{parts}} jäljellä"
+  },
   "notifications": {
-    "reachedZero": "Laskuri on nollassa!"
+    "reachedZero": "Laskuri on nollassa!",
+    "enableTitle": "Otetaanko ilmoitukset käyttöön?",
+    "enableMessage": "Haluatko muistutuksen, kun tämä laskuri saavuttaa nollan?",
+    "enable": "Ota käyttöön",
+    "notNow": "Ei nyt"
   },
   "calendar": {
     "importTitle": "Tuo kalenterista",
@@ -216,6 +253,7 @@
     "purchaseSuccess": "Mainokset on nyt poistettu.",
     "purchaseError": "Osto epäonnistui. Yritä uudelleen.",
     "loadError": "Tuotteita ei voitu ladata.",
+    "retry": "Yritä uudelleen",
     "loadingProducts": "Ladataan...",
     "webUnavailable": "Ostot ovat saatavilla iOS-sovelluksessa.",
     "disclaimer": "Kertaostos. Voidaan palauttaa milloin vain.",
@@ -231,22 +269,6 @@
         "badge": "Tukija"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} vuosi",
-    "year_other": "{{count}} vuotta",
-    "month_one": "{{count}} kuukausi",
-    "month_other": "{{count}} kuukautta",
-    "week_one": "{{count}} viikko",
-    "week_other": "{{count}} viikkoa",
-    "day_one": "{{count}} päivä",
-    "day_other": "{{count}} päivää",
-    "hour_one": "{{count}} tunti",
-    "hour_other": "{{count}} tuntia",
-    "minute_one": "{{count}} minuutti",
-    "minute_other": "{{count}} minuuttia",
-    "ago": "{{parts}} sitten",
-    "left": "{{parts}} jäljellä"
   },
   "firstRun": {
     "title": "Mikä on ensimmäinen laskurisi?",

@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Sin cuentas regresivas",
-    "createFirst": "Toca el botón + para crear tu primera cuenta regresiva"
+    "createFirst": "Toca el botón + para crear tu primera cuenta regresiva",
+    "orImportFromCalendar": "O importa desde el Calendario"
   },
   "feedback": {
     "eventCreated": "Evento creado",
@@ -53,6 +54,7 @@
       "secondsShort_one": "Seg",
       "secondsShort_other": "Seg"
     },
+    "homeScreenTip": "Añade un widget a la pantalla de inicio 📱",
     "daysAgoText": "antes",
     "daysAgoTextUpper_one": "día antes",
     "daysAgoTextUpper_other": "días antes",
@@ -116,8 +118,12 @@
     "yearlySuggestionHint": "¿Repetir anualmente?",
     "yearlySuggestionReason": "Esta fecha ocurrió hace más de un año",
     "enableYearly": "Activar",
+    "dateMaxHelper": "Hasta 5 años en el futuro",
     "setSpecificTimeLabel": "Establecer hora exacta",
-    "setSpecificTimeSublabel": "Cuenta regresiva hasta un momento preciso"
+    "setSpecificTimeSublabel": "Cuenta regresiva hasta un momento preciso",
+    "timeFormatLabel": "Visualización personalizada",
+    "timeFormatSublabelToDays": "Mostrar esta cuenta regresiva solo en días",
+    "timeFormatSublabelToSemantic": "Mostrar esta cuenta regresiva en meses, semanas y días"
   },
   "dialogs": {
     "dateChanged": {
@@ -158,8 +164,39 @@
     "daysAgo_other": "hace {{count}} días",
     "format": "{{days}}d {{hours}}h {{minutes}}m"
   },
+  "trackingConsent": {
+    "title": "Una nota rápida sobre los anuncios",
+    "intro": "Los anuncios mantienen la app gratis",
+    "pointsLabel": "Qué significa el consentimiento",
+    "points": [
+      "Los anuncios personalizados pagan un poco más que los aleatorios",
+      "No recopilo, rastreo, vendo ni envío tus datos a ningún sitio",
+      "Puede que Google y Apple te pregunten después sobre la personalización de anuncios. La app funciona igual"
+    ],
+    "continue": "OK"
+  },
+  "relative": {
+    "year_one": "{{count}} año",
+    "year_other": "{{count}} años",
+    "month_one": "{{count}} mes",
+    "month_other": "{{count}} meses",
+    "week_one": "{{count}} semana",
+    "week_other": "{{count}} semanas",
+    "day_one": "{{count}} día",
+    "day_other": "{{count}} días",
+    "hour_one": "{{count}} hora",
+    "hour_other": "{{count}} horas",
+    "minute_one": "{{count}} minuto",
+    "minute_other": "{{count}} minutos",
+    "ago": "hace {{parts}}",
+    "left": "en {{parts}}"
+  },
   "notifications": {
-    "reachedZero": "¡Tu cuenta regresiva ha terminado!"
+    "reachedZero": "¡Tu cuenta regresiva ha terminado!",
+    "enableTitle": "¿Activar notificaciones?",
+    "enableMessage": "¿Quieres un recordatorio cuando esta cuenta regresiva llegue a cero?",
+    "enable": "Activar",
+    "notNow": "Ahora no"
   },
   "calendar": {
     "importTitle": "Importar calendario",
@@ -216,6 +253,7 @@
     "purchaseSuccess": "Los anuncios han sido eliminados.",
     "purchaseError": "Error en la compra. Inténtalo de nuevo.",
     "loadError": "No se pudieron cargar los productos.",
+    "retry": "Reintentar",
     "loadingProducts": "Cargando...",
     "webUnavailable": "Las compras están disponibles en la app de iOS.",
     "disclaimer": "Compra única. Se puede restaurar en cualquier momento.",
@@ -231,22 +269,6 @@
         "badge": "Colaborador"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} año",
-    "year_other": "{{count}} años",
-    "month_one": "{{count}} mes",
-    "month_other": "{{count}} meses",
-    "week_one": "{{count}} semana",
-    "week_other": "{{count}} semanas",
-    "day_one": "{{count}} día",
-    "day_other": "{{count}} días",
-    "hour_one": "{{count}} hora",
-    "hour_other": "{{count}} horas",
-    "minute_one": "{{count}} minuto",
-    "minute_other": "{{count}} minutos",
-    "ago": "hace {{parts}}",
-    "left": "en {{parts}}"
   },
   "firstRun": {
     "title": "¿Cuál es tu primera cuenta atrás?",

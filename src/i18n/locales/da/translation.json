@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Ingen nedtællinger",
-    "createFirst": "Tryk på + knappen for at oprette din første nedtælling"
+    "createFirst": "Tryk på + knappen for at oprette din første nedtælling",
+    "orImportFromCalendar": "Eller importér fra Kalender"
   },
   "feedback": {
     "eventCreated": "Begivenhed oprettet",
@@ -53,6 +54,7 @@
       "secondsShort_one": "Sek",
       "secondsShort_other": "Sek"
     },
+    "homeScreenTip": "Tilføj en widget på hjemmeskærmen 📱",
     "daysAgoText": "siden",
     "daysAgoTextUpper_one": "dag siden",
     "daysAgoTextUpper_other": "dage siden",
@@ -116,8 +118,12 @@
     "yearlySuggestionHint": "Skal denne gentages hvert år?",
     "yearlySuggestionReason": "Denne dato fandt sted for over et år siden",
     "enableYearly": "Aktiver",
+    "dateMaxHelper": "Op til 5 år frem",
     "setSpecificTimeLabel": "Indstil specifik tid",
-    "setSpecificTimeSublabel": "Nedtæl til et præcist tidspunkt"
+    "setSpecificTimeSublabel": "Nedtæl til et præcist tidspunkt",
+    "timeFormatLabel": "Tilpasset visning",
+    "timeFormatSublabelToDays": "Vis kun denne nedtælling i dage",
+    "timeFormatSublabelToSemantic": "Vis denne nedtælling i måneder, uger og dage"
   },
   "dialogs": {
     "dateChanged": {
@@ -158,8 +164,39 @@
     "daysAgo_other": "{{count}} dage siden",
     "format": "{{days}}d {{hours}}t {{minutes}}m"
   },
+  "trackingConsent": {
+    "title": "Kort om annoncer",
+    "intro": "Annoncer holder appen gratis",
+    "pointsLabel": "Hvad samtykket betyder",
+    "points": [
+      "Personlige annoncer giver lidt mere end tilfældige annoncer",
+      "Jeg indsamler, sporer, sælger eller sender ikke dine data nogen steder",
+      "Google og Apple spørger måske om annoncepersonalisering bagefter. Appen virker uanset hvad"
+    ],
+    "continue": "OK"
+  },
+  "relative": {
+    "year_one": "{{count}} år",
+    "year_other": "{{count}} år",
+    "month_one": "{{count}} måned",
+    "month_other": "{{count}} måneder",
+    "week_one": "{{count}} uge",
+    "week_other": "{{count}} uger",
+    "day_one": "{{count}} dag",
+    "day_other": "{{count}} dage",
+    "hour_one": "{{count}} time",
+    "hour_other": "{{count}} timer",
+    "minute_one": "{{count}} minut",
+    "minute_other": "{{count}} minutter",
+    "ago": "{{parts}} siden",
+    "left": "{{parts}} tilbage"
+  },
   "notifications": {
-    "reachedZero": "Din nedtælling er slut!"
+    "reachedZero": "Din nedtælling er slut!",
+    "enableTitle": "Slå notifikationer til?",
+    "enableMessage": "Vil du have en påmindelse, når denne nedtælling rammer nul?",
+    "enable": "Slå til",
+    "notNow": "Ikke nu"
   },
   "calendar": {
     "importTitle": "Importer fra kalender",
@@ -216,6 +253,7 @@
     "purchaseSuccess": "Reklamerne er nu fjernet.",
     "purchaseError": "Køb mislykkedes. Prøv igen.",
     "loadError": "Kunne ikke hente produkter lige nu.",
+    "retry": "Prøv igen",
     "loadingProducts": "Henter priser...",
     "webUnavailable": "Køb er tilgængelige i iOS-appen.",
     "disclaimer": "Engangskøb. Kan altid gendannes.",
@@ -231,22 +269,6 @@
         "badge": "Supporter"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} år",
-    "year_other": "{{count}} år",
-    "month_one": "{{count}} måned",
-    "month_other": "{{count}} måneder",
-    "week_one": "{{count}} uge",
-    "week_other": "{{count}} uger",
-    "day_one": "{{count}} dag",
-    "day_other": "{{count}} dage",
-    "hour_one": "{{count}} time",
-    "hour_other": "{{count}} timer",
-    "minute_one": "{{count}} minut",
-    "minute_other": "{{count}} minutter",
-    "ago": "{{parts}} siden",
-    "left": "{{parts}} tilbage"
   },
   "firstRun": {
     "title": "Hvad er din første nedtælling?",

@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Aucun compte à rebours",
-    "createFirst": "Appuyez sur le bouton + pour créer votre premier compte à rebours"
+    "createFirst": "Appuyez sur le bouton + pour créer votre premier compte à rebours",
+    "orImportFromCalendar": "Ou importez depuis le Calendrier"
   },
   "feedback": {
     "eventCreated": "Évènement créé",
@@ -53,6 +54,7 @@
       "secondsShort_one": "Sec",
       "secondsShort_other": "Sec"
     },
+    "homeScreenTip": "Ajoutez un widget à l'écran d'accueil 📱",
     "daysAgoText": "il y a",
     "daysAgoTextUpper_one": "jour",
     "daysAgoTextUpper_other": "jours",
@@ -116,8 +118,12 @@
     "yearlySuggestionHint": "Répéter chaque année ?",
     "yearlySuggestionReason": "Cette date remonte à plus d'un an",
     "enableYearly": "Activer",
+    "dateMaxHelper": "Jusqu'à 5 ans à l'avance",
     "setSpecificTimeLabel": "Définir une heure précise",
-    "setSpecificTimeSublabel": "Compte à rebours jusqu'à un moment exact"
+    "setSpecificTimeSublabel": "Compte à rebours jusqu'à un moment exact",
+    "timeFormatLabel": "Affichage personnalisé",
+    "timeFormatSublabelToDays": "Afficher ce compte à rebours uniquement en jours",
+    "timeFormatSublabelToSemantic": "Afficher ce compte à rebours en mois, semaines et jours"
   },
   "dialogs": {
     "dateChanged": {
@@ -158,8 +164,39 @@
     "daysAgo_other": "il y a {{count}} jours",
     "format": "{{days}}j {{hours}}h {{minutes}}m"
   },
+  "trackingConsent": {
+    "title": "Un mot sur les publicités",
+    "intro": "Les publicités permettent de garder l'app gratuite",
+    "pointsLabel": "Ce que signifie le consentement",
+    "points": [
+      "Les publicités personnalisées rapportent un peu plus que les publicités aléatoires",
+      "Je ne collecte, ne suis, ne vends ni n'envoie vos données nulle part",
+      "Google et Apple vous poseront peut-être ensuite une question sur la personnalisation. L'app fonctionne dans les deux cas"
+    ],
+    "continue": "OK"
+  },
+  "relative": {
+    "year_one": "{{count}} an",
+    "year_other": "{{count}} ans",
+    "month_one": "{{count}} mois",
+    "month_other": "{{count}} mois",
+    "week_one": "{{count}} semaine",
+    "week_other": "{{count}} semaines",
+    "day_one": "{{count}} jour",
+    "day_other": "{{count}} jours",
+    "hour_one": "{{count}} heure",
+    "hour_other": "{{count}} heures",
+    "minute_one": "{{count}} minute",
+    "minute_other": "{{count}} minutes",
+    "ago": "il y a {{parts}}",
+    "left": "dans {{parts}}"
+  },
   "notifications": {
-    "reachedZero": "Le compte à rebours est terminé !"
+    "reachedZero": "Le compte à rebours est terminé !",
+    "enableTitle": "Activer les notifications ?",
+    "enableMessage": "Souhaitez-vous un rappel lorsque ce compte à rebours atteint zéro ?",
+    "enable": "Activer",
+    "notNow": "Plus tard"
   },
   "calendar": {
     "importTitle": "Importer du calendrier",
@@ -216,6 +253,7 @@
     "purchaseSuccess": "Les publicités ont été supprimées.",
     "purchaseError": "L'achat a échoué. Réessayez.",
     "loadError": "Impossible de charger les produits.",
+    "retry": "Réessayer",
     "loadingProducts": "Chargement...",
     "webUnavailable": "Achats disponibles dans l'app iOS.",
     "disclaimer": "Achat unique. Peut être restauré à tout moment.",
@@ -231,22 +269,6 @@
         "badge": "Supporter"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} an",
-    "year_other": "{{count}} ans",
-    "month_one": "{{count}} mois",
-    "month_other": "{{count}} mois",
-    "week_one": "{{count}} semaine",
-    "week_other": "{{count}} semaines",
-    "day_one": "{{count}} jour",
-    "day_other": "{{count}} jours",
-    "hour_one": "{{count}} heure",
-    "hour_other": "{{count}} heures",
-    "minute_one": "{{count}} minute",
-    "minute_other": "{{count}} minutes",
-    "ago": "il y a {{parts}}",
-    "left": "dans {{parts}}"
   },
   "firstRun": {
     "title": "C’est quoi ton premier compte à rebours ?",

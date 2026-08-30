@@ -2,7 +2,8 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Нет отсчетов",
-    "createFirst": "Нажмите на кнопку +, чтобы создать свой первый отсчет"
+    "createFirst": "Нажмите на кнопку +, чтобы создать свой первый отсчет",
+    "orImportFromCalendar": "Или импортируйте из Календаря"
   },
   "feedback": {
     "eventCreated": "Событие создано",
@@ -37,38 +38,39 @@
     "countingDown": "Идет отсчет",
     "units": {
       "days_one": "день",
-      "days_few": "дня",
-      "days_many": "дней",
       "days_other": "дней",
       "daysShort_one": "День",
-      "daysShort_few": "Дня",
-      "daysShort_many": "Дней",
       "daysShort_other": "Дней",
       "hours_one": "час",
-      "hours_few": "часа",
-      "hours_many": "часов",
       "hours_other": "часов",
       "hoursShort_one": "Час",
-      "hoursShort_few": "Часа",
-      "hoursShort_many": "Часов",
       "hoursShort_other": "Часов",
       "minutes_one": "минута",
-      "minutes_few": "минуты",
-      "minutes_many": "минут",
       "minutes_other": "минут",
       "minutesShort_one": "Мин",
-      "minutesShort_few": "Мин",
-      "minutesShort_many": "Мин",
       "minutesShort_other": "Мин",
       "seconds_one": "секунда",
-      "seconds_few": "секунды",
-      "seconds_many": "секунд",
       "seconds_other": "секунд",
       "secondsShort_one": "Сек",
+      "secondsShort_other": "Сек",
+      "days_few": "дня",
+      "days_many": "дней",
+      "daysShort_few": "Дня",
+      "daysShort_many": "Дней",
+      "hours_few": "часа",
+      "hours_many": "часов",
+      "hoursShort_few": "Часа",
+      "hoursShort_many": "Часов",
+      "minutes_few": "минуты",
+      "minutes_many": "минут",
+      "minutesShort_few": "Мин",
+      "minutesShort_many": "Мин",
+      "seconds_few": "секунды",
+      "seconds_many": "секунд",
       "secondsShort_few": "Сек",
-      "secondsShort_many": "Сек",
-      "secondsShort_other": "Сек"
+      "secondsShort_many": "Сек"
     },
+    "homeScreenTip": "Добавьте виджет на экран «Домой» 📱",
     "daysAgoText": "назад",
     "daysAgoTextUpper_one": "день назад",
     "daysAgoTextUpper_other": "дней назад",
@@ -132,8 +134,12 @@
     "yearlySuggestionHint": "Повторять ежегодно?",
     "yearlySuggestionReason": "Событие было более года назад",
     "enableYearly": "Включить",
+    "dateMaxHelper": "Не более чем на 5 лет вперёд",
     "setSpecificTimeLabel": "Указать точное время",
-    "setSpecificTimeSublabel": "Обратный отсчёт до конкретного момента"
+    "setSpecificTimeSublabel": "Обратный отсчёт до конкретного момента",
+    "timeFormatLabel": "Свой формат времени",
+    "timeFormatSublabelToDays": "Показывать этот отсчёт только в днях",
+    "timeFormatSublabelToSemantic": "Показывать этот отсчёт в месяцах, неделях и днях"
   },
   "dialogs": {
     "dateChanged": {
@@ -157,11 +163,11 @@
     "yearlyMigration": {
       "title": "Сделать ежегодным?",
       "message_one": "У вас {{count}} событие более года назад. Сделать его ежегодным?",
-      "message_few": "У вас {{count}} события более года назад. Сделать их ежегодными?",
-      "message_many": "У вас {{count}} событий более года назад. Сделать их ежегодными?",
       "message_other": "У вас {{count}} событий более года назад. Сделать их ежегодными?",
       "convert": "Сделать ежегодными",
-      "skip": "Пропустить"
+      "skip": "Пропустить",
+      "message_few": "У вас {{count}} события более года назад. Сделать их ежегодными?",
+      "message_many": "У вас {{count}} событий более года назад. Сделать их ежегодными?"
     },
     "suggestYearly": {
       "title": "Сделать ежегодным?",
@@ -173,13 +179,56 @@
   "countdown": {
     "today": "Сегодня! 🎉",
     "daysAgo_one": "{{count}} день назад",
-    "daysAgo_few": "{{count}} дня назад",
-    "daysAgo_many": "{{count}} дней назад",
     "daysAgo_other": "{{count}} дней назад",
-    "format": "{{days}}д {{hours}}ч {{minutes}}м"
+    "format": "{{days}}д {{hours}}ч {{minutes}}м",
+    "daysAgo_few": "{{count}} дня назад",
+    "daysAgo_many": "{{count}} дней назад"
+  },
+  "trackingConsent": {
+    "title": "Коротко о рекламе",
+    "intro": "Реклама позволяет приложению оставаться бесплатным",
+    "pointsLabel": "Что означает согласие",
+    "points": [
+      "Персонализированная реклама приносит немного больше, чем случайная",
+      "Я не собираю, не отслеживаю, не продаю и никуда не отправляю ваши данные",
+      "Далее Google и Apple могут спросить о персонализации рекламы. Приложение работает в любом случае"
+    ],
+    "continue": "ОК"
+  },
+  "relative": {
+    "year_one": "{{count}} год",
+    "month_one": "{{count}} месяц",
+    "week_one": "{{count}} неделя",
+    "day_one": "{{count}} день",
+    "hour_one": "{{count}} час",
+    "minute_one": "{{count}} минута",
+    "ago": "{{parts}} назад",
+    "left": "через {{parts}}",
+    "year_few": "{{count}} года",
+    "year_many": "{{count}} лет",
+    "month_few": "{{count}} месяца",
+    "month_many": "{{count}} месяцев",
+    "week_few": "{{count}} недели",
+    "week_many": "{{count}} недель",
+    "day_few": "{{count}} дня",
+    "day_many": "{{count}} дней",
+    "hour_few": "{{count}} часа",
+    "hour_many": "{{count}} часов",
+    "minute_few": "{{count}} минуты",
+    "minute_many": "{{count}} минут",
+    "year_other": "{{count}} года",
+    "month_other": "{{count}} месяца",
+    "week_other": "{{count}} недели",
+    "day_other": "{{count}} дня",
+    "hour_other": "{{count}} часа",
+    "minute_other": "{{count}} минуты"
   },
   "notifications": {
-    "reachedZero": "Обратный отсчет закончился!"
+    "reachedZero": "Обратный отсчет закончился!",
+    "enableTitle": "Включить уведомления?",
+    "enableMessage": "Напомнить, когда этот отсчёт дойдёт до нуля?",
+    "enable": "Включить",
+    "notNow": "Не сейчас"
   },
   "calendar": {
     "importTitle": "Импорт из календаря",
@@ -190,12 +239,8 @@
     "noEventsTitle": "События не найдены",
     "noEventsMessage": "В вашем календаре не найдено дней рождения или юбилеев",
     "eventsFound_one": "Найдено {{count}} событие",
-    "eventsFound_few": "Найдено {{count}} события",
-    "eventsFound_many": "Найдено {{count}} событий",
     "eventsFound_other": "Найдено {{count}} событий",
     "recurringEventsFound_one": "Найдено {{count}} ежегодное событие",
-    "recurringEventsFound_few": "Найдено {{count}} ежегодных события",
-    "recurringEventsFound_many": "Найдено {{count}} ежегодных событий",
     "recurringEventsFound_other": "Найдено {{count}} ежегодных событий",
     "searchPlaceholder": "Поиск событий...",
     "selectAll": "Выбрать все",
@@ -211,7 +256,11 @@
     "permissionDeniedTitle": "Нет доступа",
     "permissionDeniedMessage": "Разрешите доступ к календарю в Настройках для импорта событий.",
     "openSettings": "Открыть Настройки",
-    "clearFilter": "Все"
+    "clearFilter": "Все",
+    "eventsFound_few": "Найдено {{count}} события",
+    "eventsFound_many": "Найдено {{count}} событий",
+    "recurringEventsFound_few": "Найдено {{count}} ежегодных события",
+    "recurringEventsFound_many": "Найдено {{count}} ежегодных событий"
   },
   "aria": {
     "saveEvent": "Сохранить событие",
@@ -240,6 +289,7 @@
     "purchaseSuccess": "Реклама успешно отключена.",
     "purchaseError": "Ошибка покупки. Попробуйте еще раз.",
     "loadError": "Не удалось загрузить продукты.",
+    "retry": "Повторить",
     "loadingProducts": "Загрузка...",
     "webUnavailable": "Покупки доступны в приложении для iOS.",
     "disclaimer": "Разовая покупка. Можно восстановить в любой момент.",
@@ -255,28 +305,6 @@
         "badge": "Поддержка"
       }
     }
-  },
-  "relative": {
-    "year_one": "{{count}} год",
-    "year_few": "{{count}} года",
-    "year_many": "{{count}} лет",
-    "month_one": "{{count}} месяц",
-    "month_few": "{{count}} месяца",
-    "month_many": "{{count}} месяцев",
-    "week_one": "{{count}} неделя",
-    "week_few": "{{count}} недели",
-    "week_many": "{{count}} недель",
-    "day_one": "{{count}} день",
-    "day_few": "{{count}} дня",
-    "day_many": "{{count}} дней",
-    "hour_one": "{{count}} час",
-    "hour_few": "{{count}} часа",
-    "hour_many": "{{count}} часов",
-    "minute_one": "{{count}} минута",
-    "minute_few": "{{count}} минуты",
-    "minute_many": "{{count}} минут",
-    "ago": "{{parts}} назад",
-    "left": "через {{parts}}"
   },
   "firstRun": {
     "title": "Какой у тебя первый отсчёт?",
@@ -323,19 +351,19 @@
     "previewPlaceholder": "Твой отсчёт",
     "create": "Создать",
     "daysAway_one": "Остался {{count}} день",
-    "daysAway_few": "Осталось {{count}} дня",
-    "daysAway_many": "Осталось {{count}} дней",
     "daysAway_other": "Осталось {{count}} дней",
     "daysSince_one": "{{count}} день пока что",
-    "daysSince_few": "{{count}} дня пока что",
-    "daysSince_many": "{{count}} дней пока что",
     "daysSince_other": "{{count}} дней пока что",
     "emptyCta": "Создать первый отсчёт",
     "hint": {
       "shape": "Удерживай и потяни. Или оставь как есть.",
       "color": "Удерживай или дважды нажми на цвет, чтобы выбрать светлее или темнее."
     },
-    "clear": "Очистить"
+    "clear": "Очистить",
+    "daysAway_few": "Осталось {{count}} дня",
+    "daysAway_many": "Осталось {{count}} дней",
+    "daysSince_few": "{{count}} дня пока что",
+    "daysSince_many": "{{count}} дней пока что"
   },
   "liveActivity": {
     "yearsToday": "{{count}} лет сегодня"
