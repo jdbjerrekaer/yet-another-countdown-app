@@ -208,6 +208,29 @@ export async function scheduleEventNotification(
 }
 
 /**
+ * Drop any scheduled notification whose countdown no longer exists.
+ *
+ * Deletes used to cancel only when the undo window closed, so installs from
+ * before that fix can hold notifications for countdowns that are long gone.
+ * Reconciling against the live list on launch clears those strays; the id is
+ * the same deterministic hash schedule/cancel use, so matching is exact.
+ *
+ * @param liveEventIds - Ids of the countdowns that currently exist
+ */
+export async function reconcileNotifications(liveEventIds: string[]): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const wanted = new Set(liveEventIds.map(getNotificationId));
+    const pending = await LocalNotifications.getPending();
+    const stale = pending.notifications.filter((n) => !wanted.has(n.id));
+    if (stale.length === 0) return;
+    await LocalNotifications.cancel({ notifications: stale.map((n) => ({ id: n.id })) });
+  } catch (error) {
+    console.error('Failed to reconcile notifications:', error);
+  }
+}
+
+/**
  * Cancel a scheduled notification for an event
  * @param eventId - Unique identifier for the event
  */

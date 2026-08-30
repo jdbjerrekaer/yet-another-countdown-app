@@ -38,7 +38,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CountdownEvent, WidgetSize, WidgetAppearanceMode, WidgetCountdownStyle, resolveLegacy } from '@/types/countdown';
 import { EmojiShape } from '@/lib/emojiShapes';
 import { getNextRecurringDate, getNextOccurrenceNumber, getRepetitionCount } from '@/lib/recurring';
-import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, checkScheduledNotifications } from '@/lib/notifications';
+import { checkNotificationPermission, requestNotificationPermission, scheduleEventNotification, cancelEventNotification, reconcileNotifications, checkScheduledNotifications } from '@/lib/notifications';
 import { EventImportPayload } from '@/lib/eventImportLink';
 import { CalendarImportModal, CalendarImportModalRef } from '@/components/CalendarImportModal';
 import { RemoveAdsModal } from '@/components/RemoveAdsModal';
@@ -1024,6 +1024,12 @@ export default function Index() {
     return () => window.clearInterval(interval);
   }, []);
 
+  // Sweep up notifications orphaned by the old delete path, which only cancelled
+  // when the undo window closed. Mount-only: events come straight out of
+  // localStorage above, and deletes now cancel inline.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void reconcileNotifications(events.map(e => e.id)); }, []);
+
   // Push the countdown list to iCloud whenever it changes. Skips writes that
   // match what was last reconciled with iCloud (set on push AND on pull), which
   // breaks the ping-pong loop between devices re-pushing the same merged list.
@@ -1435,7 +1441,6 @@ export default function Index() {
     const event = pendingDeleteRef.current.get(eventId);
     if (!event) return;
     pendingDeleteRef.current.delete(eventId);
-    void cancelEventNotification(eventId);
     void AdsManager.maybeShowInterstitialAfterSave({ kind: 'delete' });
   };
 
@@ -1455,6 +1460,15 @@ export default function Index() {
     );
     setRestoringIds(ids);
     window.setTimeout(() => setRestoringIds([]), 450);
+
+    // Deleting cancelled the notification, so put it back. scheduleEventNotification
+    // no-ops without permission and skips dates already in the past.
+    for (const e of restored) {
+      const target = e.isRecurring
+        ? getNextRecurringDate(new Date(e.targetDate))
+        : new Date(e.targetDate);
+      if (target) void scheduleEventNotification(e.id, e.title, target, e.emoji);
+    }
   };
 
   const handleUndoDelete = (eventId: string) => {
@@ -1480,6 +1494,12 @@ export default function Index() {
     // still has it. Undo removes the tombstone. Set before setEvents so the
     // push effect (fired by the events change) uploads it in the same blob.
     persistTombstones(mergeTombstones(deletedRef.current, { [eventId]: new Date().toISOString() }));
+
+    // Drop the scheduled notification now, not when the undo window closes —
+    // the app can be backgrounded or killed inside those 3.5s, and iOS would
+    // still fire "reached zero" for a countdown that is already gone. Undo
+    // re-schedules it in restoreEvents.
+    void cancelEventNotification(eventId);
 
     setEvents(prev => {
       const filtered = removeCountdownEvent(prev, eventId);
