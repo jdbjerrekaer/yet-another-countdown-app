@@ -725,9 +725,26 @@ export default function Index() {
     return () => window.clearTimeout(timer);
   }, [isDevBuild, events.length]);
 
+  // Every overlay that takes over the screen, listed once. This used to be
+  // spelled out inline in the effect below and drifted: the first-run, widget
+  // and remove-ads modals were never added, so the banner sat across the
+  // onboarding's Next button. Add new full-screen modals here.
+  // NOTE: not the same set as the FAB's hide list, which keeps the FAB visible
+  // over the editor sheet because it doubles as that sheet's save button.
+  const isAdBlockingOverlayOpen =
+    isModalOpen ||
+    isCalendarImportOpen ||
+    isTrackingConsentOpen ||
+    isWidgetOnboardingOpen ||
+    isFirstRunOpen ||
+    isRemoveAdsOpen;
+
   useEffect(() => {
     if (!isNative) return;
-    const shouldHideAds = hasRemoveAds || isModalOpen || isCalendarImportOpen || isTrackingConsentOpen;
+    // No ads until they actually own a countdown. That covers the whole first-run
+    // flow without depending on a modal flag, and matches the ATT pre-prompt gate,
+    // which already waits for the first event.
+    const shouldHideAds = hasRemoveAds || isAdBlockingOverlayOpen || events.length === 0;
     void AdsManager.setBannerSuppressed(shouldHideAds);
     if (hasRemoveAds) {
       void AdsManager.hideBanner();
@@ -742,7 +759,7 @@ export default function Index() {
       void AdsManager.setBannerSuppressed(true);
       void AdsManager.hideBanner();
     };
-  }, [isNative, isModalOpen, isCalendarImportOpen, isTrackingConsentOpen, hasRemoveAds]);
+  }, [isNative, isAdBlockingOverlayOpen, hasRemoveAds, events.length]);
 
   // After the user creates their first event, show the custom tracking
   // pre-prompt (once per session) — but only on native, only for non ad-free
