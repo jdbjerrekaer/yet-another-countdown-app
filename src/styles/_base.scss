@@ -14,8 +14,14 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    // Inherited: no orphaned last words in body copy.
+    text-wrap: pretty;
   }
-  
+
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+
   input, textarea, [contenteditable="true"] {
     -webkit-user-select: auto;
     -moz-user-select: auto;
