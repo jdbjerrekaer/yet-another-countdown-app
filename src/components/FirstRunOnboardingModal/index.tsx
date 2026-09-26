@@ -9,7 +9,7 @@ import { EmojiShapePicker } from '@/components/EmojiShapePicker';
 import { ColorWheelPicker } from '@/components/ColorWheelPicker';
 import type { EmojiShape } from '@/lib/emojiShapes';
 import { COLOR_PALETTE } from '@/lib/colorPalette';
-import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
+import { useEmojiSuggestions } from '@/lib/emojiSuggestions';
 import EmojiKeyboardPlugin from '@/plugins/EmojiKeyboardPlugin';
 import { useHaptic } from '@/hooks/useHaptic';
 import '@/components/WidgetOnboardingModal/onboarding.css';
@@ -155,12 +155,11 @@ export function FirstRunOnboardingModal({
   // set. A word like "Concert" only matches one emoji, and a grid of one reads
   // as broken — the defaults fill the rest. The chosen emoji is always in the
   // list, so a custom pick keeps a tile to sit in.
+  const matches = useEmojiSuggestions(title, 8);
   const emojiChoices = useMemo(() => {
-    const trimmed = title.trim();
-    const matches = trimmed ? getEmojiSuggestions(trimmed, 8).map((r) => r.unicode) : [];
     const list = [...new Set([...matches, ...EMOJI_DEFAULTS[direction ?? 'future']])].slice(0, 11);
     return emoji && !list.includes(emoji) ? [emoji, ...list].slice(0, 11) : list;
-  }, [title, direction, emoji]);
+  }, [matches, direction, emoji]);
 
   // Pre-pick the best guess so the emoji step is a confirmation, not a chore,
   // and keep re-picking as they type — until they choose one themselves.

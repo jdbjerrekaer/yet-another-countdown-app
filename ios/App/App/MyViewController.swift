@@ -10,6 +10,7 @@ class MyViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(CalendarPlugin())
         bridge?.registerPluginInstance(BuildInfoPlugin())
         bridge?.registerPluginInstance(EmojiKeyboardPlugin())
+        bridge?.registerPluginInstance(EmojiSemanticPlugin())
         bridge?.registerPluginInstance(StoreKitDiagnosticsPlugin())
         bridge?.registerPluginInstance(CountdownSyncPlugin())
         bridge?.registerPluginInstance(LiveActivityPlugin())

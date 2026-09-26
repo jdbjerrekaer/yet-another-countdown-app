@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useLegacyTimeFormat } from '@/lib/useLegacyTimeFormat';
 import { formatRelative } from '@/lib/relativeTime';
-import { getEmojiSuggestions } from '@/lib/emojiSuggestions';
+import { useEmojiSuggestions } from '@/lib/emojiSuggestions';
 import { getNextRecurringDate } from '@/lib/recurring';
 import './edgeswipe.css';
 import { EmojiShape, normalizeShape } from '@/lib/emojiShapes';
@@ -199,18 +199,13 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
   }, [hasSpecificTime]);
 
   // Compute suggested emojis based on title input
+  const titleSuggestions = useEmojiSuggestions(title, 12);
   const suggestedEmojis = useMemo(() => {
-    const trimmed = title.trim();
-    if (!trimmed) {
-      // No title yet: show defaults
+    if (titleSuggestions.length === 0) {
+      // No title or no matches: fall back to defaults
       return EMOJI_OPTIONS;
     }
-    const results = getEmojiSuggestions(trimmed, 12);
-    if (results.length === 0) {
-      // No matches: fall back to defaults
-      return EMOJI_OPTIONS;
-    }
-    let list = results.map((r) => r.unicode);
+    let list = titleSuggestions;
     // If current emoji is in EMOJI_OPTIONS but not in suggestions, add it so it can be highlighted
     // This ensures standard emojis aren't treated as custom when editing
     if (emoji && EMOJI_OPTIONS.includes(emoji) && !list.includes(emoji)) {
@@ -221,7 +216,7 @@ export const DatePickerModal = forwardRef<DatePickerModalRef, DatePickerModalPro
       list = [...list, emoji];
     }
     return list;
-  }, [title, emoji]);
+  }, [titleSuggestions, emoji]);
 
   // Track emoji list changes to trigger animations
   useEffect(() => {

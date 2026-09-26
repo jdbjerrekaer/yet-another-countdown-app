@@ -188,3 +188,23 @@ public class EmojiKeyboardPlugin: CAPPlugin, CAPBridgedPlugin, UITextFieldDelega
         notifyListeners("emojiTextChanged", data: ["text": filteredText])
     }
 }
+
+/// Bridges the on-device semantic fallback (EmojiSuggestionEngine.semanticEmoji)
+/// to the web app, which runs the keyword layers itself.
+@objc(EmojiSemanticPlugin)
+public class EmojiSemanticPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "EmojiSemanticPlugin"
+    public let jsName = "EmojiSemanticPlugin"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "suggest", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func suggest(_ call: CAPPluginCall) {
+        let title = call.getString("title") ?? ""
+        let language = call.getString("language") ?? EmojiSuggestionEngine.appLanguage()
+        DispatchQueue.global(qos: .userInitiated).async {
+            let emoji = EmojiSuggestionEngine.shared.semanticEmoji(for: title, language: language)
+            call.resolve(emoji.map { ["emoji": $0] } ?? [:])
+        }
+    }
+}

@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import CalendarPlugin, { CalendarEvent } from '@/plugins/CalendarPlugin';
 import { fetchAndParseICS, filterYearlyRecurringEvents, ICSEvent } from './icsParser';
 import { CountdownEvent } from '@/types/countdown';
+import { getEmojiSuggestions } from './emojiSuggestions';
 
 /**
  * Unified calendar event format used across the app
@@ -373,62 +374,11 @@ function isBirthdayEvent(title: string): boolean {
 }
 
 /**
- * Suggest an emoji based on event title
+ * Suggest an emoji based on event title (shared engine, all app languages)
  */
 function suggestEmojiForEvent(title: string, isBirthday: boolean): string {
-  const lower = title.toLowerCase();
-  
-  // Birthday variations
-  if (isBirthday || lower.includes('birthday') || lower.includes('bday')) {
-    return '🎂';
-  }
-  
-  // Anniversary variations
-  if (lower.includes('anniversary') || lower.includes('aniversario')) {
-    return '💍';
-  }
-  
-  // Wedding
-  if (lower.includes('wedding')) {
-    return '💒';
-  }
-  
-  // Holiday keywords
-  if (lower.includes('christmas') || lower.includes('navidad') || lower.includes('weihnachten')) {
-    return '🎄';
-  }
-  
-  if (lower.includes('easter') || lower.includes('pascua') || lower.includes('ostern')) {
-    return '🐰';
-  }
-  
-  if (lower.includes('halloween')) {
-    return '🎃';
-  }
-  
-  if (lower.includes('valentine')) {
-    return '❤️';
-  }
-  
-  if (lower.includes('new year') || lower.includes('año nuevo') || lower.includes('neujahr')) {
-    return '🎉';
-  }
-  
-  if (lower.includes('mother') || lower.includes('mom') || lower.includes('madre')) {
-    return '💐';
-  }
-  
-  if (lower.includes('father') || lower.includes('dad') || lower.includes('padre')) {
-    return '👔';
-  }
-  
-  // Graduation
-  if (lower.includes('graduation') || lower.includes('graduate')) {
-    return '🎓';
-  }
-  
-  // Default for recurring events
-  return '🎉';
+  if (isBirthday) return '🎂';
+  return getEmojiSuggestions(title, 1)[0]?.unicode ?? '🎉';
 }
 
 /**

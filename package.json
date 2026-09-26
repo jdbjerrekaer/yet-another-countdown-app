@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "test": "vitest run && npm run test:swift",
-    "test:swift": "swiftc ios/App/App/EmojiParser.swift ios/Tests/EmojiParserTests.swift -o /tmp/countdown-emoji-tests && /tmp/countdown-emoji-tests",
+    "test:swift": "swiftc ios/App/App/EmojiParser.swift ios/Tests/EmojiParserTests.swift -o /tmp/countdown-emoji-tests && /tmp/countdown-emoji-tests && swiftc -parse-as-library ios/App/App/EmojiSuggestionEngine.swift ios/Tests/EmojiSuggestionEngineTests.swift -o /tmp/countdown-emoji-suggest-tests && /tmp/countdown-emoji-suggest-tests",
     "test:watch": "vitest",
     "lint": "eslint .",
     "preview": "vite preview",
