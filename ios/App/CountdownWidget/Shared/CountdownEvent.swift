@@ -199,20 +199,49 @@ struct CountdownTime {
     let isComplete: Bool
     let daysSince: Int
     
-    static func calculate(from target: Date?, now: Date = Date()) -> CountdownTime {
+    /// `allDay` is true for countdowns without a user-set time (`hasTime` off). Those are
+    /// stored at 08:00, so counting whole 24h periods to that hidden time came out one
+    /// day lower than the list (which counts calendar days) every day from 08:00 to
+    /// midnight. For all-day countdowns, days are calendar days and hours/minutes are
+    /// what's left of today, so the widget always agrees with the list.
+    static func calculate(from target: Date?, now: Date = Date(), allDay: Bool = false) -> CountdownTime {
         guard let target = target else {
             return CountdownTime(days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false, isComplete: false, daysSince: 0)
         }
 
         let calendar = Calendar.current
-        
-        // Check if it's today
-        if calendar.isDateInToday(target) {
+
+        // Check if it's today (relative to `now`, so timeline entries and tests are consistent)
+        if calendar.isDate(target, inSameDayAs: now) {
             return CountdownTime(days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false, isComplete: true, daysSince: 0)
         }
-        
+
+        if allDay {
+            let today = calendar.startOfDay(for: now)
+            let targetDay = calendar.startOfDay(for: target)
+            let dayDiff = calendar.dateComponents([.day], from: today, to: targetDay).day ?? 0
+            if dayDiff < 0 {
+                return CountdownTime(days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true, isComplete: false, daysSince: -dayDiff)
+            }
+            // Wall-clock time left of today (so DST days still read 23h at 01:00). Exactly at
+            // midnight that's a full 24h, which would read as "N days 24h"; clamp to 23:59:59
+            // so the day count stays the calendar count.
+            let clock = calendar.dateComponents([.hour, .minute, .second], from: now)
+            let elapsedToday = (clock.hour ?? 0) * 3600 + (clock.minute ?? 0) * 60 + (clock.second ?? 0)
+            let leftToday = min(24 * 3600 - elapsedToday, 24 * 3600 - 1)
+            return CountdownTime(
+                days: dayDiff,
+                hours: leftToday / 3600,
+                minutes: (leftToday % 3600) / 60,
+                seconds: leftToday % 60,
+                isPast: false,
+                isComplete: false,
+                daysSince: 0
+            )
+        }
+
         let isPast = target < now
-        
+
         if isPast {
             // Calculate days since
             let components = calendar.dateComponents([.day], from: target, to: now)

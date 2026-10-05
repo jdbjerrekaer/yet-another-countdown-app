@@ -600,7 +600,7 @@ struct CountdownWidgetEntryView: View {
     var body: some View {
         if let event = entry.event {
             let targetDate = event.isRecurring ? event.getNextRecurringDate() : event.targetDateAsDate
-            let countdown = CountdownTime.calculate(from: targetDate, now: entry.date)
+            let countdown = CountdownTime.calculate(from: targetDate, now: entry.date, allDay: !(event.hasTime ?? false))
             let progress = WidgetDataSync.shared.calculateProgress(for: event)
             
             // Create deep link URL to open edit modal for this event
@@ -751,7 +751,7 @@ struct EventRowView: View {
 
     var body: some View {
         let targetDate = event.isRecurring ? event.getNextRecurringDate() : event.targetDateAsDate
-        let countdown = CountdownTime.calculate(from: targetDate, now: now)
+        let countdown = CountdownTime.calculate(from: targetDate, now: now, allDay: !(event.hasTime ?? false))
         let progress = WidgetDataSync.shared.calculateProgress(for: event)
         
         HStack(spacing: 12) {

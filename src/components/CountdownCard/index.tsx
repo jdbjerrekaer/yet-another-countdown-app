@@ -50,7 +50,7 @@ export function CountdownCard({
     ? getNextRecurringDate(new Date(event.targetDate))
     : new Date(event.targetDate);
   
-  const countdown = useCountdown(targetDate, { resolution: 'minute' });
+  const countdown = useCountdown(targetDate, { resolution: 'minute', allDay: !event.hasTime });
   
   // Calculate occurrence number for events (only for recurring events)
   const occurrenceNumber = event.isRecurring

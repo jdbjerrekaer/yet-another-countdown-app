@@ -118,9 +118,9 @@ function TripleWidgetPreview({
         : new Date(event3.targetDate))
     : null;
 
-  const countdown1 = useCountdown(targetDate1);
-  const countdown2 = useCountdown(targetDate2);
-  const countdown3 = useCountdown(targetDate3);
+  const countdown1 = useCountdown(targetDate1, { allDay: !event1?.hasTime });
+  const countdown2 = useCountdown(targetDate2, { allDay: !event2?.hasTime });
+  const countdown3 = useCountdown(targetDate3, { allDay: !event3?.hasTime });
 
   const occurrenceNumber1 = event1 && event1.isRecurring
     ? (countdown1.isPast
@@ -990,7 +990,7 @@ export default function Index() {
         : new Date(selectedEvent.targetDate))
     : null;
   
-  const countdown = useCountdown(targetDate);
+  const countdown = useCountdown(targetDate, { allDay: !selectedEvent?.hasTime });
   
   // Calculate occurrence number for events (only for recurring events)
   const occurrenceNumber = selectedEvent
