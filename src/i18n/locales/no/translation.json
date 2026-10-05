@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Ingen nedtellinger",
-    "createFirst": "Trykk på + knappen for å opprette din første nedtelling",
+    "createFirst": "Konserter, bursdager, ferier: tell ned til hva som helst.",
     "orImportFromCalendar": "Eller importer fra Kalender"
   },
   "feedback": {

@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Nessun countdown",
-    "createFirst": "Tocca il pulsante + per creare il tuo primo countdown",
+    "createFirst": "Concerti, compleanni, vacanze: conta alla rovescia per qualsiasi cosa.",
     "orImportFromCalendar": "Oppure importa dal Calendario"
   },
   "feedback": {

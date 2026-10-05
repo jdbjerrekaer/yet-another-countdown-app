@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Inga nedräkningar",
-    "createFirst": "Tryck på + knappen för att skapa din första nedräkning",
+    "createFirst": "Konserter, födelsedagar, semestrar: räkna ner till vad som helst.",
     "orImportFromCalendar": "Eller importera från Kalender"
   },
   "feedback": {

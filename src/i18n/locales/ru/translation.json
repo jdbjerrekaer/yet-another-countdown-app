@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Нет отсчетов",
-    "createFirst": "Нажмите на кнопку +, чтобы создать свой первый отсчет",
+    "createFirst": "Концерты, дни рождения, отпуск: ведите отсчёт до чего угодно.",
     "orImportFromCalendar": "Или импортируйте из Календаря"
   },
   "feedback": {

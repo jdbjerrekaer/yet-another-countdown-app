@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "No Countdowns",
-    "createFirst": "Tap the + button below to create your first countdown",
+    "createFirst": "Concerts, birthdays, holidays: count down to anything.",
     "orImportFromCalendar": "Or import from Calendar"
   },
   "feedback": {

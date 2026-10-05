@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Ei laskureita",
-    "createFirst": "Napauta + painiketta luodaksesi ensimmäisen laskurisi",
+    "createFirst": "Konsertit, syntymäpäivät, lomat: laske alas mihin tahansa.",
     "orImportFromCalendar": "Tai tuo Kalenterista"
   },
   "feedback": {

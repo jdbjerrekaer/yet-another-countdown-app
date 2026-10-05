@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Sem contagens regressivas",
-    "createFirst": "Toque no botão + para criar sua primeira contagem regressiva",
+    "createFirst": "Shows, aniversários, férias: faça a contagem regressiva para o que quiser.",
     "orImportFromCalendar": "Ou importe do Calendário"
   },
   "feedback": {

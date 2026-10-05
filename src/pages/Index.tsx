@@ -1881,7 +1881,9 @@ export default function Index() {
         bottom: 'calc(16px + env(safe-area-inset-bottom) + 56px)',
         zIndex: isAnyModalOpen ? 100000 : 50,
         display:
-          isRemoveAdsOpen || isTrackingConsentOpen || isWidgetOnboardingOpen || isFirstRunOpen
+          isRemoveAdsOpen || isTrackingConsentOpen || isWidgetOnboardingOpen || isFirstRunOpen ||
+          // The empty state has its own CTA; the FAB is still needed as Save inside the editor.
+          (events.length === 0 && !isAnyModalOpen)
             ? 'none'
             : undefined,
       }}
@@ -1996,7 +1998,7 @@ export default function Index() {
                   you get back to it after dismissing it. */}
               <button
                 onClick={() => setIsFirstRunOpen(true)}
-                className="wo-primary mb-4 rounded-2xl px-6 py-3 text-base font-semibold transition-transform duration-150 active:scale-[0.97]"
+                className="wo-primary mb-4 rounded-full px-7 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background text-base font-semibold transition-transform duration-150 active:scale-[0.97]"
               >
                 {t('firstRun.emptyCta')}
               </button>

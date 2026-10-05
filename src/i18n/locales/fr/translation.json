@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Aucun compte à rebours",
-    "createFirst": "Appuyez sur le bouton + pour créer votre premier compte à rebours",
+    "createFirst": "Concerts, anniversaires, vacances : comptez les jours avant n'importe quoi.",
     "orImportFromCalendar": "Ou importez depuis le Calendrier"
   },
   "feedback": {

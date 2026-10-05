@@ -2,7 +2,7 @@
   "app": {
     "title": "Yet Another Countdown",
     "noCountdowns": "Keine Countdowns",
-    "createFirst": "Tippe auf das + Symbol, um deinen ersten Countdown zu erstellen",
+    "createFirst": "Konzerte, Geburtstage, Urlaub: zähle zu allem herunter.",
     "orImportFromCalendar": "Oder aus dem Kalender importieren"
   },
   "feedback": {
