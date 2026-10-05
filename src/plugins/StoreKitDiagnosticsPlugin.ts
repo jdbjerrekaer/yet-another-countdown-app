@@ -78,6 +78,7 @@ export interface StoreKitDiagnosticsPlugin {
   fetchProducts(): Promise<StoreKitProductFetchResult>;
   syncStore(): Promise<{ success: boolean; error?: string }>;
   getEntitlements(): Promise<StoreKitEntitlementsResult>;
+  requestReview(): Promise<void>;
   addListener(
     eventName: "transactionUpdated",
     listenerFunc: (data: StoreKitEntitlement) => void,
@@ -107,6 +108,7 @@ const StoreKitDiagnostics = registerPlugin<StoreKitDiagnosticsPlugin>(
         entitlements: [],
         error: "StoreKit 2 entitlements only available on native iOS",
       }),
+      requestReview: async () => {},
       addListener: async () => ({ remove: async () => {} }),
     }),
   }

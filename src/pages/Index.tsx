@@ -53,6 +53,7 @@ import { SharedSelection } from '@/lib/sharedSelection';
 import { EDIT_EVENT_DEEP_LINK, EditEventDeepLinkDetail } from '@/components/DeepLinkHandler';
 import { IMPORT_EVENT_READY } from '@/pages/Import';
 import { AdsManager } from '@/lib/ads/adsManager';
+import StoreKitDiagnostics from '@/plugins/StoreKitDiagnosticsPlugin';
 import { PurchasesManager } from '@/lib/purchases/purchasesManager';
 import { createCountdownEvent, hasEventChanged, removeCountdownEvent, updateCountdownEvent } from '@/lib/countdownEvents';
 import { syncLiveActivities } from '@/lib/liveActivities';
@@ -1444,6 +1445,20 @@ export default function Index() {
       localStorage.setItem('widgetTipShown', '1');
       // Let the "event created" confirmation land before taking over the screen.
       setTimeout(() => setIsWidgetOnboardingOpen(true), 2200);
+    }
+
+    // Second countdown = the user is getting value. iOS caps the prompt at 3/year
+    // and may show nothing; skip the interstitial so the two never collide.
+    const shouldAskForReview =
+      saveKind === 'create' &&
+      events.length === 1 &&
+      isNative &&
+      !localStorage.getItem('reviewRequested');
+
+    if (shouldAskForReview) {
+      localStorage.setItem('reviewRequested', '1');
+      setTimeout(() => void StoreKitDiagnostics.requestReview(), 2200);
+      return;
     }
 
     void AdsManager.maybeShowInterstitialAfterSave({ kind: saveKind });

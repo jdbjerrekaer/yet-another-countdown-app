@@ -11,7 +11,8 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "collectSnapshot", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "fetchProducts", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "syncStore", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "getEntitlements", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "getEntitlements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestReview", returnType: CAPPluginReturnPromise)
     ]
 
     private let snapshotFileName = "storekit_diagnostics_snapshot.json"
@@ -117,6 +118,17 @@ public class StoreKitDiagnosticsPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
     
+    // ponytail: iOS decides whether the sheet actually appears (max 3/year), so no result to report.
+    @objc func requestReview(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                SKStoreReviewController.requestReview(in: scene)
+            }
+            call.resolve()
+        }
+    }
+
     @objc func getEntitlements(_ call: CAPPluginCall) {
         if #available(iOS 15.0, *) {
             Task {
