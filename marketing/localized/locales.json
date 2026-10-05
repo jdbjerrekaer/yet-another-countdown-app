@@ -1,0 +1,698 @@
+{
+ "_doc": "One capture set per app language; each set feeds one or more App Store locales. Event slots reuse the ids the placed sim widgets are bound to: small widget + lock-screen widget = birthday (q3zq1rwz), medium widget = count-up (m80m8c8h), Live Activity = the same-day concert (t8i123uj). days: offset from today; 'today' = a few hours from now, before midnight. Every market gets its own culturally local events (no Roskilde in the US set).",
+ "slots": [
+  {
+   "id": "t8i123uj",
+   "key": "concert",
+   "emoji": "🫶",
+   "color": "#E8A0BF",
+   "days": "today"
+  },
+  {
+   "id": "q3zq1rwz",
+   "key": "birthday",
+   "emoji": "🎂",
+   "color": "#F4B8C1",
+   "days": 5
+  },
+  {
+   "id": "9qy648xm",
+   "key": "trip",
+   "emoji": "✈️",
+   "color": "#8FC7E8",
+   "days": 23
+  },
+  {
+   "id": "ikgk7849",
+   "key": "holiday",
+   "emoji": "🎄",
+   "color": "#C97C7C",
+   "days": 80
+  },
+  {
+   "id": "mo2qix3d",
+   "key": "baby",
+   "emoji": "👶",
+   "color": "#F9D8A8",
+   "days": 97
+  },
+  {
+   "id": "b7x2k9qa",
+   "key": "summer",
+   "emoji": "🏖️",
+   "color": "#F4C95D",
+   "days": 262
+  },
+  {
+   "id": "m80m8c8h",
+   "key": "streak",
+   "emoji": "💪",
+   "color": "#A8C4A2",
+   "days": -67
+  }
+ ],
+ "screens": [
+  "home",
+  "lock",
+  "list",
+  "style",
+  "shape"
+ ],
+ "sets": {
+  "en-US": {
+   "appLang": "en",
+   "simLang": "en-US",
+   "simLocale": "en_US",
+   "events": {
+    "concert": "Taylor Swift concert",
+    "birthday": "Mom's birthday",
+    "trip": "Disney World",
+    "holiday": "Thanksgiving",
+    "baby": "Baby due date",
+    "summer": "Spring Break",
+    "streak": "Vape-free"
+   },
+   "emoji": {
+    "trip": "🏰",
+    "holiday": "🦃",
+    "summer": "🌴"
+   },
+   "days": {
+    "holiday": 52,
+    "summer": 160
+   },
+   "asc": {
+    "en-US": [
+     [
+      "WIDGETS",
+      "YOUR BIG DAYS ON YOUR HOME SCREEN"
+     ],
+     [
+      "GLANCE",
+      "LIVE ON YOUR LOCK SCREEN"
+     ],
+     [
+      "COUNT DOWN",
+      "TO THE DAYS THAT MATTER"
+     ],
+     [
+      "STYLE IT",
+      "AN EMOJI & COLOR FOR EVERY DAY"
+     ],
+     [
+      "SHAPE IT",
+      "HEARTS, FLOWERS & MORE"
+     ]
+    ]
+   }
+  },
+  "en-CA": {
+   "appLang": "en",
+   "simLang": "en-CA",
+   "simLocale": "en_CA",
+   "events": {
+    "concert": "Taylor Swift concert",
+    "birthday": "Mom's birthday",
+    "trip": "Cottage weekend",
+    "holiday": "Thanksgiving",
+    "baby": "Baby due date",
+    "summer": "Canada Day",
+    "streak": "Vape-free"
+   },
+   "emoji": {
+    "trip": "🛶",
+    "holiday": "🦃",
+    "summer": "🍁"
+   },
+   "days": {
+    "holiday": 7,
+    "summer": 269
+   },
+   "asc": {
+    "en-CA": [
+     [
+      "WIDGETS",
+      "YOUR BIG DAYS ON YOUR HOME SCREEN"
+     ],
+     [
+      "GLANCE",
+      "LIVE ON YOUR LOCK SCREEN"
+     ],
+     [
+      "COUNT DOWN",
+      "TO THE DAYS THAT MATTER"
+     ],
+     [
+      "STYLE IT",
+      "AN EMOJI & COLOUR FOR EVERY DAY"
+     ],
+     [
+      "SHAPE IT",
+      "HEARTS, FLOWERS & MORE"
+     ]
+    ]
+   }
+  },
+  "en-GB": {
+   "appLang": "en",
+   "simLang": "en-GB",
+   "simLocale": "en_GB",
+   "events": {
+    "concert": "Taylor Swift concert",
+    "birthday": "Mum's birthday",
+    "trip": "Bonfire Night",
+    "holiday": "Christmas",
+    "baby": "Baby due date",
+    "summer": "Glastonbury",
+    "streak": "Smoke-free"
+   },
+   "emoji": {
+    "trip": "🎆",
+    "summer": "🎪"
+   },
+   "days": {
+    "trip": 31
+   },
+   "asc": {
+    "en-GB": [
+     [
+      "WIDGETS",
+      "YOUR BIG DAYS ON YOUR HOME SCREEN"
+     ],
+     [
+      "GLANCE",
+      "LIVE ON YOUR LOCK SCREEN"
+     ],
+     [
+      "COUNT DOWN",
+      "TO THE DAYS THAT MATTER"
+     ],
+     [
+      "STYLE IT",
+      "AN EMOJI & COLOUR FOR EVERY DAY"
+     ],
+     [
+      "SHAPE IT",
+      "HEARTS, FLOWERS & MORE"
+     ]
+    ]
+   }
+  },
+  "da": {
+   "appLang": "da",
+   "simLang": "da",
+   "simLocale": "da_DK",
+   "events": {
+    "concert": "Taylor Swift koncert",
+    "birthday": "Mors fødselsdag",
+    "trip": "J-dag",
+    "holiday": "Jul",
+    "baby": "Termin",
+    "summer": "Roskilde Festival",
+    "streak": "Snus-fri"
+   },
+   "emoji": {
+    "trip": "🍺",
+    "summer": "🎪"
+   },
+   "days": {
+    "trip": 32,
+    "summer": 270
+   },
+   "asc": {
+    "da": [
+     [
+      "WIDGETS",
+      "DINE STORE DAGE PÅ HJEMMESKÆRMEN"
+     ],
+     [
+      "ET BLIK",
+      "LIVE PÅ DIN LÅSESKÆRM"
+     ],
+     [
+      "TÆL NED",
+      "TIL DE DAGE, DER BETYDER NOGET"
+     ],
+     [
+      "GØR DEN DIN",
+      "EMOJI OG FARVE TIL HVER DAG"
+     ],
+     [
+      "FORM DEN",
+      "HJERTER, BLOMSTER OG MERE"
+     ]
+    ]
+   }
+  },
+  "sv": {
+   "appLang": "sv",
+   "simLang": "sv",
+   "simLocale": "sv_SE",
+   "events": {
+    "concert": "Taylor Swift-konsert",
+    "birthday": "Mammas födelsedag",
+    "trip": "Lucia",
+    "holiday": "Jul",
+    "baby": "Bebis på väg",
+    "summer": "Midsommar",
+    "streak": "Snusfri"
+   },
+   "emoji": {
+    "trip": "🕯️",
+    "summer": "🌼"
+   },
+   "days": {
+    "trip": 69
+   },
+   "asc": {
+    "sv": [
+     [
+      "WIDGETS",
+      "DINA STORA DAGAR PÅ HEMSKÄRMEN"
+     ],
+     [
+      "ETT ÖGONKAST",
+      "LIVE PÅ DIN LÅSSKÄRM"
+     ],
+     [
+      "RÄKNA NER",
+      "TILL DAGARNA SOM BETYDER NÅGOT"
+     ],
+     [
+      "GÖR DEN DIN",
+      "EMOJI OCH FÄRG FÖR VARJE DAG"
+     ],
+     [
+      "FORMA DEN",
+      "HJÄRTAN, BLOMMOR OCH MER"
+     ]
+    ]
+   }
+  },
+  "no": {
+   "appLang": "no",
+   "simLang": "nb",
+   "simLocale": "nb_NO",
+   "events": {
+    "concert": "Taylor Swift-konsert",
+    "birthday": "Mammas bursdag",
+    "trip": "Hyttetur",
+    "holiday": "Jul",
+    "baby": "Termin",
+    "summer": "17. mai",
+    "streak": "Snusfri"
+   },
+   "emoji": {
+    "trip": "🏔️",
+    "summer": "🇳🇴"
+   },
+   "days": {
+    "summer": 224
+   },
+   "asc": {
+    "no": [
+     [
+      "WIDGETS",
+      "DE STORE DAGENE PÅ HJEM-SKJERMEN"
+     ],
+     [
+      "ET BLIKK",
+      "LIVE PÅ LÅSESKJERMEN"
+     ],
+     [
+      "TELL NED",
+      "TIL DAGENE SOM BETYR NOE"
+     ],
+     [
+      "GJØR DEN DIN",
+      "EMOJI OG FARGE TIL HVER DAG"
+     ],
+     [
+      "FORM DEN",
+      "HJERTER, BLOMSTER OG MER"
+     ]
+    ]
+   }
+  },
+  "fi": {
+   "appLang": "fi",
+   "simLang": "fi",
+   "simLocale": "fi_FI",
+   "events": {
+    "concert": "Taylor Swift -konsertti",
+    "birthday": "Äidin syntymäpäivä",
+    "trip": "Lapin-matka",
+    "holiday": "Joulu",
+    "baby": "Laskettu aika",
+    "summer": "Juhannus",
+    "streak": "Savuton"
+   },
+   "emoji": {
+    "trip": "❄️",
+    "summer": "🌼"
+   },
+   "days": {},
+   "asc": {
+    "fi": [
+     [
+      "WIDGETIT",
+      "TÄRKEÄT PÄIVÄT KOTINÄYTÖLLÄ"
+     ],
+     [
+      "VILKAISE",
+      "SUORAAN LUKITUSNÄYTÖLTÄ"
+     ],
+     [
+      "LASKE PÄIVIÄ",
+      "HETKIIN, JOILLA ON VÄLIÄ"
+     ],
+     [
+      "TYYLITTELE",
+      "EMOJI JA VÄRI JOKAISELLE PÄIVÄLLE"
+     ],
+     [
+      "MUOTOILE",
+      "SYDÄMIÄ, KUKKIA JA MUUTA"
+     ]
+    ]
+   }
+  },
+  "de": {
+   "appLang": "de",
+   "simLang": "de",
+   "simLocale": "de_DE",
+   "events": {
+    "concert": "Taylor Swift Konzert",
+    "birthday": "Mamas Geburtstag",
+    "trip": "Skiurlaub in Tirol",
+    "holiday": "Weihnachten",
+    "baby": "Geburtstermin",
+    "summer": "Ostsee-Urlaub",
+    "streak": "Rauchfrei"
+   },
+   "emoji": {
+    "trip": "⛷️"
+   },
+   "days": {
+    "trip": 110
+   },
+   "asc": {
+    "de-DE": [
+     [
+      "WIDGETS",
+      "DEINE GROSSEN TAGE AUF DEM HOME-BILDSCHIRM"
+     ],
+     [
+      "AUF EINEN BLICK",
+      "LIVE AUF DEM SPERRBILDSCHIRM"
+     ],
+     [
+      "COUNTDOWN",
+      "BIS ZU DEN TAGEN, DIE ZÄHLEN"
+     ],
+     [
+      "DEIN STIL",
+      "EMOJI & FARBE FÜR JEDEN TAG"
+     ],
+     [
+      "IN FORM",
+      "HERZEN, BLUMEN & MEHR"
+     ]
+    ]
+   }
+  },
+  "fr": {
+   "appLang": "fr",
+   "simLang": "fr",
+   "simLocale": "fr_FR",
+   "events": {
+    "concert": "Concert de Taylor Swift",
+    "birthday": "Anniversaire de maman",
+    "trip": "Ski dans les Alpes",
+    "holiday": "Noël",
+    "baby": "Arrivée de bébé",
+    "summer": "Fête de la musique",
+    "streak": "Sans tabac"
+   },
+   "emoji": {
+    "trip": "⛷️",
+    "summer": "🎶"
+   },
+   "days": {
+    "trip": 110,
+    "summer": 259
+   },
+   "asc": {
+    "fr-FR": [
+     [
+      "WIDGETS",
+      "VOS GRANDS JOURS SUR L'ÉCRAN D'ACCUEIL"
+     ],
+     [
+      "D'UN COUP D'ŒIL",
+      "EN DIRECT SUR L'ÉCRAN VERROUILLÉ"
+     ],
+     [
+      "COMPTE À REBOURS",
+      "JUSQU'AUX JOURS QUI COMPTENT"
+     ],
+     [
+      "À VOTRE STYLE",
+      "UN EMOJI ET UNE COULEUR PAR JOUR"
+     ],
+     [
+      "EN FORME",
+      "CŒURS, FLEURS ET PLUS ENCORE"
+     ]
+    ]
+   }
+  },
+  "fr-CA": {
+   "appLang": "fr",
+   "simLang": "fr-CA",
+   "simLocale": "fr_FR",
+   "events": {
+    "concert": "Spectacle de Taylor Swift",
+    "birthday": "Fête de maman",
+    "trip": "Cabane à sucre",
+    "holiday": "Action de grâce",
+    "baby": "Arrivée de bébé",
+    "summer": "Fête nationale",
+    "streak": "Sans vapoteuse"
+   },
+   "emoji": {
+    "trip": "🍁",
+    "holiday": "🦃",
+    "summer": "⚜️"
+   },
+   "days": {
+    "trip": 170,
+    "holiday": 7,
+    "summer": 262
+   },
+   "asc": {
+    "fr-CA": [
+     [
+      "WIDGETS",
+      "VOS GRANDS JOURS SUR L'ÉCRAN D'ACCUEIL"
+     ],
+     [
+      "D'UN COUP D'ŒIL",
+      "EN DIRECT SUR L'ÉCRAN VERROUILLÉ"
+     ],
+     [
+      "COMPTE À REBOURS",
+      "JUSQU'AUX JOURS QUI COMPTENT"
+     ],
+     [
+      "À VOTRE STYLE",
+      "UN EMOJI ET UNE COULEUR PAR JOUR"
+     ],
+     [
+      "EN FORME",
+      "CŒURS, FLEURS ET PLUS ENCORE"
+     ]
+    ]
+   },
+   "_note": "fr_CA region ignores simctl status_bar --time on the lock screen; fr_FR formats dates the same."
+  },
+  "es": {
+   "appLang": "es",
+   "simLang": "es",
+   "simLocale": "es_ES",
+   "events": {
+    "concert": "Concierto de Taylor Swift",
+    "birthday": "Cumple de mamá",
+    "trip": "Feria de Abril",
+    "holiday": "Navidad",
+    "baby": "Llegada del bebé",
+    "summer": "Vacaciones en la playa",
+    "streak": "Sin fumar"
+   },
+   "emoji": {
+    "trip": "💃"
+   },
+   "days": {
+    "trip": 195
+   },
+   "asc": {
+    "es-ES": [
+     [
+      "WIDGETS",
+      "TUS GRANDES DÍAS EN LA PANTALLA DE INICIO"
+     ],
+     [
+      "DE UN VISTAZO",
+      "EN DIRECTO EN LA PANTALLA BLOQUEADA"
+     ],
+     [
+      "CUENTA ATRÁS",
+      "HASTA LOS DÍAS QUE IMPORTAN"
+     ],
+     [
+      "A TU ESTILO",
+      "UN EMOJI Y UN COLOR PARA CADA DÍA"
+     ],
+     [
+      "DALE FORMA",
+      "CORAZONES, FLORES Y MÁS"
+     ]
+    ]
+   }
+  },
+  "es-MX": {
+   "appLang": "es",
+   "simLang": "es-MX",
+   "simLocale": "es_MX",
+   "events": {
+    "concert": "Concierto de Taylor Swift",
+    "birthday": "Cumpleaños de mamá",
+    "trip": "Día de Muertos",
+    "holiday": "Navidad",
+    "baby": "Llegada del bebé",
+    "summer": "Vacaciones de verano",
+    "streak": "Sin vapear"
+   },
+   "emoji": {
+    "trip": "💀"
+   },
+   "days": {
+    "trip": 28
+   },
+   "asc": {
+    "es-MX": [
+     [
+      "WIDGETS",
+      "TUS GRANDES DÍAS EN LA PANTALLA DE INICIO"
+     ],
+     [
+      "DE UN VISTAZO",
+      "EN VIVO EN LA PANTALLA BLOQUEADA"
+     ],
+     [
+      "CUENTA REGRESIVA",
+      "HASTA LOS DÍAS QUE IMPORTAN"
+     ],
+     [
+      "A TU ESTILO",
+      "UN EMOJI Y UN COLOR PARA CADA DÍA"
+     ],
+     [
+      "DALE FORMA",
+      "CORAZONES, FLORES Y MÁS"
+     ]
+    ]
+   }
+  },
+  "it": {
+   "appLang": "it",
+   "simLang": "it",
+   "simLocale": "it_IT",
+   "events": {
+    "concert": "Concerto di Taylor Swift",
+    "birthday": "Compleanno della mamma",
+    "trip": "Settimana bianca",
+    "holiday": "Natale",
+    "baby": "Arriva il bebè",
+    "summer": "Ferragosto",
+    "streak": "Senza fumo"
+   },
+   "emoji": {
+    "trip": "⛷️"
+   },
+   "days": {
+    "trip": 120,
+    "summer": 314
+   },
+   "asc": {
+    "it": [
+     [
+      "WIDGET",
+      "I TUOI GIORNI SPECIALI NELLA SCHERMATA HOME"
+     ],
+     [
+      "A COLPO D'OCCHIO",
+      "IN DIRETTA SULLA SCHERMATA BLOCCATA"
+     ],
+     [
+      "CONTO ALLA ROVESCIA",
+      "VERSO I GIORNI CHE CONTANO"
+     ],
+     [
+      "IL TUO STILE",
+      "EMOJI E COLORE PER OGNI GIORNO"
+     ],
+     [
+      "DAI FORMA",
+      "CUORI, FIORI E ALTRO ANCORA"
+     ]
+    ]
+   }
+  },
+  "pt": {
+   "appLang": "pt",
+   "simLang": "pt-PT",
+   "simLocale": "pt_PT",
+   "events": {
+    "concert": "Concerto da Taylor Swift",
+    "birthday": "Aniversário da mãe",
+    "trip": "Santos Populares",
+    "holiday": "Natal",
+    "baby": "Chegada do bebé",
+    "summer": "Férias no Algarve",
+    "streak": "Sem fumar"
+   },
+   "emoji": {
+    "trip": "🎉"
+   },
+   "days": {
+    "trip": 251,
+    "summer": 290
+   },
+   "asc": {
+    "pt-PT": [
+     [
+      "WIDGETS",
+      "OS TEUS GRANDES DIAS NO ECRÃ PRINCIPAL"
+     ],
+     [
+      "NUM RELANCE",
+      "EM DIRETO NO ECRÃ BLOQUEADO"
+     ],
+     [
+      "CONTAGEM DECRESCENTE",
+      "PARA OS DIAS QUE IMPORTAM"
+     ],
+     [
+      "AO TEU ESTILO",
+      "EMOJI E COR PARA CADA DIA"
+     ],
+     [
+      "DÁ-LHE FORMA",
+      "CORAÇÕES, FLORES E MAIS"
+     ]
+    ]
+   }
+  }
+ }
+}
